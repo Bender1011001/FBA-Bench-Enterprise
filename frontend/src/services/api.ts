@@ -376,29 +376,60 @@ class ApiService {
    * Test OpenRouter API connection with provided key
    */
   async testOpenRouterConnection(apiKey: string): Promise<ConnectionTestResult> {
+    // Debug log: Check key format without exposing full key
+    console.log('OpenRouter test: Key prefix/format check', {
+      startsWithSkOr: apiKey.startsWith('sk-or-'),
+      length: apiKey.length,
+      hasWhitespace: /\s/.test(apiKey)
+    });
+
     try {
+      const requestHeaders = {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      };
+      // Debug log: Request details (headers keys only)
+      console.log('OpenRouter test: Request', {
+        url: 'https://openrouter.ai/api/v1/models',
+        method: 'GET',
+        headersKeys: Object.keys(requestHeaders),
+        hasAuthHeader: 'Authorization' in requestHeaders
+      });
+
       const response = await fetch('https://openrouter.ai/api/v1/models', {
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
+        headers: requestHeaders,
         signal: AbortSignal.timeout(10000), // 10 second timeout
+      });
+
+      // Debug log: Response details
+      console.log('OpenRouter test: Response', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        headers: [...response.headers.entries()]
       });
 
       if (response.ok) {
         const data = await response.json();
+        console.log('OpenRouter test: Success data preview', { modelCount: data.data?.length || 0 });
         return {
           success: true,
           message: `Connected successfully. Found ${data.data?.length || 0} models available.`
         };
-      } else if (response.status === 401) {
-        return { success: false, message: 'Invalid API key. Please check your OpenRouter API key.' };
-      } else if (response.status === 429) {
-        return { success: false, message: 'Rate limit exceeded. Please try again later.' };
       } else {
-        return { success: false, message: `API error: ${response.status} ${response.statusText}` };
+        // Log full error body on non-OK
+        const errorBody = await response.text();
+        console.log('OpenRouter test: Error body', errorBody);
+        if (response.status === 401) {
+          return { success: false, message: `401 Unauthorized. Details: ${errorBody || 'Check key/credits.'}` };
+        } else if (response.status === 429) {
+          return { success: false, message: 'Rate limit exceeded. Please try again later.' };
+        } else {
+          return { success: false, message: `API error: ${response.status} ${response.statusText}. Body: ${errorBody}` };
+        }
       }
     } catch (error) {
+      console.error('OpenRouter test: Exception', error);
       if (error instanceof Error && error.name === 'AbortError') {
         return { success: false, message: 'Connection timeout' };
       }
