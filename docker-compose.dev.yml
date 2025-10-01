@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+  api:
+    image: python:3.11-slim
+    working_dir: /app
+    ports:
+      - "8000:8000"
+    environment:
+      AUTH_ENABLED: "false"        # dev only
+      AUTH_TEST_BYPASS: "true"     # dev only
+      FBA_CORS_ALLOW_ORIGINS: "*"
+      DATABASE_URL: "sqlite+aiosqlite:///./dev.db"  # dev only
+      DB_AUTO_CREATE: "true"
+      API_RATE_LIMIT: "100/minute"
+      LOG_LEVEL: "INFO"
+    volumes:
+      - ./:/app
+    command: >
+      sh -c "pip install --no-cache-dir poetry==1.7.1 &&
+             poetry config virtualenvs.create false &&
+             poetry install --no-interaction --no-ansi &&
+             uvicorn fba_bench_api.main:create_app --factory --host 0.0.0.0 --port 8000 --reload"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0) if urllib.request.urlopen('http://localhost:8000/api/v1/health').getcode()==200 else sys.exit(1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+        reservations:
+          cpus: "0.50"
+          memory: 512M

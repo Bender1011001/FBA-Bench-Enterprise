@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title | default("Leaderboard") }}</title>
+    <style>
+        body { font-family: sans-serif; margin: 2em; background-color: #f4f4f4; color: #333; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 2em; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1, h2 { text-align: center; color: #0056b3; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1.5em; }
+        th, td { padding: 12px 15px; border: 1px solid #ddd; text-align: left; }
+        th { background-color: #e9ecef; font-weight: bold; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .badge {
+            display: inline-block;
+            padding: 0.3em 0.8em;
+            border-radius: 12px;
+            color: white;
+            font-size: 0.85em;
+            font-weight: bold;
+            text-align: center;
+        }
+        .badge.gold { background-color: #d4af37; }
+        .badge.silver { background-color: #c0c0c0; }
+        .badge.bronze { background-color: #cd7f32; }
+        .badge.default { background-color: #6c757d; }
+        .timestamp { font-size: 0.8em; color: #777; text-align: right; margin-top: 1em; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>{{ title | default("FBA-Bench Leaderboard") }}</h1>
+        <p class="timestamp">Last Updated: {{ last_updated | default("N/A") }}</p>
+
+        {% if description %}
+        <p>{{ description }}</p>
+        {% endif %}
+
+        <h2>Current Rankings</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Bot Name</th>
+                    <th>Score</th>
+                    <th>Tier</th>
+                    {% if show_details %}
+                    <th>Last Run</th>
+                    <th>Details</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for bot in bots %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ bot.name }}</td>
+                    <td>{{ "{:.2f}".format(bot.score) }}</td>
+                    <td>
+                        <span class="badge {{ bot.tier | lower | default('default') }}">
+                            {{ bot.tier | default('N/A') }}
+                        </span>
+                    </td>
+                    {% if show_details %}
+                    <td>{{ bot.last_run_timestamp | default('N/A') }}</td>
+                    <td>{{ bot.last_run_details | default('No details') }}</td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if historical_data %}
+        <h2>Historical Performance</h2>
+        {# This section can be extended with charts/graphs using libraries like Chart.js or D3.js #}
+        <ul>
+            {% for item in historical_data %}
+            <li>{{ item.date }}: {{ item.description }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        <div style="margin-top: 2em; text-align: center;">
+            <a href="https://github.com/your-org/your-repo" target="_blank">View Project on GitHub</a>
+        </div>
+    </div>
+</body>
+</html>

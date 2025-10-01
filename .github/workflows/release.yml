@@ -1,0 +1,273 @@
+name: Release and Publish to PyPI
+
+on:
+  push:
+    tags:
+      - 'v*'
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      push_docker:
+        description: 'Also push Docker image to Docker Hub when manually dispatched'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  POETRY_VERSION: 1.8.3
+  POETRY_VIRTUALENVS_IN_PROJECT: true
+  PIP_DISABLE_PIP_VERSION_CHECK: 1
+  PIP_NO_PYTHON_VERSION_WARNING: 1
+
+jobs:
+  test:
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.9', '3.10', '3.11', '3.12']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'poetry'
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: ${{ env.POETRY_VERSION }}
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
+
+      - name: Cache Poetry virtualenv
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        run: |
+          poetry --version
+          poetry install --no-interaction --no-ansi
+
+      - name: Basic package checks
+        run: |
+          poetry check --lock
+
+      - name: Run tests
+        run: |
+          poetry run pytest -q
+        env:
+          PYTHONWARNINGS: default
+
+  build:
+    name: Build distributions
+    runs-on: ubuntu-latest
+    needs: test
+    outputs:
+      tag_name: ${{ steps.meta.outputs.tag_name }}
+      version: ${{ steps.meta.outputs.version }}
+      pyproject_version: ${{ steps.meta.outputs.pyproject_version }}
+      publishable: ${{ steps.meta.outputs.publishable }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'poetry'
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: ${{ env.POETRY_VERSION }}
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
+
+      - name: Cache Poetry virtualenv
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-3.11-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        run: |
+          poetry install --no-interaction --no-ansi
+
+      - name: Determine tag and version
+        id: meta
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG_NAME=""
+          if [ "${GITHUB_EVENT_NAME}" = "release" ]; then
+            TAG_NAME="${{ github.event.release.tag_name }}"
+          elif [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            TAG_NAME="${GITHUB_REF_NAME}"
+          fi
+
+          VERSION="${TAG_NAME#v}"
+          echo "tag_name=${TAG_NAME}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+          PYVER=$(python -c "import tomllib, pathlib; print(tomllib.loads(pathlib.Path('pyproject.toml').read_text(encoding='utf-8'))['tool']['poetry']['version'])")
+          echo "pyproject_version=${PYVER}" >> "$GITHUB_OUTPUT"
+
+          PUBLISHABLE=false
+          if [[ "${GITHUB_EVENT_NAME}" == "release" ]] && [[ "${{ github.event.action }}" == "published" ]]; then
+            PUBLISHABLE=true
+          elif [[ "${GITHUB_EVENT_NAME}" == "push" ]] && [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            PUBLISHABLE=true
+          fi
+          echo "publishable=${PUBLISHABLE}" >> "$GITHUB_OUTPUT"
+
+          echo "Detected tag: ${TAG_NAME}; version: ${VERSION}; pyproject: ${PYVER}; publishable: ${PUBLISHABLE}"
+
+      - name: Validate version matches tag
+        if: steps.meta.outputs.publishable == 'true'
+        run: |
+          if [ "${{ steps.meta.outputs.version }}" != "${{ steps.meta.outputs.pyproject_version }}" ]; then
+            echo "Version mismatch: tag=${{ steps.meta.outputs.version }} pyproject=${{ steps.meta.outputs.pyproject_version }}"
+            exit 1
+          fi
+
+      - name: Security audit (pip-audit)
+        continue-on-error: true
+        run: |
+          poetry run pip install --disable-pip-version-check pip-audit
+          poetry run pip-audit -r -f json > pip-audit.json || true
+
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pip-audit-${{ github.run_id }}
+          path: pip-audit.json
+
+      - name: Build wheel and sdist
+        run: |
+          poetry build -n
+
+      - name: Validate distributions (twine check)
+        run: |
+          poetry run pip install --disable-pip-version-check twine
+          poetry run twine check dist/*
+
+      - name: Upload distribution artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+    needs: build
+    if: needs.build.outputs.publishable == 'true'
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Download built distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      - name: Show dist files
+        run: ls -l dist
+
+      - name: Publish to PyPI (OIDC or API token)
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          skip-existing: true
+
+  docker:
+    name: Docker image (optional)
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Compute image tags
+        id: dmeta
+        shell: bash
+        env:
+          DOCKER_IMAGE_NAME: ${{ vars.DOCKER_IMAGE_NAME }}
+          DOCKER_REGISTRY: ${{ vars.DOCKER_REGISTRY }}
+          DOCKER_REPOSITORY: ${{ vars.DOCKER_REPOSITORY }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        run: |
+          set -euo pipefail
+          VERSION="${{ needs.build.outputs.version }}"
+          if [ -z "${VERSION}" ]; then
+            VERSION="dev-${GITHUB_RUN_NUMBER}"
+          fi
+          IMAGE_NAME="${DOCKER_IMAGE_NAME:-fba-bench}"
+          REGISTRY="${DOCKER_REGISTRY:-docker.io}"
+          REPO="${DOCKER_REPOSITORY:-${DOCKER_USERNAME:-library}}"
+          FULL_REPO="${REGISTRY}/${REPO}/${IMAGE_NAME}"
+          TAGS="${FULL_REPO}:${VERSION},${FULL_REPO}:latest"
+          echo "tags=${TAGS}" >> "$GITHUB_OUTPUT"
+          echo "full_repo=${FULL_REPO}" >> "$GITHUB_OUTPUT"
+          echo "Computed Docker tags: ${TAGS}"
+
+      - name: Check Docker credentials
+        id: creds
+        shell: bash
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          if [ -n "$DOCKER_USERNAME" ] && [ -n "$DOCKER_PASSWORD" ]; then
+            echo "has_creds=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_creds=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Login to Docker Hub
+        if: ${{ steps.creds.outputs.has_creds == 'true' && needs.build.outputs.publishable == 'true' && (github.event_name != 'workflow_dispatch' || inputs.push_docker == true) }}
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.api
+          platforms: linux/amd64
+          push: ${{ steps.creds.outputs.has_creds == 'true' && needs.build.outputs.publishable == 'true' && (github.event_name != 'workflow_dispatch' || inputs.push_docker == true) }}
+          tags: ${{ steps.dmeta.outputs.tags }}
+          build-args: |
+            APP_VERSION=${{ needs.build.outputs.pyproject_version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

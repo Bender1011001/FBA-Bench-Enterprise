@@ -1,0 +1,109 @@
+name: End-to-End Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 6 * * 1-5'  # Weekdays at 6 AM
+
+jobs:
+  e2e-tests:
+    runs-on: ubuntu-latest
+
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres:15
+        # Provide the password for postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: fba_bench_test
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # Maps tcp port 5432 on service container to the host
+          - 5432:5432
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: 'frontend/package-lock.json'
+
+    - name: Install frontend dependencies
+      working-directory: ./frontend
+      run: npm ci
+
+    - name: Build frontend
+      working-directory: ./frontend
+      run: npm run build
+      env:
+        CI: false
+
+    - name: Start backend services
+      run: |
+        # Start the backend API server
+        python -m uvicorn fba_bench_api.main:create_app --factory --host 0.0.0.0 --port 8000 &
+        # Wait for the backend to be ready
+        sleep 10
+        # Check if the backend is running
+        curl -f http://localhost:8000/api/v1/health || exit 1
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/fba_bench_test
+        AUTH_ENABLED: "false"
+        AUTH_TEST_BYPASS: "true"
+
+    - name: Install Playwright
+      run: |
+        npm install -g @playwright/test
+        playwright install --with-deps
+
+    - name: Run E2E tests
+      run: |
+        # Run your E2E tests here
+        # For example, using Playwright, Cypress, or Selenium
+        echo "Running E2E tests..."
+        # npx playwright test
+        # or
+        # npx cypress run
+        # Placeholder for actual E2E test command
+
+    - name: Upload E2E test results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: e2e-test-results
+        path: test-results/
+
+    - name: Notify E2E test status
+      if: always()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        channel: '#testing'
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}

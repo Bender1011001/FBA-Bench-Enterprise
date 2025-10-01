@@ -1,0 +1,14 @@
+tenants/
+!tenants/.gitkeep
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+terraform.tfvars
+*.tfvars
+plan.out
+crash.log
+override.tf
+*_override.tf
+terraform.tfstate
+terraform.tfstate.*

@@ -1,0 +1,26 @@
+# terraform.tfvars.example - Copy to terraform.tfvars or tenant.tfvars and customize
+# This file provides example values for the managed sandbox Terraform configuration.
+# IMPORTANT: Replace placeholders (e.g., CHANGE_ME) with real values for actual use.
+# Never commit files with real secrets to version control. Use environment variables
+# or secure vaults for production deployments.
+
+# Domain configuration
+domain_name             = "example.com"  # Replace with your domain, e.g., "acme-corp.com"
+
+# Environment
+environment             = "sandbox"      # Options: sandbox, dev, staging, prod
+
+# Image tags for container deployments (future cloud integration)
+api_image_tag           = "latest"       # Docker tag for API service, e.g., "v1.2.3"
+web_image_tag           = "latest"       # Docker tag for web frontend, e.g., "v1.0.0"
+
+# Base URLs (local for development; update for production)
+api_public_base_url     = "http://localhost:8000"    # API endpoint URL
+frontend_base_url       = "http://localhost:5173"    # Frontend app URL
+
+# Stripe configuration (placeholders only - obtain from Stripe dashboard)
+stripe_public_key       = "pk_test_CHANGE_ME"        # Public key for frontend (pk_test_...)
+stripe_price_id_default = "price_123CHANGE_ME"       # Default price ID for subscriptions (price_...)
+
+# Security (sensitive - do not commit real values)
+jwt_secret              = "CHANGE_ME_DEV"            # Replace with a secure random string (at least 32 chars)

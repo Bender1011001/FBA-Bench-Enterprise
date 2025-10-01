@@ -1,0 +1,9 @@
+[run]
+branch = True
+source = api
+
+[report]
+omit =
+    tests/*
+    */site-packages/*
+    */__pycache__/*

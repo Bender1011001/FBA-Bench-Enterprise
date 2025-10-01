@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+*.egg
+.eggs/
+dist/
+build/
+.build/
+.cache/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Environments
+.venv/
+venv/
+.env
+.env.*
+
+# Node/Frontend
+node_modules/
+dist/
+build/
+*.log
+
+# Frontend specific
+repos/fba-bench-enterprise/frontend/node_modules/
+repos/fba-bench-enterprise/frontend/dist/
+repos/fba-bench-enterprise/frontend/.env
+
+# IDE/OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Data/Artifacts
+artifacts/
+results/
+
+# Docker/Compose
+*.pid
+*.pid.lock
+
+# Web UI
+web/node_modules/
+web/dist/

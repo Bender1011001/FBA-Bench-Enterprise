@@ -1,0 +1,18 @@
+# Example Terraform variables for dev environment
+# IMPORTANT: Do not commit real secrets to version control.
+# Replace placeholders with actual values for your environment.
+# For production, use secure methods like environment variables or remote state.
+
+environment = "dev"
+
+domain_name = "dev.example.com"
+
+public_app_base_url = "http://localhost:5173"
+
+api_image_tag = "2025-09-29"
+
+frontend_image_tag = "2025-09-29"
+
+jwt_secret = "CHANGE_ME_DEV_SECRET"
+
+stripe_secret_key = "sk_test_CHANGE_ME"
