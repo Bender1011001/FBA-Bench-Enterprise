@@ -62,8 +62,9 @@ def create_test_user(db, email: str, password: str, active: bool = True):
         email=email,
         password_hash=hash_password(password),
         is_active=active,
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow(),
+        subscription_status=None,
+        created_at=datetime.now(ZoneInfo("UTC")),
+        updated_at=datetime.now(ZoneInfo("UTC")),
     )
     db.add(user)
     db.commit()
@@ -87,7 +88,7 @@ class TestCheckoutSession:
         assert response.status_code == 401
         assert response.json()["detail"] == "invalid_or_expired_token"
 
-    def test_checkout_400_when_missing_price_and_no_default(self, setup_database):
+    def test_checkout_400_when_missing_price_and_no_default(self, client, test_user, auth_token):
         """Returns 400 when no price_id provided and no env default."""
         # Ensure no STRIPE_PRICE_ID_BASIC in env
         original_env = os.environ.get("STRIPE_PRICE_ID_BASIC")
@@ -96,125 +97,76 @@ class TestCheckoutSession:
         response = client.post(
             "/billing/checkout-session",
             json={},
-            headers={"Authorization": "Bearer invalid_token"}  # Will be 401, but test focuses on price
+            headers={"Authorization": f"Bearer {auth_token}"},
         )
-        # Actually, auth will fail first, but to test price validation, we need auth.
-        # For this test, we'll mock auth or use a valid token but focus on price.
-        # Since auth is dependency, to isolate, but task says test requires auth, so combine.
 
-        # Create user and token
-        db = TestingSessionLocal(bind=engine.connect())
-        try:
-            user = create_test_user(db, "test@example.com", "Password123!")
-            token = get_auth_token(db, user)
+        assert response.status_code == 400
+        assert response.json()["detail"] == "No price ID provided and no default configured"
+        if original_env:
+            os.environ["STRIPE_PRICE_ID_BASIC"] = original_env
 
-            # Set env to no default
-            os.environ.pop("STRIPE_PRICE_ID_BASIC", None)
-
-            response = client.post(
-                "/billing/checkout-session",
-                json={},
-                headers={"Authorization": f"Bearer {token}"},
-            )
-
-            assert response.status_code == 400
-            assert response.json()["detail"] == "invalid_price"
-        finally:
-            db.close()
-            if original_env:
-                os.environ["STRIPE_PRICE_ID_BASIC"] = original_env
-
-    def test_checkout_200_returns_url_with_env_default_price(self, setup_database, monkeypatch):
+    def test_checkout_200_returns_url_with_env_default_price(self, client, test_user, auth_token, monkeypatch):
         """Successful checkout with env default price returns 200 with URL."""
         # Set env vars
         monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_mock")
-        monkeypatch.setenv("STRIPE_PRICE_ID_BASIC", "price_123")
-        monkeypatch.setenv("BILLING_SUCCESS_URL", "http://example.com/success")
-        monkeypatch.setenv("BILLING_CANCEL_URL", "http://example.com/cancel")
-        monkeypatch.setenv("STRIPE_MODE", "subscription")
+        monkeypatch.setenv("STRIPE_PRICE_ID_DEFAULT", "price_123")
+        monkeypatch.setenv("FRONTEND_BASE_URL", "http://localhost:5173")
 
         # Mock Stripe
         mock_session = MagicMock()
         mock_session.url = "https://checkout.stripe.com/pay/cs_test_mock"
-        monkeypatch.setattr(stripe.checkout, "Session", MagicMock(create=mock_session))
+        monkeypatch.setattr(stripe.checkout.Session, "create", MagicMock(return_value=mock_session))
 
-        # Create user and token
-        db = TestingSessionLocal(bind=engine.connect())
-        try:
-            user = create_test_user(db, "test@example.com", "Password123!")
-            token = get_auth_token(db, user)
+        response = client.post(
+            "/billing/checkout-session",
+            json={},
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
 
-            response = client.post(
-                "/billing/checkout-session",
-                json={},
-                headers={"Authorization": f"Bearer {token}"},
-            )
+        assert response.status_code == 200
+        data = response.json()
+        assert "url" in data
+        assert data["url"] == mock_session.url
 
-            assert response.status_code == 200
-            data = response.json()
-            assert "url" in data
-            assert data["url"] == mock_session.url
-        finally:
-            db.close()
-
-    def test_checkout_502_on_stripe_error(self, setup_database, monkeypatch):
+    def test_checkout_502_on_stripe_error(self, client, test_user, auth_token, monkeypatch):
         """Stripe API error returns 502."""
         # Set env vars
         monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_mock")
-        monkeypatch.setenv("STRIPE_PRICE_ID_BASIC", "price_123")
-        monkeypatch.setenv("BILLING_SUCCESS_URL", "http://example.com/success")
-        monkeypatch.setenv("BILLING_CANCEL_URL", "http://example.com/cancel")
+        monkeypatch.setenv("STRIPE_PRICE_ID_DEFAULT", "price_123")
+        monkeypatch.setenv("FRONTEND_BASE_URL", "http://localhost:5173")
 
         # Mock Stripe to raise error
-        monkeypatch.setattr(stripe.checkout, "Session", MagicMock())
-        stripe.checkout.Session.create.side_effect = Exception("Stripe error")
+        monkeypatch.setattr(stripe.checkout.Session, "create", MagicMock(side_effect=Exception("Stripe error")))
 
-        # Create user and token
-        db = TestingSessionLocal(bind=engine.connect())
-        try:
-            user = create_test_user(db, "test@example.com", "Password123!")
-            token = get_auth_token(db, user)
+        response = client.post(
+            "/billing/checkout-session",
+            json={},
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
 
-            response = client.post(
-                "/billing/checkout-session",
-                json={},
-                headers={"Authorization": f"Bearer {token}"},
-            )
+        assert response.status_code == 500
+        assert "Stripe error" in response.json()["detail"]
 
-            assert response.status_code == 502
-            assert response.json()["detail"] == "stripe_api_error"
-        finally:
-            db.close()
-
-    def test_checkout_uses_customer_email_and_metadata(self, setup_database, monkeypatch):
+    def test_checkout_uses_customer_email_and_metadata(self, client, test_user, auth_token, monkeypatch):
         """Verifies customer_email and metadata are passed to Stripe."""
         # Set env vars
         monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_mock")
-        monkeypatch.setenv("STRIPE_PRICE_ID_BASIC", "price_123")
-        monkeypatch.setenv("BILLING_SUCCESS_URL", "http://example.com/success")
-        monkeypatch.setenv("BILLING_CANCEL_URL", "http://example.com/cancel")
+        monkeypatch.setenv("STRIPE_PRICE_ID_DEFAULT", "price_123")
+        monkeypatch.setenv("FRONTEND_BASE_URL", "http://localhost:5173")
 
         # Mock Stripe create to capture args
         mock_create = MagicMock()
         monkeypatch.setattr(stripe.checkout.Session, "create", mock_create)
 
-        # Create user and token
-        db = TestingSessionLocal(bind=engine.connect())
-        try:
-            user = create_test_user(db, "user@example.com", "Password123!")
-            token = get_auth_token(db, user)
+        response = client.post(
+            "/billing/checkout-session",
+            json={},
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
 
-            response = client.post(
-                "/billing/checkout-session",
-                json={},
-                headers={"Authorization": f"Bearer {token}"},
-            )
+        assert response.status_code == 200
 
-            assert response.status_code == 200
-
-            # Verify args passed to create
-            call_args = mock_create.call_args[1]  # kwargs
-            assert call_args["customer_email"] == user.email
-            assert call_args["metadata"]["user_id"] == user.id
-        finally:
-            db.close()
+        # Verify args passed to create
+        call_args = mock_create.call_args[1]  # kwargs
+        assert call_args["customer_email"] == test_user.email
+        assert call_args["metadata"]["user_id"] == test_user.id

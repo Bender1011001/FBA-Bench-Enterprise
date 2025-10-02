@@ -500,8 +500,8 @@ develop = false
 [package.source]
 type = "git"
 url = "https://github.com/Bender1011001/FBA-Bench-core.git"
-reference = "v0.1.0"
-resolved_reference = "19e80a1d8bec14f3be374198b84a8c24020bcb7f"
+reference = "main"
+resolved_reference = "530771b4afe6d03f2ca1e0b8cb54142942d45289"
 
 [[package]]
 name = "greenlet"
@@ -1646,4 +1646,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9,<3.13"
-content-hash = "bc38fb9a0056726e71a9d10db765ddb91cf4216d503778bb105b2d322c1b71eb"
+content-hash = "637ab40848d269609a9730c5f8f0d9ff29e88b7d04f26192f80cc6931a341859"

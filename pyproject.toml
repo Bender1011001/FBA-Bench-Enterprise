@@ -1,35 +1,36 @@
-[tool.poetry]
+[build-system]
+requires = ["setuptools>=69.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
 name = "fba-bench-enterprise"
 version = "0.1.0"
-description = "FBA-Bench Enterprise: private application, API, infra, and proprietary assets."
-authors = ["FBA-Bench Authors"]
+description = "FBA-Bench Enterprise: benchmarking and simulation platform"
 readme = "README.md"
-license = "Other/Proprietary License"
+requires-python = ">=3.10"
+authors = [{ name = "FBA-Bench Team" }]
+license = { file = "LICENSE" }
 classifiers = [
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "License :: Other/Proprietary License",
-    "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
 ]
 
-[tool.poetry.dependencies]
-python = ">=3.9,<3.13"
-fba-bench-core = { git = "https://github.com/Bender1011001/FBA-Bench-core.git", rev = "v0.1.0" }
-fastapi = "^0.115.0"
-uvicorn = {extras = ["standard"], version = "^0.30.6"}
-sqlalchemy = {extras = ["asyncio"], version = "^2.0.36"}
-alembic = "^1.13.3"
-argon2-cffi = "^23.1"
-python-dotenv = "^1.0"
-packaging = "^24.2"
-pydantic = {extras = ["email"], version = "^2.9.2"}
-pydantic-settings = "^2.4.0"
-python-jose = {extras = ["cryptography"], version = "^3.3"}
-stripe = ">=5.0.0"
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+[tool.setuptools.packages.find]
+# Discover packages from both the repo root and the src/ directory
+where = [".", "src"]
+include = [
+  "api*",
+  "constraints*",
+  "metrics*",
+  "baseline_bots*",
+  "dashboard*",
+  "infrastructure*",
+  "leaderboard*",
+  "fba_events*",
+  "redteam_scripts*",
+  "services*",
+  "redteam*",
+]
+exclude = ["tests*", "integration_tests*", "scripts*", "docs*", "marketing*", "infra*"]

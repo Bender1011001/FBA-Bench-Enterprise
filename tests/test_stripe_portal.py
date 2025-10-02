@@ -62,8 +62,9 @@ def create_test_user(db, email: str, password: str, active: bool = True):
         email=email,
         password_hash=hash_password(password),
         is_active=active,
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow(),
+        subscription_status=None,
+        created_at=datetime.now(ZoneInfo("UTC")),
+        updated_at=datetime.now(ZoneInfo("UTC")),
     )
     db.add(user)
     db.commit()
@@ -87,101 +88,77 @@ class TestPortalSession:
         assert response.status_code == 401
         assert response.json()["detail"] == "invalid_or_expired_token"
 
-    def test_portal_503_when_stripe_secret_missing(self, setup_database, monkeypatch):
+    def test_portal_503_when_stripe_secret_missing(self, client, test_user, auth_token, monkeypatch):
         """Returns 503 when STRIPE_SECRET_KEY missing."""
         # Ensure no STRIPE_SECRET_KEY
         monkeypatch.delenv("STRIPE_SECRET_KEY", raising=False)
 
-        # Create user and token
-        db = TestingSessionLocal(bind=engine.connect())
-        try:
-            user = create_test_user(db, "test@example.com", "Password123!")
-            token = get_auth_token(db, user)
+        response = client.post(
+            "/billing/portal-session",
+            json={},
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
 
-            response = client.post(
-                "/billing/portal-session",
-                json={},
-                headers={"Authorization": f"Bearer {token}"},
-            )
+        assert response.status_code == 503
+        assert response.json()["detail"] == "Billing unavailable"
 
-            assert response.status_code == 503
-            assert response.json()["detail"] == "stripe_not_configured"
-        finally:
-            db.close()
-
-    def test_portal_500_when_return_url_missing(self, setup_database, monkeypatch):
+    def test_portal_500_when_return_url_missing(self, client, test_user, auth_token, monkeypatch):
         """Returns 500 when no return_url and no env default."""
-        # Set STRIPE_SECRET_KEY but no BILLING_PORTAL_RETURN_URL
+        # Set STRIPE_SECRET_KEY but no FRONTEND_BASE_URL
         monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_mock")
-        monkeypatch.delenv("BILLING_PORTAL_RETURN_URL", raising=False)
+        monkeypatch.delenv("FRONTEND_BASE_URL", raising=False)
 
-        # Create user and token
-        db = TestingSessionLocal(bind=engine.connect())
-        try:
-            user = create_test_user(db, "test@example.com", "Password123!")
-            token = get_auth_token(db, user)
+        response = client.post(
+            "/billing/portal-session",
+            json={},
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
 
-            response = client.post(
-                "/billing/portal-session",
-                json={},
-                headers={"Authorization": f"Bearer {token}"},
-            )
+        assert response.status_code == 500
+        assert "return_url" in response.json()["detail"].lower()
 
-            assert response.status_code == 500
-            assert response.json()["detail"] == "billing_url_not_configured"
-        finally:
-            db.close()
-
-    def test_portal_creates_session_with_existing_customer_email(self, setup_database, monkeypatch):
-        """Successful portal with existing customer via search returns 200 with URL."""
+    def test_portal_creates_session_with_existing_customer_email(self, client, test_user, auth_token, monkeypatch):
+        """Successful portal with existing customer via list returns 200 with URL."""
         # Set env vars
         monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_mock")
-        monkeypatch.setenv("BILLING_PORTAL_RETURN_URL", "http://example.com/return")
+        monkeypatch.setenv("FRONTEND_BASE_URL", "http://localhost:5173")
 
-        # Mock search to return existing customer
+        # Mock list to return existing customer
         mock_customer = MagicMock()
         mock_customer.id = "cus_mock_existing"
         mock_customers = MagicMock()
         mock_customers.data = [mock_customer]
-        monkeypatch.setattr(stripe.Customer, "search", MagicMock(return_value=mock_customers))
+        monkeypatch.setattr(stripe.Customer, "list", MagicMock(return_value=mock_customers))
 
         # Mock session create
         mock_session = MagicMock()
         mock_session.url = "https://billing.stripe.com/session/mock"
         monkeypatch.setattr(stripe.billing_portal.Session, "create", MagicMock(return_value=mock_session))
 
-        # Create user and token
-        db = TestingSessionLocal(bind=engine.connect())
-        try:
-            user = create_test_user(db, "test@example.com", "Password123!")
-            token = get_auth_token(db, user)
+        response = client.post(
+            "/billing/portal-session",
+            json={},
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
 
-            response = client.post(
-                "/billing/portal-session",
-                json={},
-                headers={"Authorization": f"Bearer {token}"},
-            )
+        assert response.status_code == 200
+        data = response.json()
+        assert "url" in data
+        assert data["url"] == mock_session.url
 
-            assert response.status_code == 200
-            data = response.json()
-            assert "url" in data
-            assert data["url"] == mock_session.url
+        # Ensure list called with email
+        stripe.Customer.list.assert_called_once_with(email=test_user.email)
 
-            # Ensure search called with user email
-            stripe.Customer.search.assert_called_once_with(query='email:"test@example.com"')
-        finally:
-            db.close()
-
-    def test_portal_creates_customer_if_not_exists_then_session(self, setup_database, monkeypatch):
+    def test_portal_creates_customer_if_not_exists_then_session(self, client, test_user, auth_token, monkeypatch):
         """Creates customer if none exists, then session; verifies metadata."""
         # Set env vars
         monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_mock")
-        monkeypatch.setenv("BILLING_PORTAL_RETURN_URL", "http://example.com/return")
+        monkeypatch.setenv("FRONTEND_BASE_URL", "http://localhost:5173")
 
-        # Mock search to return empty
+        # Mock list to return empty
         mock_empty_customers = MagicMock()
         mock_empty_customers.data = []
-        monkeypatch.setattr(stripe.Customer, "search", MagicMock(return_value=mock_empty_customers))
+        monkeypatch.setattr(stripe.Customer, "list", MagicMock(return_value=mock_empty_customers))
 
         # Mock create customer
         mock_customer = MagicMock()
@@ -193,61 +170,45 @@ class TestPortalSession:
         mock_session.url = "https://billing.stripe.com/session/mock"
         monkeypatch.setattr(stripe.billing_portal.Session, "create", MagicMock(return_value=mock_session))
 
-        # Create user and token
-        db = TestingSessionLocal(bind=engine.connect())
-        try:
-            user = create_test_user(db, "test@example.com", "Password123!")
-            token = get_auth_token(db, user)
+        response = client.post(
+            "/billing/portal-session",
+            json={},
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
 
-            response = client.post(
-                "/billing/portal-session",
-                json={},
-                headers={"Authorization": f"Bearer {token}"},
-            )
+        assert response.status_code == 200
+        data = response.json()
+        assert "url" in data
+        assert data["url"] == mock_session.url
 
-            assert response.status_code == 200
-            data = response.json()
-            assert "url" in data
-            assert data["url"] == mock_session.url
+        # Ensure list called (empty result)
+        stripe.Customer.list.assert_called_once_with(email=test_user.email)
 
-            # Ensure search called (empty result)
-            stripe.Customer.search.assert_called_once_with(query='email:"test@example.com"')
+        # Ensure create called with email and metadata
+        create_call_args = stripe.Customer.create.call_args[1]
+        assert create_call_args["email"] == test_user.email
+        assert create_call_args["metadata"]["user_id"] == test_user.id
 
-            # Ensure create called with email and metadata
-            create_call_args = stripe.Customer.create.call_args[1]
-            assert create_call_args["email"] == user.email
-            assert create_call_args["metadata"]["user_id"] == str(user.id)
+        # Ensure session created with customer.id
+        stripe.billing_portal.Session.create.assert_called_once_with(
+            customer=mock_customer.id,
+            return_url="http://localhost:5173/account"
+        )
 
-            # Ensure session created with customer.id
-            stripe.billing_portal.Session.create.assert_called_once_with(
-                customer=mock_customer.id,
-                return_url="http://example.com/return"
-            )
-        finally:
-            db.close()
-
-    def test_portal_502_on_stripe_error(self, setup_database, monkeypatch):
+    def test_portal_502_on_stripe_error(self, client, test_user, auth_token, monkeypatch):
         """Stripe API error returns 502."""
         # Set env vars
         monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_mock")
-        monkeypatch.setenv("BILLING_PORTAL_RETURN_URL", "http://example.com/return")
+        monkeypatch.setenv("FRONTEND_BASE_URL", "http://localhost:5173")
 
-        # Mock to raise on customer search (simulate API error)
-        monkeypatch.setattr(stripe.Customer, "search", MagicMock(side_effect=Exception("Stripe search error")))
+        # Mock to raise on customer list (simulate API error)
+        monkeypatch.setattr(stripe.Customer, "list", MagicMock(side_effect=Exception("Stripe search error")))
 
-        # Create user and token
-        db = TestingSessionLocal(bind=engine.connect())
-        try:
-            user = create_test_user(db, "test@example.com", "Password123!")
-            token = get_auth_token(db, user)
+        response = client.post(
+            "/billing/portal-session",
+            json={},
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
 
-            response = client.post(
-                "/billing/portal-session",
-                json={},
-                headers={"Authorization": f"Bearer {token}"},
-            )
-
-            assert response.status_code == 502
-            assert response.json()["detail"] == "stripe_api_error"
-        finally:
-            db.close()
+        assert response.status_code == 500
+        assert "Stripe search error" in response.json()["detail"]

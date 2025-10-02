@@ -3,8 +3,12 @@
 Defines the User model for persistent user storage.
 """
 
-from sqlalchemy import String, DateTime, Boolean, func, Index
+from sqlalchemy import String, DateTime, Boolean, Index
 from sqlalchemy.orm import Mapped, mapped_column
+from datetime import datetime
+from zoneinfo import ZoneInfo
+from sqlalchemy.orm import Mapped, mapped_column
+from datetime import datetime
 
 from api.db import Base
 
@@ -19,13 +23,14 @@ class User(Base):
         String(255), unique=True, nullable=False, index=True
     )
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    # Use Python-side defaults to avoid SQLite 'now()' server-function issues during tests
     created_at: Mapped[DateTime] = mapped_column(
-        DateTime, server_default=func.now(), nullable=False
+        DateTime, default=lambda: datetime.now(ZoneInfo("UTC")), nullable=False
     )
     updated_at: Mapped[DateTime] = mapped_column(
         DateTime,
-        server_default=func.now(),
-        onupdate=func.now(),
+        default=lambda: datetime.now(ZoneInfo("UTC")),
+        onupdate=lambda: datetime.now(ZoneInfo("UTC")),
         nullable=False,
     )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)

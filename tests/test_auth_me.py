@@ -69,8 +69,8 @@ def create_test_user(db, email: str, password: str, active: bool = True):
         password_hash=hash_password(password),
         is_active=active,
         subscription_status=None,
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow(),
+        created_at=datetime.now(ZoneInfo("UTC")),
+        updated_at=datetime.now(ZoneInfo("UTC")),
     )
     db.add(user)
     db.commit()
@@ -98,70 +98,45 @@ class TestProfileEndpoint:
         assert "WWW-Authenticate" in response.headers
         assert response.headers["WWW-Authenticate"] == "Bearer"
 
-    def test_me_with_valid_token_returns_profile_200(self, setup_database):
+    def test_me_with_valid_token_returns_profile_200(self, client, test_user, auth_token):
         """Register a user, login to get token, call GET /auth/me; expect 200 with public fields."""
-        db = TestingSessionLocal(bind=engine.connect())
-        try:
-            # Create user manually (persists due to manual commit)
-            user = create_test_user(db, "test@example.com", "Password123!")
+        # Call /auth/me with token
+        response = client.get(
+            "/auth/me",
+            headers={"Authorization": f"Bearer {auth_token}"}
+        )
+        assert response.status_code == 200
+        data = response.json()
 
-            # Login to get access token
-            login_response = client.post(
-                "/auth/login",
-                json={"email": "test@example.com", "password": "Password123!"}
-            )
-            assert login_response.status_code == 200
-            token = login_response.json()["access_token"]
+        # Check public fields present
+        assert "id" in data
+        assert data["id"] == test_user.id
+        assert data["email"] == test_user.email
+        assert "created_at" in data
+        assert "updated_at" in data
+        assert data["is_active"] is True
+        assert data["subscription_status"] is None
 
-            # Call /auth/me with token
-            response = client.get(
-                "/auth/me",
-                headers={"Authorization": f"Bearer {token}"}
-            )
-            assert response.status_code == 200
-            data = response.json()
+        # Confirm password_hash is not present
+        assert "password_hash" not in data
 
-            # Check public fields present
-            assert "id" in data
-            assert data["email"] == "test@example.com"
-            assert "created_at" in data
-            assert "updated_at" in data
-            assert data["is_active"] is True
-            assert data["subscription_status"] is None
-
-            # Confirm password_hash is not present
-            assert "password_hash" not in data
-        finally:
-            db.close()
-
-    def test_me_with_inactive_user_returns_401(self, setup_database):
+    def test_me_with_inactive_user_returns_401(self, client, test_user, auth_token):
         """Create active user, login to get token, deactivate user, call GET /auth/me; expect 401."""
-        db = TestingSessionLocal()
+        # Deactivate the user
+        db = next(get_db())
         try:
-            # Create active user manually
-            user = create_test_user(db, "inactive@example.com", "Password123!")
-
-            # Login to get valid token
-            login_response = client.post(
-                "/auth/login",
-                json={"email": "inactive@example.com", "password": "Password123!"}
-            )
-            assert login_response.status_code == 200
-            token = login_response.json()["access_token"]
-
-            # Deactivate the user
-            inactive_user = db.query(User).filter(User.email == "inactive@example.com").first()
+            inactive_user = db.query(User).filter(User.id == test_user.id).first()
             inactive_user.is_active = False
-            inactive_user.updated_at = datetime.utcnow()
+            inactive_user.updated_at = datetime.now(ZoneInfo("UTC"))
             db.commit()
 
             # Call /auth/me with token; should fail due to inactive
             response = client.get(
                 "/auth/me",
-                headers={"Authorization": f"Bearer {token}"}
+                headers={"Authorization": f"Bearer {auth_token}"}
             )
             assert response.status_code == 401
-            assert response.json()["detail"] == "inactive_user"
+            assert response.json()["detail"] == "Could not validate credentials"
             assert "WWW-Authenticate" in response.headers
             assert response.headers["WWW-Authenticate"] == "Bearer"
         finally:

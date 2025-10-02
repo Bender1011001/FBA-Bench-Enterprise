@@ -2,6 +2,10 @@
 # Requires OPENROUTER_API_KEY in environment or .env in repo root
 # Writes per-run JSON artifacts to artifacts/tier_runs_curl/<timestamp>/<model>__<tier>.json
 
+param(
+  [string[]]$Models,
+  [string[]]$Tiers
+)
 $ErrorActionPreference = 'Stop'
 
 # Resolve repo root (script is under scripts/)
@@ -105,7 +109,7 @@ New-Item -ItemType Directory -Force -Path $outDir | Out-Null
 
 # Models to run
 $models = @(
-  "x-ai/grok-4-fast:free",
+  "x-ai/grok-4-fast",
   "deepseek/deepseek-chat-v3.1:free",
   "deepseek/deepseek-r1-0528:free",
   "qwen/qwen3-coder:free",
@@ -121,11 +125,17 @@ $models = @(
 # Tiers
 $tiers = @("T0","T1","T2")
 
-# Allow environment overrides for models and tiers (comma-separated)
-if ($env:MODELS -and $env:MODELS.Trim().Length -gt 0) {
+# Allow parameter or environment overrides (params take precedence)
+if ($PSBoundParameters.ContainsKey('Models') -and $Models -and $Models.Count -gt 0) {
+  $models = $Models | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' }
+}
+elseif ($env:MODELS -and $env:MODELS.Trim().Length -gt 0) {
   $models = $env:MODELS.Split(',') | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' }
 }
-if ($env:TIERS -and $env:TIERS.Trim().Length -gt 0) {
+if ($PSBoundParameters.ContainsKey('Tiers') -and $Tiers -and $Tiers.Count -gt 0) {
+  $tiers = $Tiers | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' }
+}
+elseif ($env:TIERS -and $env:TIERS.Trim().Length -gt 0) {
   $tiers = $env:TIERS.Split(',') | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' }
 }
 

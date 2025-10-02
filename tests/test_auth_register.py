@@ -187,20 +187,13 @@ def test_register_email_normalization(setup_database):
     assert data["email"] == "test@example.com"  # Lowercased and trimmed
 
 
-def test_password_is_hashed_in_db_not_plaintext(setup_database):
+def test_password_is_hashed_in_db_not_plaintext(client, test_user):
     """Test password is hashed in DB, not stored as plaintext."""
-    email = "hashed@example.com"
+    email = test_user.email
     password = "Password123!"
     
-    # Register user
-    response = client.post(
-        "/auth/register",
-        json={"email": email, "password": password}
-    )
-    assert response.status_code == 201
-    
     # Query DB directly
-    db = TestingSessionLocal()
+    db = next(get_db())
     try:
         user = db.query(User).filter(User.email == email).first()
         assert user is not None

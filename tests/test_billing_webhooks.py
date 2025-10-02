@@ -267,7 +267,10 @@ def test_subscription_updated_maps_status_from_event(client: TestClient, test_us
 def test_subscription_updated_ignores_unknown_status(client: TestClient, test_user, patch_construct_event):
     """customer.subscription.updated with unknown status → ignore (no change)."""
     os.environ["STRIPE_WEBHOOK_SECRET"] = "whsec_test"
-    test_user.subscription_status = "active"  # Pre-set
+    db = next(get_db())
+    existing_user = db.query(User).filter(User.id == test_user.id).first()
+    existing_user.subscription_status = "active"
+    db.commit()
     event = create_mock_event(
         "customer.subscription.updated",
         {"status": "unknown", "metadata": {"user_id": "test-uuid-123"}},
@@ -389,7 +392,10 @@ def test_ignores_when_user_not_resolved(client: TestClient, patch_construct_even
 def test_ignores_unknown_event(client: TestClient, test_user, patch_construct_event):
     """Unknown event type → 200, no DB change."""
     os.environ["STRIPE_WEBHOOK_SECRET"] = "whsec_test"
-    test_user.subscription_status = "active"  # Pre-set
+    db = next(get_db())
+    existing_user = db.query(User).filter(User.id == test_user.id).first()
+    existing_user.subscription_status = "active"
+    db.commit()
     event = create_mock_event("unknown.event", {"metadata": {"user_id": "test-uuid-123"}})
     patch_construct_event(event)
 

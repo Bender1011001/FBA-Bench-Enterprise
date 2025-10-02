@@ -15,7 +15,7 @@ from api.models import User
 from api.schemas.auth import LoginRequest, RegistrationRequest, TokenResponse, UserPublic
 from api.security.passwords import hash_password, verify_password
 from api.security.jwt import create_access_token, get_current_user
-from api.security.jwt import settings
+from api.config import ACCESS_TOKEN_EXPIRES_MINUTES
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -28,13 +28,13 @@ def register_user(
 ):
     """
     Register a new user with email and password.
-    
+
     Validates input, checks for duplicates, hashes password,
     and persists the user. Returns safe user fields.
     """
     # Normalize email
     email = request.email.lower().strip()
-    
+
     # Check for existing user by email (case-insensitive)
     existing_user = db.query(User).filter(func.lower(User.email) == email).first()
     if existing_user:
@@ -42,7 +42,7 @@ def register_user(
             status_code=409,
             detail="Email already registered"
         )
-    
+
     # Validate password policy
     if not 8 <= len(request.password) <= 128:
         raise HTTPException(
@@ -69,10 +69,10 @@ def register_user(
             status_code=400,
             detail="Password must contain at least one symbol (non-alphanumeric)"
         )
-    
+
     # Hash password
     password_hash = hash_password(request.password)
-    
+
     # Create new user
     user = User(
         id=str(uuid4()),
@@ -81,7 +81,7 @@ def register_user(
         is_active=True,
         subscription_status=None
     )
-    
+
     # Persist user
     try:
         db.add(user)
@@ -93,7 +93,7 @@ def register_user(
             status_code=409,
             detail="Email already registered"
         )
-    
+
     # Return safe fields
     return UserPublic.model_validate(user)
 
@@ -108,28 +108,28 @@ def login_user(
     """
     # Normalize email
     email = request.email.lower().strip()
-    
+
     # Fetch user by normalized email
     user = db.query(User).filter(User.email == email).first()
-    
+
     if not user:
         raise HTTPException(
             status_code=401,
             detail="Invalid credentials"
         )
-    
+
     if not verify_password(request.password, user.password_hash):
         raise HTTPException(
             status_code=401,
             detail="Invalid credentials"
         )
-    
+
     if not user.is_active:
         raise HTTPException(
             status_code=401,
             detail="Inactive account"
         )
-    
+
     # Create access token
     claims = {
         "sub": user.id,
@@ -137,9 +137,9 @@ def login_user(
         "token_type": "access"
     }
     access_token = create_access_token(claims)
-    
-    expires_in = settings["access_expire_minutes"] * 60
-    
+
+    expires_in = ACCESS_TOKEN_EXPIRES_MINUTES * 60
+
     return {
         "access_token": access_token,
         "token_type": "bearer",

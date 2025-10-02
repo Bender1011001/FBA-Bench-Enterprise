@@ -13,7 +13,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 
 from api.server import app
-from api.db import get_db as get_session
+from api.db import get_db
 from api.models import Base, User
 from api.security.passwords import hash_password
 
@@ -61,11 +61,16 @@ def create_test_user(email: str, password: str):
         password_hash=hashed,
         is_active=True,
         subscription_status=None,
+        created_at=datetime.now(ZoneInfo("UTC")),
+        updated_at=datetime.now(ZoneInfo("UTC")),
     )
-    with get_session() as session:
-        session.add(user)
-        session.commit()
-        session.refresh(user)
+    db = next(get_db())
+    try:
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    finally:
+        db.close()
     return user
 
 

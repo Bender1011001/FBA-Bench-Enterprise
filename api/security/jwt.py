@@ -1,96 +1,71 @@
-"""JWT utilities and authentication dependency for FBA-Bench Enterprise.
+"""JWT utilities and authentication dependency for FBA-Bench Enterprise."""
 
-Provides token creation, verification, and a FastAPI dependency to get the current user.
-"""
 from datetime import datetime, timedelta, timezone
-from typing import Dict, Any
+from typing import Optional, Dict, Any
 
-from fastapi import Depends, HTTPException, status, Header
-from fastapi.security.utils import get_authorization_scheme_param
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
-from ..config import settings
-
-SECRET_KEY = settings.SECRET_KEY
-ALGORITHM = settings.ALGORITHM
-ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
-
+from api.config import (
+    JWT_SECRET,
+    JWT_ALGORITHM,
+    ACCESS_TOKEN_EXPIRES_MINUTES,
+)
 from api.db import get_db
 from api.models import User
 
+security = HTTPBearer(auto_error=False)
 
 
-
-
-
-def create_access_token(claims: Dict[str, Any]) -> str:
-    """Create a short-lived access token."""
-    to_encode = claims.copy()
-    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({
-        "token_type": "access",
-        "exp": expire,
-        "iat": datetime.now(timezone.utc),
-        "iss": "fba-bench-enterprise",
-    })
-    encoded = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded
-
-
-def decode_token(token: str) -> Dict[str, Any]:
-    """Decode and verify a JWT token, raising HTTPException on failure."""
-    try:
-        payload = jwt.decode(
-            token,
-            SECRET_KEY,
-            algorithms=[ALGORITHM],
-            options={"verify_aud": False},
+def create_access_token(payload: dict, expires_delta: Optional[timedelta] = None) -> str:
+    """Create a JWT access token from payload, adding exp if not present."""
+    to_encode = payload.copy()
+    if "exp" not in to_encode:
+        expire = datetime.now(timezone.utc) + (
+            expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRES_MINUTES)
         )
-        return payload
-    except JWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="invalid_or_expired_token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        to_encode["exp"] = expire
+    return jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+
+def decode_token(token: str) -> dict:
+    """Decode and validate a JWT token, returning the payload."""
+    return jwt.decode(
+        token,
+        JWT_SECRET,
+        algorithms=[JWT_ALGORITHM],
+        options={"verify_aud": False},
+    )
 
 
 async def get_current_user(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
     db: Session = Depends(get_db),
-    authorization: str = Header(None),
 ) -> User:
-    """FastAPI dependency to get the current active user from JWT."""
+    """Return the current ORM User or raise 401 on failure."""
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="invalid_or_expired_token",
+        detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    
-    # Extract token
-    scheme, token = get_authorization_scheme_param(authorization)
-    if not (scheme and scheme.lower() == "bearer"):
+
+    if not credentials or credentials.scheme.lower() != "bearer":
         raise credentials_exception
-    
-    # Decode token
-    payload = decode_token(token)
-    if payload.get("token_type") != "access":
+
+    token = credentials.credentials
+    try:
+        payload: Dict[str, Any] = decode_token(token)
+    except JWTError:
         raise credentials_exception
-    
-    user_id: str = payload.get("sub")
+
+    user_id = payload.get("sub")
     if not user_id:
         raise credentials_exception
-    
-    # Fetch user
+
     user = db.query(User).filter(User.id == user_id).first()
-    if not user:
+    if not user or not user.is_active:
         raise credentials_exception
-    
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="inactive_user",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
+
     return user
