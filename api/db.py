@@ -6,35 +6,32 @@ and FastAPI dependency for database sessions.
 
 import os
 from sqlalchemy import create_engine
-from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from sqlalchemy.engine import Engine
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import NullPool
 from fastapi import Depends
 from contextlib import contextmanager
 
-
-class Base(DeclarativeBase):
-    """SQLAlchemy declarative base for all models."""
-    pass
-
-engine = get_engine()
-SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
+from .models import Base
 
 
-def get_db_url() -> str:
-    """Get DATABASE_URL from environment (loaded via dotenv)."""
-    return os.getenv("DATABASE_URL", "sqlite:///./enterprise.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///enterprise.db")
 
 
-def get_engine() -> create_engine:
+def get_engine() -> Engine:
     """Create and return SQLAlchemy engine from DATABASE_URL.
 
-    For SQLite, use NullPool to avoid lingering file locks (important on Windows for test teardown).
+    For SQLite, use connect_args={"check_same_thread": False} for relative paths.
     """
-    url = get_db_url()
+    url = DATABASE_URL
     if url.startswith("sqlite"):
         return create_engine(url, connect_args={"check_same_thread": False}, poolclass=NullPool)
     return create_engine(url)
+
+
+engine = get_engine()
+SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 
 
 def get_db() -> Session:
@@ -59,5 +56,6 @@ def get_session() -> Session:
         yield db
     finally:
         db.close()
+
 
 __all__ = ["SessionLocal", "engine", "Base", "get_db"]

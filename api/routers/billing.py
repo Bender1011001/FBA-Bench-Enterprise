@@ -10,11 +10,25 @@ import inspect
 from typing import Optional
 
 import stripe
+try:
+    from stripe import error as stripe_error
+except Exception:
+    try:
+        stripe_error = stripe.error  # type: ignore[attr-defined]
+    except Exception:
+        from types import SimpleNamespace
+        stripe_error = SimpleNamespace(
+            StripeError=getattr(stripe, "StripeError", Exception),
+            InvalidRequestError=getattr(stripe, "InvalidRequestError", Exception),
+            AuthenticationError=getattr(stripe, "AuthenticationError", Exception),
+            APIConnectionError=getattr(stripe, "APIConnectionError", Exception),
+            RateLimitError=getattr(stripe, "RateLimitError", Exception),
+            CardError=getattr(stripe, "CardError", Exception),
+            SignatureVerificationError=getattr(stripe, "SignatureVerificationError", Exception),
+        )
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
-
-from stripe.error import SignatureVerificationError, StripeError
 
 from api.db import get_db
 from api.models import User
@@ -112,7 +126,7 @@ def create_checkout_session(
         except Exception:
             pass
         return CheckoutSessionResponse(url=session.url)
-    except StripeError as e:
+    except stripe_error.StripeError as e:
         # Log non-sensitive error info
         logger.exception("Stripe API error: %s", str(e))
         raise HTTPException(status_code=500, detail="Failed to create checkout session")
@@ -142,7 +156,7 @@ def create_portal_session(
         if not customers.data:
             raise HTTPException(status_code=404, detail="No Stripe customer found")
         customer = customers.data[0]
-    except StripeError as e:
+    except stripe_error.StripeError as e:
         # Log non-sensitive error info
         logger.exception("Stripe API error: %s", str(e))
         raise HTTPException(status_code=500, detail="Failed to create portal session")
@@ -154,7 +168,7 @@ def create_portal_session(
             return_url=return_url,
         )
         return PortalSessionResponse(url=session.url)
-    except StripeError as e:
+    except stripe_error.StripeError as e:
         # Log non-sensitive error info
         logger.exception("Stripe API error: %s", str(e))
         raise HTTPException(status_code=500, detail="Failed to create portal session")
@@ -211,7 +225,7 @@ async def stripe_webhook(
         )
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid signature")
-    except SignatureVerificationError:
+    except stripe_error.SignatureVerificationError:
         raise HTTPException(status_code=400, detail="Invalid signature")
 
     event_type = event["type"]

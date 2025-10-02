@@ -1,0 +1,1 @@
+"""Lightweight shim package for 'agents'. Replace or extend with real implementation if/when integrated."""

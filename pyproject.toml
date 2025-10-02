@@ -32,5 +32,10 @@ include = [
   "redteam_scripts*",
   "services*",
   "redteam*",
+  "agents*",
+  "money*",
+  "fba_bench_core*",
+  "fba_bench*",
+  "event_bus*",
 ]
 exclude = ["tests*", "integration_tests*", "scripts*", "docs*", "marketing*", "infra*"]

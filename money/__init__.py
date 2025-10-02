@@ -1,0 +1,1 @@
+"""Lightweight shim package for 'money' to satisfy optional imports during smoke/tests."""

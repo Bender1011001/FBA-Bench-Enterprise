@@ -10,14 +10,42 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, validator
 
 import stripe
-from stripe.error import StripeError
+from types import SimpleNamespace
+
+try:
+    from stripe import error as stripe_error  # Preferred on many versions
+except Exception:
+    try:
+        stripe_error = stripe.error  # Fallback if attribute exists on package
+    except Exception:
+        stripe_error = SimpleNamespace(
+            StripeError=getattr(stripe, "StripeError", Exception),
+            InvalidRequestError=getattr(stripe, "InvalidRequestError", Exception),
+            AuthenticationError=getattr(stripe, "AuthenticationError", Exception),
+            APIConnectionError=getattr(stripe, "APIConnectionError", Exception),
+            RateLimitError=getattr(stripe, "RateLimitError", Exception),
+            CardError=getattr(stripe, "CardError", Exception),
+        )
 
 from ..config import (
     STRIPE_SECRET_KEY,
-    STRIPE_DEFAULT_PRICE_ID,
-    PUBLIC_APP_BASE_URL,
-    STRIPE_PORTAL_RETURN_PATH,
+    STRIPE_PRICE_ID_DEFAULT as STRIPE_DEFAULT_PRICE_ID,
 )
+
+import os
+
+try:
+    from api.config import PUBLIC_APP_BASE_URL  # preferred if defined
+except Exception:
+    PUBLIC_APP_BASE_URL = os.getenv("PUBLIC_APP_BASE_URL", "http://localhost:5173")
+
+try:
+    from ..config import STRIPE_PORTAL_RETURN_PATH
+except ImportError:
+    try:
+        from ..config import STRIPE_PORTAL_RETURN_URL as STRIPE_PORTAL_RETURN_PATH
+    except ImportError:
+        STRIPE_PORTAL_RETURN_PATH = os.getenv("STRIPE_PORTAL_RETURN_PATH", "/billing/portal/return")
 
 from ..jwt import get_current_user
 from ..models import User
@@ -91,7 +119,7 @@ async def create_checkout_session(request: CheckoutSessionRequest):
         )
 
         return CheckoutSessionResponse(url=session.url)
-    except StripeError:
+    except stripe_error.StripeError:
         raise HTTPException(
             status_code=502,
             detail="Stripe error",
@@ -137,7 +165,7 @@ async def create_portal_session(current_user: dict = Depends(get_current_user)):
         )
 
         return PortalSessionResponse(url=session.url)
-    except StripeError:
+    except stripe_error.StripeError:
         raise HTTPException(
             status_code=502,
             detail="Stripe error",

@@ -4,13 +4,14 @@ Defines the User model for persistent user storage.
 """
 
 from sqlalchemy import String, DateTime, Boolean, Index
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from datetime import datetime
 from zoneinfo import ZoneInfo
-from sqlalchemy.orm import Mapped, mapped_column
-from datetime import datetime
 
-from api.db import Base
+
+class Base(DeclarativeBase):
+    """SQLAlchemy declarative base for all models."""
+    pass
 
 
 class User(Base):

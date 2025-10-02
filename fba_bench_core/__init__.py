@@ -1,0 +1,1 @@
+"""Shim for 'fba_bench_core'. Provides placeholder to avoid import errors in services/redteam."""
