@@ -106,11 +106,11 @@ def login_user(
     """
     Authenticate user and return short-lived JWT access token.
     """
-    # Normalize email
-    email = request.email.lower().strip()
+    # Normalize email input deterministically for lookup and claims
+    email_norm = request.email.strip().lower()
 
-    # Fetch user by normalized email
-    user = db.query(User).filter(User.email == email).first()
+    # Case-insensitive user lookup to avoid collation-dependent flakiness
+    user = db.query(User).filter(func.lower(User.email) == email_norm).first()
 
     if not user:
         raise HTTPException(
@@ -130,11 +130,13 @@ def login_user(
             detail="Inactive account"
         )
 
-    # Create access token
+    # Create access token; preserve existing semantics and expiry,
+    # Set subject to the user's UUID while retaining normalized email and other standard claims.
     claims = {
-        "sub": user.id,
-        "email": user.email,
-        "token_type": "access"
+        "sub": str(user.id),
+        "email": email_norm,
+        "token_type": "access",
+        "iss": "fba-bench-enterprise",
     }
     access_token = create_access_token(claims)
 

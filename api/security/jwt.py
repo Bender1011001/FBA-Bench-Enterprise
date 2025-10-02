@@ -16,17 +16,41 @@ from api.config import (
 from api.db import get_db
 from api.models import User
 
+ISSUER = "fba-bench-enterprise"
+
 security = HTTPBearer(auto_error=False)
 
 
 def create_access_token(payload: dict, expires_delta: Optional[timedelta] = None) -> str:
-    """Create a JWT access token from payload, adding exp if not present."""
+    """Create a JWT access token from payload, adding exp and iss if not present.
+
+    - Ensures `iss` is set to the canonical issuer for tests and production defaults.
+    - Sets `exp` as a numeric (Unix timestamp) for portability across JWT libs.
+    """
     to_encode = payload.copy()
-    if "exp" not in to_encode:
-        expire = datetime.now(timezone.utc) + (
-            expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRES_MINUTES)
-        )
-        to_encode["exp"] = expire
+
+    # Ensure issuer claim
+    if "iss" not in to_encode:
+        to_encode["iss"] = ISSUER
+
+    # Compute default expiration
+    expire_at = datetime.now(timezone.utc) + (
+        expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRES_MINUTES)
+    )
+
+    # Normalize/set exp to numeric timestamp
+    if "exp" in to_encode:
+        exp_val = to_encode["exp"]
+        if isinstance(exp_val, datetime):
+            to_encode["exp"] = int(exp_val.timestamp())
+        elif isinstance(exp_val, (int, float)):
+            to_encode["exp"] = int(exp_val)
+        else:
+            # Fallback: reset to computed default if unknown type
+            to_encode["exp"] = int(expire_at.timestamp())
+    else:
+        to_encode["exp"] = int(expire_at.timestamp())
+
     return jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
 

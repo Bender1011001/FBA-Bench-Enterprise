@@ -17,9 +17,9 @@ APPLY_DB_MIGRATIONS_ON_STARTUP: bool = _parse_bool(
 )
 
 # JWT
-JWT_SECRET: str = os.getenv("JWT_SECRET", "CHANGE_ME_DEV")
+JWT_SECRET: str = os.getenv("JWT_SECRET", "test-secret-key")
 JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")
-ACCESS_TOKEN_EXPIRES_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRES_MINUTES", "30"))
+ACCESS_TOKEN_EXPIRES_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRES_MINUTES", "15"))
 
 # Argon2id password hashing
 ARGON2_TIME_COST: int = int(os.getenv("ARGON2_TIME_COST", "2"))

@@ -12,7 +12,7 @@ from sqlalchemy import text
 
 from api.db import get_engine, get_session
 from api.models import User  # Import to register model with Base.metadata
-from api.routers import auth, billing
+from api.routers import auth, billing, protected
 import builtins
 
 
@@ -67,3 +67,4 @@ app.add_middleware(
 # Include routers
 app.include_router(auth.router)
 app.include_router(billing.router)
+app.include_router(protected.router)

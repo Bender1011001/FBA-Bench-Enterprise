@@ -6,8 +6,8 @@ Implements the /billing/checkout-session endpoint for creating Stripe Checkout s
 from typing import Optional
 from urllib.parse import urlparse
 
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, validator
+from fastapi import APIRouter, HTTPException, Depends
+from pydantic import BaseModel, field_validator, model_validator
 
 import stripe
 from types import SimpleNamespace
@@ -58,27 +58,47 @@ class CheckoutSessionRequest(BaseModel):
     quantity: Optional[int] = 1
     mode: Optional[str] = "subscription"
 
-    @validator("quantity")
+    @field_validator("quantity", mode="after")
     def validate_quantity(cls, v):
+        if v is None:
+            return v
         if v < 1:
             raise ValueError("quantity must be at least 1")
         return v
 
-    @validator("mode")
+    @field_validator("mode", mode="after")
     def validate_mode(cls, v):
+        if v is None:
+            return v
         if v not in ["subscription", "payment"]:
             raise ValueError("mode must be 'subscription' or 'payment'")
         return v
 
-    @validator("success_url", "cancel_url", pre=True, always=True)
-    def validate_urls(cls, v, values, field):
-        base_url = values.get("success_url") if field.name == "cancel_url" else values.get("cancel_url")
+    @field_validator("success_url", mode="after")
+    def validate_success_url(cls, v):
         if v is None:
-            return f"{PUBLIC_APP_BASE_URL}/billing/{'success' if field.name == 'success_url' else 'cancel'}"
+            return v
         parsed = urlparse(v)
         if parsed.scheme not in ("http", "https"):
-            raise ValueError(f"{field.name} must be a valid HTTP/HTTPS URL")
+            raise ValueError("success_url must be a valid HTTP/HTTPS URL")
         return v
+
+    @field_validator("cancel_url", mode="after")
+    def validate_cancel_url(cls, v):
+        if v is None:
+            return v
+        parsed = urlparse(v)
+        if parsed.scheme not in ("http", "https"):
+            raise ValueError("cancel_url must be a valid HTTP/HTTPS URL")
+        return v
+
+    @model_validator(mode="after")
+    def _set_default_urls(self):
+        if self.success_url is None:
+            self.success_url = f"{PUBLIC_APP_BASE_URL}/billing/success"
+        if self.cancel_url is None:
+            self.cancel_url = f"{PUBLIC_APP_BASE_URL}/billing/cancel"
+        return self
 
 
 class CheckoutSessionResponse(BaseModel):

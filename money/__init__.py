@@ -1,1 +1,2 @@
-"""Lightweight shim package for 'money' to satisfy optional imports during smoke/tests."""
+from fba_bench.money import Money, money, parse_money
+__all__ = ["Money", "money", "parse_money"]
