@@ -57,6 +57,47 @@ class IntegrationTestRunner:
         self.start_time = None
         self.end_time = None
 
+    async def run_specific_tier(self, tier: str) -> bool:
+        """Run a specific tier based on the provided tier flag."""
+        logger.info(f"🧪 Running specific tier: {tier}")
+
+        if tier == "T0":
+            # Run T0 baseline demo
+            from integration_tests.demo_scenarios import DemoScenarios
+            demo_suite = DemoScenarios(self.config)
+            result = await demo_suite.run_t0_baseline_demo()
+            success = result.success
+            self.results["tier0_demo"] = {
+                "success": success,
+                "score": result.final_score,
+                "events": result.event_count,
+                "duration": result.duration_seconds,
+            }
+            logger.info(f"T0 demo completed: success={success}, score={result.final_score:.2f}")
+            return success
+
+        elif tier == "T1":
+            # Run tier-1 requirements validation
+            return await self.run_tier1_requirements()
+
+        elif tier == "T2":
+            # Run T2 stress/memory demo (using memory ablation as proxy for T2 constraints)
+            from integration_tests.demo_scenarios import DemoScenarios
+            demo_suite = DemoScenarios(self.config)
+            results = await demo_suite.run_memory_ablation_demo()
+            success = all(r.success for r in results)
+            avg_score = sum(r.final_score for r in results) / len(results)
+            self.results["tier2_demo"] = {
+                "success": success,
+                "avg_score": avg_score,
+                "results": [asdict(r) for r in results],
+            }
+            logger.info(f"T2 demo completed: success={success}, avg_score={avg_score:.2f}")
+            return success
+
+        else:
+            raise ValueError(f"Unknown tier: {tier}")
+
     async def run_all_tests(self) -> Dict[str, Any]:
         """Run all integration test suites."""
 
@@ -398,15 +439,33 @@ async def main():
     parser.add_argument("--all", action="store_true", help="Run all tests and generate report")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose logging")
     parser.add_argument("--output", default="./reports", help="Output directory for reports")
+    parser.add_argument(
+        "--model",
+        type=str,
+        default=None,
+        help="Override LLM model slug (e.g., 'x-ai/grok-4-fast:free'). Sets MODEL_SLUG env var.",
+    )
+    parser.add_argument(
+        "--tier",
+        type=str,
+        choices=["T0", "T1", "T2"],
+        default=None,
+        help="Run specific tier: T0 (baseline demo), T1 (requirements), T2 (stress demo).",
+    )
 
     args = parser.parse_args()
 
     # Default to --all if no specific option provided
-    if not any([args.quick, args.performance, args.tier1, args.demo, args.report]):
+    if not any([args.quick, args.performance, args.tier1, args.demo, args.report, args.tier]):
         args.all = True
 
     # Setup logging
     setup_logging(args.verbose)
+
+    # Set MODEL_SLUG env if --model provided
+    if args.model:
+        os.environ["MODEL_SLUG"] = args.model
+        logger.info(f"Set MODEL_SLUG={args.model} from --model flag")
 
     # Create configuration
     config = IntegrationTestConfig(skip_slow_tests=args.quick, verbose_logging=args.verbose)
@@ -415,7 +474,12 @@ async def main():
     runner = IntegrationTestRunner(config)
 
     try:
-        # Run selected test suites
+        # Handle specific tier run
+        if args.tier:
+            await runner.run_specific_tier(args.tier)
+            sys.exit(0 if runner.results.get("success", True) else 1)
+
+        # Run selected test suites (existing logic)
         if args.tier1 or args.all:
             await runner.run_tier1_requirements()
 

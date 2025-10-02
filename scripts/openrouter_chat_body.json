@@ -1,0 +1,8 @@
+{
+  "model": "mistralai/mistral-small",
+  "messages": [
+    { "role": "user", "content": "Return OK only." }
+  ],
+  "temperature": 0,
+  "max_tokens": 32
+}

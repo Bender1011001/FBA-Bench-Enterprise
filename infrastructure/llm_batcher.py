@@ -1,9 +1,15 @@
 import asyncio
 import logging
+import os
 import time
 import uuid
 from collections import defaultdict
 from typing import Any, Callable, Dict, List, Optional, Tuple
+
+import aiohttp
+from aiohttp import ClientTimeout
+
+from infrastructure.openrouter_client import OpenRouterClient
 
 logger = logging.getLogger(__name__)
 
@@ -196,65 +202,6 @@ class LLMBatcher:
                 self.stats["max_batch_latency_ms"], batch_latency
             )
 
-    async def _aggregate_and_process(self):
-        """Aggregates pending requests into batches and processes them."""
-        if not self._pending_requests:
-            return
-
-        current_time = time.time()
-        requests_to_batch = []
-        requests_to_remove_from_pending = []
-
-        # Collect requests that are ready to be batched (either by timeout or if we hit max size)
-        for req_id, req in list(
-            self._pending_requests.items()
-        ):  # copy to allow modification during iteration
-            # Always ensure we have enough space in the batch
-            if len(requests_to_batch) < self.max_batch_size:
-                # Check if request has been waiting long enough for timeout OR if we have max requests
-                if (current_time - req.timestamp) * 1000 >= self.batch_timeout_ms:
-                    requests_to_batch.append(req)
-                    requests_to_remove_from_pending.append(req_id)
-            elif len(requests_to_batch) >= self.max_batch_size:
-                # If we've hit max_batch_size, process what we have and then continue in next loop iteration
-                break
-
-        # If we have requests but they haven't timed out yet, process them anyway to avoid hanging
-        if not requests_to_batch and self._pending_requests:
-            requests_to_batch = list(self._pending_requests.values())
-            requests_to_remove_from_pending = list(self._pending_requests.keys())
-
-        if requests_to_batch:
-            # Remove batched requests from pending
-            for req_id in requests_to_remove_from_pending:
-                self._pending_requests.pop(req_id, None)
-
-            # Process the batch
-            processed_batch = self.optimize_batch_composition(requests_to_batch)
-            self._update_stats_from_batch(processed_batch)
-            await self.process_batch(processed_batch)
-
-            # Update average batch size
-            if self.stats["total_batches_processed"] > 0:
-                self.stats["avg_batch_size"] = (
-                    self.stats["total_requests_batched"] / self.stats["total_batches_processed"]
-                )
-
-            # Update max batch latency based on earliest request timestamp across all batches
-            earliest_ts = min(
-                (
-                    req.timestamp
-                    for lst in processed_batch.values()
-                    for req in lst
-                    if getattr(req, "timestamp", None) is not None
-                ),
-                default=time.time(),
-            )
-            batch_latency = (time.time() - earliest_ts) * 1000
-            self.stats["max_batch_latency_ms"] = max(
-                self.stats["max_batch_latency_ms"], batch_latency
-            )
-
     def optimize_batch_composition(self, requests: List[LLMRequest]) -> Dict[str, List[LLMRequest]]:
         """
         Groups similar requests for a single LLM API call.
@@ -328,55 +275,60 @@ class LLMBatcher:
     async def _execute_llm_api_call(
         self, prompt: str, model: str, original_requests: List[LLMRequest]
     ):
-        """Simulates an LLM API call and distributes the result to original request callbacks."""
-        try:
-            # Simulate API call latency and token usage
-            await asyncio.sleep(0.1 + len(prompt) / 10000.0)  # Longer prompts take more time
+        """Executes LLM API call (real via OpenRouter if key set, else simulated) and distributes results."""
+        api_key = os.getenv("OPENROUTER_API_KEY")
+        if api_key:
+            # Real OpenRouter call
+            try:
+                async with OpenRouterClient(api_key) as client:
+                    response = await client.chat_completions(
+                        model=model,
+                        prompt=prompt,
+                        max_tokens=None,  # Derive from budget if passed in future
+                        temperature=0.7,
+                    )
 
-            simulated_response = f"Simulated response to '{prompt[:50]}...' from model {model}"
+                content = response["content"]
+                usage = response["usage"]
+                cost = response["cost"]
 
-            estimated_tokens = len(prompt) / 4 + 50  # rough estimate
-            estimated_cost = (estimated_tokens / 1000) * 0.002  # Example cost per 1k tokens
+                # Update stats with real data
+                total_tokens = usage["total_tokens"]
+                self.stats["total_tokens_estimated"] += total_tokens
+                self.stats["total_api_cost_estimated"] += cost
 
-            self.stats["total_tokens_estimated"] += estimated_tokens
-            self.stats["total_api_cost_estimated"] += estimated_cost
+                logger.info(
+                    f"OpenRouter LLM call succeeded: model={model}, tokens={total_tokens}, "
+                    f"cost=${cost:.6f}"
+                )
 
-            for req in original_requests:
-                req.status = "completed"
-                req.response = simulated_response
-                try:
-                    result = req.callback(
-                        req.request_id, req.response, None
-                    )  # Invoke original callback
-                    # Support async callbacks (e.g., AsyncMock in tests)
-                    import inspect
+                for req in original_requests:
+                    req.status = "completed"
+                    req.response = content
+                    try:
+                        result = req.callback(req.request_id, content, None)
+                        if asyncio.iscoroutine(result):
+                            await result
+                    except Exception:
+                        logger.exception("Error invoking callback for request %s", req.request_id)
 
-                    if inspect.isawaitable(result):
-                        await result
-                except Exception:
-                    logger.exception("Error invoking callback for request %s", req.request_id)
+            except Exception as e:
+                logger.error(f"OpenRouter call failed for model {model}: {e}", exc_info=True)
+                for req in original_requests:
+                    req.status = "failed"
+                    req.error = e
+                    try:
+                        result = req.callback(req.request_id, None, e)
+                        if asyncio.iscoroutine(result):
+                            await result
+                    except Exception:
+                        logger.exception("Error invoking error callback for request %s", req.request_id)
+                return
 
-            logger.info(
-                f"Simulated LLM call for model {model} (Prompt: '{prompt[:30].strip()}...'). Estimated tokens: {estimated_tokens:.2f}"
-            )
-
-        except Exception as e:
-            logger.error(
-                f"Error during simulated LLM API call for model {model}: {e}", exc_info=True
-            )
-            for req in original_requests:
-                req.status = "failed"
-                req.error = e
-                try:
-                    result = req.callback(
-                        req.request_id, None, e
-                    )  # Invoke original callback with error
-                    import inspect
-
-                    if inspect.isawaitable(result):
-                        await result
-                except Exception:
-                    logger.exception("Error invoking error callback for request %s", req.request_id)
+        else:
+            error_msg = "OPENROUTER_API_KEY environment variable required for real LLM calls."
+            logger.error(error_msg)
+            raise ValueError(error_msg)
 
     def estimate_batch_cost(
         self, batch_of_requests: Dict[str, List[LLMRequest]]
