@@ -1,0 +1,66 @@
+{
+    "experiences": [
+        {
+            "episode_data": {
+                "episode_index": 1,
+                "timestamp": "2025-09-06T02:09:22.460780"
+            },
+            "outcomes": {
+                "profit": 5249.999999999998,
+                "market_share": 0.1,
+                "inventory_turnover_rate": 5.0,
+                "stock_out_rate": 0.01,
+                "customer_satisfaction": 0.9,
+                "on_time_delivery_rate": 0.98,
+                "success": true,
+                "composite_score": 1.018861501445244,
+                "bonus_score": 0.06287167148414642,
+                "simulation_duration": 90
+            }
+        },
+        {
+            "episode_data": {
+                "episode_index": 2,
+                "timestamp": "2025-09-06T02:09:22.470609"
+            },
+            "outcomes": {
+                "profit": 5249.999999999998,
+                "market_share": 0.1,
+                "inventory_turnover_rate": 5.0,
+                "stock_out_rate": 0.01,
+                "customer_satisfaction": 0.9,
+                "on_time_delivery_rate": 0.98,
+                "success": true,
+                "composite_score": 1.018861501445244,
+                "bonus_score": 0.06287167148414642,
+                "simulation_duration": 90
+            }
+        }
+    ],
+    "metrics": [
+        {
+            "profit": 5249.999999999998,
+            "market_share": 0.1,
+            "inventory_turnover_rate": 5.0,
+            "stock_out_rate": 0.01,
+            "customer_satisfaction": 0.9,
+            "on_time_delivery_rate": 0.98,
+            "success": true,
+            "composite_score": 1.018861501445244,
+            "bonus_score": 0.06287167148414642,
+            "simulation_duration": 90
+        },
+        {
+            "profit": 5249.999999999998,
+            "market_share": 0.1,
+            "inventory_turnover_rate": 5.0,
+            "stock_out_rate": 0.01,
+            "customer_satisfaction": 0.9,
+            "on_time_delivery_rate": 0.98,
+            "success": true,
+            "composite_score": 1.018861501445244,
+            "bonus_score": 0.06287167148414642,
+            "simulation_duration": 90
+        }
+    ]
+}

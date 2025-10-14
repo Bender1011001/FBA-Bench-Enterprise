@@ -1,0 +1,13 @@
+# Configuration for a live, API-driven agent
+agent:
+  name: "Baseline API Agent v1"
+  description: "A simple agent that uses a live LLM for basic decision-making."
+  agent_class: "benchmarking.agents.unified_agent.UnifiedAgent"
+  llm_config:
+    client_type: "openai" # Can be 'openai', 'openrouter', 'anthropic', etc.
+    model: "gpt-4o"
+    temperature: 0.5
+    max_tokens: 1500
+  memory:
+    enabled: true
+    max_entries: 100

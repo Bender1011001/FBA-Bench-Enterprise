@@ -12,7 +12,8 @@ from sqlalchemy import text
 
 from api.db import get_engine, get_session
 from api.models import User  # Import to register model with Base.metadata
-from api.routers import auth, billing, protected
+from api.routers import auth, billing, protected, profile as profile_router
+from api.startup import init_db
 import builtins
 
 
@@ -26,6 +27,9 @@ async def lifespan(app: FastAPI):
     # Verify database connectivity
     with engine.connect() as connection:
         connection.execute(text("SELECT 1"))
+
+    # Ensure all tables exist before serving any requests (idempotent)
+    init_db()
 
     try:
         yield
@@ -68,3 +72,4 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(billing.router)
 app.include_router(protected.router)
+app.include_router(profile_router.router)

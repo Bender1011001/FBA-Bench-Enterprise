@@ -1,5 +1,7 @@
 """Tests for authenticated profile retrieval and protected routes."""
 
+from datetime import datetime
+from zoneinfo import ZoneInfo
 import os
 
 # Configure test database URL before importing modules that depend on it

@@ -1,0 +1,63 @@
+# Combined Learning Experiment Configuration
+# This YAML combines the Grok learning scenario and agent templates into a single
+# experiment definition for easy selection in the enhanced GUI Templates page.
+# It enables episodic learning with memory persistence using OpenRouter's free Grok model,
+# demonstrating advanced memory/learning features cost-free.
+
+experiment:
+  name: "Grok Episodic Learning Experiment"
+  display_name: "Grok Learning Demo (Free)"
+  description: "Demonstrates episodic learning and memory with x-ai/grok-4-fast:free via OpenRouter. Tracks improvement over 5 episodes."
+  version: "1.0.0"
+  type: "learning_experiment"
+
+  # Reference to the scenario template
+  scenario_file: "grok_learning_experiment.yaml"
+  scenario_overrides: {}  # No overrides needed; uses full template
+
+  # Reference to the agent configuration
+  agent_file: "grok_learning_agent.yaml"
+  agent_overrides: {}  # Agent is fully specified
+
+  # Consolidated episodic learning parameters
+  learning:
+    enabled: true
+    episodic_learning: true
+    learning_episodes: 5  # Multiple episodes for demonstration
+    episode_duration: 10  # Steps per episode
+    evaluation_episodes: 2  # Final eval episodes without learning
+
+  # Memory retention and persistence settings
+  memory:
+    retention: 0.8  # 80% retention rate across episodes
+    persistence: true  # Save memory state between runs
+    checkpoint_interval: 1  # Save after each episode
+
+  # Learning analytics and tracking
+  analytics:
+    enabled: true
+    tracking_metrics:
+      - profit_improvement
+      - episode_scores
+      - market_adaptation_rate
+      - memory_utilization
+    export_learning_history: true
+    visualization: "gui_dashboard"  # Integrate with enhanced GUI
+    log_level: "info"  # For tracking progress
+
+  # Execution settings for GUI/CLI compatibility
+  run_mode: "episodic_batch"  # Run all episodes in sequence
+  max_parallel_episodes: 1  # Sequential for free model limits
+  timeout_per_episode: 300  # 5 minutes per episode
+
+  # Cost optimization for free model
+  model_optimization:
+    use_free_tier: true
+    max_calls_per_episode: 50
+    caching_enabled: true
+
+  # Success thresholds for the combined experiment
+  overall_success_criteria:
+    min_episodes_completed: 5
+    avg_profit_improvement: 0.1  # 10% avg improvement
+    final_profit_target: 200.0  # Higher target after learning

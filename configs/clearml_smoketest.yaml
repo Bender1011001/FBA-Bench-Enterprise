@@ -1,0 +1,34 @@
+# ClearML smoke test scenario for ScenarioEngine
+
+scenario_name: ClearML_SmokeTest
+scenario_type: single_agent
+difficulty_tier: 0
+expected_duration: 10
+deterministic_profit_shaping: true
+
+success_criteria:
+  profit_target_min: 100.0
+  on_time_delivery_rate: 0.90
+  customer_satisfaction: 0.75
+
+market_conditions:
+  base_demand_index: 1.0
+  competition_level: low
+  seasonality: stable
+
+business_parameters:
+  product_categories:
+    - general_merchandise
+  supply_chain_complexity: low
+  pricing_strategy: fixed
+
+external_events:
+  - name: "minor_marketing_boost"
+    tick: 5
+    type: "marketing_campaign"
+    impact:
+      market_share_delta: 0.02
+
+agent_constraints:
+  initial_capital: 50000
+  max_debt_ratio: 0.8

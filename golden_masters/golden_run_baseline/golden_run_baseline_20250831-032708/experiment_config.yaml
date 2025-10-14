@@ -1,0 +1,9 @@
+experiment_name: golden_run_baseline
+description: Golden Run baseline using BaselineAgentV1 on Tier 1 Moderate
+base_parameters:
+  scenario_file: scenarios/tier_1_moderate.yaml
+  agents:
+    BaselineAgentV1: {}
+parameter_sweep: {}
+output:
+  base_dir: golden_masters/golden_run_baseline

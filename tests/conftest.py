@@ -3,14 +3,7 @@ import pytest
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from pathlib import Path
-from sqlalchemy import create_engine, text
-from sqlalchemy.pool import StaticPool
-from sqlalchemy.orm import sessionmaker
-from api.db import Base, get_db
-from api.models import User
-from api.security.passwords import hash_password
-from fastapi.testclient import TestClient
-from api.server import app
+from sqlalchemy import text
 
 # Shared test DB file
 TEST_DB = "test_shared.db"
@@ -19,21 +12,17 @@ if db_path.exists():
     db_path.unlink()
 
 os.environ["DATABASE_URL"] = f"sqlite:///./{TEST_DB}"
-engine = create_engine(os.environ["DATABASE_URL"], poolclass=StaticPool)
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+from api.dependencies import Base, engine, get_db as app_get_db
+from api.models import User
+from api.security.passwords import hash_password
+from fastapi.testclient import TestClient
+from api.server import app
 
 def override_get_db():
-    connection = engine.connect()
-    transaction = connection.begin()
-    session = TestingSessionLocal(bind=connection)
-    try:
-        yield session
-    finally:
-        session.close()
-        transaction.rollback()
-        connection.close()
+    yield from app_get_db()
 
-app.dependency_overrides[get_db] = override_get_db
+app.dependency_overrides[app_get_db] = override_get_db
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_shared_db():
@@ -47,42 +36,56 @@ def setup_shared_db():
         except PermissionError:
             pass  # Windows lock
 
-@pytest.fixture(autouse=True)
-def clean_db():
-    """Clean users table before each test."""
-    db = next(override_get_db())
+@pytest.fixture(scope="session", autouse=True)
+def setup_database():
+    """Create all tables once for the test session"""
+    Base.metadata.create_all(bind=engine)
+    yield
+    # Optional teardown (keep minimal risk): drop tables after session
+    Base.metadata.drop_all(bind=engine)
+    engine.dispose()
+@pytest.fixture(scope="function")
+def db_session():
+    gen = app_get_db()
+    db = next(gen)
     try:
-        db.execute(text("DELETE FROM users"))
-        db.commit()
+        yield db
+    finally:
+        try:
+            next(gen)
+        except StopIteration:
+            pass
+
+
+@pytest.fixture(autouse=True)
+def clean_db(db_session):
+    """Clean users table before each test."""
+    try:
+        db_session.execute(text("DELETE FROM users"))
+        db_session.commit()
     except Exception:
         pass  # Table may not exist
-    finally:
-        db.close()
 
 @pytest.fixture
 def client():
     return TestClient(app)
 
 @pytest.fixture
-def test_user():
+def test_user(db_session):
     """Create a test user."""
-    db = next(override_get_db())
-    try:
-        user = User(
-            id="test-uuid-123",
-            email="test@example.com",
-            password_hash=hash_password("Password123!"),
-            is_active=True,
-            subscription_status=None,
-            created_at=datetime.now(ZoneInfo("UTC")),
-            updated_at=datetime.now(ZoneInfo("UTC")),
-        )
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-        return user
-    finally:
-        db.close()
+    user = User(
+        id="test-uuid-123",
+        email="test@example.com",
+        password_hash=hash_password("Password123!"),
+        is_active=True,
+        subscription_status=None,
+        created_at=datetime.now(ZoneInfo("UTC")),
+        updated_at=datetime.now(ZoneInfo("UTC")),
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+    return user
 
 @pytest.fixture
 def auth_token(test_user):

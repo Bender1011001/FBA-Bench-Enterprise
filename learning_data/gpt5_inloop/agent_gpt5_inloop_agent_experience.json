@@ -1,0 +1,107 @@
+{
+    "experiences": [
+        {
+            "episode_data": {
+                "episode": "day_1",
+                "decision": {
+                    "actions": [
+                        {
+                            "type": "set_price",
+                            "asin": "ELECTRONICS-ASIN-001",
+                            "price": 20.69
+                        },
+                        {
+                            "type": "set_price",
+                            "asin": "HOME_GOODS-ASIN-001",
+                            "price": 20.79
+                        },
+                        {
+                            "type": "set_price",
+                            "asin": "APPAREL-ASIN-001",
+                            "price": 20.99
+                        }
+                    ],
+                    "reasoning": "Inventory is healthy and no recent events, so we\u2019ll test small price lifts (+3\u20135%) to probe elasticity and improve margins. Staggered increases reflect likely sensitivity (electronics slightly lower increase) and higher inventory in apparel. Prices use psychological endings (.69/.79/.99). We\u2019ll monitor sell-through for adjustments next tick.",
+                    "confidence": 0.66
+                },
+                "reflection": {
+                    "insights": [
+                        "No reflection data available"
+                    ],
+                    "memory_additions": [],
+                    "risk_flags": [],
+                    "next_day_hypotheses": []
+                }
+            },
+            "outcomes": {
+                "profit_delta": 0.0,
+                "notes": "Deterministic outcomes placeholder; hook real environment here."
+            }
+        },
+        {
+            "episode_data": {
+                "episode": "day_2",
+                "decision": {
+                    "actions": [
+                        {
+                            "type": "wait_next_day"
+                        }
+                    ],
+                    "reasoning": "No response from LLM, defaulting to wait action",
+                    "confidence": 0.5
+                },
+                "reflection": {
+                    "insights": [
+                        "Defaulted to wait due to no LLM response.",
+                        "Inaction led to zero profit delta.",
+                        "System lacks resilience to LLM downtime.",
+                        "No retries/timeouts or fallback policy in place.",
+                        "Monitoring for API health is missing."
+                    ],
+                    "memory_additions": [
+                        "Add LLM retry: 3 attempts with exponential backoff; 10s timeout per try.",
+                        "Trigger alert if no LLM response within 60s; auto-switch to fallback.",
+                        "Create offline fallback heuristic to execute when LLM unavailable.",
+                        "Run LLM calls earlier in the day to allow retries.",
+                        "Daily pre-check: verify API key, quota, and endpoint health before trading.",
+                        "Log response latency/uptime; review each morning.",
+                        "Cache last valid plan; execute minimal version if LLM fails.",
+                        "Add circuit breaker to skip LLM after repeated failures for the day."
+                    ],
+                    "risk_flags": [
+                        "Repeated LLM timeouts causing persistent inaction.",
+                        "Opportunity cost from default waiting behavior.",
+                        "Single point of failure on LLM dependency.",
+                        "Potential API quota/rate limit exhaustion.",
+                        "Delayed detection of outages without monitoring."
+                    ],
+                    "next_day_hypotheses": [
+                        "Implementing retries/timeouts will cut no-response events by >70%.",
+                        "Earlier LLM invocation increases success rate before deadlines.",
+                        "Fallback heuristic will yield small positive expected value vs waiting.",
+                        "Health checks and alerts reduce downtime detection to <2 minutes.",
+                        "Caching last plan ensures at least minimal execution on failures."
+                    ]
+                }
+            },
+            "outcomes": {
+                "profit_delta": 0.0,
+                "notes": "Deterministic outcomes placeholder; hook real environment here."
+            }
+        }
+    ],
+    "metrics": [
+        {
+            "day": 1,
+            "decision_tokens": 1154,
+            "reflection_tokens": 1510,
+            "cumulative_cost_cents": 2
+        },
+        {
+            "day": 2,
+            "decision_tokens": 1554,
+            "reflection_tokens": 1094,
+            "cumulative_cost_cents": 4
+        }
+    ]
+}

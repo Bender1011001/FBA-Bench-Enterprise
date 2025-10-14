@@ -1,0 +1,70 @@
+version: 2
+updates:
+  # Enable version updates for Python/Poetry
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+    open-pull-requests-limit: 10
+    assignees:
+      - "Bender1011001"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    # Allow up to 5 dependency updates at once
+    groups:
+      python-dependencies:
+        patterns:
+          - "*"
+    # Ignore major version updates for stability
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # Enable version updates for npm/yarn
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+    open-pull-requests-limit: 10
+    assignees:
+      - "Bender1011001"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    # Allow up to 5 dependency updates at once
+    groups:
+      frontend-dependencies:
+        patterns:
+          - "*"
+    # Ignore major version updates for stability
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # Enable version updates for Docker
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+    open-pull-requests-limit: 10
+    assignees:
+      - "Bender1011001"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    # Allow up to 3 dependency updates at once
+    groups:
+      docker-dependencies:
+        patterns:
+          - "*"
+    # Ignore major version updates for stability
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]

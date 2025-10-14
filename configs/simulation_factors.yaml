@@ -1,0 +1,35 @@
+# Simulation market factor configuration
+seasonal_factors:
+  1: 0.8
+  2: 0.85
+  3: 0.9
+  4: 0.95
+  5: 1.0
+  6: 1.05
+  7: 1.1
+  8: 1.05
+  9: 1.0
+  10: 1.1
+  11: 1.3
+  12: 1.4
+weekday_factors:
+  0: 1.0
+  1: 1.0
+  2: 1.0
+  3: 1.0
+  4: 1.0
+  5: 1.2
+  6: 1.1
+hour_bands:
+  - start: 6
+    end: 10
+    factor: 1.3
+  - start: 11
+    end: 14
+    factor: 1.1
+  - start: 18
+    end: 22
+    factor: 1.4
+  - start: 23
+    end: 5
+    factor: 0.3

@@ -3,14 +3,16 @@
 Handles user registration endpoint.
 """
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy import func
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm import Session
 from uuid import uuid4
 import re
 
-from api.db import get_db
+from api.dependencies import get_db
+from api.db import ensure_schema
 from api.models import User
 from api.schemas.auth import LoginRequest, RegistrationRequest, TokenResponse, UserPublic
 from api.security.passwords import hash_password, verify_password
@@ -106,11 +108,19 @@ def login_user(
     """
     Authenticate user and return short-lived JWT access token.
     """
+    # Ensure schema exists for this session's bind (idempotent, needed for test overrides)
+    ensure_schema(db)
+
     # Normalize email input deterministically for lookup and claims
     email_norm = request.email.strip().lower()
 
     # Case-insensitive user lookup to avoid collation-dependent flakiness
-    user = db.query(User).filter(func.lower(User.email) == email_norm).first()
+    try:
+        user = db.query(User).filter(func.lower(User.email) == email_norm).first()
+    except OperationalError:
+        # If schema is missing due to test-specific engine overrides, ensure and retry once
+        ensure_schema(db)
+        user = db.query(User).filter(func.lower(User.email) == email_norm).first()
 
     if not user:
         raise HTTPException(
@@ -118,16 +128,17 @@ def login_user(
             detail="Invalid credentials"
         )
 
-    if not verify_password(request.password, user.password_hash):
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid credentials"
-        )
-
+    # Ensure inactive users are rejected with the expected detail
     if not user.is_active:
         raise HTTPException(
             status_code=401,
             detail="Inactive account"
+        )
+
+    if not verify_password(request.password, user.password_hash):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid credentials"
         )
 
     # Create access token; preserve existing semantics and expiry,
@@ -149,8 +160,39 @@ def login_user(
     }
 
 
+async def require_user_auth(request: Request, db: Session = Depends(get_db)) -> User:
+    auth = request.headers.get("Authorization")
+    if not auth or not auth.lower().startswith("bearer "):
+        raise HTTPException(
+            status_code=401,
+            detail="invalid_or_expired_token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    token = auth[7:].lstrip()
+    credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
+    try:
+        return await get_current_user(credentials=credentials, db=db)
+    except HTTPException as exc:
+        if exc.status_code == 401:
+            # Preserve user-not-found/inactive semantics surfaced by get_current_user
+            if getattr(exc, "detail", None) == "Could not validate credentials":
+                raise HTTPException(
+                    status_code=401,
+                    detail="Could not validate credentials",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            # Normalize missing/invalid/expired token to contract detail
+            raise HTTPException(
+                status_code=401,
+                detail="invalid_or_expired_token",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        # Propagate non-401 exceptions unchanged
+        raise
+
+
 @router.get("/me", response_model=UserPublic)
-def get_profile(current_user: User = Depends(get_current_user)):
+def get_profile(current_user: User = Depends(require_user_auth)):
     """
     Retrieve the authenticated user's public profile.
     """

@@ -1,0 +1,135 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+        # Dev: plaintext for local use only; do NOT use in staging/prod
+      http:
+        endpoint: 0.0.0.0:4318
+        # Dev: plaintext for local use only; do NOT use in staging/prod
+
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: "otel-collector"
+          scrape_interval: 10s
+          static_configs:
+            - targets: ["0.0.0.0:8889"]
+
+  hostmetrics:
+    collection_interval: 10s
+    scrapers:
+      cpu: {}
+      memory: {}
+      filesystem: {}
+      disk: {}
+      network: {}
+      load: {}
+      paging: {}
+      processes: {}
+
+  filelog:
+    include:
+      - /var/log/fba/*.log
+      - /var/log/containers/*.log
+      - /var/lib/docker/containers/*/*-json.log
+    start_at: end
+    operators:
+      - type: json_parser
+        parse_from: body
+      - type: severity_parser
+        parse_from: attributes.level
+      - type: move
+        from: attributes.logger
+        to: attributes.logger_name
+
+exporters:
+  logging:
+    loglevel: info
+
+  otlp/tempo:
+    # Dev defaults to local Tempo; override via env as needed
+    endpoint: ${env:TEMPO_ENDPOINT:http://tempo:4317}
+    tls:
+      insecure: true
+      insecure_skip_verify: true
+
+  prometheus:
+    endpoint: 0.0.0.0:8889
+
+  prometheusremotewrite:
+    # Optional in dev; enable if a remote Prometheus is available
+    endpoint: ${env:PROM_REMOTE_WRITE_URL:http://prometheus:9090/api/v1/write}
+    tls:
+      insecure_skip_verify: true
+
+  loki:
+    # Dev defaults to local Loki; override via env as needed
+    endpoint: ${env:LOKI_ENDPOINT:http://loki:3100/loki/api/v1/push}
+    tls:
+      insecure_skip_verify: true
+
+processors:
+  batch:
+    send_batch_size: 1000
+    timeout: 10s
+
+  resourcedetection:
+    detectors: [env, system]
+
+  resource:
+    attributes:
+      - key: deployment.environment
+        action: upsert
+        value: ${env:ENVIRONMENT:development}
+      - key: service.namespace
+        action: upsert
+        value: fba-bench
+
+  tailsampling:
+    decision_wait: 2s
+    num_traces: 20000
+    expected_new_traces_per_sec: 500
+    policies:
+      - name: errors
+        type: status_code
+        status_codes: [ERROR]
+      - name: slow-traces
+        type: latency
+        threshold_ms: 1500
+      - name: probabilistic
+        type: probabilistic
+        hash_seed: 22
+        sampling_percentage: 100.0
+
+  spanmetrics:
+    metrics_exporter: prometheus
+    dimensions:
+      - name: http.method
+      - name: http.status_code
+      - name: http.route
+      - name: rpc.system
+      - name: rpc.method
+      - name: rpc.service
+
+extensions:
+  health_check: {}
+
+service:
+  telemetry:
+    logs:
+      level: info
+  extensions: [health_check]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [resource, resourcedetection, tailsampling, spanmetrics, batch]
+      exporters: [otlp/tempo, logging]
+    metrics:
+      receivers: [otlp, prometheus, hostmetrics]
+      processors: [resource, resourcedetection, batch]
+      exporters: [prometheus, logging]
+    logs:
+      receivers: [otlp, filelog]
+      processors: [resource, resourcedetection, batch]
+      exporters: [loki, logging]

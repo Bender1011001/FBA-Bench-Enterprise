@@ -1,0 +1,43 @@
+# Grok Learning Agent Configuration
+# This agent uses OpenRouter's free Grok model with episodic learning and memory features
+# for demonstrating enhanced GUI capabilities in FBA-Bench.
+
+agent:
+  name: "Grok Learning Agent"
+  description: "Learning-enabled agent using Grok for episodic improvement in business simulations"
+  agent_class: "learning.episodic_learning.EpisodicLearningAgent"  # References the learning module
+
+  llm_config:
+    client_type: "openrouter"  # Use OpenRouter client
+    model: "x-ai/grok-4-fast:free"  # Free Grok model
+    temperature: 0.7  # Higher for exploration and creativity in learning scenarios
+    max_tokens: 4096  # Sufficient for complex reasoning and memory recall
+    # Note: API key for OpenRouter should be set in .env as OPENROUTER_API_KEY
+
+  memory:
+    enabled: true
+    max_entries: 500  # Balanced for free model context limits
+    retention_strategy: "episodic"  # Focus on episode-based retention for learning
+
+  learning:
+    enabled: true
+    learning_rate: 0.1  # Moderate rate for stable episodic improvement
+    experience_buffer_size: 1000  # Store experiences for RL training
+    mode: "REINFORCEMENT_LEARNING"  # Align with scenario
+    rl_config:
+      algorithm: "PPO"  # Proven for policy optimization in simulations
+      batch_size: 64
+      epsilon: 0.1  # Exploration parameter
+      gamma: 0.99  # Discount factor for future rewards
+    memory_config:
+      max_episodes: 10000  # Long-term storage capacity
+      max_buffer_size: 1000  # Match experience buffer
+      similarity_threshold: 0.8  # For experience retrieval
+      compression_enabled: true  # Optimize for free-tier efficiency
+    export_config:
+      export_path: "./models/grok_learning_agent"
+      export_format: "pytorch"
+      include_metadata: true  # Track learning progress
+
+  # Optional: Advanced prompt strategy for learning
+  prompt_strategy: "learning_optimized_v1"  # Assumes a learning-focused prompt template exists or can be added

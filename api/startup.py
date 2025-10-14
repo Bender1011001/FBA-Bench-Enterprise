@@ -10,7 +10,21 @@ from alembic import command
 from alembic.config import Config
 
 from .config import APPLY_DB_MIGRATIONS_ON_STARTUP, DATABASE_URL
+from api.dependencies import Base, engine
+import api.models  # noqa: F401
 
+__all__ = ["init_db"]
+
+def init_db() -> None:
+    """Initialize database tables in an idempotent way.
+
+    Ensures SQLAlchemy models are imported so their metadata is registered,
+    then creates all tables if they do not already exist.
+    Safe to call multiple times.
+    """
+    # Models import is at module level to register metadata; no action needed here.
+
+    Base.metadata.create_all(bind=engine)
 
 def run_db_migrations_if_configured() -> None:
     """Run database migrations if configured to do so.
@@ -32,3 +46,4 @@ def run_db_migrations_if_configured() -> None:
     print("Applying DB migrations...")
     command.upgrade(alembic_cfg, "head")
     print("DB migrations applied successfully.")
+    

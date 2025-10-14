@@ -1,0 +1,14 @@
+# Configuration for a more advanced, strategic agent
+agent:
+  name: "Strategic Analyst Agent v2"
+  description: "A more advanced agent: uses a sophisticated prompt for better market analysis."
+  agent_class: "benchmarking.agents.unified_agent.UnifiedAgent"
+  llm_config:
+    client_type: "openai"
+    model: "gpt-4-turbo" # Using a more powerful model for strategy
+    temperature: 0.3 # Lower temperature for more deterministic, strategic outputs
+    max_tokens: 2000
+    prompt_strategy: "advanced_sourcing_v1" # A key to select a more detailed prompt template
+  memory:
+    enabled: true
+    max_entries: 250

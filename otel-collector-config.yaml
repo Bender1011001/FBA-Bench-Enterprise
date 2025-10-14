@@ -1,0 +1,175 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+        tls:
+          cert_file: /etc/ssl/certs/otlp_server.crt
+          key_file: /etc/ssl/private/otlp_server.key
+          client_ca_file: /etc/ssl/certs/otlp_client_ca.crt
+          client_auth: require_and_verify_client_cert
+      http:
+        endpoint: 0.0.0.0:4318
+        tls:
+          cert_file: /etc/ssl/certs/otlp_server.crt
+          key_file: /etc/ssl/private/otlp_server.key
+          client_ca_file: /etc/ssl/certs/otlp_client_ca.crt
+          client_auth: require_and_verify_client_cert
+    auth:
+      authenticator: basicauth/server
+
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: "otel-collector"
+          scrape_interval: 10s
+          static_configs:
+            - targets: ["0.0.0.0:8889"]
+          basic_auth:
+            username: ${env:PROMETHEUS_USERNAME}
+            password: ${env:PROMETHEUS_PASSWORD}
+
+  hostmetrics:
+    collection_interval: 10s
+    scrapers:
+      cpu: {}
+      memory: {}
+      filesystem: {}
+      disk: {}
+      network: {}
+      load: {}
+      paging: {}
+      processes: {}
+
+  filelog:
+    include:
+      - /var/log/fba/*.log
+      - /var/log/containers/*.log
+      - /var/lib/docker/containers/*/*-json.log
+    start_at: end
+    operators:
+      - type: json_parser
+        parse_from: body
+      - type: severity_parser
+        parse_from: attributes.level
+      - type: move
+        from: attributes.logger
+        to: attributes.logger_name
+
+exporters:
+  logging:
+    loglevel: info
+
+  otlp/tempo:
+    endpoint: ${env:TEMPO_ENDPOINT}
+    tls:
+      insecure: false
+      ca_file: ${env:TEMPO_CA_FILE}
+    headers:
+      authorization: "Bearer ${env:TEMPO_BEARER_TOKEN}"
+    compression: gzip
+
+  prometheus:
+    endpoint: 0.0.0.0:8889
+
+  prometheusremotewrite:
+    endpoint: ${env:PROM_REMOTE_WRITE_URL}
+    tls:
+      insecure_skip_verify: false
+      ca_file: ${env:PROM_REMOTE_WRITE_CA_FILE}
+    auth:
+      authenticator: basicauth/remote_write
+
+  loki:
+    endpoint: ${env:LOKI_ENDPOINT}
+    tls:
+      insecure_skip_verify: false
+      ca_file: ${env:LOKI_CA_FILE}
+    auth:
+      authenticator: basicauth/loki
+    default_labels_enabled:
+      exporter: true
+      job: true
+      instance: true
+      level: true
+
+processors:
+  batch:
+    send_batch_size: 1000
+    timeout: 10s
+
+  resourcedetection:
+    detectors: [env, system]
+
+  resource:
+    attributes:
+      - key: deployment.environment
+        action: upsert
+        value: ${env:ENVIRONMENT}
+      - key: service.namespace
+        action: upsert
+        value: fba-bench
+
+  tailsampling:
+    decision_wait: 5s
+    num_traces: 50000
+    expected_new_traces_per_sec: 1000
+    policies:
+      - name: errors
+        type: status_code
+        status_codes: [ERROR]
+      - name: slow-traces
+        type: latency
+        threshold_ms: 2000
+      - name: probabilistic
+        type: probabilistic
+        hash_seed: 22
+        sampling_percentage: 10.0
+
+  spanmetrics:
+    metrics_exporter: prometheus
+    dimensions:
+      - name: http.method
+      - name: http.status_code
+      - name: http.route
+      - name: rpc.system
+      - name: rpc.method
+      - name: rpc.service
+
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: ${env:OTEL_MEM_LIMIT_MIB:1024}
+    spike_limit_mib: ${env:OTEL_MEM_SPIKE_MIB:256}
+
+extensions:
+  health_check: {}
+  basicauth/loki:
+    client_auth:
+      username: ${env:LOKI_USERNAME}
+      password: ${env:LOKI_PASSWORD}
+  basicauth/remote_write:
+    client_auth:
+      username: ${env:PROM_REMOTE_WRITE_USERNAME}
+      password: ${env:PROM_REMOTE_WRITE_PASSWORD}
+  basicauth/server:
+    # Use an htpasswd file for OTLP receiver auth; mount it as a secret in production.
+    htpasswd: ${env:OTLP_BASICAUTH_HTPASSWD}
+
+service:
+  telemetry:
+    logs:
+      level: info
+  extensions: [health_check, basicauth/loki, basicauth/remote_write, basicauth/server]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, resourcedetection, tailsampling, spanmetrics, batch]
+      exporters: [otlp/tempo, logging]
+    metrics:
+      receivers: [otlp, prometheus, hostmetrics]
+      processors: [memory_limiter, resource, resourcedetection, batch]
+      exporters: [prometheus, prometheusremotewrite, logging]
+    logs:
+      receivers: [otlp, filelog]
+      processors: [memory_limiter, resource, resourcedetection, batch]
+      exporters: [loki, logging]

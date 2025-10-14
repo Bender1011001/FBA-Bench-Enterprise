@@ -1,0 +1,156 @@
+groups:
+  - name: availability.rules
+    rules:
+      - alert: OtelCollectorDown
+        expr: up{job="otel-collector"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: observability
+        annotations:
+          summary: "OpenTelemetry Collector is down"
+          description: "The otel-collector scrape target is down for more than 2 minutes."
+
+      - alert: PrometheusTargetScrapeHighFailures
+        expr: increase(prometheus_target_scrapes_exceeded_sample_limit_total[5m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+          service: observability
+        annotations:
+          summary: "Prometheus targets hit sample limit"
+          description: "One or more targets exceeded Prometheus sample limit in the last 5 minutes."
+
+  - name: latency.rules
+    rules:
+      # p95 latency > 2s using spanmetrics histogram (preferred)
+      - alert: HighLatencyP95
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (le) (rate(traces_spanmetrics_latency_bucket[5m]))
+          ) > 2
+        for: 10m
+        labels:
+          severity: warning
+          slo: latency
+        annotations:
+          summary: "High latency (p95 > 2s)"
+          description: "p95 latency derived from spanmetrics over 5m exceeds 2 seconds for 10m."
+
+      # Alternative for http_server_request_duration_seconds_bucket if using app HTTP metrics
+      - alert: HighLatencyP95_HTTP
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (le) (rate(http_server_request_duration_seconds_bucket[5m]))
+          ) > 2
+        for: 10m
+        labels:
+          severity: warning
+          slo: latency
+        annotations:
+          summary: "High HTTP latency (p95 > 2s)"
+          description: "p95 HTTP request latency exceeds 2 seconds based on http_server_request_duration_seconds."
+
+  - name: error_rate.rules
+    rules:
+      # Error rate > 5% using spanmetrics request counts
+      - alert: HighErrorRate
+        expr: |
+          ( sum(rate(traces_spanmetrics_calls_total{http_status_code=~"5.."}[5m])) )
+          /
+          ( sum(rate(traces_spanmetrics_calls_total[5m])) )
+          > 0.05
+        for: 10m
+        labels:
+          severity: critical
+          slo: errors
+        annotations:
+          summary: "High error rate (> 5% 5xx)"
+          description: "The proportion of 5xx responses over the last 5 minutes exceeds 5% for 10 minutes."
+
+      # Alternative for typical http_server_requests_seconds_count
+      - alert: HighErrorRate_HTTP
+        expr: |
+          ( sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) )
+          /
+          ( sum(rate(http_server_requests_seconds_count[5m])) )
+          > 0.05
+        for: 10m
+        labels:
+          severity: critical
+          slo: errors
+        annotations:
+          summary: "High HTTP error rate (> 5% 5xx)"
+          description: "The proportion of 5xx HTTP responses exceeds 5% over 10 minutes."
+
+  - name: system.rules
+    rules:
+      # CPU utilization using hostmetrics (OpenTelemetry Host Metrics)
+      - alert: HighCPUUtilization
+        expr: avg by (host) (system_cpu_utilization) > 0.9
+        for: 10m
+        labels:
+          severity: critical
+          resource: cpu
+        annotations:
+          summary: "High CPU utilization (> 90%)"
+          description: "Average CPU utilization over the last 10 minutes is above 90%."
+
+      # Fallback using node_exporter if present
+      - alert: HighCPUUtilizationNodeExporter
+        expr: |
+          1 - avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) > 0.9
+        for: 10m
+        labels:
+          severity: critical
+          resource: cpu
+        annotations:
+          summary: "High CPU utilization (node_exporter) (> 90%)"
+          description: "Average CPU utilization from node_exporter over the last 10 minutes is above 90%."
+
+      # Memory utilization using hostmetrics (OpenTelemetry Host Metrics)
+      - alert: HighMemoryUtilization
+        expr: avg by (host) (system_memory_utilization) > 0.9
+        for: 10m
+        labels:
+          severity: critical
+          resource: memory
+        annotations:
+          summary: "High memory utilization (> 90%)"
+          description: "Average memory utilization over the last 10 minutes is above 90%."
+
+      # Fallback using node_exporter if present
+      - alert: LowMemoryAvailableNodeExporter
+        expr: (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) < 0.10
+        for: 10m
+        labels:
+          severity: critical
+          resource: memory
+        annotations:
+          summary: "Low available memory (< 10%)"
+          description: "Available memory is below 10% of total for 10 minutes."
+
+  - name: service.rules
+    rules:
+      # Alert if Tempo or Loki write endpoints fail (requires proper job labels or relabeling)
+      - alert: TempoWriteErrors
+        expr: rate(loki_request_duration_seconds_count{status_code=~"5.."}[5m]) > 0
+        for: 10m
+        labels:
+          severity: warning
+          backend: tempo
+        annotations:
+          summary: "Tempo write errors observed"
+          description: "5xx responses detected on write path for Tempo over 10 minutes."
+
+      - alert: LokiWriteErrors
+        expr: rate(loki_request_duration_seconds_count{status_code=~"5.."}[5m]) > 0
+        for: 10m
+        labels:
+          severity: warning
+          backend: loki
+        annotations:
+          summary: "Loki write errors observed"
+          description: "5xx responses detected on write path for Loki over 10 minutes."

@@ -1,0 +1,66 @@
+apiVersion: 1
+
+deleteDatasources:
+  - name: Prometheus
+    orgId: 1
+  - name: Loki
+    orgId: 1
+  - name: Tempo
+    orgId: 1
+
+datasources:
+  - name: Prometheus
+    uid: prometheus_ds
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: true
+    jsonData:
+      timeInterval: 15s
+      httpMethod: POST
+      manageAlerts: true
+      prometheusType: Prometheus
+      prometheusVersion: 2.48.0
+      exemplarTraceIdDestinations:
+        - name: trace_id
+          datasourceUid: tempo_ds
+    secureJsonData: {}
+
+  - name: Loki
+    uid: loki_ds
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    editable: true
+    jsonData:
+      maxLines: 1000
+      derivedFields:
+        - name: trace_id
+          matcherRegex: "trace_id=(\\w+)"
+          url: "$${__value.raw}"
+          datasourceUid: tempo_ds
+    secureJsonData: {}
+
+  - name: Tempo
+    uid: tempo_ds
+    type: tempo
+    access: proxy
+    url: http://tempo:3200
+    editable: true
+    jsonData:
+      nodeGraph:
+        enabled: true
+      tracesToLogs:
+        datasourceUid: loki_ds
+        spanStartTimeShift: "-1h"
+        spanEndTimeShift: "1h"
+        filterByTraceID: true
+        tags: ["container", "service.name", "deployment.environment"]
+      tracesToMetrics:
+        datasourceUid: prometheus_ds
+        spanStartTimeShift: "-1h"
+        spanEndTimeShift: "1h"
+        tags: ["service.name", "deployment.environment"]
+      serviceMap:
+        datasourceUid: prometheus_ds

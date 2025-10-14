@@ -1,0 +1,12 @@
+{
+  "scenario_name": "Tier 1 Moderate",
+  "tier": 1,
+  "success_status": "fail",
+  "metrics": {
+    "profit_target": 0,
+    "inventory_turnover_rate": 5.0,
+    "customer_satisfaction": 0.9,
+    "on_time_delivery_rate": 0.98
+  },
+  "simulation_duration": 90
+}

@@ -3,8 +3,8 @@ import os
 from datetime import datetime
 from typing import Any, Dict
 
-import numpy as np  # Moved import to top
-import yaml  # Added import
+import statistics as stats  # Use stdlib statistics instead of numpy for portability
+import yaml  # YAML is required for reading bot configs
 
 from leaderboard.leaderboard_renderer import LeaderboardRenderer
 from leaderboard.score_tracker import ScoreTracker
@@ -133,9 +133,13 @@ class LeaderboardManager:
 
                 # Simple consistency: standard deviation (lower is more consistent)
                 # Or could use min/max difference, or a custom metric
-                consistency = 1.0 - (
-                    np.std(scores) / avg_score if avg_score > 0 else 0.0
-                )  # Invert std dev for "consistency" score
+                # Use population stddev from the stdlib statistics module for portability.
+                # If avg_score is 0, fall back to 0.0 to avoid division by zero.
+                try:
+                    stddev = stats.pstdev(scores) if len(scores) > 0 else 0.0
+                except Exception:
+                    stddev = 0.0
+                consistency = 1.0 - (stddev / avg_score if avg_score > 0 else 0.0)
 
                 total_runs_completed = len(runs)
                 expected_score = self.bot_expected_scores.get(bot_name, 0.0)  # Use 0.0 for float

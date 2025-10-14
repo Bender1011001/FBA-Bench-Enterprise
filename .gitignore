@@ -40,6 +40,7 @@ Thumbs.db
 # Data/Artifacts
 artifacts/
 results/
+*.db
 
 # Docker/Compose
 *.pid

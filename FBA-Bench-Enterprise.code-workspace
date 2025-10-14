@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"name": "FBA-Bench-Enterprise",
+			"path": "."
+		},
+		{
+			"name": "FBA-Bench-core",
+			"path": "../FBA-Bench-core"
+		},
+		{
+			"name": "fba",
+			"path": "../../../Downloads/fba"
+		}
+	],
+	"settings": {}
+}

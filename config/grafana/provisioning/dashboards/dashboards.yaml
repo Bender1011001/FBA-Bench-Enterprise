@@ -1,0 +1,12 @@
+apiVersion: 1
+
+providers:
+  - name: "FBA Observability Dashboards"
+    orgId: 1
+    folder: "FBA Bench"
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/dashboards/fba
+      foldersFromFilesStructure: true

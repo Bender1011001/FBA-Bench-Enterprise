@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "generated_at_utc": "2025-09-29T05:39:41.852270Z",
+  "source_mapping": "repos/file_split_map.json",
+  "counts": {
+    "total_entries": 43,
+    "copied": 42,
+    "skipped_needs_review": 1,
+    "missing_sources": 0
+  },
+  "copied_samples": [
+    {
+      "source": "src/scenarios/tier_0_baseline.yaml",
+      "dest_path": "repos/fba-bench-core/src/scenarios/tier_0_baseline.yaml"
+    },
+    {
+      "source": "src/scenarios/tier_1_moderate.yaml",
+      "dest_path": "repos/fba-bench-core/src/scenarios/tier_1_moderate.yaml"
+    },
+    {
+      "source": "src/scenarios/tier_2_advanced.yaml",
+      "dest_path": "repos/fba-bench-core/src/scenarios/tier_2_advanced.yaml"
+    },
+    {
+      "source": "src/benchmarking/metrics",
+      "dest_path": "repos/fba-bench-core/src/benchmarking/metrics"
+    },
+    {
+      "source": "src/agents/base.py",
+      "dest_path": "repos/fba-bench-core/src/agents/base.py"
+    }
+  ]
+}

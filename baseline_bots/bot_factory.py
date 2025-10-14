@@ -63,22 +63,50 @@ class BotFactory:
     """Factory for creating baseline bots."""
 
     @staticmethod
-    def create_bot(bot_name: str) -> Optional[LLMBot]:
+    def create_bot(bot_name: str, model_slug: Optional[str] = None) -> Optional[Any]:
         """
-        Create a bot by name.
+        Create a bot by name, supporting OpenRouter for LLM calls when MODEL_SLUG is set.
 
         Supported bots:
-        - gpt_4o_mini_bot: Uses MODEL_SLUG or defaults to gpt-4o-mini
+        - gpt_4o_mini_bot: Uses OpenRouterBot with MODEL_SLUG or defaults to gpt-4o-mini
         - claude_sonnet_bot: Same, but logs as Claude
         - greedy_script_bot: Simple rule-based (no LLM)
         - grok_4_bot: Same as above
+        - openrouter_bot: Explicit OpenRouter LLM bot
+
+        Args:
+            bot_name: The bot type to create
+            model_slug: Override model (from --model flag)
 
         Returns:
-            LLMBot instance or None if unknown
+            Bot instance (OpenRouterBot or LLMBot) or None if unknown
         """
-        if bot_name in ["gpt_4o_mini_bot", "claude_sonnet_bot", "grok_4_bot"]:
-            batcher = LLMBatcher()  # Shared or per-bot
-            return LLMBot(bot_name, batcher)
+        model = model_slug or os.getenv("MODEL_SLUG", "openai/gpt-4o-mini")
+        if bot_name in ["gpt_4o_mini_bot", "claude_sonnet_bot", "grok_4_bot", "openrouter_bot"]:
+            # Use OpenRouterBot for real LLM calls
+            try:
+                from baseline_bots.openrouter_bot import OpenRouterBot
+                from llm_interface.prompt_adapter import PromptAdapter
+                from llm_interface.response_parser import LLMResponseParser
+                from constraints.agent_gateway import AgentGateway
+
+                # Create dependencies (simple defaults for demo)
+                prompt_adapter = PromptAdapter()
+                response_parser = LLMResponseParser()
+                agent_gateway = AgentGateway()
+
+                agent_id = f"demo_bot_{bot_name}"
+                return OpenRouterBot(
+                    agent_id=agent_id,
+                    prompt_adapter=prompt_adapter,
+                    response_parser=response_parser,
+                    agent_gateway=agent_gateway,
+                    model_name=model,
+                )
+            except ImportError as e:
+                logger.warning(f"OpenRouterBot dependencies missing: {e}. Falling back to stub LLMBot.")
+                batcher = LLMBatcher()
+                return LLMBot(bot_name, batcher)
         elif bot_name == "greedy_script_bot":
             # Simple non-LLM bot for fallback
             class GreedyScriptBot:

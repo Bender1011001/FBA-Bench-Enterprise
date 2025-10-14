@@ -1,0 +1,129 @@
+# FBA Benchmark Application Configuration
+
+app:
+  name: "FBA Benchmark"
+  version: "1.0.0"
+  debug: false # Set to true for development
+
+# Database settings
+database:
+  url: "sqlite:///./fba_bench.db" # Default SQLite database
+  # For PostgreSQL:
+  # url: "postgresql://user:password@host:port/database"
+  # For MySQL:
+  # url: "mysql://user:password@host:port/database"
+  echo: false # Log SQL queries (for development)
+
+# API Server settings (e.g., if using FastAPI)
+api_server:
+  host: "0.0.0.0"
+  port: 8000
+  reload: false # Enable auto-reload for development
+  log_level: "info"
+
+# Logging Configuration
+logging:
+  level: "INFO" # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "text" # "text" or "json"
+  # For json format, ensure 'pythonjsonlogger' is installed:
+  # pip install pythonjsonlogger
+
+# Benchmarking Engine Configuration
+benchmarking:
+  default_scenario_timeout: 3600 # seconds
+  max_concurrent_runs: 4
+  results_storage_path: "./benchmark_results/"
+  execution:
+    retry_on_failure: true
+    max_retries: 3
+    timeout: 300  # seconds per run
+    max_duration: 3600  # seconds for overall benchmark
+  environment:
+    parallel_execution: false
+    max_workers: 1
+
+# Agent Configuration
+agents:
+  default_llm_provider: "openai" # e.g., openai, anthropic, gemini
+  llm_configs:
+    openai:
+      api_key_env: "OPENAI_API_KEY" # Environment variable name
+      model: "gpt-4o"
+      temperature: 0.7
+    gpt5:
+      api_key_env: "OPENAI_API_KEY" # Environment variable name
+      model: "gpt-5"
+      temperature: 0.7
+      max_tokens: 4000
+    anthropic:
+      api_key_env: "ANTHROPIC_API_KEY"
+      model: "claude-3-sonnet-20240229"
+      temperature: 0.7
+    gemini:
+      api_key_env: "GOOGLE_API_KEY"
+      model: "gemini-1.5-flash"
+      temperature: 0.7
+      max_tokens: 4000
+
+# Services Configuration
+services:
+  financial_audit:
+    halt_on_violation: true
+    tolerance_cents: 0
+    audit_enabled: true
+    starting_cash_dollars: 10000.0
+    starting_inventory_dollars: 5000.0
+  ledger: {}
+  trust_score:
+    base_score: 100.0
+    violation_penalty: 5.0
+    feedback_weight: 0.2
+    min_score: 0.0
+    max_score: 100.0
+  bsr: {}
+  outcome_analysis:
+    enabled: false
+
+# Metrics Configuration
+metrics:
+  cognitive:
+    enabled: true
+    weight: 0.33
+  business:
+    enabled: true
+    weight: 0.33
+  technical:
+    enabled: true
+    weight: 0.33
+  ethical:
+    enabled: true
+    weight: 0.0
+
+# Security Configuration
+security:
+  enable_cors: true
+  cors_origins:
+    - "http://localhost:3000"
+    - "http://localhost:8080"
+  api_key_required: false
+  rate_limiting:
+    enabled: true
+    requests_per_minute: 60
+
+# WebSocket Configuration (if applicable)
+websocket:
+  max_connections_per_user_default: 200
+  max_connections_global_default: 100
+  message_queue_size: 100
+
+# Environment-specific overrides can be managed here or via separate files
+# For example, to override for 'development':
+# development:
+#   app:
+#     debug: true
+#   database:
+#     echo: true
+#   api_server:
+#     reload: true
+#   logging:
+#     level: "DEBUG"

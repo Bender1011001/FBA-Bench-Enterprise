@@ -1,0 +1,87 @@
+# Grok Learning Experiment Scenario Template
+# This configuration enables episodic learning with memory persistence for demonstrating
+# advanced GUI capabilities using OpenRouter's free Grok model.
+
+scenario_name: Grok_Learning_Experiment
+scenario_type: learning_agent
+difficulty_tier: 1
+expected_duration: 50  # Longer duration to allow for multiple learning episodes
+
+# Enable learning features
+enable_learning: true
+learning_config:
+  episodic_learning: true
+  memory_enabled: true
+  learning_episodes: 5
+  memory_retention: 0.8
+  mode: REINFORCEMENT_LEARNING  # From LearningConfig patterns
+  rl_config:
+    algorithm: PPO  # Proximal Policy Optimization, suitable for episodic business sims
+    learning_rate: 0.1
+    batch_size: 64
+    epsilon: 0.1
+    gamma: 0.99
+    episodes: 5  # Match learning_episodes
+  memory_config:
+    max_episodes: 10000
+    max_buffer_size: 1000
+    similarity_threshold: 0.8
+    compression_enabled: true
+  export_config:
+    export_path: "./models/grok_learning_agent"
+    export_format: "pytorch"
+    include_metadata: true
+
+# Success criteria that benefit from learning over episodes
+success_criteria:
+  profit_target_min: 150.0  # Modest start, expected to improve with learning
+  on_time_delivery_rate: 0.85
+  customer_satisfaction: 0.80
+  learning_improvement: 0.1  # 10% improvement threshold over episodes
+
+# Market conditions designed to challenge and enable learning
+market_conditions:
+  base_demand_index: 1.2
+  competition_level: medium
+  seasonality: variable  # Variable to test adaptation
+
+# Agent constraints for the learning experiment
+agent_constraints:
+  initial_capital: 75000
+  max_debt_ratio: 0.7
+
+# Simulation factors integration (inspired by simulation_factors.yaml)
+seasonal_factors:
+  1: 0.8
+  2: 0.85
+  3: 0.9
+  4: 0.95
+  5: 1.0
+  6: 1.05
+  7: 1.1
+  8: 1.05
+  9: 1.0
+  10: 1.1
+  11: 1.3
+  12: 1.4
+weekday_factors:
+  0: 1.0  # Monday
+  1: 1.0
+  2: 1.0
+  3: 1.0
+  4: 1.0
+  5: 1.2  # Saturday
+  6: 1.1  # Sunday
+hour_bands:
+  - start: 6
+    end: 10
+    factor: 1.3
+  - start: 11
+    end: 14
+    factor: 1.1
+  - start: 18
+    end: 22
+    factor: 1.4
+  - start: 23
+    end: 5
+    factor: 0.3

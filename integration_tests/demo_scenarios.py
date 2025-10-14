@@ -21,14 +21,21 @@ Each demo includes:
 """
 
 import asyncio
+import os
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from typing import Any, Dict, List
 
 from agent_runners.configs.framework_configs import FrameworkConfig
 
-# Agent framework imports
-from agent_runners.runner_factory import RunnerFactory
+# Agent framework imports (optional for fallback)
+try:
+    from agent_runners.runner_factory import RunnerFactory
+    AGENT_RUNNERS_AVAILABLE = True
+except ImportError:
+    RunnerFactory = None
+    AGENT_RUNNERS_AVAILABLE = False
+
 from baseline_bots.bot_factory import BotFactory
 from constraints.budget_enforcer import BudgetEnforcer
 from event_bus import get_event_bus
@@ -100,14 +107,15 @@ class DemoScenarios:
         # Create T0 environment
         env = await self._create_demo_environment("T0", 42)
 
-        # Initialize baseline bot
+        # Initialize baseline bot with model from env (for OpenRouter)
+        model_slug = os.getenv("MODEL_SLUG")
         try:
-            agent = BotFactory.create_bot("gpt_4o_mini_bot")  # Use available bot
+            agent = BotFactory.create_bot("openrouter_bot", model_slug=model_slug)  # Use OpenRouter for LLM
             if not agent:
                 agent = BotFactory.create_bot("greedy_script_bot")  # Fallback
-            agent_type = "gpt_4o_mini_bot" if agent else "fallback"
+            agent_type = f"openrouter_bot ({model_slug or 'default'})" if agent else "fallback"
         except Exception as e:
-            logger.warning(f"Failed to create advanced bot: {e}")
+            logger.warning(f"Failed to create OpenRouter bot: {e}. Falling back to greedy.")
             agent = BotFactory.create_bot("greedy_script_bot")
             agent_type = "greedy_script_bot"
 
@@ -223,16 +231,15 @@ class DemoScenarios:
         # Create T3 environment
         env = await self._create_demo_environment("T3", 1337)
 
-        # Initialize advanced agent with constraints
+        # Initialize advanced agent with model from env (for OpenRouter)
+        model_slug = os.getenv("MODEL_SLUG")
         try:
-            agent = BotFactory.create_bot("claude_sonnet_bot")
-            if not agent:
-                agent = BotFactory.create_bot("gpt_4o_mini_bot")
+            agent = BotFactory.create_bot("openrouter_bot", model_slug=model_slug)  # Use OpenRouter for LLM
             if not agent:
                 agent = BotFactory.create_bot("greedy_script_bot")
-            agent_type = "claude_sonnet_bot" if agent else "fallback"
+            agent_type = f"openrouter_bot ({model_slug or 'default'})" if agent else "fallback"
         except Exception as e:
-            logger.warning(f"Failed to create advanced bot: {e}")
+            logger.warning(f"Failed to create OpenRouter bot: {e}. Falling back to greedy.")
             agent = BotFactory.create_bot("greedy_script_bot")
             agent_type = "greedy_script_bot"
 
@@ -452,15 +459,19 @@ class DemoScenarios:
 
             # Initialize framework-specific agent
             try:
+                model_slug = os.getenv("MODEL_SLUG")
                 if framework_type == "greedy_script":
                     agent = BotFactory.create_bot("greedy_script_bot")
                 elif framework_type == "diy":
-                    # Mock DIY framework
-                    agent = BotFactory.create_bot("greedy_script_bot")  # Use as placeholder
+                    # Mock DIY framework with OpenRouter
+                    agent = BotFactory.create_bot("openrouter_bot", model_slug=model_slug)
                 else:
-                    # Advanced frameworks
-                    config = FrameworkConfig(framework_type=framework_type)
-                    agent = RunnerFactory.create_runner(framework_type, config)
+                    # Advanced frameworks (if available)
+                    if AGENT_RUNNERS_AVAILABLE:
+                        config = FrameworkConfig(framework_type=framework_type)
+                        agent = RunnerFactory.create_runner(framework_type, config)
+                    else:
+                        agent = BotFactory.create_bot("openrouter_bot", model_slug=model_slug)  # Fallback to OpenRouter
 
                 agent_created = agent is not None
             except Exception as e:
@@ -621,12 +632,13 @@ class DemoScenarios:
                 memory_available = False
                 continue
 
-            # Initialize agent
+            # Initialize agent with model from env (for OpenRouter)
+            model_slug = os.getenv("MODEL_SLUG")
             try:
-                agent = BotFactory.create_bot("gpt_4o_mini_bot")
+                agent = BotFactory.create_bot("openrouter_bot", model_slug=model_slug)  # Use OpenRouter for LLM
                 if not agent:
                     agent = BotFactory.create_bot("greedy_script_bot")
-                agent_type = "gpt_4o_mini_bot" if agent else "greedy_script_bot"
+                agent_type = f"openrouter_bot ({model_slug or 'default'})" if agent else "greedy_script_bot"
             except Exception:
                 agent = BotFactory.create_bot("greedy_script_bot")
                 agent_type = "greedy_script_bot"
@@ -748,16 +760,23 @@ class DemoScenarios:
         """Create a demo environment with all necessary components."""
 
         # Initialize core components
+        # Allow override via SIM_* env vars to control demo pacing; defaults preserve current behavior
+        max_ticks = int(os.getenv("SIM_MAX_TICKS", "200"))
+        tick_interval = float(os.getenv("SIM_TICK_INTERVAL_SECONDS", "0.01"))
+        time_accel = float(os.getenv("SIM_TIME_ACCELERATION", "50.0"))
         sim_config = SimulationConfig(
-            seed=seed, max_ticks=200, tick_interval_seconds=0.01, time_acceleration=50.0
+            seed=seed,
+            max_ticks=max_ticks,
+            tick_interval_seconds=tick_interval,
+            time_acceleration=time_accel,
         )
 
         orchestrator = SimulationOrchestrator(sim_config)
         event_bus = get_event_bus()
 
-        # Initialize services
-        world_store = WorldStore()
-        sales_service = SalesService(world_store)
+        # Initialize services on the same EventBus for coherent recording
+        world_store = WorldStore(event_bus=event_bus)
+        sales_service = SalesService(config={})
         trust_service = TrustScoreService()
 
         return {
