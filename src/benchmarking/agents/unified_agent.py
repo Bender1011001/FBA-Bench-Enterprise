@@ -13,8 +13,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Type
 
-from ..config.pydantic_config import AgentConfig as PydanticAgentConfig
-from ..config.pydantic_config import FrameworkType
+from ..config.pydantic_config import AgentConfig as PydanticAgentConfig, FrameworkType
 from ..metrics.extensible_metrics import MetricResult
 
 # Import services for dependency injection
@@ -27,7 +26,9 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 if services is None:
-    logger.warning("Services module not available. Some agent functionality may be limited.")
+    logger.warning(
+        "Services module not available. Some agent functionality may be limited."
+    )
 
 
 class AgentState(str, Enum):
@@ -69,7 +70,9 @@ class AgentMessage:
     def __post_init__(self):
         """Generate message ID if not provided."""
         if self.message_id is None:
-            self.message_id = f"{self.sender_id}_{self.receiver_id}_{self.timestamp.timestamp()}"
+            self.message_id = (
+                f"{self.sender_id}_{self.receiver_id}_{self.timestamp.timestamp()}"
+            )
 
 
 @dataclass
@@ -116,7 +119,9 @@ class AgentContext:
 
     def get_observations_by_type(self, observation_type: str) -> List[AgentObservation]:
         """Get observations by type."""
-        return [obs for obs in self.observations if obs.observation_type == observation_type]
+        return [
+            obs for obs in self.observations if obs.observation_type == observation_type
+        ]
 
     def get_messages_from(self, sender_id: str) -> List[AgentMessage]:
         """Get messages from a specific sender."""
@@ -179,7 +184,9 @@ class BaseUnifiedAgent(abc.ABC):
     async def run_decision_cycle(self, context: AgentContext) -> List[AgentAction]:
         """Run a complete decision cycle."""
         if self.state != AgentState.READY:
-            raise RuntimeError(f"Agent {self.agent_id} is not ready. State: {self.state}")
+            raise RuntimeError(
+                f"Agent {self.agent_id} is not ready. State: {self.state}"
+            )
 
         self.state = AgentState.RUNNING
 
@@ -324,7 +331,9 @@ class NativeFBAAdapter(BaseUnifiedAgent):
             "observations": [obs.data for obs in context.observations],
             "world_state": context.world_state,
             "messages": [msg.content for msg in context.messages],
-            "previous_actions": [action.parameters for action in context.previous_actions],
+            "previous_actions": [
+                action.parameters for action in context.previous_actions
+            ],
         }
 
         if hasattr(self.native_agent, "process_stimulus"):
@@ -335,7 +344,11 @@ class NativeFBAAdapter(BaseUnifiedAgent):
 
             # Convert response to actions
             if isinstance(response, dict):
-                return [AgentAction(action_type="response", parameters=response, confidence=1.0)]
+                return [
+                    AgentAction(
+                        action_type="response", parameters=response, confidence=1.0
+                    )
+                ]
             elif isinstance(response, list):
                 return [
                     AgentAction(action_type="response", parameters=item, confidence=1.0)
@@ -414,12 +427,16 @@ class CrewAIAdapter(BaseUnifiedAgent):
         from crewai import Task
 
         # Format the task description based on the context
-        task_description = "Analyze the following FBA market data and make pricing decisions:\n"
+        task_description = (
+            "Analyze the following FBA market data and make pricing decisions:\n"
+        )
         task_description += f"Products: {context.world_state.get('products', [])}\n"
         task_description += (
             f"Market conditions: {context.world_state.get('market_conditions', {})}\n"
         )
-        task_description += f"Recent events: {[obs.data for obs in context.observations]}\n"
+        task_description += (
+            f"Recent events: {[obs.data for obs in context.observations]}\n"
+        )
 
         task = Task(
             description=task_description,
@@ -450,7 +467,10 @@ class CrewAIAdapter(BaseUnifiedAgent):
                             actions.append(
                                 AgentAction(
                                     action_type="set_price",
-                                    parameters={"asin": asin, "price": float(price_data["price"])},
+                                    parameters={
+                                        "asin": asin,
+                                        "price": float(price_data["price"]),
+                                    },
                                     confidence=float(price_data.get("confidence", 0.8)),
                                     reasoning=price_data.get(
                                         "reasoning", "CrewAI pricing decision"
@@ -462,7 +482,9 @@ class CrewAIAdapter(BaseUnifiedAgent):
                     # If not JSON, treat as a single response
                     return [
                         AgentAction(
-                            action_type="response", parameters={"decision": result}, confidence=0.7
+                            action_type="response",
+                            parameters={"decision": result},
+                            confidence=0.7,
                         )
                     ]
 
@@ -533,11 +555,11 @@ class LangChainAdapter(BaseUnifiedAgent):
         # Format the input for the LangChain agent
         input_text = "You are an FBA pricing expert. Analyze the following data and make pricing decisions:\n\n"
         input_text += f"Products: {context.world_state.get('products', [])}\n\n"
-        input_text += f"Market conditions: {context.world_state.get('market_conditions', {})}\n\n"
-        input_text += f"Recent events: {[obs.data for obs in context.observations]}\n\n"
         input_text += (
-            "Provide your response as a JSON object with 'asin' as keys and 'price' as values."
+            f"Market conditions: {context.world_state.get('market_conditions', {})}\n\n"
         )
+        input_text += f"Recent events: {[obs.data for obs in context.observations]}\n\n"
+        input_text += "Provide your response as a JSON object with 'asin' as keys and 'price' as values."
 
         try:
             # Execute the agent
@@ -558,7 +580,10 @@ class LangChainAdapter(BaseUnifiedAgent):
                             actions.append(
                                 AgentAction(
                                     action_type="set_price",
-                                    parameters={"asin": asin, "price": float(price_data["price"])},
+                                    parameters={
+                                        "asin": asin,
+                                        "price": float(price_data["price"]),
+                                    },
                                     confidence=float(price_data.get("confidence", 0.8)),
                                     reasoning=price_data.get(
                                         "reasoning", "LangChain pricing decision"
@@ -570,7 +595,10 @@ class LangChainAdapter(BaseUnifiedAgent):
                             actions.append(
                                 AgentAction(
                                     action_type="set_price",
-                                    parameters={"asin": asin, "price": float(price_data)},
+                                    parameters={
+                                        "asin": asin,
+                                        "price": float(price_data),
+                                    },
                                     confidence=0.8,
                                     reasoning="LangChain pricing decision",
                                 )
@@ -580,7 +608,9 @@ class LangChainAdapter(BaseUnifiedAgent):
                     # If not JSON, treat as a single response
                     return [
                         AgentAction(
-                            action_type="response", parameters={"decision": result}, confidence=0.7
+                            action_type="response",
+                            parameters={"decision": result},
+                            confidence=0.7,
                         )
                     ]
 
@@ -698,7 +728,9 @@ class DIYAdapter(BaseUnifiedAgent):
                             action_type=action.tool_name,
                             parameters=action.parameters,
                             confidence=getattr(action, "confidence", 0.8),
-                            reasoning=getattr(action, "reasoning", "DIY agent decision"),
+                            reasoning=getattr(
+                                action, "reasoning", "DIY agent decision"
+                            ),
                         )
                     )
                 elif isinstance(action, dict):
@@ -793,7 +825,9 @@ class UnifiedAgentRunner:
         """
         # Extract relevant information from simulation state
         scenario_id = getattr(
-            simulation_state, "scenario_id", simulation_state.get("scenario_id", "unknown")
+            simulation_state,
+            "scenario_id",
+            simulation_state.get("scenario_id", "unknown"),
         )
         tick = getattr(simulation_state, "tick", simulation_state.get("tick", 0))
 
@@ -814,7 +848,9 @@ class UnifiedAgentRunner:
             world_state=world_state,
         )
 
-    def _convert_actions_to_simulation_format(self, actions: List[AgentAction]) -> List[Any]:
+    def _convert_actions_to_simulation_format(
+        self, actions: List[AgentAction]
+    ) -> List[Any]:
         """
         Convert agent actions to simulation format.
 
@@ -862,7 +898,9 @@ class AgentFactory:
             FrameworkType.ADAPTED: NativeFBAAdapter,
         }
 
-    def register_agent_type(self, agent_type: str, agent_class: Type[BaseUnifiedAgent]) -> None:
+    def register_agent_type(
+        self, agent_type: str, agent_class: Type[BaseUnifiedAgent]
+    ) -> None:
         """Register a new agent type."""
         self._agent_types[agent_type] = agent_class
         logger.info(f"Registered agent type: {agent_type}")
@@ -875,7 +913,10 @@ class AgentFactory:
         logger.info(f"Registered adapter for framework: {framework}")
 
     def create_agent(
-        self, agent_id: str, config: PydanticAgentConfig, native_agent: Optional[Any] = None
+        self,
+        agent_id: str,
+        config: PydanticAgentConfig,
+        native_agent: Optional[Any] = None,
     ) -> BaseUnifiedAgent:
         """Create an agent instance."""
         framework = config.framework
@@ -893,7 +934,10 @@ class AgentFactory:
             return self._create_framework_agent(agent_id, config, adapter_class)
 
     def _create_framework_agent(
-        self, agent_id: str, config: PydanticAgentConfig, adapter_class: Type[BaseUnifiedAgent]
+        self,
+        agent_id: str,
+        config: PydanticAgentConfig,
+        adapter_class: Type[BaseUnifiedAgent],
     ) -> BaseUnifiedAgent:
         """Create a framework-specific agent instance."""
         framework = config.framework
@@ -909,7 +953,10 @@ class AgentFactory:
             return adapter_class(agent_id, config, self._create_default_agent(config))
 
     def _create_crewai_agent(
-        self, agent_id: str, config: PydanticAgentConfig, adapter_class: Type[BaseUnifiedAgent]
+        self,
+        agent_id: str,
+        config: PydanticAgentConfig,
+        adapter_class: Type[BaseUnifiedAgent],
     ) -> BaseUnifiedAgent:
         """Create a CrewAI agent instance."""
         try:
@@ -922,7 +969,9 @@ class AgentFactory:
             # Create the CrewAI agent
             crewai_agent = Agent(
                 role=agent_params.get("role", "FBA Pricing Specialist"),
-                goal=agent_params.get("goal", "Optimize FBA product pricing for maximum profit"),
+                goal=agent_params.get(
+                    "goal", "Optimize FBA product pricing for maximum profit"
+                ),
                 backstory=agent_params.get(
                     "backstory",
                     "You are an experienced FBA pricing expert with deep knowledge of e-commerce markets.",
@@ -941,7 +990,10 @@ class AgentFactory:
             raise
 
     def _create_langchain_agent(
-        self, agent_id: str, config: PydanticAgentConfig, adapter_class: Type[BaseUnifiedAgent]
+        self,
+        agent_id: str,
+        config: PydanticAgentConfig,
+        adapter_class: Type[BaseUnifiedAgent],
     ) -> BaseUnifiedAgent:
         """Create a LangChain agent instance."""
         try:
@@ -994,7 +1046,10 @@ class AgentFactory:
             raise
 
     def _create_diy_agent(
-        self, agent_id: str, config: PydanticAgentConfig, adapter_class: Type[BaseUnifiedAgent]
+        self,
+        agent_id: str,
+        config: PydanticAgentConfig,
+        adapter_class: Type[BaseUnifiedAgent],
     ) -> BaseUnifiedAgent:
         """
         Create a DIY/baseline agent instance (Greedy/LLM/Advanced) in a unified way.
@@ -1013,22 +1068,27 @@ class AgentFactory:
         services = custom_config.get("_services") or {}
 
         agent_type = agent_params.get("agent_type", "baseline").lower()
-        bot_name = agent_params.get("bot_name") or agent_params.get("bot_type")  # support both keys
+        bot_name = agent_params.get("bot_name") or agent_params.get(
+            "bot_type"
+        )  # support both keys
 
         try:
-            if agent_type == "baseline" and (bot_name is None or bot_name == "GreedyScript"):
+            if agent_type == "baseline" and (
+                bot_name is None or bot_name == "GreedyScript"
+            ):
                 # Greedy rule-based bot
                 from baseline_bots.greedy_script_bot import GreedyScriptBot
 
                 # Allow tier-style knobs via parameters or custom_config
-                reorder_threshold = agent_params.get("reorder_threshold") or custom_config.get(
-                    "reorder_threshold", 10
-                )
-                reorder_quantity = agent_params.get("reorder_quantity") or custom_config.get(
-                    "reorder_quantity", 50
-                )
+                reorder_threshold = agent_params.get(
+                    "reorder_threshold"
+                ) or custom_config.get("reorder_threshold", 10)
+                reorder_quantity = agent_params.get(
+                    "reorder_quantity"
+                ) or custom_config.get("reorder_quantity", 50)
                 diy_agent = GreedyScriptBot(
-                    reorder_threshold=int(reorder_threshold), reorder_quantity=int(reorder_quantity)
+                    reorder_threshold=int(reorder_threshold),
+                    reorder_quantity=int(reorder_quantity),
                 )
                 return adapter_class(agent_id, config, diy_agent)
 
@@ -1044,7 +1104,9 @@ class AgentFactory:
 
                 # Check if services module is available
                 if services is None:
-                    raise ValueError("Services module not available. Cannot create DIY LLM agent.")
+                    raise ValueError(
+                        "Services module not available. Cannot create DIY LLM agent."
+                    )
 
                 world_store = services.get("world_store")
                 budget_enforcer = services.get("budget_enforcer")
@@ -1052,7 +1114,15 @@ class AgentFactory:
                 agent_gateway = services.get("agent_gateway")
                 event_bus = services.get("event_bus")
 
-                if not all([world_store, budget_enforcer, trust_metrics, agent_gateway, event_bus]):
+                if not all(
+                    [
+                        world_store,
+                        budget_enforcer,
+                        trust_metrics,
+                        agent_gateway,
+                        event_bus,
+                    ]
+                ):
                     raise ValueError(
                         "Unified DIY LLM agent requires world_store, budget_enforcer, trust_metrics, agent_gateway, and event_bus services."
                     )
@@ -1065,8 +1135,9 @@ class AgentFactory:
                 max_tokens = (config.llm_config or {}).get("max_tokens", 1000)
                 top_p = (config.llm_config or {}).get("top_p", 1.0)
 
-                from llm_interface.config import LLMConfig
                 import os
+
+                from llm_interface.llm_config import LLMConfig
 
                 llm_cfg = LLMConfig(
                     provider="openrouter",
@@ -1196,7 +1267,9 @@ class AgentFactory:
                     "competitor_price": self._extract_number(
                         input_data, r"competitor[s]?\s*price[s]?\s*[:\$]?\s*(\d+\.?\d*)"
                     ),
-                    "demand": self._extract_number(input_data, r"demand\s*[:\-]?\s*(\d+\.?\d*)"),
+                    "demand": self._extract_number(
+                        input_data, r"demand\s*[:\-]?\s*(\d+\.?\d*)"
+                    ),
                     "market_share": self._extract_number(
                         input_data, r"market\s*share\s*[:\-]?\s*(\d+\.?\d*)"
                     ),
@@ -1269,8 +1342,12 @@ class AgentFactory:
         """
         try:
             # Extract market data
-            market_trend = self._extract_trend(input_data, r"market\s*trend\s*[:\-]?\s*(\w+)")
-            competition_level = self._extract_level(input_data, r"competition\s*[:\-]?\s*(\w+)")
+            market_trend = self._extract_trend(
+                input_data, r"market\s*trend\s*[:\-]?\s*(\w+)"
+            )
+            competition_level = self._extract_level(
+                input_data, r"competition\s*[:\-]?\s*(\w+)"
+            )
             seasonality = self._extract_seasonality(input_data)
 
             # Determine market conditions
@@ -1316,10 +1393,18 @@ class AgentFactory:
         """
         try:
             # Extract inventory data
-            current_stock = self._extract_number(input_data, r"current\s*stock\s*[:\-]?\s*(\d+)")
-            min_stock = self._extract_number(input_data, r"min(?:imum)?\s*stock\s*[:\-]?\s*(\d+)")
-            max_stock = self._extract_number(input_data, r"max(?:imum)?\s*stock\s*[:\-]?\s*(\d+)")
-            sales_rate = self._extract_number(input_data, r"sales\s*rate\s*[:\-]?\s*(\d+\.?\d*)")
+            current_stock = self._extract_number(
+                input_data, r"current\s*stock\s*[:\-]?\s*(\d+)"
+            )
+            min_stock = self._extract_number(
+                input_data, r"min(?:imum)?\s*stock\s*[:\-]?\s*(\d+)"
+            )
+            max_stock = self._extract_number(
+                input_data, r"max(?:imum)?\s*stock\s*[:\-]?\s*(\d+)"
+            )
+            sales_rate = self._extract_number(
+                input_data, r"sales\s*rate\s*[:\-]?\s*(\d+\.?\d*)"
+            )
 
             # Calculate days of inventory
             if sales_rate > 0:
@@ -1400,7 +1485,8 @@ class AgentFactory:
         """Extract seasonality information from text."""
         text_lower = text.lower()
         if any(
-            word in text_lower for word in ["holiday", "christmas", "thanksgiving", "black friday"]
+            word in text_lower
+            for word in ["holiday", "christmas", "thanksgiving", "black friday"]
         ):
             return "peak"
         elif any(word in text_lower for word in ["summer", "winter", "spring", "fall"]):

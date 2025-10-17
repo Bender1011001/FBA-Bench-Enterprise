@@ -196,7 +196,11 @@ class TemplateAgentPlugin(AgentPlugin):
         # Set position limits
         self.position_limits = config.get(
             "position_limits",
-            {"max_inventory_value": 10000.0, "max_single_position": 1000.0, "max_positions": 10},
+            {
+                "max_inventory_value": 10000.0,
+                "max_single_position": 1000.0,
+                "max_positions": 10,
+            },
         )
 
         # Initialize strategy-specific parameters
@@ -233,10 +237,14 @@ class TemplateAgentPlugin(AgentPlugin):
         risk_assessment = await self._assess_risk(observation)
 
         # Generate potential actions based on strategy
-        potential_actions = await self._generate_potential_actions(observation, market_analysis)
+        potential_actions = await self._generate_potential_actions(
+            observation, market_analysis
+        )
 
         # Select best action using decision logic
-        selected_action = await self._select_best_action(potential_actions, risk_assessment)
+        selected_action = await self._select_best_action(
+            potential_actions, risk_assessment
+        )
 
         # Validate action against constraints
         validated_action = await self._validate_action(selected_action, observation)
@@ -324,7 +332,9 @@ class TemplateAgentPlugin(AgentPlugin):
         await self._update_risk_parameters(feedback)
 
         # Log performance update
-        success_rate = self.successful_trades / self.total_trades if self.total_trades > 0 else 0
+        success_rate = (
+            self.successful_trades / self.total_trades if self.total_trades > 0 else 0
+        )
         self.logger.info(
             f"Performance update: {success_rate:.2%} success rate, ${self.total_profit:.2f} total profit"
         )
@@ -339,10 +349,14 @@ class TemplateAgentPlugin(AgentPlugin):
         This method provides insights into the agent's performance
         for analysis and comparison purposes.
         """
-        success_rate = self.successful_trades / self.total_trades if self.total_trades > 0 else 0
+        success_rate = (
+            self.successful_trades / self.total_trades if self.total_trades > 0 else 0
+        )
 
         # Calculate advanced metrics
-        profits = [entry["profit"] for entry in self.performance_history if "profit" in entry]
+        profits = [
+            entry["profit"] for entry in self.performance_history if "profit" in entry
+        ]
 
         if profits:
             avg_profit = np.mean(profits)
@@ -351,7 +365,9 @@ class TemplateAgentPlugin(AgentPlugin):
             profit_volatility = np.std(profits)
 
             # Calculate Sharpe ratio (simplified)
-            sharpe_ratio = avg_profit / profit_volatility if profit_volatility > 0 else 0
+            sharpe_ratio = (
+                avg_profit / profit_volatility if profit_volatility > 0 else 0
+            )
 
             # Calculate maximum drawdown
             cumulative_profits = np.cumsum(profits)
@@ -359,9 +375,9 @@ class TemplateAgentPlugin(AgentPlugin):
             drawdowns = running_max - cumulative_profits
             max_drawdown = np.max(drawdowns) if len(drawdowns) > 0 else 0
         else:
-            avg_profit = (
-                max_profit
-            ) = min_profit = profit_volatility = sharpe_ratio = max_drawdown = 0
+            avg_profit = max_profit = min_profit = profit_volatility = sharpe_ratio = (
+                max_drawdown
+            ) = 0
 
         return {
             # Basic Performance Metrics
@@ -455,11 +471,13 @@ class TemplateAgentPlugin(AgentPlugin):
 
             # Keep only recent data (last 100 points)
             if len(self.market_knowledge["price_trends"][product_id]) > 100:
-                self.market_knowledge["price_trends"][product_id] = self.market_knowledge[
-                    "price_trends"
-                ][product_id][-100:]
+                self.market_knowledge["price_trends"][product_id] = (
+                    self.market_knowledge["price_trends"][product_id][-100:]
+                )
 
-    async def _analyze_market_conditions(self, observation: Dict[str, Any]) -> Dict[str, Any]:
+    async def _analyze_market_conditions(
+        self, observation: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Analyze current market conditions."""
         analysis = {
             "market_trend": "neutral",
@@ -509,7 +527,9 @@ class TemplateAgentPlugin(AgentPlugin):
         competitor_data = observation.get("competitor_data", {})
         if competitor_data:
             aggressive_competitors = sum(
-                1 for comp in competitor_data.values() if comp.get("strategy") == "aggressive"
+                1
+                for comp in competitor_data.values()
+                if comp.get("strategy") == "aggressive"
             )
             if aggressive_competitors > len(competitor_data) * 0.5:
                 analysis["risk_factors"].append("high_competition")
@@ -524,7 +544,10 @@ class TemplateAgentPlugin(AgentPlugin):
         # Calculate portfolio risk
         total_value = sum(item.get("value", 0) for item in portfolio.values())
         max_position_ratio = (
-            max((item.get("value", 0) / total_value for item in portfolio.values()), default=0)
+            max(
+                (item.get("value", 0) / total_value for item in portfolio.values()),
+                default=0,
+            )
             if total_value > 0
             else 0
         )
@@ -572,11 +595,17 @@ class TemplateAgentPlugin(AgentPlugin):
         # Generate buy actions
         for product_id, price in current_prices.items():
             if available_cash >= price:
-                confidence = self._calculate_buy_confidence(product_id, price, market_analysis)
+                confidence = self._calculate_buy_confidence(
+                    product_id, price, market_analysis
+                )
                 actions.append(
                     {
                         "action_type": "buy",
-                        "parameters": {"product_id": product_id, "quantity": 1, "price": price},
+                        "parameters": {
+                            "product_id": product_id,
+                            "quantity": 1,
+                            "price": price,
+                        },
                         "confidence": confidence,
                         "reasoning": f"Buy {product_id} based on market analysis",
                     }
@@ -647,7 +676,9 @@ class TemplateAgentPlugin(AgentPlugin):
         # Check profitability
         purchase_price = item.get("purchase_price", current_price)
         profit_ratio = (
-            (current_price - purchase_price) / purchase_price if purchase_price > 0 else 0
+            (current_price - purchase_price) / purchase_price
+            if purchase_price > 0
+            else 0
         )
 
         if profit_ratio > 0.1:  # 10% profit
@@ -679,7 +710,9 @@ class TemplateAgentPlugin(AgentPlugin):
             score = action["confidence"]
 
             # Adjust score based on risk tolerance and current risk
-            if risk_assessment["overall_risk"] == "high" and action["action_type"] in ["buy"]:
+            if risk_assessment["overall_risk"] == "high" and action["action_type"] in [
+                "buy"
+            ]:
                 score *= 1 - self.risk_tolerance
 
             scored_actions.append((score, action))
@@ -733,10 +766,14 @@ class TemplateAgentPlugin(AgentPlugin):
         # Simple learning: adjust risk tolerance based on performance
         if success and reward > 0:
             # Successful trade, slightly increase risk tolerance
-            self.risk_tolerance = min(1.0, self.risk_tolerance + self.learning_rate * 0.1)
+            self.risk_tolerance = min(
+                1.0, self.risk_tolerance + self.learning_rate * 0.1
+            )
         elif not success or reward < 0:
             # Failed trade, slightly decrease risk tolerance
-            self.risk_tolerance = max(0.0, self.risk_tolerance - self.learning_rate * 0.1)
+            self.risk_tolerance = max(
+                0.0, self.risk_tolerance - self.learning_rate * 0.1
+            )
 
         # Update product performance tracking
         action_type = feedback.get("action_type")
@@ -744,11 +781,18 @@ class TemplateAgentPlugin(AgentPlugin):
             product_id = feedback.get("product_id")
             if product_id:
                 if product_id not in self.product_performance:
-                    self.product_performance[product_id] = {"trades": 0, "success_rate": 0.5}
+                    self.product_performance[product_id] = {
+                        "trades": 0,
+                        "success_rate": 0.5,
+                    }
 
                 self.product_performance[product_id]["trades"] += 1
-                current_success_rate = self.product_performance[product_id]["success_rate"]
-                new_success_rate = (current_success_rate + (1.0 if success else 0.0)) / 2
+                current_success_rate = self.product_performance[product_id][
+                    "success_rate"
+                ]
+                new_success_rate = (
+                    current_success_rate + (1.0 if success else 0.0)
+                ) / 2
                 self.product_performance[product_id]["success_rate"] = new_success_rate
 
     async def _adapt_strategy(self, feedback: Dict[str, Any]) -> None:
@@ -758,7 +802,9 @@ class TemplateAgentPlugin(AgentPlugin):
 
         # Check if adaptation is needed
         recent_performance = (
-            self.performance_history[-10:] if len(self.performance_history) >= 10 else []
+            self.performance_history[-10:]
+            if len(self.performance_history) >= 10
+            else []
         )
 
         if len(recent_performance) >= 10:
@@ -771,13 +817,17 @@ class TemplateAgentPlugin(AgentPlugin):
             if success_rate < 0.4 or avg_profit < -10:
                 # Poor performance, become more conservative
                 self.risk_tolerance = max(0.1, self.risk_tolerance - 0.1)
-                self.logger.info("Adapting to more conservative strategy due to poor performance")
+                self.logger.info(
+                    "Adapting to more conservative strategy due to poor performance"
+                )
                 self.adaptation_count += 1
 
             elif success_rate > 0.7 and avg_profit > 10:
                 # Good performance, become more aggressive
                 self.risk_tolerance = min(0.9, self.risk_tolerance + 0.1)
-                self.logger.info("Adapting to more aggressive strategy due to good performance")
+                self.logger.info(
+                    "Adapting to more aggressive strategy due to good performance"
+                )
                 self.adaptation_count += 1
 
     async def _update_risk_parameters(self, feedback: Dict[str, Any]) -> None:
@@ -788,7 +838,9 @@ class TemplateAgentPlugin(AgentPlugin):
             cumulative = np.cumsum(profits)
             running_max = np.maximum.accumulate(cumulative)
             current_drawdown = (
-                (running_max[-1] - cumulative[-1]) / running_max[-1] if running_max[-1] > 0 else 0
+                (running_max[-1] - cumulative[-1]) / running_max[-1]
+                if running_max[-1] > 0
+                else 0
             )
 
             # If drawdown exceeds threshold, reduce risk
@@ -808,12 +860,16 @@ class TemplateAgentPlugin(AgentPlugin):
             "risk_tolerance": self.risk_tolerance,
             "total_trades": self.total_trades,
             "success_rate": (
-                self.successful_trades / self.total_trades if self.total_trades > 0 else 0
+                self.successful_trades / self.total_trades
+                if self.total_trades > 0
+                else 0
             ),
             "total_profit": self.total_profit,
             "learning_rate": self.learning_rate,
             "market_knowledge_items": len(self.market_knowledge),
-            "recent_decisions": len(self.decision_history[-10:]) if self.decision_history else 0,
+            "recent_decisions": (
+                len(self.decision_history[-10:]) if self.decision_history else 0
+            ),
         }
 
     async def export_agent_state(self, export_path: str) -> None:
@@ -868,7 +924,9 @@ if __name__ == "__main__":
         # Test decision making
         test_observation = {
             "current_prices": {"PROD001": 25.50, "PROD002": 42.75, "PROD003": 18.20},
-            "portfolio": {"PROD001": {"quantity": 2, "purchase_price": 24.00, "value": 51.00}},
+            "portfolio": {
+                "PROD001": {"quantity": 2, "purchase_price": 24.00, "value": 51.00}
+            },
             "available_cash": 1000.0,
             "market_data": {"volatility": 0.35},
             "competitor_data": {

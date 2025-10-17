@@ -4,10 +4,11 @@ from datetime import datetime
 from decimal import Decimal
 from typing import List, Optional
 
-from fba_events import BaseEvent
-from fba_events.pricing import SetPriceCommand
 from models.product import Product
 from money import Money
+
+from fba_events import BaseEvent
+from fba_events.pricing import SetPriceCommand
 
 
 @dataclass
@@ -61,7 +62,9 @@ class GreedyScriptBot:
         for product in state.products:
             # Price matching strategy
             competitor_prices = (
-                product.metadata.get("competitor_prices", []) if product.metadata else []
+                product.metadata.get("competitor_prices", [])
+                if product.metadata
+                else []
             )
             if competitor_prices:  # Get competitor_prices from metadata
                 # Find the minimum competitor price
@@ -72,11 +75,14 @@ class GreedyScriptBot:
 
                 # Ensure price is not set below cost basis (simple rule to prevent losses)
                 if new_price < product.cost:
-                    new_price = product.cost * Decimal("1.05")  # Small markup if going below cost
+                    new_price = product.cost * Decimal(
+                        "1.05"
+                    )  # Small markup if going below cost
 
                 # Only change price if it's significantly different to avoid excessive churn
                 if (
-                    abs(new_price.to_float() - product.price.to_float()) / product.price.to_float()
+                    abs(new_price.to_float() - product.price.to_float())
+                    / product.price.to_float()
                     > 0.001
                 ):
                     actions.append(

@@ -157,7 +157,9 @@ class ConfigurationTestManager:
                 logger.info(f"Loaded test configuration from {self.config_file}")
 
             except Exception as e:
-                logger.error(f"Failed to load configuration from {self.config_file}: {e}")
+                logger.error(
+                    f"Failed to load configuration from {self.config_file}: {e}"
+                )
                 logger.info("Using default configuration")
         else:
             logger.info("No configuration file found, using defaults")
@@ -244,7 +246,9 @@ class ReportGeneratorTest:
         quality_metrics = await self._calculate_quality_metrics(suite_results)
 
         # Generate recommendations
-        recommendations = await self._generate_recommendations(suite_results, quality_metrics)
+        recommendations = await self._generate_recommendations(
+            suite_results, quality_metrics
+        )
 
         report = ComprehensiveTestReport(
             report_id=report_id,
@@ -294,7 +298,9 @@ class ReportGeneratorTest:
                     saved_files["pdf"] = str(file_path)
 
             except Exception as e:
-                logger.error(f"Failed to save report in {format_type.value} format: {e}")
+                logger.error(
+                    f"Failed to save report in {format_type.value} format: {e}"
+                )
 
         # Generate JUnit XML if requested
         if self.config.junit_xml_output:
@@ -329,7 +335,8 @@ class ReportGeneratorTest:
         try:
             template = self.jinja_env.get_template("test_report.html")
             html_content = template.render(
-                report=report, generation_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                report=report,
+                generation_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             )
 
             with open(file_path, "w", encoding="utf-8") as f:
@@ -379,7 +386,9 @@ class ReportGeneratorTest:
             md_content += f"- **Category:** {suite.category}\n"
             md_content += f"- **Duration:** {suite.duration_seconds:.2f}s\n"
             md_content += f"- **Success Rate:** {suite.success_rate:.1%}\n"
-            md_content += f"- **Tests:** {suite.passed_tests}/{suite.total_tests} passed\n"
+            md_content += (
+                f"- **Tests:** {suite.passed_tests}/{suite.total_tests} passed\n"
+            )
             if suite.error_details:
                 md_content += f"- **Error:** {suite.error_details}\n"
             md_content += "\n"
@@ -424,9 +433,7 @@ class ReportGeneratorTest:
                     xml_content += f'    <testcase name="{test_name}" time="1.0"/>\n'
                 else:
                     xml_content += f'    <testcase name="{test_name}" time="1.0">\n'
-                    xml_content += (
-                        f'      <failure message="Test failed">Test {test_name} failed</failure>\n'
-                    )
+                    xml_content += f'      <failure message="Test failed">Test {test_name} failed</failure>\n'
                     xml_content += "    </testcase>\n"
 
             xml_content += "  </testsuite>\n"
@@ -438,7 +445,9 @@ class ReportGeneratorTest:
 
         return file_path
 
-    async def _analyze_performance(self, suite_results: List[SuiteResultTest]) -> Dict[str, Any]:
+    async def _analyze_performance(
+        self, suite_results: List[SuiteResultTest]
+    ) -> Dict[str, Any]:
         """Analyze performance metrics across all suites."""
         performance_suites = [s for s in suite_results if s.performance_metrics]
 
@@ -469,21 +478,29 @@ class ReportGeneratorTest:
             / len(performance_suites),
         }
 
-    async def _analyze_regressions(self, suite_results: List[SuiteResultTest]) -> Dict[str, Any]:
+    async def _analyze_regressions(
+        self, suite_results: List[SuiteResultTest]
+    ) -> Dict[str, Any]:
         """Analyze for potential regressions."""
-        regression_suites = [s for s in suite_results if "regression" in s.category.lower()]
+        regression_suites = [
+            s for s in suite_results if "regression" in s.category.lower()
+        ]
 
         if not regression_suites:
             return {"analysis": "No regression test data available"}
 
-        regressions_detected = sum(1 for s in regression_suites if s.status == StatusTest.FAILED)
+        regressions_detected = sum(
+            1 for s in regression_suites if s.status == StatusTest.FAILED
+        )
 
         return {
             "regression_suites_run": len(regression_suites),
             "regressions_detected": regressions_detected,
             "regression_free": regressions_detected == 0,
             "regression_rate": (
-                regressions_detected / len(regression_suites) if regression_suites else 0
+                regressions_detected / len(regression_suites)
+                if regression_suites
+                else 0
             ),
         }
 
@@ -499,7 +516,9 @@ class ReportGeneratorTest:
 
         return {
             "overall_pass_rate": passed_tests / total_tests if total_tests > 0 else 0,
-            "suite_completion_rate": sum(1 for s in suite_results if s.status == StatusTest.PASSED)
+            "suite_completion_rate": sum(
+                1 for s in suite_results if s.status == StatusTest.PASSED
+            )
             / len(suite_results),
             "average_suite_duration": sum(s.duration_seconds for s in suite_results)
             / len(suite_results),
@@ -529,7 +548,9 @@ class ReportGeneratorTest:
             )
 
         # Check performance
-        long_running_suites = [s for s in suite_results if s.duration_seconds > 300]  # 5 minutes
+        long_running_suites = [
+            s for s in suite_results if s.duration_seconds > 300
+        ]  # 5 minutes
         if long_running_suites:
             recommendations.append(
                 f"Consider optimizing performance for slow test suites: {', '.join(s.suite_name for s in long_running_suites[:2])}"
@@ -677,7 +698,8 @@ class ReportGeneratorTest:
 async def main():
     """Run test configuration and reporting framework."""
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     # Example usage of the framework

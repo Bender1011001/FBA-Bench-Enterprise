@@ -10,7 +10,7 @@ import abc
 from dataclasses import dataclass, field
 from typing import Any, Dict, Optional
 
-from llm_interface.config import LLMConfig
+from llm_interface.llm_config import LLMConfig
 
 
 @dataclass

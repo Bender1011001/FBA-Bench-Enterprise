@@ -4,12 +4,13 @@ from datetime import datetime
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
+from money import Money  # Use canonical Money implementation
+
 from fba_bench_core.models.competitor import Competitor
 
 # Import get_event_bus for instantiation and EventBus for type hinting
 from fba_events.competitor import CompetitorPricesUpdated, CompetitorState
 from fba_events.time_events import TickEvent
-from money import Money  # Use canonical Money implementation
 from personas import CompetitorPersona  # New import
 
 if TYPE_CHECKING:
@@ -58,8 +59,6 @@ class CompetitorManager:
             try:
                 from fba_bench_core.services.world_store import (
                     InMemoryStorageBackend as _InMemBackend,
-                )
-                from fba_bench_core.services.world_store import (
                     WorldStore as _WorldStore,  # type: ignore
                 )
 
@@ -109,7 +108,9 @@ class CompetitorManager:
 
         logger.info("CompetitorManager initialized")
 
-    async def start(self, event_bus: Optional["EventBus"] = None) -> None:  # Use forward reference
+    async def start(
+        self, event_bus: Optional["EventBus"] = None
+    ) -> None:  # Use forward reference
         """
         Starts the CompetitorManager and subscribes to events.
 
@@ -172,7 +173,9 @@ class CompetitorManager:
             "persona_distribution": dist,
         }
 
-    def add_competitor(self, competitor: Any, persona: Optional[CompetitorPersona] = None) -> None:
+    def add_competitor(
+        self, competitor: Any, persona: Optional[CompetitorPersona] = None
+    ) -> None:
         """
         Register an existing competitor object with the manager.
 
@@ -194,7 +197,9 @@ class CompetitorManager:
             or getattr(competitor, "competitor_id", None)
         )
         if not comp_id:
-            raise ValueError("Competitor must define one of: 'asin', 'id', or 'competitor_id'")
+            raise ValueError(
+                "Competitor must define one of: 'asin', 'id', or 'competitor_id'"
+            )
 
         # Ensure Money-typed price
         price = getattr(competitor, "price", None)
@@ -287,7 +292,9 @@ class CompetitorManager:
             persona=persona,
         )
         self.total_competitors_tracked += 1
-        logger.info(f"Competitor {competitor_id} registered with strategy {strategy.value}.")
+        logger.info(
+            f"Competitor {competitor_id} registered with strategy {strategy.value}."
+        )
 
     async def _handle_tick_event(self, event: TickEvent) -> None:
         """Handle tick events by updating competitor data and publishing updates."""
@@ -301,8 +308,9 @@ class CompetitorManager:
             # Ensure fba_events.competitor references the same Money class as the runtime 'money' module.
             # This avoids class identity mismatches when tests import Money before/after event modules.
             try:
-                import fba_events.competitor as _comp_mod  # type: ignore
                 from money import Money as _MoneyRT  # type: ignore
+
+                import fba_events.competitor as _comp_mod  # type: ignore
 
                 if getattr(_comp_mod, "Money", None) is not _MoneyRT:
                     _comp_mod.Money = _MoneyRT
@@ -327,8 +335,10 @@ class CompetitorManager:
                 except Exception:
                     persona = None
                 if persona is not None:
-                    new_price, new_bsr, new_sales_velocity = self._apply_persona_modifiers(
-                        competitor, new_price, new_bsr, new_sales_velocity, event
+                    new_price, new_bsr, new_sales_velocity = (
+                        self._apply_persona_modifiers(
+                            competitor, new_price, new_bsr, new_sales_velocity, event
+                        )
                     )
 
                 # Update competitor's state
@@ -376,7 +386,9 @@ class CompetitorManager:
 
             # Publish update event
             if self.event_bus and updated_competitor_states:
-                market_summary = self._calculate_market_summary(updated_competitor_states)
+                market_summary = self._calculate_market_summary(
+                    updated_competitor_states
+                )
                 update_event = CompetitorPricesUpdated(
                     event_id=f"competitor_update_{event.tick_number}_{int(datetime.now().timestamp())}",
                     timestamp=datetime.now(),
@@ -391,7 +403,9 @@ class CompetitorManager:
                 )
 
         except Exception as e:
-            logger.error(f"Error processing TickEvent in CompetitorManager: {e}", exc_info=True)
+            logger.error(
+                f"Error processing TickEvent in CompetitorManager: {e}", exc_info=True
+            )
 
     def _get_baseline_our_price(self, tick_event: TickEvent) -> Money:
         """
@@ -486,7 +500,9 @@ class CompetitorManager:
             )
             resolved = CompetitorStrategy.ADAPTIVE
 
-        strategy_func = self.competitor_strategies.get(resolved, self._adaptive_strategy)
+        strategy_func = self.competitor_strategies.get(
+            resolved, self._adaptive_strategy
+        )
         return strategy_func(competitor, our_price, tick_event)
 
     def _aggressive_strategy(
@@ -495,7 +511,9 @@ class CompetitorManager:
         """Competitor aggressively undercuts our price."""
         # Construct Money using the same class as the competitor's price to avoid type identity issues
         money_cls = type(competitor.price)
-        new_cents = max(1, int(our_price.cents) - 10)  # 10 cents less, clamp at 1 cent minimum
+        new_cents = max(
+            1, int(our_price.cents) - 10
+        )  # 10 cents less, clamp at 1 cent minimum
         new_price = money_cls(new_cents)
         new_bsr = max(
             1.0, competitor.bsr * (1 - self.bsr_volatility * random.random())
@@ -510,7 +528,9 @@ class CompetitorManager:
     ) -> Tuple[Money, float, float]:
         """Competitor maintains stable prices, reacts slowly."""
         new_price = competitor.price  # Price remains stable
-        new_bsr = competitor.bsr * (1 + self.bsr_volatility * random.random())  # Slight degradation
+        new_bsr = competitor.bsr * (
+            1 + self.bsr_volatility * random.random()
+        )  # Slight degradation
         new_sales_velocity = competitor.sales_velocity * (
             1 - self.sales_volatility * random.random()
         )  # Slight decrease
@@ -589,7 +609,9 @@ class CompetitorManager:
                     new_cents = max(1, int(price_cents * (1.0 - cut_ratio)))
                     price = money_cls(new_cents)
                     # When slashing, increase sales velocity moderately (10%-25%)
-                    sales_velocity = float(sales_velocity) * (1.10 + random.uniform(0.0, 0.15))
+                    sales_velocity = float(sales_velocity) * (
+                        1.10 + random.uniform(0.0, 0.15)
+                    )
         except Exception:
             pass
 
@@ -601,7 +623,9 @@ class CompetitorManager:
                     price = competitor.price  # keep previous price
                 else:
                     # Move only a small step towards proposed price (smooth changes)
-                    step = max(1, int((price_cents - int(competitor.price.cents)) * 0.25))
+                    step = max(
+                        1, int((price_cents - int(competitor.price.cents)) * 0.25)
+                    )
                     target_cents = int(competitor.price.cents) + step
                     # Ensure we move in the correct direction
                     if price_cents < int(competitor.price.cents):
@@ -616,7 +640,9 @@ class CompetitorManager:
 
         return price, bsr, sales_velocity
 
-    def _calculate_market_summary(self, competitors: List[CompetitorState]) -> Dict[str, Any]:
+    def _calculate_market_summary(
+        self, competitors: List[CompetitorState]
+    ) -> Dict[str, Any]:
         """Calculate summary metrics for the market based on competitor data."""
         if not competitors:
             return {

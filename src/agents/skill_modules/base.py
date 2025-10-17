@@ -131,7 +131,9 @@ class _SafeArithmeticEvaluator(ast.NodeVisitor):
         self._depth = 0
 
     def generic_visit(self, node: ast.AST) -> Any:  # type: ignore[override]
-        raise SkillExecutionError(f"Disallowed expression component: {type(node).__name__}")
+        raise SkillExecutionError(
+            f"Disallowed expression component: {type(node).__name__}"
+        )
 
     def _check_limits(self, value: Union[int, float]) -> None:
         if not isinstance(value, (int, float)):

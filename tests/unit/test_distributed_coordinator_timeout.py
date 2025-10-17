@@ -21,18 +21,27 @@ class FakeBus:
     async def stop(self) -> None:
         self.stopped = True
 
-    async def register_worker(self, worker_id: str, capabilities: Dict[str, Any]) -> None:
+    async def register_worker(
+        self, worker_id: str, capabilities: Dict[str, Any]
+    ) -> None:
         self.registered_workers[worker_id] = capabilities
 
     async def create_partition(self, partition_id: str, agents: List[str]) -> None:
         self.partitions[partition_id] = agents
 
     async def publish_event(
-        self, event_type: str, event_data: Dict[str, Any], target_partition: Optional[str]
+        self,
+        event_type: str,
+        event_data: Dict[str, Any],
+        target_partition: Optional[str],
     ) -> None:
         # Record all published events for assertions
         self.published_events.append(
-            {"type": event_type, "data": event_data, "target_partition": target_partition}
+            {
+                "type": event_type,
+                "data": event_data,
+                "target_partition": target_partition,
+            }
         )
 
     async def handle_worker_failure(self, worker_id: str) -> None:
@@ -80,15 +89,20 @@ async def test_tick_ack_timeout_removes_missing_worker_and_advances_tick():
     # The coordinator should have removed the missing worker and advanced to tick 1
     assert w2 in bus.failures, "Missing worker should be reported to the bus"
     assert w2 not in coord._workers, "Missing worker should be removed from registry"
-    assert coord.current_global_tick == 1, "Tick should advance after pruning missing worker"
+    assert (
+        coord.current_global_tick == 1
+    ), "Tick should advance after pruning missing worker"
 
     # Validate a GlobalTickAdvanceEvent was published with new_tick_number == 1
     advance_events = [
         e
         for e in bus.published_events
-        if e["type"] == "GlobalTickAdvanceEvent" and e["data"].get("new_tick_number") == 1
+        if e["type"] == "GlobalTickAdvanceEvent"
+        and e["data"].get("new_tick_number") == 1
     ]
-    assert len(advance_events) >= 1, "GlobalTickAdvanceEvent should be published for tick 1"
+    assert (
+        len(advance_events) >= 1
+    ), "GlobalTickAdvanceEvent should be published for tick 1"
 
     await coord.stop()
 

@@ -256,7 +256,11 @@ class SchemaManager:
         if category is None:
             return list(self._schema_cache.keys())
 
-        return [name for name, info in self._schema_cache.items() if info["category"] == category]
+        return [
+            name
+            for name, info in self._schema_cache.items()
+            if info["category"] == category
+        ]
 
     def list_categories(self) -> List[str]:
         """

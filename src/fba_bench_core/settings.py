@@ -215,7 +215,9 @@ def get_settings(config_path: Optional[str] = None) -> Settings:
     """
     # Determine config path: explicit arg has priority over env
     env_cfg = os.getenv("FBA_CONFIG")
-    candidate = Path(config_path) if config_path else (Path(env_cfg) if env_cfg else None)
+    candidate = (
+        Path(config_path) if config_path else (Path(env_cfg) if env_cfg else None)
+    )
 
     yaml_data = _load_yaml_config(candidate)
     settings = Settings(**yaml_data, config_file=candidate)

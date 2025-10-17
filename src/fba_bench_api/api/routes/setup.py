@@ -111,7 +111,8 @@ async def check_env_configuration(
 
 @router.post("/update-config")
 async def update_configuration(
-    request: ConfigUpdateRequest, current_user: Optional[Dict[str, Any]] = Depends(get_current_user)
+    request: ConfigUpdateRequest,
+    current_user: Optional[Dict[str, Any]] = Depends(get_current_user),
 ):
     """
     Update the .env configuration file with provided values.
@@ -159,7 +160,9 @@ CLEARML_API_SECRET_KEY={request.clearml_secret_key}
         # Reload environment
         load_dotenv(env_path)
 
-        logger.info(f"Configuration updated successfully for environment: {request.environment}")
+        logger.info(
+            f"Configuration updated successfully for environment: {request.environment}"
+        )
 
         return {
             "success": True,
@@ -169,7 +172,9 @@ CLEARML_API_SECRET_KEY={request.clearml_secret_key}
 
     except Exception as e:
         logger.error(f"Failed to update configuration: {e!s}")
-        raise HTTPException(status_code=500, detail=f"Failed to save configuration: {e!s}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to save configuration: {e!s}"
+        )
 
 
 @router.get("/health")

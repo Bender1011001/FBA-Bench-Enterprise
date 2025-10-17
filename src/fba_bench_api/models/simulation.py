@@ -80,8 +80,7 @@ class SimulationStatusResponse(BaseModel):
     message: Optional[str] = None
 
 
-from sqlalchemy import Enum as SAEnum
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import Enum as SAEnum, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base, JSONEncoded, TimestampMixin
@@ -104,7 +103,10 @@ class SimulationORM(TimestampMixin, Base):
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)  # UUID4 string
     experiment_id: Mapped[Optional[str]] = mapped_column(
-        String(36), ForeignKey("experiments.id", ondelete="SET NULL"), nullable=True, index=True
+        String(36),
+        ForeignKey("experiments.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
     )
 
     status: Mapped[str] = mapped_column(
@@ -124,7 +126,9 @@ class SimulationORM(TimestampMixin, Base):
 
     # IMPORTANT: attribute name 'metadata' is reserved by SQLAlchemy Declarative API.
     # Use a different Python attribute and map it to DB column 'metadata'.
-    sim_metadata: Mapped[dict] = mapped_column("metadata", JSONEncoded, nullable=True, default=dict)
+    sim_metadata: Mapped[dict] = mapped_column(
+        "metadata", JSONEncoded, nullable=True, default=dict
+    )
 
     # Relationships
     experiment = relationship("ExperimentORM", backref="simulations", lazy="joined")

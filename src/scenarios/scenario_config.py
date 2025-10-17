@@ -45,7 +45,9 @@ class ScenarioConfigManager:
             2: os.path.join(scenario_base_path, "tier_2_advanced.yaml"),
             3: os.path.join(scenario_base_path, "tier_3_expert.yaml"),
         }
-        logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+        logging.basicConfig(
+            level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+        )
 
     def _load_all_scenario_metadata(self):
         """
@@ -57,7 +59,9 @@ class ScenarioConfigManager:
         for tier_file in os.listdir(self.scenario_base_path):
             if tier_file.startswith("tier_") and tier_file.endswith(".yaml"):
                 name = os.path.splitext(tier_file)[0]
-                self.available_scenarios[name] = os.path.join(self.scenario_base_path, tier_file)
+                self.available_scenarios[name] = os.path.join(
+                    self.scenario_base_path, tier_file
+                )
 
         # Load business_types scenarios
         if os.path.exists(self.business_types_path):
@@ -73,7 +77,9 @@ class ScenarioConfigManager:
             for file_name in os.listdir(self.multi_agent_path):
                 if file_name.endswith(".yaml"):
                     name = os.path.splitext(file_name)[0]
-                    self.available_scenarios[name] = os.path.join(self.multi_agent_path, file_name)
+                    self.available_scenarios[name] = os.path.join(
+                        self.multi_agent_path, file_name
+                    )
 
         logging.info(f"Loaded {len(self.available_scenarios)} available scenarios.")
         logging.debug(f"Available Scenarios: {self.available_scenarios.keys()}")
@@ -98,7 +104,9 @@ class ScenarioConfigManager:
         # First, check default tier configs
         if tier in self.default_tier_configs:
             try:
-                tier_scenarios.append(ScenarioConfig.from_yaml(self.default_tier_configs[tier]))
+                tier_scenarios.append(
+                    ScenarioConfig.from_yaml(self.default_tier_configs[tier])
+                )
             except Exception as e:
                 logging.warning(f"Could not load default tier {tier} scenario: {e}")
 
@@ -133,13 +141,15 @@ class ScenarioConfigManager:
         This provides a programmatic way to get difficulty metrics beyond just the tier.
         """
         metrics = {
-            "num_external_events": len(scenario_config.config_data.get("external_events", [])),
-            "economic_volatility": scenario_config.config_data.get("market_conditions", {}).get(
-                "economic_cycles", "stable"
+            "num_external_events": len(
+                scenario_config.config_data.get("external_events", [])
             ),
-            "competition_level": scenario_config.config_data.get("market_conditions", {}).get(
-                "competition_levels", "low"
-            ),
+            "economic_volatility": scenario_config.config_data.get(
+                "market_conditions", {}
+            ).get("economic_cycles", "stable"),
+            "competition_level": scenario_config.config_data.get(
+                "market_conditions", {}
+            ).get("competition_levels", "low"),
             "supply_chain_complexity": scenario_config.config_data.get(
                 "business_parameters", {}
             ).get("supply_chain_complexity", "simple"),
@@ -149,7 +159,8 @@ class ScenarioConfigManager:
                 "initial_capital", 100000
             ),  # Higher capital = easier
             "has_multi_agent": "multi_agent_config" in scenario_config.config_data
-            and scenario_config.config_data["multi_agent_config"].get("num_agents", 0) > 1,
+            and scenario_config.config_data["multi_agent_config"].get("num_agents", 0)
+            > 1,
             "information_asymmetry_present": scenario_config.config_data.get(
                 "agent_constraints", {}
             ).get("information_asymmetry", False),
@@ -210,7 +221,9 @@ class ScenarioConfigManager:
         )
 
         if target_tier is not None:
-            logging.info(f"Scaling dynamically generated scenario to Tier {target_tier}...")
+            logging.info(
+                f"Scaling dynamically generated scenario to Tier {target_tier}..."
+            )
             generated_scenario = self.dynamic_generator.scale_difficulty(
                 generated_scenario, target_tier
             )

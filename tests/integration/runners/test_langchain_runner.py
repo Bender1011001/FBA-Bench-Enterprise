@@ -68,7 +68,9 @@ async def test_langchain_runner_success_with_fake_lib(monkeypatch):
             self.content = content
 
     # Install fakes into sys.modules
-    monkeypatch.setitem(sys.modules, "langchain_openai", SimpleNamespace(ChatOpenAI=FakeChatOpenAI))
+    monkeypatch.setitem(
+        sys.modules, "langchain_openai", SimpleNamespace(ChatOpenAI=FakeChatOpenAI)
+    )
     monkeypatch.setitem(sys.modules, "langchain.tools", SimpleNamespace(Tool=FakeTool))
     monkeypatch.setitem(
         sys.modules,

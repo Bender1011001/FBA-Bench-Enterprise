@@ -95,7 +95,9 @@ class MemoryConfig:
     # Reflection and Consolidation Settings
     reflection_enabled: bool = True
     reflection_frequency_hours: int = 24  # Daily reflection by default
-    consolidation_algorithm: ConsolidationAlgorithm = ConsolidationAlgorithm.IMPORTANCE_SCORE
+    consolidation_algorithm: ConsolidationAlgorithm = (
+        ConsolidationAlgorithm.IMPORTANCE_SCORE
+    )
     consolidation_percentage: float = 0.3  # % of short-term memories to promote
 
     # Memory Retrieval Settings
@@ -115,7 +117,14 @@ class MemoryConfig:
 
     # Advanced Settings
     memory_domains: List[str] = field(
-        default_factory=lambda: ["pricing", "sales", "competitors", "strategy", "operations", "all"]
+        default_factory=lambda: [
+            "pricing",
+            "sales",
+            "competitors",
+            "strategy",
+            "operations",
+            "all",
+        ]
     )
     domain_specific_retention: Dict[str, int] = field(default_factory=dict)
 
@@ -145,9 +154,13 @@ class MemoryConfig:
 
         return cls(
             base_config=base_config,
-            memory_mode=MemoryMode(memory_settings.get("memory_mode", "reflection_enabled")),
+            memory_mode=MemoryMode(
+                memory_settings.get("memory_mode", "reflection_enabled")
+            ),
             short_term_capacity=memory_settings.get("short_term_capacity", 100),
-            short_term_retention_days=memory_settings.get("short_term_retention_days", 1),
+            short_term_retention_days=memory_settings.get(
+                "short_term_retention_days", 1
+            ),
             short_term_decay_function=DecayFunction(
                 memory_settings.get("short_term_decay_function", "linear")
             ),
@@ -157,27 +170,37 @@ class MemoryConfig:
                 memory_settings.get("long_term_decay_function", "none")
             ),
             reflection_enabled=memory_settings.get("reflection_enabled", True),
-            reflection_frequency_hours=memory_settings.get("reflection_frequency_hours", 24),
+            reflection_frequency_hours=memory_settings.get(
+                "reflection_frequency_hours", 24
+            ),
             consolidation_algorithm=ConsolidationAlgorithm(
                 memory_settings.get("consolidation_algorithm", "importance_score")
             ),
-            consolidation_percentage=memory_settings.get("consolidation_percentage", 0.3),
+            consolidation_percentage=memory_settings.get(
+                "consolidation_percentage", 0.3
+            ),
             max_retrieval_events=memory_settings.get("max_retrieval_events", 20),
-            retrieval_relevance_threshold=memory_settings.get("retrieval_relevance_threshold", 0.7),
+            retrieval_relevance_threshold=memory_settings.get(
+                "retrieval_relevance_threshold", 0.7
+            ),
             vector_store_enabled=memory_settings.get("vector_store_enabled", True),
             vector_store_backend=memory_settings.get("vector_store_backend", "faiss"),
             embedding_model=memory_settings.get(
                 "embedding_model", "sentence-transformers/all-MiniLM-L6-v2"
             ),
             vector_dimension=memory_settings.get("vector_dimension", 384),
-            enable_memory_injection=memory_settings.get("enable_memory_injection", True),
+            enable_memory_injection=memory_settings.get(
+                "enable_memory_injection", True
+            ),
             memory_budget_tokens=memory_settings.get("memory_budget_tokens", 2000),
             track_memory_usage=memory_settings.get("track_memory_usage", True),
             memory_domains=memory_settings.get(
                 "memory_domains",
                 ["pricing", "sales", "competitors", "strategy", "operations", "all"],
             ),
-            domain_specific_retention=memory_settings.get("domain_specific_retention", {}),
+            domain_specific_retention=memory_settings.get(
+                "domain_specific_retention", {}
+            ),
             short_term_store_type=MemoryStoreType(
                 memory_settings.get("short_term_store_type", "in_memory")
             ),

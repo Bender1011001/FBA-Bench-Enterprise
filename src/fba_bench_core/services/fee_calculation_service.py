@@ -6,8 +6,9 @@ from decimal import ROUND_HALF_UP, ROUND_UP, Decimal
 from enum import Enum
 from typing import Dict, List
 
-from fba_bench_core.models.product import Product
 from money import Money
+
+from fba_bench_core.models.product import Product
 
 
 class FeeType(Enum):
@@ -72,11 +73,26 @@ class FeeCalculationService:
         self.size_tiers = config.get(
             "size_tiers",
             {
-                "small_standard": {"max_weight_oz": 16, "max_dimensions_inches": [15, 12, 0.75]},
-                "large_standard": {"max_weight_oz": 160, "max_dimensions_inches": [18, 14, 8]},
-                "small_oversize": {"max_weight_oz": 1120, "max_dimensions_inches": [60, 30, 30]},
-                "medium_oversize": {"max_weight_oz": 1120, "max_dimensions_inches": [108, 30, 30]},
-                "large_oversize": {"max_weight_oz": 2240, "max_dimensions_inches": [108, 30, 30]},
+                "small_standard": {
+                    "max_weight_oz": 16,
+                    "max_dimensions_inches": [15, 12, 0.75],
+                },
+                "large_standard": {
+                    "max_weight_oz": 160,
+                    "max_dimensions_inches": [18, 14, 8],
+                },
+                "small_oversize": {
+                    "max_weight_oz": 1120,
+                    "max_dimensions_inches": [60, 30, 30],
+                },
+                "medium_oversize": {
+                    "max_weight_oz": 1120,
+                    "max_dimensions_inches": [108, 30, 30],
+                },
+                "large_oversize": {
+                    "max_weight_oz": 2240,
+                    "max_dimensions_inches": [108, 30, 30],
+                },
                 "special_oversize": {
                     "max_weight_oz": float("inf"),
                     "max_dimensions_inches": [float("inf"), float("inf"), float("inf")],
@@ -100,7 +116,9 @@ class FeeCalculationService:
         )
 
         # Dimensional weight divisor (default 139)
-        self.dim_divisor = self._to_decimal(self.config.get("dimensional_weight_divisor", 139))
+        self.dim_divisor = self._to_decimal(
+            self.config.get("dimensional_weight_divisor", 139)
+        )
 
         # Surcharges configuration
         self.surcharges = self.config.get("surcharges", {})
@@ -174,7 +192,9 @@ class FeeCalculationService:
             dims = [12, 8, 1]
         L, W, H = (self._to_decimal(d) for d in dims)
         cubic_inches = L * W * H
-        return (cubic_inches / Decimal(1728)).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
+        return (cubic_inches / Decimal(1728)).quantize(
+            Decimal("0.0001"), rounding=ROUND_HALF_UP
+        )
 
     def _compute_billable_weight_lb(self, product: Product) -> Decimal:
         """
@@ -258,7 +278,9 @@ class FeeCalculationService:
         peak_override = additional_context.get("peak_season", None)
         current_month = datetime.now().month
         is_peak_season = (
-            (current_month in [10, 11, 12]) if peak_override is None else bool(peak_override)
+            (current_month in [10, 11, 12])
+            if peak_override is None
+            else bool(peak_override)
         )
 
         # Percent surcharges on FBA
@@ -371,8 +393,14 @@ class FeeCalculationService:
         # Long-term storage penalty (LTSF) - months_in_storage >= 12
         months_in_storage = int(additional_context.get("months_in_storage", 0) or 0)
         ltsf_rate: Money = self.penalties.get("ltsf_monthly_per_cu_ft", Money.zero())
-        if months_in_storage >= 12 and isinstance(ltsf_rate, Money) and ltsf_rate.cents > 0:
-            cf = self._compute_cubic_feet(getattr(product, "dimensions_inches", [12, 8, 1]))
+        if (
+            months_in_storage >= 12
+            and isinstance(ltsf_rate, Money)
+            and ltsf_rate.cents > 0
+        ):
+            cf = self._compute_cubic_feet(
+                getattr(product, "dimensions_inches", [12, 8, 1])
+            )
             # Money * int -> Money; Money * Decimal -> Money
             ltsf_amount = (ltsf_rate * months_in_storage) * cf
             individual_fees.append(
@@ -392,8 +420,12 @@ class FeeCalculationService:
             )
 
         # Low-price penalty
-        low_price_threshold: Money = self.penalties.get("low_price_threshold", Money.zero())
-        low_price_fee_flat: Money = self.penalties.get("low_price_fee_flat", Money.zero())
+        low_price_threshold: Money = self.penalties.get(
+            "low_price_threshold", Money.zero()
+        )
+        low_price_fee_flat: Money = self.penalties.get(
+            "low_price_fee_flat", Money.zero()
+        )
         if (
             isinstance(low_price_threshold, Money)
             and low_price_threshold.cents > 0
@@ -416,7 +448,9 @@ class FeeCalculationService:
                 )
 
         # Calculate totals
-        total_fees = sum((fee.calculated_amount for fee in individual_fees), Money.zero())
+        total_fees = sum(
+            (fee.calculated_amount for fee in individual_fees), Money.zero()
+        )
         net_proceeds = sale_price - total_fees
 
         # Calculate profit margin
@@ -429,7 +463,9 @@ class FeeCalculationService:
             profit_margin_percent = 0.0
 
         return ComprehensiveFeeBreakdown(
-            product_id=getattr(product, "product_id", getattr(product, "asin", "unknown")),
+            product_id=getattr(
+                product, "product_id", getattr(product, "asin", "unknown")
+            ),
             sale_price=sale_price,
             individual_fees=individual_fees,
             total_fees=total_fees,
@@ -438,10 +474,14 @@ class FeeCalculationService:
             timestamp=datetime.now(),
         )
 
-    def _calculate_referral_fee(self, product: Product, sale_price: Money) -> FeeCalculation:
+    def _calculate_referral_fee(
+        self, product: Product, sale_price: Money
+    ) -> FeeCalculation:
         """Calculate referral fee based on product category and sale price."""
         category = getattr(product, "category", "default")
-        rate_val = self.category_referral_rates.get(category, self.fee_rates["referral_base_rate"])
+        rate_val = self.category_referral_rates.get(
+            category, self.fee_rates["referral_base_rate"]
+        )
         rate_dec = self._to_decimal(rate_val)
 
         # Apply minimum and maximum referral fee rules (Decimal-safe)
@@ -486,7 +526,9 @@ class FeeCalculationService:
             base_fee = self.fee_rates["fba_large_standard_1lb"]
             if billable_weight_lb > Decimal("1.0"):
                 additional_weight = billable_weight_lb - Decimal("1.0")
-                rate_cents = Decimal(self.fee_rates["fba_large_standard_additional_lb"].cents)
+                rate_cents = Decimal(
+                    self.fee_rates["fba_large_standard_additional_lb"].cents
+                )
                 additional_fee_cents = (additional_weight * rate_cents).quantize(
                     Decimal("1"), rounding=ROUND_HALF_UP
                 )
@@ -521,7 +563,9 @@ class FeeCalculationService:
             timestamp=datetime.now(),
         )
 
-    def _calculate_storage_fee(self, product: Product, duration_days: int) -> FeeCalculation:
+    def _calculate_storage_fee(
+        self, product: Product, duration_days: int
+    ) -> FeeCalculation:
         """Calculate monthly storage fee prorated for duration (Decimal math)."""
         size_tier = self._determine_size_tier(product)
         is_oversize = "oversize" in size_tier
@@ -618,7 +662,9 @@ class FeeCalculationService:
             timestamp=datetime.now(),
         )
 
-    def _calculate_penalty_fee(self, penalty_amount: Money, reason: str) -> FeeCalculation:
+    def _calculate_penalty_fee(
+        self, penalty_amount: Money, reason: str
+    ) -> FeeCalculation:
         """Calculate penalty fee."""
         return FeeCalculation(
             fee_type=FeeType.PENALTY,
@@ -637,7 +683,8 @@ class FeeCalculationService:
 
         for tier_name, tier_config in self.size_tiers.items():
             if weight_oz <= tier_config["max_weight_oz"] and all(
-                d <= max_d for d, max_d in zip(dimensions, tier_config["max_dimensions_inches"])
+                d <= max_d
+                for d, max_d in zip(dimensions, tier_config["max_dimensions_inches"])
             ):
                 return tier_name
 
@@ -676,12 +723,16 @@ class FeeCalculationService:
 
         # Refine estimate (fees change with price due to referral fees)
         for _ in range(3):  # 3 iterations should be sufficient
-            refined_breakdown = self.calculate_comprehensive_fees(product, estimated_price, context)
+            refined_breakdown = self.calculate_comprehensive_fees(
+                product, estimated_price, context
+            )
             estimated_price = cost_basis + refined_breakdown.total_fees
 
         return estimated_price
 
-    def get_fee_summary_by_type(self, breakdowns: List[ComprehensiveFeeBreakdown]) -> Dict:
+    def get_fee_summary_by_type(
+        self, breakdowns: List[ComprehensiveFeeBreakdown]
+    ) -> Dict:
         """Get summary of fees by type across multiple transactions."""
         fee_totals: Dict[str, Dict[str, Money | int]] = {}
 
@@ -703,6 +754,8 @@ class FeeCalculationService:
         # Calculate averages
         for fee_type, totals in fee_totals.items():
             if totals["count"] > 0:
-                totals["average_amount"] = Money(totals["total_amount"].cents // totals["count"])
+                totals["average_amount"] = Money(
+                    totals["total_amount"].cents // totals["count"]
+                )
 
         return fee_totals

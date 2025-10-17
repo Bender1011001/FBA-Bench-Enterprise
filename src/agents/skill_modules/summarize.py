@@ -54,7 +54,9 @@ class SummarizeInput(SkillInputModel):
     )
 
     model_config = ConfigDict(
-        json_schema_extra={"examples": [{"text": "Sentence one. Sentence two.", "max_tokens": 8}]}
+        json_schema_extra={
+            "examples": [{"text": "Sentence one. Sentence two.", "max_tokens": 8}]
+        }
     )
 
 
@@ -77,7 +79,9 @@ class SummarizeSkill(Skill):
     """
 
     name = "summarize"
-    description = "Extractive summarization: select earliest sentences within token budget."
+    description = (
+        "Extractive summarization: select earliest sentences within token budget."
+    )
     input_model = SummarizeInput
     output_model = SummarizeOutput
 

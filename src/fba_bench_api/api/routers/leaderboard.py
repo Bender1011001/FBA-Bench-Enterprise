@@ -2,11 +2,13 @@
 Stub router for leaderboard.
 """
 
-from fastapi import APIRouter, Query
 import logging
+
+from fastapi import APIRouter, Query
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
 
 @router.get("/leaderboard")
 async def get_leaderboard(limit: int = Query(50)):

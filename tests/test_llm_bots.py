@@ -2,12 +2,13 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from models.product import Product  # Ensure this is actual path
+from money import Money
 
 from baseline_bots.claude_sonnet_bot import ClaudeSonnetBot
 
 # Import the LLM bots and their SimulationState
-from baseline_bots.gpt_3_5_bot import GPT35Bot
-from baseline_bots.gpt_3_5_bot import SimulationState as LLMSimulationState
+from baseline_bots.gpt_3_5_bot import GPT35Bot, SimulationState as LLMSimulationState
 from baseline_bots.gpt_4o_mini_bot import GPT4oMiniBot
 from baseline_bots.grok_4_bot import Grok4Bot
 from constraints.agent_gateway import AgentGateway
@@ -15,8 +16,6 @@ from events import SetPriceCommand  # Ensure this is actual path
 from llm_interface.contract import BaseLLMClient
 from llm_interface.prompt_adapter import PromptAdapter
 from llm_interface.response_parser import LLMResponseParser
-from models.product import Product  # Ensure this is actual path
-from money import Money
 
 # --- Mocks for Dependencies ---
 
@@ -43,7 +42,9 @@ class MockWorldStore:
 
 # Mock BudgetEnforcer for PromptAdapter and AgentGateway
 class MockBudgetEnforcer:
-    def __init__(self, max_tokens_per_action=1000, max_total_tokens=10000, token_cost_per_1k=0.01):
+    def __init__(
+        self, max_tokens_per_action=1000, max_total_tokens=10000, token_cost_per_1k=0.01
+    ):
         self.max_tokens_per_action = max_tokens_per_action
         self.max_total_tokens = max_total_tokens
         self.token_cost_per_1k = token_cost_per_1k
@@ -210,7 +211,9 @@ class TestLLMBots:
         mock_llm_client.generate_response.return_value = {
             "choices": [
                 {
-                    "message": {"content": '{"actions_bad": [], "reasoning": "invalid json"}'}
+                    "message": {
+                        "content": '{"actions_bad": [], "reasoning": "invalid json"}'
+                    }
                 }  # Valid JSON but schema violation
             ]
         }
@@ -291,7 +294,11 @@ class TestLLMBots:
             prompt_adapter=mock_prompt_adapter,
             response_parser=mock_response_parser,
             agent_gateway=mock_agent_gateway,
-            model_params={"temperature": 0.3, "max_tokens_per_action": 3000, "top_p": 0.9},
+            model_params={
+                "temperature": 0.3,
+                "max_tokens_per_action": 3000,
+                "top_p": 0.9,
+            },
         )
 
         actions = await bot.decide(sample_llm_simulation_state)
@@ -310,12 +317,18 @@ class TestLLMBots:
         mock_llm_client_generic = AsyncMock(spec=BaseLLMClient)
         mock_llm_client_generic.generate_response.return_value = {
             "choices": [
-                {"message": {"content": '{"actions": [], "reasoning": "", "confidence": 0.5}'}}
+                {
+                    "message": {
+                        "content": '{"actions": [], "reasoning": "", "confidence": 0.5}'
+                    }
+                }
             ]
         }
         mock_llm_client_generic.get_token_count.return_value = 10
 
-        mock_prompt_adapter_generic = MockPromptAdapter(MockWorldStore(), MockBudgetEnforcer())
+        mock_prompt_adapter_generic = MockPromptAdapter(
+            MockWorldStore(), MockBudgetEnforcer()
+        )
         mock_response_parser_generic = MockLLMResponseParser(MockTrustMetrics())
         mock_agent_gateway_generic = MockAgentGateway()
         sample_state = sample_llm_simulation_state()
@@ -359,7 +372,11 @@ class TestLLMBots:
         mock_llm_client_generic.generate_response.reset_mock()
 
         # Test Grok-4 Bot
-        grok4_params = {"temperature": 0.5, "max_tokens_per_action": 16000, "top_p": 1.0}
+        grok4_params = {
+            "temperature": 0.5,
+            "max_tokens_per_action": 16000,
+            "top_p": 1.0,
+        }
         grok4_bot = Grok4Bot(
             "grok4",
             mock_llm_client_generic,
@@ -378,7 +395,11 @@ class TestLLMBots:
         mock_llm_client_generic.generate_response.reset_mock()
 
         # Test Claude 3.5 Sonnet Bot
-        claude_params = {"temperature": 0.3, "max_tokens_per_action": 32000, "top_p": 0.9}
+        claude_params = {
+            "temperature": 0.3,
+            "max_tokens_per_action": 32000,
+            "top_p": 0.9,
+        }
         claude_bot = ClaudeSonnetBot(
             "claude",
             mock_llm_client_generic,

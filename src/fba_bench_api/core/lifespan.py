@@ -5,11 +5,6 @@ import time
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-
-from agent_runners.agent_manager import AgentManager
-from fba_bench_api.api.dependencies import connection_manager  # fixed import
-from fba_bench_api.core.database_async import create_db_tables_async
-from fba_bench_api.core.redis_client import close_redis, get_redis  # Graceful Redis init/shutdown
 from services.cost_tracking_service import CostTrackingService  # Added
 from services.dashboard_api_service import DashboardAPIService
 from services.supply_chain_service import SupplyChainService
@@ -17,8 +12,15 @@ from services.supply_chain_service import SupplyChainService
 # New: bring up core runtime services for end-to-end skills flow
 from services.world_store import WorldStore, set_world_store
 
-from .persistence import config_persistence_manager
+from agent_runners.agent_manager import AgentManager
+from fba_bench_api.core.database_async import create_db_tables_async
+from fba_bench_api.core.redis_client import (
+    close_redis,
+    get_redis,
+)  # Graceful Redis init/shutdown
+
 from .container import AppContainer
+from .persistence import config_persistence_manager
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +40,12 @@ async def lifespan(app: FastAPI):
 
     missing_vars = []
     # Check DB URL if auto-create is enabled
-    if os.getenv("DB_AUTO_CREATE", "true").strip().lower() in ("1", "true", "yes", "on"):
+    if os.getenv("DB_AUTO_CREATE", "true").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    ):
         if not settings.preferred_db_url:
             missing_vars.append("DATABASE_URL or FBA_BENCH_DB_URL")
 
@@ -68,7 +75,12 @@ async def lifespan(app: FastAPI):
 
     # Ensure DB schema exists (async) - guarded by DB_AUTO_CREATE (default true)
 
-    if os.getenv("DB_AUTO_CREATE", "true").strip().lower() in ("1", "true", "yes", "on"):
+    if os.getenv("DB_AUTO_CREATE", "true").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    ):
         await create_db_tables_async()
 
     # Resolve EventBus from DI container and initialize services
@@ -109,7 +121,12 @@ async def lifespan(app: FastAPI):
     # If Redis must be available for the app to run, set REDIS_REQUIRED=true.
     import os as _os  # local alias to avoid shadowing
 
-    _eager = _os.getenv("REDIS_EAGER_INIT", "false").strip().lower() in ("1", "true", "yes", "on")
+    _eager = _os.getenv("REDIS_EAGER_INIT", "false").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
     if _eager:
         try:
             await get_redis()
@@ -122,9 +139,13 @@ async def lifespan(app: FastAPI):
                 "on",
             )
             if _required:
-                logger.error("Redis required but initialization failed after retries: %s", e)
+                logger.error(
+                    "Redis required but initialization failed after retries: %s", e
+                )
                 raise
-            logger.warning("Redis initialization failed; continuing without Redis: %s", e)
+            logger.warning(
+                "Redis initialization failed; continuing without Redis: %s", e
+            )
 
     # Initialize and register core domain services:
     # 1) WorldStore (authoritative state)
@@ -139,7 +160,9 @@ async def lifespan(app: FastAPI):
     logger.info("WorldStore started and registered as global instance")
 
     # 2) SupplyChainService (handles PlaceOrderCommand -> InventoryUpdate on TickEvent)
-    supply_chain = SupplyChainService(world_store=world_store, event_bus=bus, base_lead_time=1)
+    supply_chain = SupplyChainService(
+        world_store=world_store, event_bus=bus, base_lead_time=1
+    )
     await supply_chain.start()
     logger.info("SupplyChainService started")
 

@@ -17,10 +17,11 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any, Dict, Optional
 
-from fba_events.competitor import CompetitorState  # Fixed import for CompetitorState
-
 # Use project-local money implementation explicitly to avoid third-party shadowing
 from money import Money  # Fixed import for Money
+
+from fba_events.competitor import CompetitorState  # Fixed import for CompetitorState
+
 
 def max_money(a: Money, b: Money) -> Money:
     """

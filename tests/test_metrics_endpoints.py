@@ -3,14 +3,17 @@ from datetime import datetime, timezone
 
 import httpx
 import pytest
+from money import Money
+from services.bsr_engine_v3 import BsrEngineV3Service
+from services.dashboard_api_service import (
+    DashboardAPIService,
+    FeeMetricsAggregatorService,
+)
+from services.double_entry_ledger_service import DoubleEntryLedgerService
 
 from event_bus import EventBus
 from events import CompetitorPricesUpdated, CompetitorState, SaleOccurred
 from financial_audit import FinancialAuditService
-from money import Money
-from services.bsr_engine_v3 import BsrEngineV3Service
-from services.dashboard_api_service import DashboardAPIService, FeeMetricsAggregatorService
-from services.double_entry_ledger_service import DoubleEntryLedgerService
 
 
 @pytest.mark.asyncio
@@ -42,10 +45,16 @@ async def test_metrics_endpoints_end_to_end():
         tick_number=1,
         competitors=[
             CompetitorState(
-                asin=asin_a, price=Money.from_dollars(24.99), bsr=1200, sales_velocity=2.5
+                asin=asin_a,
+                price=Money.from_dollars(24.99),
+                bsr=1200,
+                sales_velocity=2.5,
             ),
             CompetitorState(
-                asin=asin_b, price=Money.from_dollars(29.99), bsr=800, sales_velocity=3.0
+                asin=asin_b,
+                price=Money.from_dollars(29.99),
+                bsr=800,
+                sales_velocity=3.0,
             ),
         ],
         market_summary={"note": "seed snapshot"},
@@ -113,7 +122,9 @@ async def test_metrics_endpoints_end_to_end():
             "tolerance_cents",
         ]:
             assert key in audit_json
-        assert isinstance(audit_json["current_position"]["accounting_identity_valid"], bool)
+        assert isinstance(
+            audit_json["current_position"]["accounting_identity_valid"], bool
+        )
         # Money fields are strings with "$" prefix
         assert isinstance(audit_json["total_revenue_audited"], str) and audit_json[
             "total_revenue_audited"
@@ -143,7 +154,9 @@ async def test_metrics_endpoints_end_to_end():
             "timestamp",
         ]:
             assert key in ledger_json
-        assert isinstance(ledger_json["cash"], str) and ledger_json["cash"].startswith("$")
+        assert isinstance(ledger_json["cash"], str) and ledger_json["cash"].startswith(
+            "$"
+        )
         # timestamp is ISO
         try:
             datetime.fromisoformat(ledger_json["timestamp"].replace("Z", "+00:00"))
@@ -177,10 +190,12 @@ async def test_metrics_endpoints_end_to_end():
         for fee_type in ["referral", "fba"]:
             entry = fees_json[fee_type]
             assert isinstance(entry["count"], int) and entry["count"] >= 1
-            assert isinstance(entry["total_amount"], str) and entry["total_amount"].startswith("$")
-            assert isinstance(entry["average_amount"], str) and entry["average_amount"].startswith(
-                "$"
-            )
+            assert isinstance(entry["total_amount"], str) and entry[
+                "total_amount"
+            ].startswith("$")
+            assert isinstance(entry["average_amount"], str) and entry[
+                "average_amount"
+            ].startswith("$")
 
     # Cleanup
     await bsr.stop()

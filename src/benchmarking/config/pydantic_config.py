@@ -103,7 +103,9 @@ class BaseConfig(BaseModel):
     name: str = Field(..., description="Name of the configuration")
     description: str = Field("", description="Description of the configuration")
     enabled: bool = Field(True, description="Whether this configuration is enabled")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict, description="Additional metadata"
+    )
 
     model_config = ConfigDict(extra="forbid", use_enum_values=True)
 
@@ -123,7 +125,9 @@ class BaseConfig(BaseModel):
                     or values.get("framework")
                     or values.get("type")
                 )
-                values["name"] = str(src or cls.__name__.replace("Config", "").lower() or "config")
+                values["name"] = str(
+                    src or cls.__name__.replace("Config", "").lower() or "config"
+                )
         except Exception:
             # Never block validation due to best-effort defaulting
             pass
@@ -142,7 +146,9 @@ class LLMConfig(BaseConfig):
     api_key: Optional[SecretStr] = Field(None, description="API key (secure)")
     base_url: Optional[str] = Field(None, description="Base URL for API")
     max_tokens: int = Field(2048, description="Maximum tokens for response")
-    temperature: float = Field(0.7, description="Temperature for generation", ge=0.0, le=2.0)
+    temperature: float = Field(
+        0.7, description="Temperature for generation", ge=0.0, le=2.0
+    )
     top_p: float = Field(1.0, description="Top-p for generation", ge=0.0, le=1.0)
     timeout: int = Field(30, description="Timeout in seconds")
     max_retries: int = Field(3, description="Maximum number of retries")
@@ -186,7 +192,9 @@ class AgentCapability(BaseModel):
     name: str = Field(..., description="Name of the capability")
     description: str = Field("", description="Description of the capability")
     version: str = Field("1.0.0", description="Version of the capability")
-    parameters: Dict[str, Any] = Field(default_factory=dict, description="Capability parameters")
+    parameters: Dict[str, Any] = Field(
+        default_factory=dict, description="Capability parameters"
+    )
 
 
 class AgentConfig(BaseConfig):
@@ -198,7 +206,9 @@ class AgentConfig(BaseConfig):
     agent_id: str = Field(..., description="Unique identifier for the agent")
     type: str = Field("default", description="Type of agent")
     # Accept either enum or arbitrary string for framework to be compatible with unit tests
-    framework: Union[FrameworkType, str] = Field(FrameworkType.DIRECT, description="Framework type")
+    framework: Union[FrameworkType, str] = Field(
+        FrameworkType.DIRECT, description="Framework type"
+    )
     llm_config: Optional[LLMConfig] = Field(None, description="LLM configuration")
     capabilities: List[AgentCapability] = Field(
         default_factory=list, description="Agent capabilities"
@@ -237,7 +247,9 @@ class AgentConfig(BaseConfig):
 
         # Back-compat: default 'name' if missing (tests may omit it)
         if not values.get("name"):
-            values["name"] = str(values.get("agent_id") or values.get("framework") or "agent")
+            values["name"] = str(
+                values.get("agent_id") or values.get("framework") or "agent"
+            )
 
         # Determine if this is DIY
         fw_val = values.get("framework")
@@ -252,7 +264,11 @@ class AgentConfig(BaseConfig):
 
         # Autowire llm_config from nested config if present
         if values.get("llm_config") is None:
-            cfg = (values.get("config") or {}) if isinstance(values.get("config"), dict) else {}
+            cfg = (
+                (values.get("config") or {})
+                if isinstance(values.get("config"), dict)
+                else {}
+            )
             nested_llm = cfg.get("llm_config")
             if isinstance(nested_llm, dict):
                 values["llm_config"] = nested_llm  # Pydantic will coerce to LLMConfig
@@ -272,7 +288,9 @@ class AgentConfig(BaseConfig):
             fw_is_required = False
 
         if fw_is_required and values.get("llm_config") is None:
-            raise ValueError("llm_config must be provided for CrewAI and LangChain frameworks.")
+            raise ValueError(
+                "llm_config must be provided for CrewAI and LangChain frameworks."
+            )
 
         return values
 
@@ -280,9 +298,13 @@ class AgentConfig(BaseConfig):
 class MemoryConfig(BaseConfig):
     """Configuration for agent memory systems using Pydantic."""
 
-    type: str = Field("buffer", description="Type of memory: 'buffer', 'summary', or 'none'")
+    type: str = Field(
+        "buffer", description="Type of memory: 'buffer', 'summary', or 'none'"
+    )
     window_size: int = Field(10, description="Size of the memory window", ge=1)
-    max_tokens: Optional[int] = Field(None, description="Maximum tokens for memory summary", gt=0)
+    max_tokens: Optional[int] = Field(
+        None, description="Maximum tokens for memory summary", gt=0
+    )
 
     @field_validator("type")
     def validate_memory_type(cls, v):
@@ -294,7 +316,9 @@ class MemoryConfig(BaseConfig):
 class CrewConfig(BaseConfig):
     """Configuration for CrewAI crew setup using Pydantic."""
 
-    process: str = Field("sequential", description="Crew process: 'sequential' or 'hierarchical'")
+    process: str = Field(
+        "sequential", description="Crew process: 'sequential' or 'hierarchical'"
+    )
     crew_size: int = Field(4, description="Number of agents in the crew", ge=1)
     roles: List[str] = Field(
         default_factory=lambda: [
@@ -305,7 +329,9 @@ class CrewConfig(BaseConfig):
         ],
         description="Roles for the crew members",
     )
-    collaboration_mode: str = Field("sequential", description="How crew members collaborate")
+    collaboration_mode: str = Field(
+        "sequential", description="How crew members collaborate"
+    )
     allow_delegation: bool = Field(True, description="Whether to allow task delegation")
 
     @field_validator("process")
@@ -322,7 +348,9 @@ class ExecutionConfig(BaseConfig):
     name: str = Field("execution", description="Name of the execution configuration")
 
     num_runs: int = Field(1, description="Number of runs to execute", ge=1)
-    parallel_execution: bool = Field(True, description="Whether to execute agents in parallel")
+    parallel_execution: bool = Field(
+        True, description="Whether to execute agents in parallel"
+    )
     timeout_seconds: int = Field(300, description="Timeout in seconds", gt=0)
     output_dir: str = Field("./results", description="Output directory for results")
     save_intermediate_results: bool = Field(
@@ -336,13 +364,19 @@ class MetricsCollectionConfig(BaseConfig):
     # Provide a default name to satisfy BaseConfig requirement in tests using default_factory
     name: str = Field("metrics", description="Name of the metrics configuration")
 
-    collection_interval: int = Field(10, description="Interval for metrics collection", ge=1)
+    collection_interval: int = Field(
+        10, description="Interval for metrics collection", ge=1
+    )
     enabled_metrics: List[MetricType] = Field(
         default_factory=lambda: [MetricType.COGNITIVE, MetricType.BUSINESS],
         description="Enabled metric types",
     )
-    custom_metrics: List[str] = Field(default_factory=list, description="Custom metric names")
-    aggregation_method: str = Field("average", description="Method for aggregating metrics")
+    custom_metrics: List[str] = Field(
+        default_factory=list, description="Custom metric names"
+    )
+    aggregation_method: str = Field(
+        "average", description="Method for aggregating metrics"
+    )
 
 
 class ScenarioConfig(BaseConfig):
@@ -359,7 +393,9 @@ class ScenarioConfig(BaseConfig):
         default_factory=dict, description="Scenario-specific parameters"
     )
     version: str = Field("1.0.0", description="Scenario version")
-    dependencies: List[str] = Field(default_factory=list, description="Scenario dependencies")
+    dependencies: List[str] = Field(
+        default_factory=list, description="Scenario dependencies"
+    )
     # Back-compat: domain is used by some tests/examples
     domain: Optional[str] = Field(default=None, description="Domain of the scenario")
 
@@ -391,7 +427,9 @@ class BenchmarkConfig(BaseConfig):
     )
 
     # Sub-configurations
-    agents: List[AgentConfig] = Field(default_factory=list, description="Agent configurations")
+    agents: List[AgentConfig] = Field(
+        default_factory=list, description="Agent configurations"
+    )
     scenarios: List[ScenarioConfig] = Field(
         default_factory=list, description="Scenario configurations"
     )
@@ -435,8 +473,12 @@ class BenchmarkConfig(BaseConfig):
 
     # Additional settings
     tags: List[str] = Field(default_factory=list, description="Tags for the benchmark")
-    created_at: datetime = Field(default_factory=datetime.now, description="Creation timestamp")
-    updated_at: datetime = Field(default_factory=datetime.now, description="Last update timestamp")
+    created_at: datetime = Field(
+        default_factory=datetime.now, description="Creation timestamp"
+    )
+    updated_at: datetime = Field(
+        default_factory=datetime.now, description="Last update timestamp"
+    )
 
     # Ensure datetime fields are JSON-serializable when using dict()/json.dumps
     @field_serializer("created_at", "updated_at", when_used="always")
@@ -477,7 +519,9 @@ class BenchmarkConfig(BaseConfig):
         # Robust handling: accept raw JSON; if parse fails, treat as path and load file; also strip comments/trailing commas.
         def _strip_json_comments_and_trailing_commas(text: str) -> str:
             # Remove // and /* */ comments
-            text = re.sub(r"^\s*//.*?$|/\*.*?\*/", "", text, flags=re.MULTILINE | re.DOTALL)
+            text = re.sub(
+                r"^\s*//.*?$|/\*.*?\*/", "", text, flags=re.MULTILINE | re.DOTALL
+            )
             # Remove trailing commas before } or ]
             text = re.sub(r",(\s*[}\]])", r"\1", text)
             return text
@@ -506,7 +550,9 @@ class BenchmarkConfig(BaseConfig):
                             parsed = json.loads(cleaned)
                     else:
                         # If it's not a file, last attempt: maybe it's JSON but with BOM or leading junk
-                        cleaned = _strip_json_comments_and_trailing_commas(env_bo.lstrip("\ufeff"))
+                        cleaned = _strip_json_comments_and_trailing_commas(
+                            env_bo.lstrip("\ufeff")
+                        )
                         try:
                             parsed = json.loads(cleaned)
                         except Exception:
@@ -583,7 +629,9 @@ class BenchmarkConfig(BaseConfig):
         if isinstance(bo, dict):
             limits = bo.get("limits")
             if limits is not None and not isinstance(limits, dict):
-                raise ValueError("budget_overrides.limits must be a dict of limit fields")
+                raise ValueError(
+                    "budget_overrides.limits must be a dict of limit fields"
+                )
 
         # Update updated_at timestamp
         values["updated_at"] = datetime.now()
@@ -606,11 +654,15 @@ class UnifiedAgentRunnerConfig(BaseConfig):
 
     # Framework-specific configurations
     llm_config: Optional[LLMConfig] = Field(None, description="LLM configuration")
-    memory_config: Optional[MemoryConfig] = Field(None, description="Memory system configuration")
+    memory_config: Optional[MemoryConfig] = Field(
+        None, description="Memory system configuration"
+    )
     agent_config: Optional[AgentConfig] = Field(
         None, description="Agent-specific behavior configuration"
     )
-    crew_config: Optional[CrewConfig] = Field(None, description="CrewAI-specific configuration")
+    crew_config: Optional[CrewConfig] = Field(
+        None, description="CrewAI-specific configuration"
+    )
 
     # General settings
     verbose: bool = Field(False, description="Enable verbose logging")
@@ -649,7 +701,9 @@ class UnifiedAgentRunnerConfig(BaseConfig):
                     name=f"{values.get('agent_id')}_llm", model="gpt-4"
                 )
             if crew_config is None:
-                values["crew_config"] = CrewConfig(name=f"{values.get('agent_id')}_crew")
+                values["crew_config"] = CrewConfig(
+                    name=f"{values.get('agent_id')}_crew"
+                )
 
         elif framework == FrameworkType.LANGCHAIN:
             if llm_config is None:
@@ -657,7 +711,9 @@ class UnifiedAgentRunnerConfig(BaseConfig):
                     name=f"{values.get('agent_id')}_llm", model="gpt-4"
                 )
             if memory_config is None:
-                values["memory_config"] = MemoryConfig(name=f"{values.get('agent_id')}_memory")
+                values["memory_config"] = MemoryConfig(
+                    name=f"{values.get('agent_id')}_memory"
+                )
 
         return values
 
@@ -671,7 +727,9 @@ class EnvironmentConfig(BaseConfig):
     api_keys: Dict[str, SecretStr] = Field(
         default_factory=dict, description="API keys for services"
     )
-    feature_flags: Dict[str, bool] = Field(default_factory=dict, description="Feature flags")
+    feature_flags: Dict[str, bool] = Field(
+        default_factory=dict, description="Feature flags"
+    )
 
     @field_validator("database_url", mode="before")
     def validate_database_url(cls, v):
@@ -697,10 +755,16 @@ class ConfigTemplate(BaseModel):
 
     name: str = Field(..., description="Template name")
     description: str = Field("", description="Template description")
-    config_type: str = Field(..., description="Type of configuration this template creates")
+    config_type: str = Field(
+        ..., description="Type of configuration this template creates"
+    )
     template: Dict[str, Any] = Field(..., description="Template configuration")
-    required_fields: List[str] = Field(default_factory=list, description="Required fields")
-    optional_fields: List[str] = Field(default_factory=list, description="Optional fields")
+    required_fields: List[str] = Field(
+        default_factory=list, description="Required fields"
+    )
+    optional_fields: List[str] = Field(
+        default_factory=list, description="Optional fields"
+    )
 
 
 class ConfigProfile(BaseModel):
@@ -909,7 +973,9 @@ class ConfigurationManager:
         self._environments[env_config.environment.value] = env_config
 
         # Save to disk
-        env_file = self.config_dir / "environments" / f"{env_config.environment.value}.yaml"
+        env_file = (
+            self.config_dir / "environments" / f"{env_config.environment.value}.yaml"
+        )
         with open(env_file, "w") as f:
             yaml.dump(env_config.model_dump(), f, default_flow_style=False)
 
@@ -925,11 +991,15 @@ class ConfigurationManager:
         """List available environment names."""
         return list(self._environments.keys())
 
-    def load_config_from_file(self, file_path: Union[str, Path], config_type: Type[T]) -> T:
+    def load_config_from_file(
+        self, file_path: Union[str, Path], config_type: Type[T]
+    ) -> T:
         """Load configuration from file."""
         return ConfigBuilder(config_type).from_file(file_path).build()
 
-    def save_config_to_file(self, config: BaseModel, file_path: Union[str, Path]) -> None:
+    def save_config_to_file(
+        self, config: BaseModel, file_path: Union[str, Path]
+    ) -> None:
         """Save configuration to file."""
         file_path = Path(file_path)
         file_path.parent.mkdir(parents=True, exist_ok=True)

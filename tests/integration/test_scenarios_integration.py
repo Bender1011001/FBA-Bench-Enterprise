@@ -2,9 +2,15 @@ from typing import Any, Dict, List
 
 import pytest
 
-from benchmarking.scenarios.complex_marketplace import generate_input as cm_generate_input
-from benchmarking.scenarios.multiturn_tool_use import generate_input as mt_generate_input
-from benchmarking.scenarios.research_summarization import generate_input as rs_generate_input
+from benchmarking.scenarios.complex_marketplace import (
+    generate_input as cm_generate_input,
+)
+from benchmarking.scenarios.multiturn_tool_use import (
+    generate_input as mt_generate_input,
+)
+from benchmarking.scenarios.research_summarization import (
+    generate_input as rs_generate_input,
+)
 
 
 @pytest.mark.integration
@@ -67,13 +73,18 @@ async def test_complex_marketplace_run_integration():
                 price = catalog[sku]["price"]
                 out_lines.append({"sku": sku, "quantity": alloc, "unit_price": price})
                 fulfillment_alloc[sku] = {
-                    "allocated": fulfillment_alloc.get(sku, {}).get("allocated", 0) + alloc
+                    "allocated": fulfillment_alloc.get(sku, {}).get("allocated", 0)
+                    + alloc
                 }
             if out_lines and not reject_reasons:
-                accepted_orders.append({"order_id": order["order_id"], "lines": out_lines})
+                accepted_orders.append(
+                    {"order_id": order["order_id"], "lines": out_lines}
+                )
             elif out_lines:
                 # Mixed case: accept the valid subset; still count as accepted
-                accepted_orders.append({"order_id": order["order_id"], "lines": out_lines})
+                accepted_orders.append(
+                    {"order_id": order["order_id"], "lines": out_lines}
+                )
             else:
                 rejections.append(
                     {
@@ -92,8 +103,10 @@ async def test_complex_marketplace_run_integration():
         return _runner_logic(inp)
 
     # Import scenario run function
-    from benchmarking.scenarios.complex_marketplace import postprocess as cm_post
-    from benchmarking.scenarios.complex_marketplace import run as cm_run
+    from benchmarking.scenarios.complex_marketplace import (
+        postprocess as cm_post,
+        run as cm_run,
+    )
 
     result = await cm_run(payload, runner_callable, timeout_seconds=5)
     result = cm_post(result)
@@ -101,7 +114,9 @@ async def test_complex_marketplace_run_integration():
     assert "accepted" in result and isinstance(result["accepted"], int)
     assert "revenue" in result and isinstance(result["revenue"], float)
     assert "fulfilled_rate" in result and 0.0 <= result["fulfilled_rate"] <= 1.0
-    assert "policy_violations" in result and isinstance(result["policy_violations"], int)
+    assert "policy_violations" in result and isinstance(
+        result["policy_violations"], int
+    )
     # With seed determinism, re-running yields same metrics
     result2 = await cm_run(payload, runner_callable, timeout_seconds=5)
     result2 = cm_post(result2)
@@ -206,7 +221,11 @@ async def test_multiturn_tool_use_run_integration_variants():
                     before, after = text.split(" paid $", 1)
                     date = before.split("On ")[1].strip()
                     amount = after.split(" for invoice ")[0].strip()
-                    invoice = after.split(" for invoice ")[1].split(" from account ")[0].strip()
+                    invoice = (
+                        after.split(" for invoice ")[1]
+                        .split(" from account ")[0]
+                        .strip()
+                    )
                     account = after.split(" from account ")[1].split(" in ")[0].strip()
                     region = after.split(" in ")[1].split(".")[0].strip()
                     name = before.split(", ")[1].strip()
@@ -232,7 +251,10 @@ async def test_multiturn_tool_use_run_integration_variants():
                 offset = int(data["offset"])
                 transformed = [i * multiplier + offset for i in items]
                 results.append(
-                    {"type": "transform", "result": {"sum": sum(items), "transformed": transformed}}
+                    {
+                        "type": "transform",
+                        "result": {"sum": sum(items), "transformed": transformed},
+                    }
                 )
         return {"results": results}
 

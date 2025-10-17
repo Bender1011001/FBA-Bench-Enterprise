@@ -69,7 +69,9 @@ class SimulationOrchestrator:
         self._is_running = True
         self._statistics["started_at"] = datetime.now(timezone.utc).isoformat()
         # Use a background task to generate ticks
-        self._runner_task = asyncio.create_task(self._run_loop(), name="SimulationOrchestrator.run")
+        self._runner_task = asyncio.create_task(
+            self._run_loop(), name="SimulationOrchestrator.run"
+        )
 
     async def stop(self) -> None:
         """Stop publishing and finalize statistics."""
@@ -89,17 +91,25 @@ class SimulationOrchestrator:
     # Internals ---------------------------------------------------------------
 
     async def _run_loop(self) -> None:
-        assert self._event_bus is not None, "EventBus must be set before starting the orchestrator"
+        assert (
+            self._event_bus is not None
+        ), "EventBus must be set before starting the orchestrator"
         cfg = self._config
         base_sim_time = datetime.now(timezone.utc)
 
         tick = 0
         # Publish until reaching max_ticks (if > 0), else run indefinitely (capped by tests)
-        limit = cfg.max_ticks if isinstance(cfg.max_ticks, int) and cfg.max_ticks > 0 else None
+        limit = (
+            cfg.max_ticks
+            if isinstance(cfg.max_ticks, int) and cfg.max_ticks > 0
+            else None
+        )
         while self._is_running and (limit is None or tick < limit):
             now = datetime.now(timezone.utc)
             # Advance logical simulation time according to time_acceleration
-            sim_delta = timedelta(seconds=cfg.tick_interval_seconds * cfg.time_acceleration)
+            sim_delta = timedelta(
+                seconds=cfg.tick_interval_seconds * cfg.time_acceleration
+            )
             sim_time = base_sim_time + tick * sim_delta
 
             # Compute simple, deterministic factors; only key presence is required by tests

@@ -14,15 +14,19 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Import cognitive components
+from memory_experiments.dual_memory_manager import DualMemoryManager
+from memory_experiments.memory_config import MemoryConfig
+from memory_experiments.memory_validator import (
+    MemoryConsistencyChecker,
+    MemoryIntegrationGateway,
+)
+from memory_experiments.reflection_module import StructuredReflectionLoop
+
 from agents.advanced_agent import AdvancedAgent, AgentConfig
 from agents.cognitive_config import CognitiveMode, get_cognitive_config
 from agents.hierarchical_planner import StrategicPlanner, TacticalPlanner
 from event_bus import EventBus
 from events import TickEvent
-from memory_experiments.dual_memory_manager import DualMemoryManager
-from memory_experiments.memory_config import MemoryConfig
-from memory_experiments.memory_validator import MemoryConsistencyChecker, MemoryIntegrationGateway
-from memory_experiments.reflection_module import StructuredReflectionLoop
 
 
 class CognitiveIntegrationTest:
@@ -157,7 +161,9 @@ class CognitiveIntegrationTest:
                 "market_conditions": {"competitive_pressure": 0.6, "volatility": 0.3},
             }
 
-            objectives = await strategic_planner.create_strategic_plan(context, timeframe=90)
+            objectives = await strategic_planner.create_strategic_plan(
+                context, timeframe=90
+            )
             assert len(objectives) > 0
             logger.info(f"Created {len(objectives)} strategic objectives")
 
@@ -231,9 +237,13 @@ class CognitiveIntegrationTest:
                 assert reflection_result.agent_id == "test_agent_reflection"
                 assert hasattr(reflection_result, "insights")
                 assert hasattr(reflection_result, "policy_adjustments")
-                logger.info(f"Reflection generated {len(reflection_result.insights)} insights")
+                logger.info(
+                    f"Reflection generated {len(reflection_result.insights)} insights"
+                )
             else:
-                logger.info("Reflection was not triggered (expected based on conditions)")
+                logger.info(
+                    "Reflection was not triggered (expected based on conditions)"
+                )
 
             # Test reflection status
             reflection_status = reflection_loop.get_reflection_status()
@@ -254,7 +264,9 @@ class CognitiveIntegrationTest:
             # Initialize memory validation components
             memory_config = MemoryConfig()
             memory_manager = DualMemoryManager(memory_config, "test_agent_validation")
-            consistency_checker = MemoryConsistencyChecker("test_agent_validation", memory_config)
+            consistency_checker = MemoryConsistencyChecker(
+                "test_agent_validation", memory_config
+            )
             integration_gateway = MemoryIntegrationGateway(
                 "test_agent_validation",
                 memory_manager,
@@ -270,8 +282,8 @@ class CognitiveIntegrationTest:
                 "expected_impact": {"revenue": 0.05},
             }
 
-            should_proceed, validation_result = await integration_gateway.pre_action_validation(
-                test_action
+            should_proceed, validation_result = (
+                await integration_gateway.pre_action_validation(test_action)
             )
             assert isinstance(should_proceed, bool)
             assert validation_result is not None
@@ -365,7 +377,9 @@ class CognitiveIntegrationTest:
         logger.info("=" * 60)
 
         total_tests = len(self.test_results)
-        passed_tests = len([r for r in self.test_results.values() if r.startswith("✅")])
+        passed_tests = len(
+            [r for r in self.test_results.values() if r.startswith("✅")]
+        )
         failed_tests = total_tests - passed_tests
 
         for test_name, result in self.test_results.items():
@@ -378,9 +392,13 @@ class CognitiveIntegrationTest:
         logger.info(f"SUCCESS RATE: {(passed_tests/total_tests)*100:.1f}%")
 
         if failed_tests == 0:
-            logger.info("🎉 ALL TESTS PASSED! Cognitive architecture is fully integrated.")
+            logger.info(
+                "🎉 ALL TESTS PASSED! Cognitive architecture is fully integrated."
+            )
         else:
-            logger.warning(f"⚠️  {failed_tests} tests failed. Review integration issues.")
+            logger.warning(
+                f"⚠️  {failed_tests} tests failed. Review integration issues."
+            )
 
         logger.info("=" * 60)
 

@@ -85,7 +85,11 @@ class ProductionEnvironmentConfig:
                     },
                     {"name": "fba-bench-db", "type": "ClusterIP", "port": 5432},
                     {"name": "fba-bench-redis", "type": "ClusterIP", "port": 6379},
-                    {"name": "fba-bench-elasticsearch", "type": "ClusterIP", "port": 9200},
+                    {
+                        "name": "fba-bench-elasticsearch",
+                        "type": "ClusterIP",
+                        "port": 9200,
+                    },
                 ],
                 "configmaps": {
                     "fba-bench-config": {
@@ -141,7 +145,11 @@ class ProductionEnvironmentConfig:
                     "health_check_interval": 10,
                     "health_check_timeout": 5,
                 },
-                "message_queue": {"type": "redis", "host": "cache.fba-bench.local", "port": 6379},
+                "message_queue": {
+                    "type": "redis",
+                    "host": "cache.fba-bench.local",
+                    "port": 6379,
+                },
             }
         else:
             raise ValueError(f"Unknown environment type: {environment_type}")
@@ -214,7 +222,9 @@ class ProductionEnvironmentManager:
             docker_compose_content["volumes"] = self.config["volumes"]
 
         # Write docker-compose.yml to a temporary file
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as temp_file:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".yml", delete=False
+        ) as temp_file:
             yaml.dump(docker_compose_content, temp_file)
             docker_compose_file = temp_file.name
 
@@ -274,7 +284,9 @@ class ProductionEnvironmentManager:
             docker_compose_content["volumes"] = self.config["volumes"]
 
         # Write docker-compose.yml to a temporary file
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as temp_file:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".yml", delete=False
+        ) as temp_file:
             yaml.dump(docker_compose_content, temp_file)
             docker_compose_file = temp_file.name
 
@@ -318,7 +330,9 @@ class ProductionEnvironmentManager:
             config_map_name = "fba-bench-config"
             config_map_data = {}
 
-            for config_name, config_value in self.config["configmaps"][config_map_name].items():
+            for config_name, config_value in self.config["configmaps"][
+                config_map_name
+            ].items():
                 config_map_data[config_name] = config_value
 
             config_map = client.V1ConfigMap(
@@ -374,7 +388,9 @@ class ProductionEnvironmentManager:
                         ports=[client.V1ContainerPort(container_port=8000)],
                         env_from=[
                             client.V1EnvFromSource(
-                                config_map_ref=client.V1ConfigMapEnvSource(name=config_map_name)
+                                config_map_ref=client.V1ConfigMapEnvSource(
+                                    name=config_map_name
+                                )
                             )
                         ],
                         resources=client.V1ResourceRequirements(
@@ -542,7 +558,9 @@ class ProductionEnvironmentManager:
             start_time = time.time()
 
             while time.time() - start_time < timeout:
-                pods = k8s_client.list_namespaced_pod(namespace=self.config["namespace"])
+                pods = k8s_client.list_namespaced_pod(
+                    namespace=self.config["namespace"]
+                )
 
                 all_ready = True
                 for pod in pods.items:
@@ -611,7 +629,9 @@ class ProductionEnvironmentManager:
             elif service_name == "fba-bench-elasticsearch":
                 return "http://localhost:9200"
         elif self.deployment_type == "distributed":
-            node = next((n for n in self.config["nodes"] if n["name"] == service_name), None)
+            node = next(
+                (n for n in self.config["nodes"] if n["name"] == service_name), None
+            )
             if node:
                 return f"http://{node['host']}:{node['port']}"
 
@@ -628,6 +648,9 @@ class ProductionEnvironmentManager:
                 if response.status_code == 200:
                     return response.json()
                 else:
-                    return {"status": "unhealthy", "error": f"HTTP {response.status_code}"}
+                    return {
+                        "status": "unhealthy",
+                        "error": f"HTTP {response.status_code}",
+                    }
             except requests.exceptions.RequestException as e:
                 return {"status": "unhealthy", "error": str(e)}

@@ -23,10 +23,11 @@ import json
 import logging
 from typing import Any, Dict, List, Optional, Tuple, Type, Union, cast
 
-from pydantic import BaseModel, ConfigDict, ValidationError
-
 from fba_bench.core.llm_outputs import AgentResponse, FbaDecision, TaskPlan, ToolCall
-from fba_bench.core.logging import setup_logging  # Ensure consistent formatting/handlers
+from fba_bench.core.logging import (
+    setup_logging,
+)  # Ensure consistent formatting/handlers
+from pydantic import BaseModel, ConfigDict, ValidationError
 
 # Initialize logging (idempotent)
 setup_logging()
@@ -46,10 +47,16 @@ CONTRACT_REGISTRY: Dict[str, Type[BaseModel]] = {
 # ---- Helpers ----------------------------------------------------------------
 
 
-def _truncate_payload_for_log(payload: Union[str, bytes, Dict[str, Any]], limit: int = 600) -> str:
+def _truncate_payload_for_log(
+    payload: Union[str, bytes, Dict[str, Any]], limit: int = 600
+) -> str:
     try:
         if isinstance(payload, (str, bytes)):
-            s = payload.decode("utf-8", errors="replace") if isinstance(payload, bytes) else payload
+            s = (
+                payload.decode("utf-8", errors="replace")
+                if isinstance(payload, bytes)
+                else payload
+            )
             return (s[:limit] + "...") if len(s) > limit else s
         # dict-like
         s = json.dumps(payload, ensure_ascii=False)
@@ -187,7 +194,9 @@ def _find_extra_fields(input_obj: Any, dumped_obj: Any, path: str = "") -> List[
                 extras.append(f"{path}/{k}" if path else k)
             else:
                 extras.extend(
-                    _find_extra_fields(v, dumped_obj.get(k), f"{path}/{k}" if path else k)
+                    _find_extra_fields(
+                        v, dumped_obj.get(k), f"{path}/{k}" if path else k
+                    )
                 )
     elif isinstance(input_obj, list):
         # Compare list items pairwise where possible
@@ -294,7 +303,10 @@ def validate_output(
                 errors = []
                 for js_err in js_errors:
                     # Handle the case where jsonschema isn't installed (import sentinel)
-                    if js_err.get("validator") == "import" or js_err.get("validator") == "internal":
+                    if (
+                        js_err.get("validator") == "import"
+                        or js_err.get("validator") == "internal"
+                    ):
                         # Log and treat as schema validation not available; don't fail strictly on import absence
                         logger.debug(
                             "jsonschema not available for strict validation; skipping schema enforcement for model=%s",
@@ -366,8 +378,10 @@ def validate_with_jsonschema(
     Guarded by try/except import to keep dependency optional.
     """
     try:
-        from jsonschema import ValidationError as JSValidationError  # type: ignore
-        from jsonschema import validate as js_validate  # type: ignore
+        from jsonschema import (
+            ValidationError as JSValidationError,  # type: ignore
+            validate as js_validate,  # type: ignore
+        )
     except Exception:
         # jsonschema isn't available; return a sentinel error letting caller decide
         return [

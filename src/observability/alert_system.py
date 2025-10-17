@@ -42,7 +42,10 @@ class ObservabilityAlertSystem:
     """
 
     def __init__(
-        self, notification_callback: Optional[Callable[[str, str, Dict[str, Any]], None]] = None
+        self,
+        notification_callback: Optional[
+            Callable[[str, str, Dict[str, Any]], None]
+        ] = None,
     ):
         """
         Initializes the alert system.
@@ -53,7 +56,9 @@ class ObservabilityAlertSystem:
         self.notification_callback = notification_callback
         self.alert_rules: Dict[str, AlertRule] = {}  # Store AlertRule objects
         self.metric_baselines: Dict[str, Any] = {}
-        self.error_history: Dict[str, deque] = {}  # {agent_id: deque of error timestamps}
+        self.error_history: Dict[str, deque] = (
+            {}
+        )  # {agent_id: deque of error timestamps}
         logging.info("ObservabilityAlertSystem initialized.")
 
     def detect_anomalies(
@@ -109,7 +114,9 @@ class ObservabilityAlertSystem:
         return None
 
     def monitor_performance_metrics(
-        self, current_metrics: Dict[str, float], thresholds: Optional[Dict[str, float]] = None
+        self,
+        current_metrics: Dict[str, float],
+        thresholds: Optional[Dict[str, float]] = None,
     ) -> List[AlertEvent]:
         """
         Notifies about system performance degradation based on predefined thresholds.
@@ -169,7 +176,8 @@ class ObservabilityAlertSystem:
         # Remove old errors outside the time window
         while (
             self.error_history[agent_id]
-            and (error_event_timestamp - self.error_history[agent_id][0]) > time_window_seconds
+            and (error_event_timestamp - self.error_history[agent_id][0])
+            > time_window_seconds
         ):
             self.error_history[agent_id].popleft()
 
@@ -208,12 +216,16 @@ class ObservabilityAlertSystem:
                 # Validate and create AlertRule objects
                 severity = AlertSeverity[rule_def.get("severity", "WARNING").upper()]
                 rule = AlertRule(
-                    name=rule_def["name"], condition=rule_def["condition"], severity=severity
+                    name=rule_def["name"],
+                    condition=rule_def["condition"],
+                    severity=severity,
                 )
                 self.alert_rules[rule.name] = rule
                 logging.info(f"Configured alert rule: {rule.name}")
             except KeyError as e:
-                logging.error(f"Invalid alert rule definition: Missing key {e} in {rule_def}")
+                logging.error(
+                    f"Invalid alert rule definition: Missing key {e} in {rule_def}"
+                )
             except ValueError as e:
                 logging.error(f"Invalid alert rule definition: {e} for {rule_def}")
             except Exception as e:
@@ -333,7 +345,8 @@ class AlertSystem:
     def _evaluate_condition(self, condition: str, metrics: Dict[str, Any]) -> bool:
         # very small safe parser for expressions like "cpu_usage > 90"
         m = re.match(
-            r"^\s*([A-Za-z_]\w*)\s*(>=|<=|==|!=|>|<)\s*([0-9]+(?:\.[0-9]+)?)\s*$", condition
+            r"^\s*([A-Za-z_]\w*)\s*(>=|<=|==|!=|>|<)\s*([0-9]+(?:\.[0-9]+)?)\s*$",
+            condition,
         )
         if not m:
             logger.debug("Condition did not match expected format: %s", condition)
@@ -397,7 +410,11 @@ if __name__ == "__main__":
     # Configure some rules
     alert_system.configure_alert_rules(
         [
-            {"name": "high_latency", "condition": "api_latency_ms > 200", "severity": "WARNING"},
+            {
+                "name": "high_latency",
+                "condition": "api_latency_ms > 200",
+                "severity": "WARNING",
+            },
             {
                 "name": "critical_latency",
                 "condition": "api_latency_ms > 500",
@@ -438,7 +455,9 @@ if __name__ == "__main__":
     # Simulate anomaly detection
     print("\nDetecting anomalies...")
     # Set a baseline for CPU usage
-    alert_system.set_baseline("system_metrics_baseline", {"avg_cpu": 0.3, "avg_memory": 0.5})
+    alert_system.set_baseline(
+        "system_metrics_baseline", {"avg_cpu": 0.3, "avg_memory": 0.5}
+    )
     alert_system.detect_anomalies(
         {"avg_cpu": 0.35, "avg_memory": 0.55}, "system_metrics_baseline"
     )  # No anomaly

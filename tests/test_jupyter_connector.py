@@ -22,7 +22,9 @@ def test_api_server_availability():
     print("🔍 Testing API server availability...")
 
     try:
-        response = requests.get("http://localhost:8000/api/v1/simulation/snapshot", timeout=5)
+        response = requests.get(
+            "http://localhost:8000/api/v1/simulation/snapshot", timeout=5
+        )
         if response.status_code == 200:
             print("✅ API server is running and accessible")
             return True
@@ -129,7 +131,9 @@ def test_event_stream_functionality(connector):
         print(f"💳 Financial history events: {len(financial_df)}")
 
     else:
-        print("⚠️ No events in buffer (simulation may need more time to generate events)")
+        print(
+            "⚠️ No events in buffer (simulation may need more time to generate events)"
+        )
 
     return True
 
@@ -149,7 +153,9 @@ def test_read_only_security(connector):
         "post_data",
     ]
 
-    connector_methods = [method for method in dir(connector) if not method.startswith("_")]
+    connector_methods = [
+        method for method in dir(connector) if not method.startswith("_")
+    ]
     print(f"📋 Available connector methods: {connector_methods}")
 
     # Check for dangerous methods
@@ -235,13 +241,17 @@ def test_real_time_monitoring(connector):
         if current_events > initial_events:
             new_events = current_events - initial_events
             events_detected.append(new_events)
-            print(f"   📡 Detected {new_events} new events at {time.time() - start_time:.1f}s")
+            print(
+                f"   📡 Detected {new_events} new events at {time.time() - start_time:.1f}s"
+            )
             initial_events = current_events
 
         time.sleep(1)
 
     final_events = len(connector.get_event_stream())
-    total_new_events = final_events - (initial_events if "initial_events" in locals() else 0)
+    total_new_events = final_events - (
+        initial_events if "initial_events" in locals() else 0
+    )
 
     print("✅ Real-time monitoring complete")
     print(f"   Total new events detected: {total_new_events}")

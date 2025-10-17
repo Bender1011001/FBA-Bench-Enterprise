@@ -38,7 +38,11 @@ class MockAgentWithMetrics(BaseAgentRunner):
         self.responses = []
         self.actions_taken = []
         self.metrics_history = []
-        self.performance_data = {"response_times": [], "success_rates": [], "resource_usage": []}
+        self.performance_data = {
+            "response_times": [],
+            "success_rates": [],
+            "resource_usage": [],
+        }
 
     async def initialize(self) -> None:
         """Initialize the mock agent."""
@@ -85,9 +89,9 @@ class MockAgentWithMetrics(BaseAgentRunner):
         self.actions_taken.append(result)
 
         # Update success rate
-        success_rate = len([a for a in self.actions_taken if a["status"] == "completed"]) / len(
-            self.actions_taken
-        )
+        success_rate = len(
+            [a for a in self.actions_taken if a["status"] == "completed"]
+        ) / len(self.actions_taken)
         self.performance_data["success_rates"].append(success_rate)
 
         return result
@@ -173,7 +177,9 @@ class TestScenarioWithMetrics(BaseScenario):
         if agent_metrics:
             avg_efficiency = np.mean([m["efficiency_score"] for m in agent_metrics])
             total_tasks = sum([m["tasks_completed"] for m in agent_metrics])
-            progress_rate = agent_metrics[-1]["scenario_progress"] if agent_metrics else 0
+            progress_rate = (
+                agent_metrics[-1]["scenario_progress"] if agent_metrics else 0
+            )
         else:
             avg_efficiency = 0
             total_tasks = 0
@@ -426,13 +432,15 @@ class TestMetricsWorkflows:
         assert 0 <= result <= 100
 
         # Verify individual metric calculations
-        strategic_decision = business_intelligence_metrics.calculate_strategic_decision_making(
-            {
-                "decision_quality": 0.85,
-                "strategic_alignment": 0.90,
-                "long_term_impact": 0.80,
-                "risk_assessment": 0.75,
-            }
+        strategic_decision = (
+            business_intelligence_metrics.calculate_strategic_decision_making(
+                {
+                    "decision_quality": 0.85,
+                    "strategic_alignment": 0.90,
+                    "long_term_impact": 0.80,
+                    "risk_assessment": 0.75,
+                }
+            )
         )
         assert isinstance(strategic_decision, float)
         assert 0 <= strategic_decision <= 100
@@ -486,13 +494,20 @@ class TestMetricsWorkflows:
         assert 0 <= scalability <= 100
 
         resource_util = technical_performance_metrics.calculate_resource_utilization(
-            {"cpu_usage": 0.65, "memory_usage": 0.70, "disk_usage": 0.45, "network_usage": 0.30}
+            {
+                "cpu_usage": 0.65,
+                "memory_usage": 0.70,
+                "disk_usage": 0.45,
+                "network_usage": 0.30,
+            }
         )
         assert isinstance(resource_util, float)
         assert 0 <= resource_util <= 100
 
     @pytest.mark.asyncio
-    async def test_ethical_safety_metrics_workflow(self, ethical_safety_metrics, mock_agent):
+    async def test_ethical_safety_metrics_workflow(
+        self, ethical_safety_metrics, mock_agent
+    ):
         """Test ethical safety metrics workflow."""
         await mock_agent.initialize()
 
@@ -538,7 +553,9 @@ class TestMetricsWorkflows:
         assert 0 <= fairness <= 100
 
     @pytest.mark.asyncio
-    async def test_cross_domain_metrics_workflow(self, cross_domain_metrics, mock_agent):
+    async def test_cross_domain_metrics_workflow(
+        self, cross_domain_metrics, mock_agent
+    ):
         """Test cross-domain metrics workflow."""
         await mock_agent.initialize()
 
@@ -581,7 +598,9 @@ class TestMetricsWorkflows:
         assert 0 <= multi_modal <= 100
 
     @pytest.mark.asyncio
-    async def test_statistical_analysis_workflow(self, statistical_analysis_framework, mock_agent):
+    async def test_statistical_analysis_workflow(
+        self, statistical_analysis_framework, mock_agent
+    ):
         """Test statistical analysis workflow."""
         await mock_agent.initialize()
 
@@ -624,7 +643,9 @@ class TestMetricsWorkflows:
         assert 0 <= inferential <= 100
 
     @pytest.mark.asyncio
-    async def test_comparative_analysis_workflow(self, comparative_analysis_engine, mock_agent):
+    async def test_comparative_analysis_workflow(
+        self, comparative_analysis_engine, mock_agent
+    ):
         """Test comparative analysis workflow."""
         await mock_agent.initialize()
 
@@ -658,15 +679,24 @@ class TestMetricsWorkflows:
         efficiency = comparative_analysis_engine.calculate_efficiency_effectiveness(
             {
                 "efficiency_metrics": {"time": 0.8, "memory": 0.85, "cpu": 0.9},
-                "effectiveness_metrics": {"accuracy": 0.9, "quality": 0.85, "reliability": 0.95},
-                "tradeoff_analysis": {"time_vs_accuracy": 0.8, "memory_vs_quality": 0.85},
+                "effectiveness_metrics": {
+                    "accuracy": 0.9,
+                    "quality": 0.85,
+                    "reliability": 0.95,
+                },
+                "tradeoff_analysis": {
+                    "time_vs_accuracy": 0.8,
+                    "memory_vs_quality": 0.85,
+                },
             }
         )
         assert isinstance(efficiency, float)
         assert 0 <= efficiency <= 100
 
     @pytest.mark.asyncio
-    async def test_metrics_aggregation_workflow(self, benchmark_engine, mock_agent, test_scenario):
+    async def test_metrics_aggregation_workflow(
+        self, benchmark_engine, mock_agent, test_scenario
+    ):
         """Test metrics aggregation workflow."""
         # Initialize and register components
         await mock_agent.initialize()
@@ -731,7 +761,9 @@ class TestMetricsWorkflows:
             assert 0 <= category_score <= 100
 
     @pytest.mark.asyncio
-    async def test_metrics_validation_workflow(self, benchmark_engine, mock_agent, test_scenario):
+    async def test_metrics_validation_workflow(
+        self, benchmark_engine, mock_agent, test_scenario
+    ):
         """Test metrics validation workflow."""
         # Initialize and register components
         await mock_agent.initialize()
@@ -812,7 +844,9 @@ class TestMetricsWorkflows:
         assert len(validation_errors) > 0
 
     @pytest.mark.asyncio
-    async def test_metrics_persistence_workflow(self, benchmark_engine, mock_agent, test_scenario):
+    async def test_metrics_persistence_workflow(
+        self, benchmark_engine, mock_agent, test_scenario
+    ):
         """Test metrics persistence workflow."""
         # Initialize and register components
         await mock_agent.initialize()
@@ -830,7 +864,9 @@ class TestMetricsWorkflows:
             benchmark_engine.register_metric(metric)
 
         # Create a temporary file for persistence
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".json") as temp_file:
+        with tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".json"
+        ) as temp_file:
             temp_filename = temp_file.name
 
         try:
@@ -880,7 +916,9 @@ class TestMetricsWorkflows:
                 os.unlink(temp_filename)
 
     @pytest.mark.asyncio
-    async def test_real_time_metrics_collection(self, benchmark_engine, mock_agent, test_scenario):
+    async def test_real_time_metrics_collection(
+        self, benchmark_engine, mock_agent, test_scenario
+    ):
         """Test real-time metrics collection workflow."""
         # Initialize and register components
         await mock_agent.initialize()
@@ -939,8 +977,12 @@ class TestMetricsWorkflows:
         if len(real_time_metric.collection_history) > 1:
             time_diffs = []
             for i in range(1, len(real_time_metric.collection_history)):
-                t1 = datetime.fromisoformat(real_time_metric.collection_history[i - 1]["timestamp"])
-                t2 = datetime.fromisoformat(real_time_metric.collection_history[i]["timestamp"])
+                t1 = datetime.fromisoformat(
+                    real_time_metric.collection_history[i - 1]["timestamp"]
+                )
+                t2 = datetime.fromisoformat(
+                    real_time_metric.collection_history[i]["timestamp"]
+                )
                 time_diffs.append((t2 - t1).total_seconds())
 
             avg_interval = sum(time_diffs) / len(time_diffs)
@@ -948,7 +990,9 @@ class TestMetricsWorkflows:
             assert abs(avg_interval - 0.1) < 0.05
 
     @pytest.mark.asyncio
-    async def test_metrics_correlation_analysis(self, benchmark_engine, mock_agent, test_scenario):
+    async def test_metrics_correlation_analysis(
+        self, benchmark_engine, mock_agent, test_scenario
+    ):
         """Test metrics correlation analysis workflow."""
         # Initialize and register components
         await mock_agent.initialize()
@@ -1013,7 +1057,9 @@ class TestMetricsWorkflows:
             assert "metric1" in correlation
             assert "metric2" in correlation
             assert "correlation" in correlation
-            assert abs(correlation["correlation"]) >= 0.7  # Strong correlation threshold
+            assert (
+                abs(correlation["correlation"]) >= 0.7
+            )  # Strong correlation threshold
 
         for correlation in weak_correlations:
             assert "metric1" in correlation

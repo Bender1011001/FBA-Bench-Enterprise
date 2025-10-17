@@ -7,7 +7,7 @@ Defines enums and dataclasses for business state, resource plans, and strategic 
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
 from money import Money
 

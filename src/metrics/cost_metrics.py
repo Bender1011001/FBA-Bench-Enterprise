@@ -7,6 +7,8 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, Optional
 
+from money import USD_ZERO, Money  # Assuming Money class and USD_ZERO are implemented
+
 from fba_events import (  # Explicitly import event types
     ApiCostEvent,
     BaseEvent,
@@ -14,7 +16,6 @@ from fba_events import (  # Explicitly import event types
     TokenUsageEvent,
 )
 from fba_events.bus import EventBus
-from money import USD_ZERO, Money  # Assuming Money class and USD_ZERO are implemented
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +53,9 @@ class CostMetrics:
     """
 
     def __init__(
-        self, event_bus: Optional[EventBus] = None, config: Optional[CostMetricsConfig] = None
+        self,
+        event_bus: Optional[EventBus] = None,
+        config: Optional[CostMetricsConfig] = None,
     ):
         self.event_bus = event_bus
         self.config = config if config else CostMetricsConfig()
@@ -196,7 +199,8 @@ class CostMetrics:
     def calculate_current_total_cost_usd(self) -> Money:
         """Calculates total cost from token usage and direct API costs."""
         token_cost = Money.from_dollars(
-            (self.total_tokens_consumed / 1_000_000) * self.token_cost_per_million, "USD"
+            (self.total_tokens_consumed / 1_000_000) * self.token_cost_per_million,
+            "USD",
         )
         return token_cost + self.total_api_costs
 
@@ -209,7 +213,9 @@ class CostMetrics:
 
         # Calculate raw cost score (higher is better, 0 cost = 100 score)
         # Using configurable max_acceptable_cost_usd
-        max_acceptable_cost_money = Money.from_dollars(self.config.max_acceptable_cost_usd, "USD")
+        max_acceptable_cost_money = Money.from_dollars(
+            self.config.max_acceptable_cost_usd, "USD"
+        )
 
         # Avoid division by zero if max_acceptable_cost_money is zero (shouldn't happen with valid config)
         if max_acceptable_cost_money.to_decimal() <= 0:
@@ -218,8 +224,12 @@ class CostMetrics:
             )
             raw_cost_score = 0.0
         else:
-            cost_ratio = current_total_cost.to_decimal() / max_acceptable_cost_money.to_decimal()
-            raw_cost_score = max(0.0, (1 - float(cost_ratio))) * 100  # Invert ratio, scale to 0-100
+            cost_ratio = (
+                current_total_cost.to_decimal() / max_acceptable_cost_money.to_decimal()
+            )
+            raw_cost_score = (
+                max(0.0, (1 - float(cost_ratio))) * 100
+            )  # Invert ratio, scale to 0-100
 
         # Apply additional penalties from budget violations and direct penalties
         final_cost_score = raw_cost_score - self.total_penalty_score_deductions
@@ -257,7 +267,13 @@ class CostMetrics:
 
     # ---- Unit-test compatible calculation helpers (dict-based) ----
     def calculate_total_cost(self, data: Dict[str, float]) -> float:
-        keys = ("compute_cost", "storage_cost", "network_cost", "api_cost", "labor_cost")
+        keys = (
+            "compute_cost",
+            "storage_cost",
+            "network_cost",
+            "api_cost",
+            "labor_cost",
+        )
         return float(sum(float(data.get(k, 0.0)) for k in keys))
 
     def calculate_cost_per_unit(self, data: Dict[str, float]) -> float:
@@ -310,7 +326,9 @@ class CostMetrics:
         cost_variance = self.calculate_cost_variance(
             {
                 "actual_cost": (
-                    total_cost if "actual_cost" not in data else data.get("actual_cost", total_cost)
+                    total_cost
+                    if "actual_cost" not in data
+                    else data.get("actual_cost", total_cost)
                 ),
                 "budgeted_cost": data.get("budgeted_cost", 0.0),
             }

@@ -1,13 +1,12 @@
-import logging
 import json
+import logging
 import re
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
 
-from medusa_experiments.schema import validate_genome_yaml, Genome
-
+from medusa_experiments.schema import Genome, validate_genome_yaml
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -112,16 +111,16 @@ class MedusaAnalyzer:
     def load_summary(self, file_path: Path) -> Optional[Dict[str, Any]]:
         """Load and return JSON summary, or None on error."""
         try:
-            with open(file_path, 'r') as f:
+            with open(file_path) as f:
                 return json.load(f)
-        except (json.JSONDecodeError, FileNotFoundError, IOError) as e:
+        except (OSError, json.JSONDecodeError, FileNotFoundError) as e:
             self.logger.error(f"Failed to load summary {file_path}: {e}")
             return None
 
     def load_genome_data(self, genome_path: Path) -> Optional[Genome]:
         """Load and validate YAML genome using schema."""
         try:
-            with open(genome_path, 'r') as f:
+            with open(genome_path) as f:
                 yaml_content = f.read()
             validated = validate_genome_yaml(yaml_content)
             self.logger.info(f"Validated genome {genome_path}")

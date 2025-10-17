@@ -9,7 +9,7 @@ import asyncio
 import logging
 import random
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, status
@@ -19,13 +19,11 @@ from ...core.models import (
     BenchmarkConfig,
     BenchmarkCreateRequest,
     BenchmarkResponse,
-    BenchmarkResult,
+    BenchmarkRunRequest,
     BenchmarkStatus,
     HealthResponse,
-    BenchmarkRunRequest,
     RunMetrics,
 )
-
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/benchmarks", tags=["benchmarks"])
@@ -40,7 +38,9 @@ class BenchmarkService:
         self.run_queue = asyncio.Queue()
         self.completed_runs: Dict[str, RunMetrics] = {}
         self.run_lock = asyncio.Lock()
-        self.worker_task = asyncio.create_task(self._worker())
+        self.worker_task = None
+        if os.getenv("TESTING") != "true":
+            self.worker_task = asyncio.create_task(self._worker())
 
     async def _worker(self):
         """Background worker to process queued runs."""
@@ -55,14 +55,24 @@ class BenchmarkService:
                 async with self.run_lock:
                     # Set status to running
                     if run_id in self.active_benchmarks:
-                        self.active_benchmarks[run_id]["status"] = BenchmarkStatus.RUNNING
-                        self.active_benchmarks[run_id]["updated_at"] = datetime.now(timezone.utc)
+                        self.active_benchmarks[run_id][
+                            "status"
+                        ] = BenchmarkStatus.RUNNING
+                        self.active_benchmarks[run_id]["updated_at"] = datetime.now(
+                            timezone.utc
+                        )
 
                 # Simulate execution (in production, integrate with agent_runners)
-                await asyncio.sleep(random.uniform(3, 10))  # Simulate variable work time
+                await asyncio.sleep(
+                    random.uniform(3, 10)
+                )  # Simulate variable work time
 
                 # Generate metrics based on agent and scenario (stub for now)
-                base_profit = 1000 if "tier_0" in scenario_id else 5000 if "tier_1" in scenario_id else 10000
+                base_profit = (
+                    1000
+                    if "tier_0" in scenario_id
+                    else 5000 if "tier_1" in scenario_id else 10000
+                )
                 profit = base_profit + random.uniform(-2000, 5000)
                 efficiency = random.uniform(0.7, 0.95)
                 sales = random.uniform(100, 500)
@@ -77,16 +87,26 @@ class BenchmarkService:
                 # Set status to completed
                 async with self.run_lock:
                     if run_id in self.active_benchmarks:
-                        self.active_benchmarks[run_id]["status"] = BenchmarkStatus.COMPLETED
-                        self.active_benchmarks[run_id]["updated_at"] = datetime.now(timezone.utc)
+                        self.active_benchmarks[run_id][
+                            "status"
+                        ] = BenchmarkStatus.COMPLETED
+                        self.active_benchmarks[run_id]["updated_at"] = datetime.now(
+                            timezone.utc
+                        )
                         # Move to completed
-                        self.completed_benchmarks[run_id] = self.active_benchmarks.pop(run_id)
-                        self.completed_benchmarks[run_id]["completed_at"] = datetime.now(timezone.utc)
+                        self.completed_benchmarks[run_id] = self.active_benchmarks.pop(
+                            run_id
+                        )
+                        self.completed_benchmarks[run_id]["completed_at"] = (
+                            datetime.now(timezone.utc)
+                        )
 
                 # Store metrics
                 self.completed_runs[run_id] = RunMetrics(metrics=metrics)
 
-                logger.info(f"Completed run {run_id} for agent {agent_id} in scenario {scenario_id} with profit {profit:.2f}")
+                logger.info(
+                    f"Completed run {run_id} for agent {agent_id} in scenario {scenario_id} with profit {profit:.2f}"
+                )
 
                 self.run_queue.task_done()
 
@@ -94,8 +114,12 @@ class BenchmarkService:
                 logger.error(f"Worker error for run {run_id}: {e}", exc_info=True)
                 async with self.run_lock:
                     if run_id in self.active_benchmarks:
-                        self.active_benchmarks[run_id]["status"] = BenchmarkStatus.FAILED
-                        self.active_benchmarks[run_id]["updated_at"] = datetime.now(timezone.utc)
+                        self.active_benchmarks[run_id][
+                            "status"
+                        ] = BenchmarkStatus.FAILED
+                        self.active_benchmarks[run_id]["updated_at"] = datetime.now(
+                            timezone.utc
+                        )
                         self.active_benchmarks[run_id]["error"] = str(e)
                 await asyncio.sleep(1)
 
@@ -118,7 +142,7 @@ class BenchmarkService:
         if not request.agent_id or not request.scenario_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="agent_id and scenario_id are required"
+                detail="agent_id and scenario_id are required",
             )
 
         run_id = str(uuid4())
@@ -143,7 +167,9 @@ class BenchmarkService:
         # Enqueue
         await self.run_queue.put(run_data)
 
-        logger.info(f"Enqueued run {run_id} for agent {request.agent_id} in scenario {request.scenario_id}")
+        logger.info(
+            f"Enqueued run {run_id} for agent {request.agent_id} in scenario {request.scenario_id}"
+        )
         return run_id
 
     async def get_benchmark_status(self, run_id: str) -> Dict[str, Any]:
@@ -155,7 +181,8 @@ class BenchmarkService:
                 return self.completed_benchmarks[run_id]
             else:
                 raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND, detail=f"Run {run_id} not found"
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Run {run_id} not found",
                 )
 
     async def get_run_results(self, run_id: str) -> RunMetrics:
@@ -165,19 +192,23 @@ class BenchmarkService:
                 return self.completed_runs[run_id]
             elif run_id in self.active_benchmarks:
                 status = self.active_benchmarks[run_id]["status"]
-                if status == BenchmarkStatus.QUEUED or status == BenchmarkStatus.RUNNING:
+                if (
+                    status == BenchmarkStatus.QUEUED
+                    or status == BenchmarkStatus.RUNNING
+                ):
                     raise HTTPException(
                         status_code=status.HTTP_202_ACCEPTED,
-                        detail=f"Run {run_id} is {status.value} - results not available yet"
+                        detail=f"Run {run_id} is {status.value} - results not available yet",
                     )
                 else:
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
-                        detail=f"Run {run_id} failed or stopped - no results"
+                        detail=f"Run {run_id} failed or stopped - no results",
                     )
             else:
                 raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND, detail=f"Run {run_id} not found"
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Run {run_id} not found",
                 )
 
     async def list_benchmarks(self) -> List[Dict[str, Any]]:
@@ -231,7 +262,9 @@ async def create_benchmark(request: BenchmarkCreateRequest):
         )
 
 
-@router.post("/run", response_model=BenchmarkResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/run", response_model=BenchmarkResponse, status_code=status.HTTP_201_CREATED
+)
 async def run_benchmark(request: BenchmarkRunRequest):
     """
     Run a benchmark.
@@ -377,7 +410,8 @@ async def delete_benchmark(run_id: str):
                 del benchmark_service.completed_benchmarks[run_id]
             else:
                 raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND, detail=f"Benchmark {run_id} not found"
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Benchmark {run_id} not found",
                 )
 
         return {"message": f"Benchmark {run_id} deleted successfully"}

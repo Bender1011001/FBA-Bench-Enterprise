@@ -8,6 +8,7 @@ import logging
 from datetime import datetime
 
 import pytest
+from money import Money
 
 from agents.advanced_agent import AdvancedAgent, AgentConfig
 from event_bus import get_event_bus
@@ -18,7 +19,6 @@ from events import (
     ProfitReport,
     TickEvent,
 )
-from money import Money
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -54,7 +54,10 @@ async def test_multi_skill_agent():
     # Test 1: Basic tick processing with skill coordination
     logger.info("\n=== Test 1: Skill-coordinated tick processing ===")
     tick_event = TickEvent(
-        event_id="tick_001", timestamp=datetime.now(), tick_number=1, simulation_time=datetime.now()
+        event_id="tick_001",
+        timestamp=datetime.now(),
+        tick_number=1,
+        simulation_time=datetime.now(),
     )
     await agent.handle_tick_event(tick_event)
 
@@ -160,8 +163,12 @@ async def test_multi_skill_agent():
         skill_info = status["skill_systems"]
         print("\nSkill Coordinator:")
         print(f"  Active Skills: {skill_info['coordinator']['active_skills']}")
-        print(f"  Registered Skills: {', '.join(skill_info['coordinator']['registered_skills'])}")
-        print(f"  Coordination Strategy: {skill_info['coordinator']['coordination_strategy']}")
+        print(
+            f"  Registered Skills: {', '.join(skill_info['coordinator']['registered_skills'])}"
+        )
+        print(
+            f"  Coordination Strategy: {skill_info['coordinator']['coordination_strategy']}"
+        )
 
         print("\nMulti-Domain Controller:")
         print(f"  Operational Mode: {skill_info['controller']['operational_mode']}")
@@ -254,7 +261,9 @@ async def demonstrate_skill_capabilities():
 
     print("\n6. MULTI-DOMAIN CONTROLLER:")
     print("   - Provides CEO-level strategic oversight and decision arbitration")
-    print("   - Evaluates business priorities dynamically (survival/growth/optimization)")
+    print(
+        "   - Evaluates business priorities dynamically (survival/growth/optimization)"
+    )
     print("   - Validates strategic alignment of all proposed actions")
     print("   - Manages crisis response with emergency protocol activation")
 
@@ -273,12 +282,18 @@ if __name__ == "__main__":
     print("MULTI-SKILL AGENT INTEGRATION COMPLETE")
     print("=" * 80)
     print("\nThe FBA-Bench agent now extends far beyond pricing decisions to include:")
-    print("• Comprehensive business domain coverage (supply, marketing, customer, finance)")
+    print(
+        "• Comprehensive business domain coverage (supply, marketing, customer, finance)"
+    )
     print("• Sophisticated multi-skill coordination and conflict resolution")
     print("• Strategic business alignment with dynamic priority management")
     print("• LLM-driven domain expertise rather than simple rule-based actions")
     print("• Event-driven reactive and proactive business management")
     print("• Advanced resource allocation and budget management")
     print("• Performance tracking and adaptive learning capabilities")
-    print("\nThis represents a master-level implementation of Issue 2: 'Partial Implementation")
-    print("of Agent Tasks (Beyond Pricing)' with full multi-domain business intelligence.")
+    print(
+        "\nThis represents a master-level implementation of Issue 2: 'Partial Implementation"
+    )
+    print(
+        "of Agent Tasks (Beyond Pricing)' with full multi-domain business intelligence."
+    )

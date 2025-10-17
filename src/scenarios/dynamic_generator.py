@@ -34,9 +34,9 @@ class DynamicScenarioGenerator:
         """
         template_data = self._load_template(base_template_name)
         generated_data = self._apply_randomization(template_data, randomization_config)
-        generated_data[
-            "scenario_name"
-        ] = f"{generated_data.get('scenario_name', 'DynamicScenario')}_{random.randint(1000, 9999)}"
+        generated_data["scenario_name"] = (
+            f"{generated_data.get('scenario_name', 'DynamicScenario')}_{random.randint(1000, 9999)}"
+        )
         # Normalize key fields post-randomization to satisfy tier-specific constraints
         generated_data = self._normalize_for_tier(generated_data)
 
@@ -46,7 +46,9 @@ class DynamicScenarioGenerator:
             validator = getattr(scenario, "validate_scenario_consistency", None)
             if callable(validator):
                 if not validator():
-                    raise ValueError("Generated scenario failed consistency validation.")
+                    raise ValueError(
+                        "Generated scenario failed consistency validation."
+                    )
         except AttributeError:
             # If validation method is unavailable, allow generation to proceed.
             # Downstream tests will still validate via ScenarioConfig.from_yaml(...).
@@ -99,7 +101,9 @@ class DynamicScenarioGenerator:
 
         return data
 
-    def _apply_randomization(self, data: Dict[str, Any], config: Dict[str, Any]) -> Dict[str, Any]:
+    def _apply_randomization(
+        self, data: Dict[str, Any], config: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Applies randomization to scenario parameters based on the provided config.
         This is a recursive method to handle nested dictionaries.
@@ -108,7 +112,9 @@ class DynamicScenarioGenerator:
             if key in data:
                 if isinstance(value, dict) and "range" in value:
                     min_val, max_val = value["range"]
-                    if isinstance(min_val, (int, float)) and isinstance(max_val, (int, float)):
+                    if isinstance(min_val, (int, float)) and isinstance(
+                        max_val, (int, float)
+                    ):
                         if isinstance(min_val, int) and isinstance(max_val, int):
                             data[key] = random.randint(min_val, max_val)
                         else:
@@ -167,7 +173,9 @@ class DynamicScenarioGenerator:
         scheduled_events = []
         for event in selected_events:
             event_copy = event.copy()
-            event_copy["tick"] = random.randint(1, timeline)  # Random tick within simulation
+            event_copy["tick"] = random.randint(
+                1, timeline
+            )  # Random tick within simulation
             scheduled_events.append(event_copy)
 
         return scheduled_events
@@ -258,7 +266,9 @@ class DynamicScenarioGenerator:
                 scenario_data["multi_agent_config"]["num_agents"] = max(
                     scenario_data["multi_agent_config"].get("num_agents", 1), 3
                 )
-                scenario_data["multi_agent_config"]["interaction_mode"] = "complex_ecosystem"
+                scenario_data["multi_agent_config"][
+                    "interaction_mode"
+                ] = "complex_ecosystem"
 
         scaled_scenario = ScenarioConfig(scenario_data)
         if not scaled_scenario.validate_scenario_consistency():

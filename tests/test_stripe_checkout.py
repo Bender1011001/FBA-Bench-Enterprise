@@ -1,24 +1,21 @@
 """Tests for the Stripe Checkout Session endpoint."""
 
 import os
-import pytest
-from unittest.mock import MagicMock
 from datetime import datetime
+from unittest.mock import MagicMock
 from uuid import uuid4
 
+import pytest
+from api.db import Base, get_db
+from api.models import User
+from api.routers.billing import stripe
+from api.security.jwt import create_access_token
+from api.security.passwords import hash_password
+from api.server import app
 from fastapi.testclient import TestClient
-from fastapi import FastAPI, Depends
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
-
-from api.server import app
-from api.db import get_db, Base
-from api.models import User
-from api.security.passwords import hash_password
-from api.security.jwt import create_access_token
-from api.routers.billing import stripe
-
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 
@@ -74,10 +71,7 @@ def create_test_user(db, email: str, password: str, active: bool = True):
 
 def get_auth_token(db, user):
     """Helper to create an access token for the user."""
-    claims = {
-        "sub": user.id,
-        "email": user.email
-    }
+    claims = {"sub": user.id, "email": user.email}
     return create_access_token(claims)
 
 
@@ -88,7 +82,9 @@ class TestCheckoutSession:
         assert response.status_code == 401
         assert response.json()["detail"] == "invalid_or_expired_token"
 
-    def test_checkout_400_when_missing_price_and_no_default(self, client, test_user, auth_token):
+    def test_checkout_400_when_missing_price_and_no_default(
+        self, client, test_user, auth_token
+    ):
         """Returns 400 when no price_id provided and no env default."""
         # Ensure no STRIPE_PRICE_ID_BASIC in env
         original_env = os.environ.get("STRIPE_PRICE_ID_BASIC")
@@ -101,11 +97,16 @@ class TestCheckoutSession:
         )
 
         assert response.status_code == 400
-        assert response.json()["detail"] == "No price ID provided and no default configured"
+        assert (
+            response.json()["detail"]
+            == "No price ID provided and no default configured"
+        )
         if original_env:
             os.environ["STRIPE_PRICE_ID_BASIC"] = original_env
 
-    def test_checkout_200_returns_url_with_env_default_price(self, client, test_user, auth_token, monkeypatch):
+    def test_checkout_200_returns_url_with_env_default_price(
+        self, client, test_user, auth_token, monkeypatch
+    ):
         """Successful checkout with env default price returns 200 with URL."""
         # Set env vars
         monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_mock")
@@ -115,7 +116,9 @@ class TestCheckoutSession:
         # Mock Stripe
         mock_session = MagicMock()
         mock_session.url = "https://checkout.stripe.com/pay/cs_test_mock"
-        monkeypatch.setattr(stripe.checkout.Session, "create", MagicMock(return_value=mock_session))
+        monkeypatch.setattr(
+            stripe.checkout.Session, "create", MagicMock(return_value=mock_session)
+        )
 
         response = client.post(
             "/billing/checkout-session",
@@ -128,7 +131,9 @@ class TestCheckoutSession:
         assert "url" in data
         assert data["url"] == mock_session.url
 
-    def test_checkout_502_on_stripe_error(self, client, test_user, auth_token, monkeypatch):
+    def test_checkout_502_on_stripe_error(
+        self, client, test_user, auth_token, monkeypatch
+    ):
         """Stripe API error returns 502."""
         # Set env vars
         monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_mock")
@@ -136,7 +141,11 @@ class TestCheckoutSession:
         monkeypatch.setenv("FRONTEND_BASE_URL", "http://localhost:5173")
 
         # Mock Stripe to raise error
-        monkeypatch.setattr(stripe.checkout.Session, "create", MagicMock(side_effect=Exception("Stripe error")))
+        monkeypatch.setattr(
+            stripe.checkout.Session,
+            "create",
+            MagicMock(side_effect=Exception("Stripe error")),
+        )
 
         response = client.post(
             "/billing/checkout-session",
@@ -147,7 +156,9 @@ class TestCheckoutSession:
         assert response.status_code == 500
         assert "Stripe error" in response.json()["detail"]
 
-    def test_checkout_uses_customer_email_and_metadata(self, client, test_user, auth_token, monkeypatch):
+    def test_checkout_uses_customer_email_and_metadata(
+        self, client, test_user, auth_token, monkeypatch
+    ):
         """Verifies customer_email and metadata are passed to Stripe."""
         # Set env vars
         monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_mock")

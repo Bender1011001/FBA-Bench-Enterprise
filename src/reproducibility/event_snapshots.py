@@ -70,7 +70,9 @@ class EventSnapshot:
         for event in events:
             e = dict(event)  # shallow copy per event
             if "timestamp" not in e:
-                e["timestamp"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+                e["timestamp"] = datetime.datetime.now(
+                    datetime.timezone.utc
+                ).isoformat()
             # Normalize 'type' to 'event_type' for compatibility with tests
             if "event_type" not in e and "type" in e:
                 e["event_type"] = e["type"]
@@ -78,7 +80,9 @@ class EventSnapshot:
 
         df = pd.DataFrame(normalized_events)
         # Ensure consistent column order for reproducibility, preferring common columns that exist
-        preferred = [c for c in ["timestamp", "event_type", "type", "data"] if c in df.columns]
+        preferred = [
+            c for c in ["timestamp", "event_type", "type", "data"] if c in df.columns
+        ]
         other_cols = [col for col in df.columns if col not in preferred]
         df = df[preferred + sorted(other_cols)]
         return df
@@ -101,7 +105,9 @@ class EventSnapshot:
             json_path = ARTIFACTS_DIR / f"{file_base}.json"
             with open(json_path, "w") as f:
                 json.dump([], f, indent=2)
-            print(f"Warning: No events to dump. Wrote empty JSON snapshot to: {json_path}")
+            print(
+                f"Warning: No events to dump. Wrote empty JSON snapshot to: {json_path}"
+            )
             return json_path
 
         df = EventSnapshot._create_event_df(events)
@@ -117,7 +123,9 @@ class EventSnapshot:
                 records = df.to_dict(orient="records")
                 with open(json_path, "w") as f:
                     json.dump(records, f, indent=2)
-                logger.warning(f"Parquet unavailable ({e}); wrote JSON snapshot to: {json_path}")
+                logger.warning(
+                    f"Parquet unavailable ({e}); wrote JSON snapshot to: {json_path}"
+                )
                 return json_path
             except Exception:
                 # Re-raise the original exception if JSON fallback also fails
@@ -138,7 +146,9 @@ class EventSnapshot:
                 pass
 
         # Fallback: try JSON with same base name
-        json_path = file_path.with_suffix(".json") if file_path.suffix != ".json" else file_path
+        json_path = (
+            file_path.with_suffix(".json") if file_path.suffix != ".json" else file_path
+        )
         if json_path.exists():
             with open(json_path) as f:
                 data = json.load(f)
@@ -150,7 +160,9 @@ class EventSnapshot:
         raise FileNotFoundError(f"Event snapshot file not found: {file_path}")
 
     @staticmethod
-    def compare_event_streams(events1: List[Dict[str, Any]], events2: List[Dict[str, Any]]) -> bool:
+    def compare_event_streams(
+        events1: List[Dict[str, Any]], events2: List[Dict[str, Any]]
+    ) -> bool:
         """
         Compares two event streams for exact equality.
         This is crucial for golden snapshot testing.
@@ -188,7 +200,9 @@ class EventSnapshot:
         df = EventSnapshot._create_event_df(events)
         # Convert rows to canonical JSON strings (sorted keys) to avoid ordering issues
         records = df.to_dict(orient="records")
-        canonical_list = [json.dumps(rec, sort_keys=True, separators=(",", ":")) for rec in records]
+        canonical_list = [
+            json.dumps(rec, sort_keys=True, separators=(",", ":")) for rec in records
+        ]
         canonical_string = "[" + ",".join(canonical_list) + "]"
         return hashlib.sha256(canonical_string.encode("utf-8")).hexdigest()[:16]
 
@@ -230,7 +244,9 @@ class EventSnapshot:
         )
 
         cls._llm_interactions.append(interaction)
-        logger.debug(f"Logged LLM interaction: {prompt_hash[:16]}... (cache_hit: {cache_hit})")
+        logger.debug(
+            f"Logged LLM interaction: {prompt_hash[:16]}... (cache_hit: {cache_hit})"
+        )
 
     @classmethod
     def set_snapshot_metadata(
@@ -259,7 +275,9 @@ class EventSnapshot:
             reproducibility_features_enabled=reproducibility_features_enabled or {},
         )
 
-        logger.debug(f"Set snapshot metadata: mode={simulation_mode}, seed={master_seed}")
+        logger.debug(
+            f"Set snapshot metadata: mode={simulation_mode}, seed={master_seed}"
+        )
 
     @classmethod
     def dump_events_with_metadata(
@@ -304,7 +322,9 @@ class EventSnapshot:
             enhanced_data["llm_interactions"] = [
                 asdict(interaction) for interaction in cls._llm_interactions
             ]
-            enhanced_data["snapshot_metadata"]["llm_interaction_count"] = len(cls._llm_interactions)
+            enhanced_data["snapshot_metadata"]["llm_interaction_count"] = len(
+                cls._llm_interactions
+            )
 
         # Add reproducibility metadata if available
         if include_reproducibility_metadata and cls._snapshot_metadata:
@@ -364,13 +384,18 @@ class EventSnapshot:
                 if "llm_interactions" not in data:
                     from dataclasses import asdict as _asdict
 
-                    data["llm_interactions"] = [_asdict(li) for li in cls._llm_interactions]
+                    data["llm_interactions"] = [
+                        _asdict(li) for li in cls._llm_interactions
+                    ]
             except Exception:
                 pass
 
             # Also ensure reproducibility metadata is present for tests when fallback JSON was used
             try:
-                if "reproducibility_metadata" not in data and cls._snapshot_metadata is not None:
+                if (
+                    "reproducibility_metadata" not in data
+                    and cls._snapshot_metadata is not None
+                ):
                     data["reproducibility_metadata"] = asdict(cls._snapshot_metadata)
             except Exception:
                 pass
@@ -548,12 +573,16 @@ class EventSnapshot:
             return {"total_interactions": 0}
 
         cache_hits = sum(1 for i in cls._llm_interactions if i.cache_hit)
-        deterministic_calls = sum(1 for i in cls._llm_interactions if i.deterministic_mode)
-        validation_failures = sum(1 for i in cls._llm_interactions if not i.validation_passed)
-
-        avg_response_time = sum(i.response_time_ms for i in cls._llm_interactions) / len(
-            cls._llm_interactions
+        deterministic_calls = sum(
+            1 for i in cls._llm_interactions if i.deterministic_mode
         )
+        validation_failures = sum(
+            1 for i in cls._llm_interactions if not i.validation_passed
+        )
+
+        avg_response_time = sum(
+            i.response_time_ms for i in cls._llm_interactions
+        ) / len(cls._llm_interactions)
 
         models_used = set(i.model for i in cls._llm_interactions)
 

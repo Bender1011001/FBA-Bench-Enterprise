@@ -20,10 +20,18 @@ from typing import Any, Dict, List, Optional
 # Add project root to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from community.community_tools import CommunityTools, DocumentationGenerator, ExampleValidator
+from community.community_tools import (
+    CommunityTools,
+    DocumentationGenerator,
+    ExampleValidator,
+)
 from community.contribution_validator import ContributionType, ContributionValidator
 from community.plugin_registry import PluginMetadata, PluginRegistry, RegistryEntry
-from community.version_manager import CompatibilityMatrix, SemanticVersion, VersionManager
+from community.version_manager import (
+    CompatibilityMatrix,
+    SemanticVersion,
+    VersionManager,
+)
 from plugins.api_gateway import APIGateway, APIVersion, EndpointRegistry
 from plugins.plugin_framework import PluginFramework, PluginType
 from plugins.plugin_loader import DependencyResolver
@@ -236,7 +244,9 @@ class CommunityAndExtensibilityTestSuite:
                     deactivated = await plugin_framework.deactivate_plugin(plugin.name)
 
                     # Test plugin is inactive
-                    is_inactive = not await plugin_framework.is_plugin_active(plugin.name)
+                    is_inactive = not await plugin_framework.is_plugin_active(
+                        plugin.name
+                    )
 
                     lifecycle_results[plugin.name] = all(
                         [activated, is_active, deactivated, is_inactive]
@@ -258,7 +268,9 @@ class CommunityAndExtensibilityTestSuite:
 
             for plugin_name, metadata in discovered_plugins.items():
                 required_fields = ["name", "type", "version", "description", "author"]
-                has_required_fields = all(field in metadata for field in required_fields)
+                has_required_fields = all(
+                    field in metadata for field in required_fields
+                )
 
                 # Validate version format
                 try:
@@ -308,10 +320,14 @@ class CommunityAndExtensibilityTestSuite:
                     security_result = await plugin_validator.validate_security(plugin)
 
                     # Test API boundary enforcement
-                    api_boundary_test = await plugin_validator.test_api_boundaries(plugin)
+                    api_boundary_test = await plugin_validator.test_api_boundaries(
+                        plugin
+                    )
 
                     # Test resource isolation
-                    resource_isolation_test = await plugin_validator.test_resource_isolation(plugin)
+                    resource_isolation_test = (
+                        await plugin_validator.test_resource_isolation(plugin)
+                    )
 
                     isolation_tests[plugin.name] = all(
                         [
@@ -340,10 +356,14 @@ class CommunityAndExtensibilityTestSuite:
                 test_plugin = self.mock_plugins[0]
                 try:
                     # Reload plugin
-                    reload_success = await plugin_framework.reload_plugin(test_plugin.name)
+                    reload_success = await plugin_framework.reload_plugin(
+                        test_plugin.name
+                    )
 
                     # Verify plugin is still functional
-                    post_reload_active = await plugin_framework.activate_plugin(test_plugin.name)
+                    post_reload_active = await plugin_framework.activate_plugin(
+                        test_plugin.name
+                    )
 
                     plugin_tests["hot_reload"] = reload_success and post_reload_active
                 except Exception as e:
@@ -410,24 +430,36 @@ class CommunityAndExtensibilityTestSuite:
 
             # Register test API endpoints
             test_endpoints = [
-                {"path": "/api/v1/agents", "version": "1.0.0", "methods": ["GET", "POST"]},
+                {
+                    "path": "/api/v1/agents",
+                    "version": "1.0.0",
+                    "methods": ["GET", "POST"],
+                },
                 {
                     "path": "/api/v1/scenarios",
                     "version": "1.0.0",
                     "methods": ["GET", "POST", "DELETE"],
                 },
-                {"path": "/api/v2/agents", "version": "2.0.0", "methods": ["GET", "POST", "PUT"]},
+                {
+                    "path": "/api/v2/agents",
+                    "version": "2.0.0",
+                    "methods": ["GET", "POST", "PUT"],
+                },
             ]
 
             endpoint_registration_results = {}
             for endpoint in test_endpoints:
                 try:
                     success = await endpoint_registry.register_endpoint(
-                        endpoint["path"], APIVersion(endpoint["version"]), endpoint["methods"]
+                        endpoint["path"],
+                        APIVersion(endpoint["version"]),
+                        endpoint["methods"],
                     )
                     endpoint_registration_results[endpoint["path"]] = success
                 except Exception as e:
-                    logger.error(f"Endpoint registration failed for {endpoint['path']}: {e}")
+                    logger.error(
+                        f"Endpoint registration failed for {endpoint['path']}: {e}"
+                    )
                     endpoint_registration_results[endpoint["path"]] = False
 
             api_compatibility_tests["endpoint_registration"] = sum(
@@ -453,14 +485,18 @@ class CommunityAndExtensibilityTestSuite:
                     is_compatible = version_manager.is_compatible(
                         SemanticVersion(v1), SemanticVersion(v2)
                     )
-                    version_tests[f"{v1}_to_{v2}"] = is_compatible == expected_compatible
+                    version_tests[f"{v1}_to_{v2}"] = (
+                        is_compatible == expected_compatible
+                    )
                 except Exception as e:
-                    logger.error(f"Version compatibility test failed for {v1} -> {v2}: {e}")
+                    logger.error(
+                        f"Version compatibility test failed for {v1} -> {v2}: {e}"
+                    )
                     version_tests[f"{v1}_to_{v2}"] = False
 
-            api_compatibility_tests["version_compatibility"] = sum(version_tests.values()) / len(
-                version_tests
-            )
+            api_compatibility_tests["version_compatibility"] = sum(
+                version_tests.values()
+            ) / len(version_tests)
 
             # Test 3: Backward Compatibility Matrix
             logger.info("Testing backward compatibility matrix")
@@ -500,9 +536,9 @@ class CommunityAndExtensibilityTestSuite:
                 matrix_tests["compatibility_rules"] = False
                 matrix_tests["matrix_serialization"] = False
 
-            api_compatibility_tests["compatibility_matrix"] = sum(matrix_tests.values()) / len(
-                matrix_tests
-            )
+            api_compatibility_tests["compatibility_matrix"] = sum(
+                matrix_tests.values()
+            ) / len(matrix_tests)
 
             # Test 4: API Documentation Generation
             logger.info("Testing API documentation generation")
@@ -512,11 +548,20 @@ class CommunityAndExtensibilityTestSuite:
             doc_tests = {}
             try:
                 # Generate API documentation
-                api_docs = await documentation_generator.generate_api_docs(endpoint_registry)
+                api_docs = await documentation_generator.generate_api_docs(
+                    endpoint_registry
+                )
 
                 # Validate documentation structure
-                required_sections = ["endpoints", "authentication", "examples", "changelog"]
-                has_required_sections = all(section in api_docs for section in required_sections)
+                required_sections = [
+                    "endpoints",
+                    "authentication",
+                    "examples",
+                    "changelog",
+                ]
+                has_required_sections = all(
+                    section in api_docs for section in required_sections
+                )
 
                 doc_tests["api_documentation"] = has_required_sections
 
@@ -526,7 +571,9 @@ class CommunityAndExtensibilityTestSuite:
                     api_docs, doc_file
                 )
 
-                doc_tests["documentation_export"] = export_success and os.path.exists(doc_file)
+                doc_tests["documentation_export"] = export_success and os.path.exists(
+                    doc_file
+                )
 
             except Exception as e:
                 logger.error(f"API documentation test failed: {e}")
@@ -559,7 +606,9 @@ class CommunityAndExtensibilityTestSuite:
                     compliance_tests[plugin.name] = False
 
             api_compatibility_tests["plugin_api_compliance"] = (
-                sum(compliance_tests.values()) / len(compliance_tests) if compliance_tests else 0
+                sum(compliance_tests.values()) / len(compliance_tests)
+                if compliance_tests
+                else 0
             )
 
             # Success criteria
@@ -584,7 +633,9 @@ class CommunityAndExtensibilityTestSuite:
             )
 
         except Exception as e:
-            logger.error(f"API stability and versioning test failed: {e}", exc_info=True)
+            logger.error(
+                f"API stability and versioning test failed: {e}", exc_info=True
+            )
             duration = time.time() - start_time
 
             return ExtensibilityTestResult(
@@ -627,7 +678,11 @@ class CommunityAndExtensibilityTestSuite:
                     contribution_type=ContributionType.PLUGIN,
                     files_modified=["plugins/new_skill.py", "tests/test_new_skill.py"],
                     test_requirements=["unit_tests", "integration_tests"],
-                    expected_review_criteria=["code_quality", "test_coverage", "documentation"],
+                    expected_review_criteria=[
+                        "code_quality",
+                        "test_coverage",
+                        "documentation",
+                    ],
                     security_implications=True,
                 ),
                 ContributionTestScenario(
@@ -657,18 +712,24 @@ class CommunityAndExtensibilityTestSuite:
             for scenario in test_contributions:
                 try:
                     # Validate contribution
-                    validation_result = await contribution_validator.validate_contribution(
-                        scenario.contribution_type,
-                        scenario.files_modified,
-                        scenario.test_requirements,
+                    validation_result = (
+                        await contribution_validator.validate_contribution(
+                            scenario.contribution_type,
+                            scenario.files_modified,
+                            scenario.test_requirements,
+                        )
                     )
 
                     # Check review criteria
-                    review_criteria_met = await contribution_validator.check_review_criteria(
-                        scenario.expected_review_criteria, validation_result
+                    review_criteria_met = (
+                        await contribution_validator.check_review_criteria(
+                            scenario.expected_review_criteria, validation_result
+                        )
                     )
 
-                    contribution_validation_results[scenario.contribution_type.value] = {
+                    contribution_validation_results[
+                        scenario.contribution_type.value
+                    ] = {
                         "validation_passed": (
                             validation_result.is_valid
                             if hasattr(validation_result, "is_valid")
@@ -681,7 +742,9 @@ class CommunityAndExtensibilityTestSuite:
                     logger.error(
                         f"Contribution validation failed for {scenario.contribution_type.value}: {e}"
                     )
-                    contribution_validation_results[scenario.contribution_type.value] = {
+                    contribution_validation_results[
+                        scenario.contribution_type.value
+                    ] = {
                         "validation_passed": False,
                         "review_criteria_met": False,
                     }
@@ -693,7 +756,9 @@ class CommunityAndExtensibilityTestSuite:
                 if result["validation_passed"] and result["review_criteria_met"]
             ) / len(contribution_validation_results)
 
-            contribution_workflow_tests["contribution_validation"] = validation_success_rate > 0.8
+            contribution_workflow_tests["contribution_validation"] = (
+                validation_success_rate > 0.8
+            )
 
             # Test 2: Automated Testing Integration
             logger.info("Testing automated testing integration")
@@ -703,12 +768,15 @@ class CommunityAndExtensibilityTestSuite:
             for scenario in test_contributions:
                 try:
                     # Simulate running tests for contribution
-                    test_results = await self._simulate_ci_pipeline(scenario, environment)
+                    test_results = await self._simulate_ci_pipeline(
+                        scenario, environment
+                    )
 
                     ci_tests[scenario.contribution_type.value] = {
                         "tests_passed": test_results.get("tests_passed", False),
                         "coverage_adequate": test_results.get("coverage", 0) > 0.8,
-                        "security_scan_clean": test_results.get("security_issues", 0) == 0,
+                        "security_scan_clean": test_results.get("security_issues", 0)
+                        == 0,
                     }
 
                 except Exception as e:
@@ -721,9 +789,9 @@ class CommunityAndExtensibilityTestSuite:
                         "security_scan_clean": False,
                     }
 
-            ci_success_rate = sum(1 for result in ci_tests.values() if all(result.values())) / len(
-                ci_tests
-            )
+            ci_success_rate = sum(
+                1 for result in ci_tests.values() if all(result.values())
+            ) / len(ci_tests)
 
             contribution_workflow_tests["automated_testing"] = ci_success_rate > 0.7
 
@@ -756,7 +824,9 @@ class CommunityAndExtensibilityTestSuite:
                 # Validate examples
                 example_validation_results = []
                 for example in test_examples:
-                    validation_result = await example_validator.validate_example(example["file"])
+                    validation_result = await example_validator.validate_example(
+                        example["file"]
+                    )
                     example_validation_results.append(
                         validation_result.is_valid
                         if hasattr(validation_result, "is_valid")
@@ -809,7 +879,9 @@ class CommunityAndExtensibilityTestSuite:
                         checksums={"sha256": "test_checksum"},
                     )
 
-                    registration_success = await plugin_registry.register_plugin(registry_entry)
+                    registration_success = await plugin_registry.register_plugin(
+                        registry_entry
+                    )
                     registry_tests[f"register_{plugin.name}"] = registration_success
 
                 # Test plugin search and discovery
@@ -854,10 +926,16 @@ class CommunityAndExtensibilityTestSuite:
                         )
 
                         security_tests[scenario.contribution_type.value] = {
-                            "no_vulnerabilities": security_scan_result.get("vulnerabilities", 0)
+                            "no_vulnerabilities": security_scan_result.get(
+                                "vulnerabilities", 0
+                            )
                             == 0,
-                            "safe_api_usage": security_scan_result.get("safe_api_usage", True),
-                            "dependency_security": security_scan_result.get("dependency_issues", 0)
+                            "safe_api_usage": security_scan_result.get(
+                                "safe_api_usage", True
+                            ),
+                            "dependency_security": security_scan_result.get(
+                                "dependency_issues", 0
+                            )
                             == 0,
                         }
 
@@ -878,7 +956,9 @@ class CommunityAndExtensibilityTestSuite:
                 else 1.0
             )
 
-            security_validation_tests["automated_security_scan"] = security_success_rate > 0.8
+            security_validation_tests["automated_security_scan"] = (
+                security_success_rate > 0.8
+            )
 
             # Success criteria
             workflow_success = (
@@ -903,7 +983,9 @@ class CommunityAndExtensibilityTestSuite:
             )
 
         except Exception as e:
-            logger.error(f"Contribution workflow validation test failed: {e}", exc_info=True)
+            logger.error(
+                f"Contribution workflow validation test failed: {e}", exc_info=True
+            )
             duration = time.time() - start_time
 
             return ExtensibilityTestResult(
@@ -937,7 +1019,9 @@ class CommunityAndExtensibilityTestSuite:
             base_results["coverage"] = 0.9  # Higher coverage expected for plugins
         elif scenario.contribution_type == ContributionType.DOCUMENTATION:
             base_results["coverage"] = 1.0  # Documentation doesn't affect code coverage
-            base_results["security_issues"] = 0  # Documentation has no security implications
+            base_results["security_issues"] = (
+                0  # Documentation has no security implications
+            )
         elif scenario.contribution_type == ContributionType.BUG_FIX:
             base_results["coverage"] = 0.95  # Bug fixes should have high test coverage
 
@@ -987,7 +1071,9 @@ class CommunityAndExtensibilityTestSuite:
                 if result.success:
                     logger.info(f"✅ {result.test_name} passed")
                 else:
-                    logger.error(f"❌ {result.test_name} failed: {result.error_details}")
+                    logger.error(
+                        f"❌ {result.test_name} failed: {result.error_details}"
+                    )
 
             except Exception as e:
                 logger.error(f"Test {test_method.__name__} crashed: {e}", exc_info=True)
@@ -1022,7 +1108,9 @@ class CommunityAndExtensibilityTestSuite:
 
         for result in results:
             if result.plugin_tests:
-                plugin_score += sum(result.plugin_tests.values()) / len(result.plugin_tests)
+                plugin_score += sum(result.plugin_tests.values()) / len(
+                    result.plugin_tests
+                )
             if result.api_compatibility_tests:
                 api_values = [
                     v
@@ -1032,9 +1120,9 @@ class CommunityAndExtensibilityTestSuite:
                 if api_values:
                     api_score += sum(api_values) / len(api_values)
             if result.contribution_workflow_tests:
-                workflow_score += sum(result.contribution_workflow_tests.values()) / len(
-                    result.contribution_workflow_tests
-                )
+                workflow_score += sum(
+                    result.contribution_workflow_tests.values()
+                ) / len(result.contribution_workflow_tests)
             if result.security_validation_tests:
                 security_score += sum(result.security_validation_tests.values()) / len(
                     result.security_validation_tests
@@ -1048,7 +1136,9 @@ class CommunityAndExtensibilityTestSuite:
         avg_api_score = api_score / total_tests if total_tests > 0 else 0
         avg_workflow_score = workflow_score / total_tests if total_tests > 0 else 0
         avg_security_score = security_score / total_tests if total_tests > 0 else 0
-        avg_documentation_score = documentation_score / total_tests if total_tests > 0 else 0
+        avg_documentation_score = (
+            documentation_score / total_tests if total_tests > 0 else 0
+        )
 
         summary = {
             "suite_duration_seconds": suite_duration,
@@ -1085,7 +1175,8 @@ async def main():
     """Run community and extensibility testing suite."""
     # Configure logging
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     test_suite = CommunityAndExtensibilityTestSuite()

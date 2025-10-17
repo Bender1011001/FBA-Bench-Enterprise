@@ -32,7 +32,8 @@ def demonstrate_jupyter_connector_features():
     # Test 1: Connector Initialization
     print("\n1️⃣ Testing Connector Initialization")
     connector = JupyterConnector(
-        api_base_url="http://localhost:8000", websocket_url="ws://localhost:8000/ws/events"
+        api_base_url="http://localhost:8000",
+        websocket_url="ws://localhost:8000/ws/events",
     )
     print("✅ JupyterConnector created successfully")
 
@@ -55,7 +56,10 @@ def demonstrate_jupyter_connector_features():
     utility_methods = []
 
     for method in public_methods:
-        if any(keyword in method.lower() for keyword in ["get", "refresh", "is_", "wait_for"]):
+        if any(
+            keyword in method.lower()
+            for keyword in ["get", "refresh", "is_", "wait_for"]
+        ):
             read_methods.append(method)
         elif any(keyword in method.lower() for keyword in ["add_", "close"]):
             utility_methods.append(method)
@@ -113,7 +117,10 @@ def demonstrate_jupyter_connector_features():
                 "price": {"amount": 24.99, "currency": "USD"},
                 "market_share": 0.35,
             },
-            "slow_follower": {"price": {"amount": 29.99, "currency": "USD"}, "market_share": 0.28},
+            "slow_follower": {
+                "price": {"amount": 29.99, "currency": "USD"},
+                "market_share": 0.28,
+            },
         },
     }
 
@@ -258,7 +265,9 @@ def demonstrate_jupyter_connector_features():
     if competitor_prices:
         avg_price = sum(competitor_prices) / len(competitor_prices)
         print(f"   📊 Average Competitor Price: ${avg_price:.2f}")
-        print(f"   📊 Price Range: ${min(competitor_prices):.2f} - ${max(competitor_prices):.2f}")
+        print(
+            f"   📊 Price Range: ${min(competitor_prices):.2f} - ${max(competitor_prices):.2f}"
+        )
 
     # Test 7: Integration Workflow Demo
     print("\n7️⃣ Integration Workflow Demo")

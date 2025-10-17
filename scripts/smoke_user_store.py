@@ -4,14 +4,12 @@ Verifies database connectivity, model persistence, and password hashing.
 """
 
 import json
-import os
 import sys
 from pathlib import Path
 from uuid import uuid4
 
 from dotenv import load_dotenv
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
 
 # Add repo root to sys.path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))

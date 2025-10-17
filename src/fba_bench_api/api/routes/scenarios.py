@@ -11,10 +11,16 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/scenarios", tags=["Scenarios"])
 
 
-@router.get("", response_model=ScenarioList, description="List available scenarios with pagination")
+@router.get(
+    "",
+    response_model=ScenarioList,
+    description="List available scenarios with pagination",
+)
 async def list_scenarios(
     page: int = Query(1, ge=1, description="Page number (1-based)"),
-    page_size: int = Query(20, ge=1, le=100, description="Number of scenarios per page"),
+    page_size: int = Query(
+        20, ge=1, le=100, description="Number of scenarios per page"
+    ),
     tags: Optional[List[str]] = Query(None, description="Filter by tags"),
     difficulty_tier: Optional[int] = Query(
         None, ge=0, le=3, description="Filter by difficulty tier"
@@ -37,11 +43,16 @@ async def list_scenarios(
     except Exception as e:
         logger.error("Failed to list scenarios: %s", e, exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to retrieve scenarios"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve scenarios",
         )
 
 
-@router.get("/{scenario_id}", response_model=Scenario, description="Get specific scenario details")
+@router.get(
+    "/{scenario_id}",
+    response_model=Scenario,
+    description="Get specific scenario details",
+)
 async def get_scenario(scenario_id: str):
     """
     Retrieve detailed information for a specific scenario.
@@ -58,7 +69,8 @@ async def get_scenario(scenario_id: str):
 
         if not scenario:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Scenario '{scenario_id}' not found"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Scenario '{scenario_id}' not found",
             )
 
         return scenario
@@ -67,7 +79,8 @@ async def get_scenario(scenario_id: str):
     except Exception as e:
         logger.error("Failed to get scenario %s: %s", scenario_id, e, exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to retrieve scenario"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve scenario",
         )
 
 
@@ -88,7 +101,8 @@ async def validate_scenario(scenario_id: str):
 
         if not scenario:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Scenario '{scenario_id}' not found"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Scenario '{scenario_id}' not found",
             )
 
         is_valid = scenario_service.validate_scenario(scenario_id)
@@ -96,20 +110,32 @@ async def validate_scenario(scenario_id: str):
         return {
             "scenario_id": scenario_id,
             "valid": is_valid,
-            "message": "Scenario validation passed" if is_valid else "Scenario validation failed",
+            "message": (
+                "Scenario validation passed"
+                if is_valid
+                else "Scenario validation failed"
+            ),
             "timestamp": scenario.created_at.isoformat(),
         }
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("Failed to validate scenario %s: %s", scenario_id, e, exc_info=True)
+        logger.error(
+            "Failed to validate scenario %s: %s", scenario_id, e, exc_info=True
+        )
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to validate scenario"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to validate scenario",
         )
 
 
-@router.post("", response_model=Scenario, status_code=status.HTTP_201_CREATED, description="Create a new scenario")
+@router.post(
+    "",
+    response_model=Scenario,
+    status_code=status.HTTP_201_CREATED,
+    description="Create a new scenario",
+)
 async def create_scenario(payload: ScenarioCreate):
     """
     Create a new scenario configuration.
@@ -135,17 +161,18 @@ async def create_scenario(payload: ScenarioCreate):
 
     except ValueError as e:
         logger.error("Failed to create scenario: %s", e)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         logger.error("Failed to create scenario: %s", e, exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create scenario"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create scenario",
         )
 
 
-@router.patch("/{scenario_id}", response_model=Scenario, description="Update an existing scenario")
+@router.patch(
+    "/{scenario_id}", response_model=Scenario, description="Update an existing scenario"
+)
 async def update_scenario(scenario_id: str, payload: ScenarioUpdate):
     """
     Update an existing scenario configuration.
@@ -157,7 +184,8 @@ async def update_scenario(scenario_id: str, payload: ScenarioUpdate):
         scenario_service = get_scenario_service()
         if not scenario_service.get_scenario(scenario_id):
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Scenario '{scenario_id}' not found"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Scenario '{scenario_id}' not found",
             )
 
         updated = scenario_service.update_scenario(scenario_id, payload)
@@ -173,17 +201,20 @@ async def update_scenario(scenario_id: str, payload: ScenarioUpdate):
 
     except ValueError as e:
         logger.error("Failed to update scenario %s: %s", scenario_id, e)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         logger.error("Failed to update scenario %s: %s", scenario_id, e, exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to update scenario"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update scenario",
         )
 
 
-@router.delete("/{scenario_id}", status_code=status.HTTP_204_NO_CONTENT, description="Delete a scenario")
+@router.delete(
+    "/{scenario_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    description="Delete a scenario",
+)
 async def delete_scenario(scenario_id: str):
     """
     Delete a scenario configuration.
@@ -194,7 +225,8 @@ async def delete_scenario(scenario_id: str):
         scenario_service = get_scenario_service()
         if not scenario_service.delete_scenario(scenario_id):
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Scenario '{scenario_id}' not found"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Scenario '{scenario_id}' not found",
             )
 
         logger.info("Deleted scenario: %s", scenario_id)
@@ -205,5 +237,6 @@ async def delete_scenario(scenario_id: str):
     except Exception as e:
         logger.error("Failed to delete scenario %s: %s", scenario_id, e, exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to delete scenario"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete scenario",
         )

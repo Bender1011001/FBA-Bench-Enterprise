@@ -18,6 +18,18 @@ from datetime import datetime
 
 import pytest
 
+# Memory experiment imports
+from memory_experiments.experiment_runner import ExperimentRunner
+from memory_experiments.memory_config import MemoryConfig
+from memory_experiments.memory_enforcer import MemoryEnforcer
+from memory_experiments.memory_modes import MemoryMode
+from redteam.adversarial_event_injector import AdversarialEventInjector
+
+# Adversarial testing imports
+from redteam.gauntlet_runner import GauntletRunner
+from redteam.resistance_scorer import AdversaryResistanceScorer as ResistanceScorer
+from services.dashboard_api_service import DashboardAPIService
+
 from agent_runners.configs.framework_configs import FrameworkConfig
 
 # Agent framework imports
@@ -36,12 +48,6 @@ from integration_tests import IntegrationTestConfig, IntegrationTestSuite, logge
 # Leaderboard imports
 from leaderboard.leaderboard_manager import LeaderboardManager
 from leaderboard.score_tracker import ScoreTracker
-
-# Memory experiment imports
-from memory_experiments.experiment_runner import ExperimentRunner
-from memory_experiments.memory_config import MemoryConfig
-from memory_experiments.memory_enforcer import MemoryEnforcer
-from memory_experiments.memory_modes import MemoryMode
 from metrics.adversarial_metrics import AdversarialMetrics
 from metrics.cognitive_metrics import CognitiveMetrics
 from metrics.cost_metrics import CostMetrics
@@ -53,12 +59,6 @@ from metrics.metric_suite import MetricSuite
 from metrics.operations_metrics import OperationsMetrics
 from metrics.stress_metrics import StressMetrics
 from metrics.trust_metrics import TrustMetrics
-from redteam.adversarial_event_injector import AdversarialEventInjector
-
-# Adversarial testing imports
-from redteam.gauntlet_runner import GauntletRunner
-from redteam.resistance_scorer import AdversaryResistanceScorer as ResistanceScorer
-from services.dashboard_api_service import DashboardAPIService
 
 # Services imports
 

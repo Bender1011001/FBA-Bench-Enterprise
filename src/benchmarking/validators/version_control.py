@@ -91,7 +91,9 @@ class VersionManifest:
             data["timestamp"] = datetime.fromisoformat(data["timestamp"])
 
         if "components" in data:
-            data["components"] = [ComponentVersion.from_dict(comp) for comp in data["components"]]
+            data["components"] = [
+                ComponentVersion.from_dict(comp) for comp in data["components"]
+            ]
 
         return cls(**data)
 
@@ -111,13 +113,17 @@ class VersionControlManager:
         Args:
             storage_path: Path to store version manifests
         """
-        self.storage_path = Path(storage_path) if storage_path else Path.cwd() / "version_manifests"
+        self.storage_path = (
+            Path(storage_path) if storage_path else Path.cwd() / "version_manifests"
+        )
         self.storage_path.mkdir(parents=True, exist_ok=True)
 
         self._current_manifest: Optional[VersionManifest] = None
         self._component_cache: Dict[str, str] = {}
 
-        logger.info(f"Initialized VersionControlManager with storage at: {self.storage_path}")
+        logger.info(
+            f"Initialized VersionControlManager with storage at: {self.storage_path}"
+        )
 
     def create_manifest(self, run_id: str) -> VersionManifest:
         """
@@ -175,7 +181,9 @@ class VersionControlManager:
                 self._component_cache[cache_key] = self._calculate_component_hash(path)
             except FileNotFoundError:
                 # Tests may provide mocked paths; fallback to hashing the identifier string
-                self._component_cache[cache_key] = hashlib.sha256(path.encode("utf-8")).hexdigest()
+                self._component_cache[cache_key] = hashlib.sha256(
+                    path.encode("utf-8")
+                ).hexdigest()
 
         # Create component version
         component = ComponentVersion(
@@ -247,7 +255,10 @@ class VersionControlManager:
             raise
 
     def add_model(
-        self, model_path: str, model_name: str, metadata: Optional[Dict[str, Any]] = None
+        self,
+        model_path: str,
+        model_name: str,
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> ComponentVersion:
         """
         Add a model to the manifest.
@@ -265,7 +276,10 @@ class VersionControlManager:
         )
 
     def add_dataset(
-        self, dataset_path: str, dataset_name: str, metadata: Optional[Dict[str, Any]] = None
+        self,
+        dataset_path: str,
+        dataset_name: str,
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> ComponentVersion:
         """
         Add a dataset to the manifest.
@@ -279,11 +293,17 @@ class VersionControlManager:
             Component version information
         """
         return self.add_component(
-            name=dataset_name, component_type="dataset", path=dataset_path, metadata=metadata
+            name=dataset_name,
+            component_type="dataset",
+            path=dataset_path,
+            metadata=metadata,
         )
 
     def add_configuration(
-        self, config_path: str, config_name: str, metadata: Optional[Dict[str, Any]] = None
+        self,
+        config_path: str,
+        config_name: str,
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> ComponentVersion:
         """
         Add a configuration file to the manifest.
@@ -297,7 +317,10 @@ class VersionControlManager:
             Component version information
         """
         return self.add_component(
-            name=config_name, component_type="config", path=config_path, metadata=metadata
+            name=config_name,
+            component_type="config",
+            path=config_path,
+            metadata=metadata,
         )
 
     def save_manifest(self, filename: Optional[str] = None) -> str:
@@ -369,9 +392,17 @@ class VersionControlManager:
         """
         comparison = {
             "run_ids": [manifest1.run_id, manifest2.run_id],
-            "timestamps": [manifest1.timestamp.isoformat(), manifest2.timestamp.isoformat()],
+            "timestamps": [
+                manifest1.timestamp.isoformat(),
+                manifest2.timestamp.isoformat(),
+            ],
             "differences": {
-                "components": {"added": [], "removed": [], "changed": [], "unchanged": []},
+                "components": {
+                    "added": [],
+                    "removed": [],
+                    "changed": [],
+                    "unchanged": [],
+                },
                 "environment": {},
                 "git_info": {},
             },
@@ -415,9 +446,15 @@ class VersionControlManager:
                         "new": env2[key],
                     }
             elif key in env1:
-                comparison["differences"]["environment"][key] = {"old": env1[key], "new": None}
+                comparison["differences"]["environment"][key] = {
+                    "old": env1[key],
+                    "new": None,
+                }
             else:
-                comparison["differences"]["environment"][key] = {"old": None, "new": env2[key]}
+                comparison["differences"]["environment"][key] = {
+                    "old": None,
+                    "new": env2[key],
+                }
 
         # Compare git info
         git1 = manifest1.git_info
@@ -432,13 +469,21 @@ class VersionControlManager:
                         "new": git2[key],
                     }
             elif key in git1:
-                comparison["differences"]["git_info"][key] = {"old": git1[key], "new": None}
+                comparison["differences"]["git_info"][key] = {
+                    "old": git1[key],
+                    "new": None,
+                }
             else:
-                comparison["differences"]["git_info"][key] = {"old": None, "new": git2[key]}
+                comparison["differences"]["git_info"][key] = {
+                    "old": None,
+                    "new": git2[key],
+                }
 
         return comparison
 
-    def verify_reproducibility(self, reference_manifest: VersionManifest) -> Dict[str, Any]:
+    def verify_reproducibility(
+        self, reference_manifest: VersionManifest
+    ) -> Dict[str, Any]:
         """
         Verify if the current environment matches a reference manifest.
 
@@ -507,7 +552,10 @@ class VersionControlManager:
         for key, value in reference_manifest.git_info.items():
             current_value = current_manifest.git_info.get(key)
             if current_value == value:
-                verification["results"]["git_info"][key] = {"status": "reproducible", "match": True}
+                verification["results"]["git_info"][key] = {
+                    "status": "reproducible",
+                    "match": True,
+                }
             else:
                 verification["results"]["git_info"][key] = {
                     "status": "different",
@@ -565,24 +613,36 @@ class VersionControlManager:
         try:
             commit = (
                 subprocess.run(
-                    ["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=False
+                    ["git", "rev-parse", "HEAD"],
+                    capture_output=True,
+                    text=True,
+                    check=False,
                 ).stdout.strip()
                 or ""
             )
             branch = (
                 subprocess.run(
-                    ["git", "branch", "--show-current"], capture_output=True, text=True, check=False
+                    ["git", "branch", "--show-current"],
+                    capture_output=True,
+                    text=True,
+                    check=False,
                 ).stdout.strip()
                 or ""
             )
             commit_message = (
                 subprocess.run(
-                    ["git", "log", "-1", "--pretty=%B"], capture_output=True, text=True, check=False
+                    ["git", "log", "-1", "--pretty=%B"],
+                    capture_output=True,
+                    text=True,
+                    check=False,
                 ).stdout.strip()
                 or ""
             )
             status_out = subprocess.run(
-                ["git", "status", "--porcelain"], capture_output=True, text=True, check=False
+                ["git", "status", "--porcelain"],
+                capture_output=True,
+                text=True,
+                check=False,
             ).stdout
 
             return {

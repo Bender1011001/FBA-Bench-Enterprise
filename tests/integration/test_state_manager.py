@@ -18,7 +18,8 @@ pytestmark = pytest.mark.integration
 
 
 @pytest.mark.skipif(
-    not fakeredis, reason="fakeredis[async] not available; skipping StateManager integration tests"
+    not fakeredis,
+    reason="fakeredis[async] not available; skipping StateManager integration tests",
 )
 @pytest.mark.asyncio
 async def test_set_get_round_trip_basic_types():
@@ -48,7 +49,8 @@ async def test_set_get_round_trip_basic_types():
 
 
 @pytest.mark.skipif(
-    not fakeredis, reason="fakeredis[async] not available; skipping StateManager integration tests"
+    not fakeredis,
+    reason="fakeredis[async] not available; skipping StateManager integration tests",
 )
 @pytest.mark.asyncio
 async def test_set_get_round_trip_special_types_datetime_uuid():
@@ -78,7 +80,8 @@ async def test_set_get_round_trip_special_types_datetime_uuid():
 
 
 @pytest.mark.skipif(
-    not fakeredis, reason="fakeredis[async] not available; skipping StateManager integration tests"
+    not fakeredis,
+    reason="fakeredis[async] not available; skipping StateManager integration tests",
 )
 @pytest.mark.asyncio
 async def test_ttl_expiration_behavior():
@@ -94,7 +97,8 @@ async def test_ttl_expiration_behavior():
 
 
 @pytest.mark.skipif(
-    not fakeredis, reason="fakeredis[async] not available; skipping StateManager integration tests"
+    not fakeredis,
+    reason="fakeredis[async] not available; skipping StateManager integration tests",
 )
 @pytest.mark.asyncio
 async def test_keys_and_clear_and_pattern_filtering():
@@ -121,7 +125,8 @@ async def test_keys_and_clear_and_pattern_filtering():
 
 
 @pytest.mark.skipif(
-    not fakeredis, reason="fakeredis[async] not available; skipping StateManager integration tests"
+    not fakeredis,
+    reason="fakeredis[async] not available; skipping StateManager integration tests",
 )
 @pytest.mark.asyncio
 async def test_incr_atomic_and_ttl_on_first_creation():
@@ -140,7 +145,9 @@ async def test_incr_atomic_and_ttl_on_first_creation():
     # TTL should exist (>= 0)
     ttl = await r.ttl("state:itest:counter")
     # fakeredis sometimes returns -1 for no ttl; we expect ttl set at first creation
-    assert ttl == -2 or ttl > 0 or ttl == -1  # be permissive; mainly validate increment correctness
+    assert (
+        ttl == -2 or ttl > 0 or ttl == -1
+    )  # be permissive; mainly validate increment correctness
 
     # Newly created without TTL
     v3 = await sm.incr("ctr2")
@@ -151,7 +158,8 @@ async def test_incr_atomic_and_ttl_on_first_creation():
 
 
 @pytest.mark.skipif(
-    not fakeredis, reason="fakeredis[async] not available; skipping StateManager integration tests"
+    not fakeredis,
+    reason="fakeredis[async] not available; skipping StateManager integration tests",
 )
 @pytest.mark.asyncio
 async def test_exists_and_delete_semantics():
@@ -171,7 +179,8 @@ async def test_exists_and_delete_semantics():
 
 
 @pytest.mark.skipif(
-    not fakeredis, reason="fakeredis[async] not available; skipping StateManager integration tests"
+    not fakeredis,
+    reason="fakeredis[async] not available; skipping StateManager integration tests",
 )
 @pytest.mark.asyncio
 async def test_notify_publish_channel():

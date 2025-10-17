@@ -6,11 +6,11 @@ import asyncio
 from datetime import datetime, timezone
 
 import pytest
+from money import Money
+from services.dashboard_api_service import DashboardAPIService
 
 from event_bus import AsyncioQueueBackend, EventBus
 from events import SaleOccurred, SetPriceCommand, TickEvent
-from money import Money
-from services.dashboard_api_service import DashboardAPIService
 
 
 @pytest.mark.asyncio
@@ -79,12 +79,16 @@ async def test_since_tick_filtering():
         print("\n📊 Testing event retrieval with since_tick filtering:")
 
         # Debug: Check dashboard state
-        print(f"   Dashboard current tick: {dashboard_service.simulation_state['current_tick']}")
+        print(
+            f"   Dashboard current tick: {dashboard_service.simulation_state['current_tick']}"
+        )
         print(f"   Events processed: {dashboard_service.events_processed_count}")
 
         # Test 1: Get all events (no filtering)
         all_sales = dashboard_service.get_recent_events(event_type="sales", limit=100)
-        all_commands = dashboard_service.get_recent_events(event_type="commands", limit=100)
+        all_commands = dashboard_service.get_recent_events(
+            event_type="commands", limit=100
+        )
         print(f"   Total sales events: {len(all_sales)}")
         print(f"   Total command events: {len(all_commands)}")
 
@@ -117,7 +121,9 @@ async def test_since_tick_filtering():
             print(f"      Tick {cmd['tick_number']}: {cmd['event_id']}")
 
         # Test 4: Mixed events since tick 2
-        mixed_events = dashboard_service.get_recent_events(event_type=None, limit=100, since_tick=2)
+        mixed_events = dashboard_service.get_recent_events(
+            event_type=None, limit=100, since_tick=2
+        )
         print(f"   Mixed events since tick 2: {len(mixed_events)} (expected: 8)")
 
         # Test 5: Edge case - since_tick higher than any tick
@@ -127,21 +133,29 @@ async def test_since_tick_filtering():
         print(f"   Events since tick 10: {len(no_events)} (expected: 0)")
 
         # Validation
-        assert len(filtered_sales) == 3, f"Expected 3 sales since tick 3, got {len(filtered_sales)}"
+        assert (
+            len(filtered_sales) == 3
+        ), f"Expected 3 sales since tick 3, got {len(filtered_sales)}"
         assert (
             len(filtered_commands) == 2
         ), f"Expected 2 commands since tick 4, got {len(filtered_commands)}"
         assert (
             len(mixed_events) == 8
         ), f"Expected 8 mixed events since tick 2, got {len(mixed_events)}"
-        assert len(no_events) == 0, f"Expected 0 events since tick 10, got {len(no_events)}"
+        assert (
+            len(no_events) == 0
+        ), f"Expected 0 events since tick 10, got {len(no_events)}"
 
         # Verify tick numbers in filtered results
         for sale in filtered_sales:
-            assert sale["tick_number"] >= 3, f"Sale has tick {sale['tick_number']}, expected >= 3"
+            assert (
+                sale["tick_number"] >= 3
+            ), f"Sale has tick {sale['tick_number']}, expected >= 3"
 
         for cmd in filtered_commands:
-            assert cmd["tick_number"] >= 4, f"Command has tick {cmd['tick_number']}, expected >= 4"
+            assert (
+                cmd["tick_number"] >= 4
+            ), f"Command has tick {cmd['tick_number']}, expected >= 4"
 
         print("\n✅ All since_tick filtering tests passed!")
 

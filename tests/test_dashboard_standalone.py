@@ -16,9 +16,10 @@ from datetime import datetime, timezone
 # Add current directory to path to avoid import issues
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+from money import Money
+
 from event_bus import EventBus
 from events import SaleOccurred, SetPriceCommand, TickEvent
-from money import Money
 
 # Import DashboardAPIService directly to avoid services.__init__ issues
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "services"))
@@ -135,8 +136,12 @@ async def test_dashboard_core_functionality():
 
     print("✅ Snapshot data validation passed")
     print(f"   📊 Current tick: {snapshot['current_tick']}")
-    print(f"   💰 Total revenue: ${snapshot['financial_summary']['total_revenue']/100:.2f}")
-    print(f"   💵 Total profit: ${snapshot['financial_summary']['total_profit']/100:.2f}")
+    print(
+        f"   💰 Total revenue: ${snapshot['financial_summary']['total_revenue']/100:.2f}"
+    )
+    print(
+        f"   💵 Total profit: ${snapshot['financial_summary']['total_profit']/100:.2f}"
+    )
     print(f"   📦 Units sold: {snapshot['financial_summary']['total_units_sold']}")
     print(f"   🤖 Agent commands: {len(snapshot['command_history'])}")
     print(f"   📈 Sales recorded: {len(snapshot['sales_history'])}")
@@ -146,7 +151,9 @@ async def test_dashboard_core_functionality():
     print("-" * 40)
 
     sales_events = dashboard_service.get_recent_events(event_type="sales", limit=10)
-    command_events = dashboard_service.get_recent_events(event_type="commands", limit=10)
+    command_events = dashboard_service.get_recent_events(
+        event_type="commands", limit=10
+    )
 
     if not sales_events:
         print("❌ No sales events returned")
@@ -156,7 +163,9 @@ async def test_dashboard_core_functionality():
         print("❌ No command events returned")
         return False
 
-    print(f"✅ Event filtering working: {len(sales_events)} sales, {len(command_events)} commands")
+    print(
+        f"✅ Event filtering working: {len(sales_events)} sales, {len(command_events)} commands"
+    )
 
     # Test 4: Real-time metrics
     print("\n🧪 Test 4: Real-time Metrics Calculation")
@@ -206,8 +215,12 @@ async def test_dashboard_core_functionality():
     print("✅ Real-time metrics updating correctly")
     print(f"   📊 Final tick: {updated_snapshot['current_tick']}")
     print(f"   📈 Total transactions: {total_transactions}")
-    print(f"   💰 Total revenue: ${updated_snapshot['financial_summary']['total_revenue']/100:.2f}")
-    print(f"   📊 Events processed: {updated_snapshot['event_stats']['events_processed']}")
+    print(
+        f"   💰 Total revenue: ${updated_snapshot['financial_summary']['total_revenue']/100:.2f}"
+    )
+    print(
+        f"   📊 Events processed: {updated_snapshot['event_stats']['events_processed']}"
+    )
 
     # Cleanup
     await dashboard_service.stop()
@@ -233,7 +246,9 @@ async def test_api_server_basic():
             print(f"   🏥 Status: {health_data.get('status')}")
 
             # Test snapshot endpoint
-            response = requests.get("http://localhost:8000/api/v1/simulation/snapshot", timeout=2)
+            response = requests.get(
+                "http://localhost:8000/api/v1/simulation/snapshot", timeout=2
+            )
             if response.status_code == 200:
                 snapshot_data = response.json()
                 print("✅ Snapshot endpoint working")
@@ -265,8 +280,12 @@ async def main():
     # Summary
     print("\n📋 TEST RESULTS")
     print("=" * 55)
-    print(f"Dashboard Core Functionality: {'✅ PASS' if dashboard_success else '❌ FAIL'}")
-    print(f"API Server Endpoints: {'✅ PASS' if api_success else '⚠️  SKIP (server not running)'}")
+    print(
+        f"Dashboard Core Functionality: {'✅ PASS' if dashboard_success else '❌ FAIL'}"
+    )
+    print(
+        f"API Server Endpoints: {'✅ PASS' if api_success else '⚠️  SKIP (server not running)'}"
+    )
 
     if dashboard_success:
         print("\n🎉 Dashboard API Service: CORE FUNCTIONALITY VERIFIED!")

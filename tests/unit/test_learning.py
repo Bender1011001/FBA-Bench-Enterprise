@@ -37,8 +37,16 @@ class TestEpisodicLearning(unittest.TestCase):
             "start_time": datetime.now(),
             "end_time": datetime.now() + timedelta(seconds=60),
             "actions": [
-                {"type": "decision", "data": {"price": 10.0}, "timestamp": datetime.now()},
-                {"type": "action", "data": {"quantity": 100}, "timestamp": datetime.now()},
+                {
+                    "type": "decision",
+                    "data": {"price": 10.0},
+                    "timestamp": datetime.now(),
+                },
+                {
+                    "type": "action",
+                    "data": {"quantity": 100},
+                    "timestamp": datetime.now(),
+                },
             ],
             "outcomes": {"profit": 1000.0, "market_share": 0.25},
             "metrics": {"accuracy": 0.85, "efficiency": 0.90},
@@ -48,8 +56,12 @@ class TestEpisodicLearning(unittest.TestCase):
 
         self.assertEqual(episode_id, "episode1")
         self.assertIn("episode1", self.episodic_learning._episodes)
-        self.assertEqual(self.episodic_learning._episodes["episode1"]["agent_id"], "agent1")
-        self.assertEqual(self.episodic_learning._episodes["episode1"]["outcomes"]["profit"], 1000.0)
+        self.assertEqual(
+            self.episodic_learning._episodes["episode1"]["agent_id"], "agent1"
+        )
+        self.assertEqual(
+            self.episodic_learning._episodes["episode1"]["outcomes"]["profit"], 1000.0
+        )
 
     def test_retrieve_episode(self):
         """Test retrieving an episode."""
@@ -59,7 +71,13 @@ class TestEpisodicLearning(unittest.TestCase):
             "scenario_id": "scenario1",
             "start_time": datetime.now(),
             "end_time": datetime.now() + timedelta(seconds=60),
-            "actions": [{"type": "decision", "data": {"price": 10.0}, "timestamp": datetime.now()}],
+            "actions": [
+                {
+                    "type": "decision",
+                    "data": {"price": 10.0},
+                    "timestamp": datetime.now(),
+                }
+            ],
             "outcomes": {"profit": 1000.0},
             "metrics": {"accuracy": 0.85},
         }
@@ -82,7 +100,13 @@ class TestEpisodicLearning(unittest.TestCase):
             "scenario_id": "scenario1",
             "start_time": datetime.now(),
             "end_time": datetime.now() + timedelta(seconds=60),
-            "actions": [{"type": "decision", "data": {"price": 10.0}, "timestamp": datetime.now()}],
+            "actions": [
+                {
+                    "type": "decision",
+                    "data": {"price": 10.0},
+                    "timestamp": datetime.now(),
+                }
+            ],
             "outcomes": {"profit": 1000.0},
             "metrics": {"accuracy": 0.85},
         }
@@ -93,7 +117,13 @@ class TestEpisodicLearning(unittest.TestCase):
             "scenario_id": "scenario1",
             "start_time": datetime.now(),
             "end_time": datetime.now() + timedelta(seconds=60),
-            "actions": [{"type": "decision", "data": {"price": 12.0}, "timestamp": datetime.now()}],
+            "actions": [
+                {
+                    "type": "decision",
+                    "data": {"price": 12.0},
+                    "timestamp": datetime.now(),
+                }
+            ],
             "outcomes": {"profit": 1200.0},
             "metrics": {"accuracy": 0.90},
         }
@@ -122,8 +152,16 @@ class TestEpisodicLearning(unittest.TestCase):
             "start_time": datetime.now(),
             "end_time": datetime.now() + timedelta(seconds=60),
             "actions": [
-                {"type": "decision", "data": {"price": 10.0}, "timestamp": datetime.now()},
-                {"type": "action", "data": {"quantity": 100}, "timestamp": datetime.now()},
+                {
+                    "type": "decision",
+                    "data": {"price": 10.0},
+                    "timestamp": datetime.now(),
+                },
+                {
+                    "type": "action",
+                    "data": {"quantity": 100},
+                    "timestamp": datetime.now(),
+                },
             ],
             "outcomes": {"profit": 1000.0, "market_share": 0.25},
             "metrics": {"accuracy": 0.85, "efficiency": 0.90},
@@ -148,7 +186,13 @@ class TestEpisodicLearning(unittest.TestCase):
             "scenario_id": "scenario1",
             "start_time": datetime.now(),
             "end_time": datetime.now() + timedelta(seconds=60),
-            "actions": [{"type": "decision", "data": {"price": 10.0}, "timestamp": datetime.now()}],
+            "actions": [
+                {
+                    "type": "decision",
+                    "data": {"price": 10.0},
+                    "timestamp": datetime.now(),
+                }
+            ],
             "outcomes": {"profit": 1000.0},
             "metrics": {"accuracy": 0.85},
         }
@@ -159,7 +203,13 @@ class TestEpisodicLearning(unittest.TestCase):
             "scenario_id": "scenario1",
             "start_time": datetime.now(),
             "end_time": datetime.now() + timedelta(seconds=60),
-            "actions": [{"type": "decision", "data": {"price": 12.0}, "timestamp": datetime.now()}],
+            "actions": [
+                {
+                    "type": "decision",
+                    "data": {"price": 12.0},
+                    "timestamp": datetime.now(),
+                }
+            ],
             "outcomes": {"profit": 1200.0},
             "metrics": {"accuracy": 0.90},
         }
@@ -244,7 +294,9 @@ class TestReinforcementLearning(unittest.TestCase):
         self.reinforcement_learning.decay_exploration_rate(decay_rate=0.99)
 
         # Verify the exploration rate was decayed
-        self.assertLess(self.reinforcement_learning._exploration_rate, initial_exploration_rate)
+        self.assertLess(
+            self.reinforcement_learning._exploration_rate, initial_exploration_rate
+        )
 
     def test_get_policy(self):
         """Test getting the policy."""
@@ -253,7 +305,10 @@ class TestReinforcementLearning(unittest.TestCase):
         self.assertIsNotNone(policy)
         self.assertEqual(len(policy), self.reinforcement_learning._state_space_size)
         self.assertTrue(
-            all(0 <= action < self.reinforcement_learning._action_space_size for action in policy)
+            all(
+                0 <= action < self.reinforcement_learning._action_space_size
+                for action in policy
+            )
         )
 
     def test_save_load_model(self):
@@ -274,7 +329,9 @@ class TestReinforcementLearning(unittest.TestCase):
             new_rl.load_model("test_model.npy")
 
             mock_load.assert_called_once()
-            np.testing.assert_array_equal(new_rl._q_table, self.reinforcement_learning._q_table)
+            np.testing.assert_array_equal(
+                new_rl._q_table, self.reinforcement_learning._q_table
+            )
 
 
 class TestCurriculumLearning(unittest.TestCase):
@@ -306,8 +363,12 @@ class TestCurriculumLearning(unittest.TestCase):
 
         self.assertEqual(level_id, "level1")
         self.assertIn("level1", self.curriculum_learning._curriculum)
-        self.assertEqual(self.curriculum_learning._curriculum["level1"]["name"], "Basic Pricing")
-        self.assertEqual(self.curriculum_learning._curriculum["level1"]["difficulty"], 1)
+        self.assertEqual(
+            self.curriculum_learning._curriculum["level1"]["name"], "Basic Pricing"
+        )
+        self.assertEqual(
+            self.curriculum_learning._curriculum["level1"]["difficulty"], 1
+        )
 
     def test_get_curriculum_level(self):
         """Test getting a curriculum level."""
@@ -363,9 +424,9 @@ class TestCurriculumLearning(unittest.TestCase):
         self.assertIn("student1", self.curriculum_learning._student_progress)
         self.assertIn("level1", self.curriculum_learning._student_progress["student1"])
         self.assertEqual(
-            self.curriculum_learning._student_progress["student1"]["level1"]["overall_performance"][
-                "accuracy"
-            ],
+            self.curriculum_learning._student_progress["student1"]["level1"][
+                "overall_performance"
+            ]["accuracy"],
             0.875,
         )
 
@@ -482,9 +543,12 @@ class TestMetaLearning(unittest.TestCase):
 
         self.assertEqual(experience_id, "exp1")
         self.assertIn("exp1", self.meta_learning._meta_knowledge)
-        self.assertEqual(self.meta_learning._meta_knowledge["exp1"]["task_type"], "pricing")
         self.assertEqual(
-            self.meta_learning._meta_knowledge["exp1"]["strategy_used"], "reinforcement_learning"
+            self.meta_learning._meta_knowledge["exp1"]["task_type"], "pricing"
+        )
+        self.assertEqual(
+            self.meta_learning._meta_knowledge["exp1"]["strategy_used"],
+            "reinforcement_learning",
         )
 
     def test_recommend_learning_strategy(self):
@@ -519,7 +583,9 @@ class TestMetaLearning(unittest.TestCase):
             "metadata": {"dataset_size": 1000, "complexity": "medium"},
         }
 
-        recommendation = self.meta_learning.recommend_learning_strategy(task_description)
+        recommendation = self.meta_learning.recommend_learning_strategy(
+            task_description
+        )
 
         self.assertIsNotNone(recommendation)
         self.assertIn("strategy", recommendation)
@@ -570,7 +636,8 @@ class TestMetaLearning(unittest.TestCase):
         self.assertIn("discount_factor", adapted_hyperparameters)
         # Should recommend higher learning rate as it performed better
         self.assertGreater(
-            adapted_hyperparameters["learning_rate"], current_hyperparameters["learning_rate"]
+            adapted_hyperparameters["learning_rate"],
+            current_hyperparameters["learning_rate"],
         )
 
     def test_extract_meta_patterns(self):

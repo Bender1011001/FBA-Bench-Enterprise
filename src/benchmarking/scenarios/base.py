@@ -14,7 +14,10 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
 from ..agents.base import BaseAgent  # Scenarios interact with agents
-from ..core.results import AgentRunResult, MetricResult  # Scenarios produce AgentRunResults
+from ..core.results import (
+    AgentRunResult,
+    MetricResult,
+)  # Scenarios produce AgentRunResults
 
 
 @dataclass
@@ -147,7 +150,9 @@ class BaseScenario(abc.ABC):
         self.agent_states.setdefault(str(agent_id), {})
         self.is_setup = True
 
-    async def update_tick(self, tick: int, state: Optional[Dict[str, Any]] = None) -> None:
+    async def update_tick(
+        self, tick: int, state: Optional[Dict[str, Any]] = None
+    ) -> None:
         """
         Legacy-compatible tick update hook. Subclasses may override and call super().
         """
@@ -155,13 +160,21 @@ class BaseScenario(abc.ABC):
         if not isinstance(tick, int) or tick < 1:
             raise ValueError("invalid tick")
         # Invalid state: must be a mapping-like or object with attributes (e.g., SimulationState)
-        if state is None or (not isinstance(state, dict) and not hasattr(state, "__dict__")):
+        if state is None or (
+            not isinstance(state, dict) and not hasattr(state, "__dict__")
+        ):
             raise ValueError("invalid state")
         # Normalize execution history to match test expectations (exclude setup entry from global history)
         try:
-            if isinstance(self.execution_history, list) and len(self.execution_history) >= 2:
+            if (
+                isinstance(self.execution_history, list)
+                and len(self.execution_history) >= 2
+            ):
                 maybe_setup = self.execution_history[1]
-                if isinstance(maybe_setup, dict) and maybe_setup.get("phase") == "setup":
+                if (
+                    isinstance(maybe_setup, dict)
+                    and maybe_setup.get("phase") == "setup"
+                ):
                     self.execution_history.pop(1)
         except Exception:
             pass
@@ -228,7 +241,9 @@ class BaseScenario(abc.ABC):
         params = kwargs.get("parameters", {}) or {}
         await self.initialize(params)
 
-    async def run(self, agent: BaseAgent, run_number: int, *args, **kwargs) -> AgentRunResult:
+    async def run(
+        self, agent: BaseAgent, run_number: int, *args, **kwargs
+    ) -> AgentRunResult:
         """
         Asynchronously run a single iteration of the scenario with a given agent.
 
@@ -286,10 +301,14 @@ class BaseScenario(abc.ABC):
             maybe_resp = agent.process_input(
                 {"content": f"Scenario {self.config.name} run {run_number}"}
             )
-            response = await maybe_resp if asyncio.iscoroutine(maybe_resp) else maybe_resp
+            response = (
+                await maybe_resp if asyncio.iscoroutine(maybe_resp) else maybe_resp
+            )
         if hasattr(agent, "execute_action"):
             maybe_act = agent.execute_action({"type": "test_action"})
-            action_result = await maybe_act if asyncio.iscoroutine(maybe_act) else maybe_act
+            action_result = (
+                await maybe_act if asyncio.iscoroutine(maybe_act) else maybe_act
+            )
 
         # Optional performance evaluation hook
         metrics: Dict[str, Any] = {}
@@ -297,7 +316,9 @@ class BaseScenario(abc.ABC):
         if callable(eval_fn):
             maybe_metrics = eval_fn(agent_id)
             maybe_metrics = (
-                await maybe_metrics if asyncio.iscoroutine(maybe_metrics) else maybe_metrics
+                await maybe_metrics
+                if asyncio.iscoroutine(maybe_metrics)
+                else maybe_metrics
             )
             if isinstance(maybe_metrics, dict):
                 metrics.update(maybe_metrics)
@@ -314,7 +335,11 @@ class BaseScenario(abc.ABC):
             start_time=start,
             end_time=end,
             duration_seconds=max((end - start).total_seconds(), 0.0),
-            metrics=[MetricResult(name="success_rate", value=1.0, unit="ratio", timestamp=end)],
+            metrics=[
+                MetricResult(
+                    name="success_rate", value=1.0, unit="ratio", timestamp=end
+                )
+            ],
             errors=[],
             success=True,
         )
@@ -335,7 +360,9 @@ class BaseScenario(abc.ABC):
         Default returns a minimal progress dict based on seen state.
         """
         completed_ticks = (
-            int(self.global_state.get("milestone", 0)) if isinstance(self.global_state, dict) else 0
+            int(self.global_state.get("milestone", 0))
+            if isinstance(self.global_state, dict)
+            else 0
         )
         return {
             "scenario_id": self.scenario_id,

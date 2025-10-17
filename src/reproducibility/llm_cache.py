@@ -114,7 +114,11 @@ class LLMResponseCache:
         final_chosen_dir_value = (
             cache_dir
             if cache_dir is not None
-            else (cfg_cache_dir if cfg_cache_dir is not None else (Path(__file__).parent / "cache"))
+            else (
+                cfg_cache_dir
+                if cfg_cache_dir is not None
+                else (Path(__file__).parent / "cache")
+            )
         )
         # Normalize to Path for filesystem operations and ensure the directory exists.
         try:
@@ -163,7 +167,11 @@ class LLMResponseCache:
                 # Consider equal if other matches the original input (often a string with backslashes),
                 # or matches the Path object, or matches the normalized string form.
                 try:
-                    return other == self._orig or other == self._path or other == str(self._path)
+                    return (
+                        other == self._orig
+                        or other == self._path
+                        or other == str(self._path)
+                    )
                 except Exception:
                     return False
 
@@ -330,7 +338,9 @@ class LLMResponseCache:
                     except Exception:
                         pass
 
-    def generate_prompt_hash(self, prompt: str, model: str, temperature: float, **kwargs) -> str:
+    def generate_prompt_hash(
+        self, prompt: str, model: str, temperature: float, **kwargs
+    ) -> str:
         """
         Generate deterministic hash for prompt and parameters.
 
@@ -364,7 +374,9 @@ class LLMResponseCache:
 
     def _compress_data(self, data: bytes) -> bytes:
         """Compress data if compression is enabled."""
-        if self.enable_compression and len(data) > 1024:  # Only compress larger responses
+        if (
+            self.enable_compression and len(data) > 1024
+        ):  # Only compress larger responses
             return gzip.compress(data)
         return data
 
@@ -412,7 +424,10 @@ class LLMResponseCache:
             logger.info(f"Recording mode: {'enabled' if enabled else 'disabled'}")
 
     def cache_response(
-        self, prompt_hash: str, response: Dict[str, Any], metadata: Optional[Dict[str, Any]] = None
+        self,
+        prompt_hash: str,
+        response: Dict[str, Any],
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> bool:
         """
         Store LLM response in cache.
@@ -444,7 +459,9 @@ class LLMResponseCache:
                 self._update_memory_cache(prompt_hash, cached_response)
 
                 # Store in persistent cache
-                response_json = json.dumps(response, separators=(",", ":")).encode("utf-8")
+                response_json = json.dumps(response, separators=(",", ":")).encode(
+                    "utf-8"
+                )
                 compressed_data = self._compress_data(response_json)
                 is_compressed = len(compressed_data) < len(response_json)
 
@@ -549,7 +566,9 @@ class LLMResponseCache:
                             self._update_memory_cache(prompt_hash, cached_response)
 
                             self._stats.cache_hits += 1
-                            logger.debug(f"Persistent cache hit for hash: {prompt_hash[:16]}...")
+                            logger.debug(
+                                f"Persistent cache hit for hash: {prompt_hash[:16]}..."
+                            )
                             return response
                     finally:
                         if cursor is not None:
@@ -607,16 +626,22 @@ class LLMResponseCache:
                         computed_hash = self._generate_response_hash(response)
 
                         if stored_hash != computed_hash:
-                            errors.append(f"Hash mismatch for {row['prompt_hash'][:16]}...")
+                            errors.append(
+                                f"Hash mismatch for {row['prompt_hash'][:16]}..."
+                            )
 
                     except Exception as e:
-                        errors.append(f"Parse error for {row['prompt_hash'][:16]}...: {e}")
+                        errors.append(
+                            f"Parse error for {row['prompt_hash'][:16]}...: {e}"
+                        )
 
             is_valid = len(errors) == 0
             if is_valid:
                 logger.info("Cache integrity validation passed")
             else:
-                logger.error(f"Cache integrity validation failed with {len(errors)} errors")
+                logger.error(
+                    f"Cache integrity validation failed with {len(errors)} errors"
+                )
 
             return is_valid, errors
 
@@ -673,7 +698,9 @@ class LLMResponseCache:
 
             if compress:
                 export_json = gzip.compress(export_json)
-                filepath = f"{filepath}.gz" if not filepath.endswith(".gz") else filepath
+                filepath = (
+                    f"{filepath}.gz" if not filepath.endswith(".gz") else filepath
+                )
 
             with open(filepath, "wb") as f:
                 f.write(export_json)
@@ -731,9 +758,9 @@ class LLMResponseCache:
                             continue
 
                     # Compress response data
-                    response_json = json.dumps(entry["response"], separators=(",", ":")).encode(
-                        "utf-8"
-                    )
+                    response_json = json.dumps(
+                        entry["response"], separators=(",", ":")
+                    ).encode("utf-8")
                     compressed_data = self._compress_data(response_json)
                     is_compressed = len(compressed_data) < len(response_json)
 

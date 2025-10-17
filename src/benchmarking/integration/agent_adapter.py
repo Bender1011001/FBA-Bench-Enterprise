@@ -15,8 +15,9 @@ from ..integration.manager import IntegrationManager
 
 # Try to import existing agent systems
 try:
-    from agent_runners.base_runner import AgentRunner
     from fba_bench.core.types import SimulationState, ToolCall
+
+    from agent_runners.base_runner import AgentRunner
 
     # Do not import RunnerFactory here; IntegrationManager abstracts runner creation and handles deprecations.
     AGENT_RUNNERS_AVAILABLE = True
@@ -105,7 +106,9 @@ class AgentAdapter:
     existing agent_runners system, ensuring seamless integration and compatibility.
     """
 
-    def __init__(self, config: AgentAdapterConfig, integration_manager: IntegrationManager):
+    def __init__(
+        self, config: AgentAdapterConfig, integration_manager: IntegrationManager
+    ):
         """
         Initialize the agent adapter.
 
@@ -122,7 +125,9 @@ class AgentAdapter:
         self._execution_history: List[AgentExecutionResult] = []
         self._current_trace: Dict[str, Any] = {}
 
-        logger.info(f"Initialized AgentAdapter for {config.framework} agent {config.agent_id}")
+        logger.info(
+            f"Initialized AgentAdapter for {config.framework} agent {config.agent_id}"
+        )
 
     async def initialize(self) -> bool:
         """
@@ -145,21 +150,29 @@ class AgentAdapter:
             )
 
             if self.agent_runner is None:
-                logger.error(f"Failed to create agent runner for {self.config.agent_id}")
+                logger.error(
+                    f"Failed to create agent runner for {self.config.agent_id}"
+                )
                 return False
 
             # Initialize the agent runner
             await self.agent_runner.initialize(self.config.config)
 
             self._initialized = True
-            logger.info(f"Successfully initialized AgentAdapter for {self.config.agent_id}")
+            logger.info(
+                f"Successfully initialized AgentAdapter for {self.config.agent_id}"
+            )
             return True
 
         except Exception as e:
-            logger.error(f"Failed to initialize AgentAdapter for {self.config.agent_id}: {e}")
+            logger.error(
+                f"Failed to initialize AgentAdapter for {self.config.agent_id}: {e}"
+            )
             return False
 
-    async def execute_decision(self, simulation_state: Dict[str, Any]) -> AgentExecutionResult:
+    async def execute_decision(
+        self, simulation_state: Dict[str, Any]
+    ) -> AgentExecutionResult:
         """
         Execute a decision using the adapted agent.
 
@@ -224,7 +237,9 @@ class AgentAdapter:
             logger.error(f"Agent {self.config.agent_id} execution failed: {e}")
             return result
 
-    async def _execute_with_retry(self, simulation_state: SimulationState) -> List[ToolCall]:
+    async def _execute_with_retry(
+        self, simulation_state: SimulationState
+    ) -> List[ToolCall]:
         """
         Execute decision with retry logic.
 
@@ -243,7 +258,8 @@ class AgentAdapter:
 
                 # Execute decision
                 tool_calls = await asyncio.wait_for(
-                    self.agent_runner.decide(simulation_state), timeout=self.config.timeout
+                    self.agent_runner.decide(simulation_state),
+                    timeout=self.config.timeout,
                 )
 
                 if self.config.enable_tracing:
@@ -278,7 +294,9 @@ class AgentAdapter:
             f"Agent decision failed after {self.config.retry_attempts} attempts: {last_error}"
         )
 
-    def _convert_to_simulation_state(self, state_dict: Dict[str, Any]) -> SimulationState:
+    def _convert_to_simulation_state(
+        self, state_dict: Dict[str, Any]
+    ) -> SimulationState:
         """
         Convert dictionary to SimulationState object.
 
@@ -341,8 +359,12 @@ class AgentAdapter:
 
         metrics = {
             "total_executions": len(self._execution_history),
-            "successful_executions": len([r for r in self._execution_history if r.success]),
-            "failed_executions": len([r for r in self._execution_history if not r.success]),
+            "successful_executions": len(
+                [r for r in self._execution_history if r.success]
+            ),
+            "failed_executions": len(
+                [r for r in self._execution_history if not r.success]
+            ),
             "average_execution_time": 0.0,
             "success_rate": 0.0,
         }
@@ -354,7 +376,9 @@ class AgentAdapter:
                     r.execution_time for r in successful_results
                 ) / len(successful_results)
 
-            metrics["success_rate"] = metrics["successful_executions"] / metrics["total_executions"]
+            metrics["success_rate"] = (
+                metrics["successful_executions"] / metrics["total_executions"]
+            )
 
         return metrics
 
@@ -449,7 +473,9 @@ class AgentAdapter:
 
             # Check execution history for issues
             if self._execution_history:
-                recent_failures = len([r for r in self._execution_history[-10:] if not r.success])
+                recent_failures = len(
+                    [r for r in self._execution_history[-10:] if not r.success]
+                )
 
                 if recent_failures > 5:
                     health["healthy"] = False
@@ -473,7 +499,9 @@ class AgentAdapter:
             logger.info(f"Cleaned up AgentAdapter for {self.config.agent_id}")
 
         except Exception as e:
-            logger.error(f"Failed to cleanup AgentAdapter for {self.config.agent_id}: {e}")
+            logger.error(
+                f"Failed to cleanup AgentAdapter for {self.config.agent_id}: {e}"
+            )
 
 
 class AgentAdapterFactory:

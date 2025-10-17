@@ -27,7 +27,9 @@ class ShockEventState:
     end_time: Optional[datetime] = None
     recovery_tick: int = -1
     recovery_time: Optional[datetime] = None
-    baseline_metric_at_shock: float = 0.0  # Key performance metric value at the start of the shock
+    baseline_metric_at_shock: float = (
+        0.0  # Key performance metric value at the start of the shock
+    )
     impact_metric: float = (
         0.0  # Key performance metric value at the worst point during / end of shock
     )
@@ -48,10 +50,16 @@ class ShockEventState:
 class StressMetricsConfig:
     """Configurable parameters for StressMetrics."""
 
-    recovery_threshold_percent: float = 0.95  # e.g., 0.95 for 95% recovery from baseline
+    recovery_threshold_percent: float = (
+        0.95  # e.g., 0.95 for 95% recovery from baseline
+    )
     max_acceptable_mttr_ticks: int = 50  # Max ticks considered acceptable for MTTR
-    default_performance_metric_score: float = 100.0  # Baseline score for performance metrics
-    mttr_normalization_factor: float = 2.0  # Factor to normalize MTTR score (e.g., higher factor makes faster recovery more valuable)
+    default_performance_metric_score: float = (
+        100.0  # Baseline score for performance metrics
+    )
+    mttr_normalization_factor: float = (
+        2.0  # Factor to normalize MTTR score (e.g., higher factor makes faster recovery more valuable)
+    )
     recent_performance_window_ticks: int = (
         100  # Number of ticks to consider for recent performance history
     )
@@ -66,9 +74,9 @@ class StressMetrics:
         self.config = config if config else StressMetricsConfig()
 
         self.shock_events: Dict[str, ShockEventState] = {}  # shock_id: ShockEventState
-        self.performance_history: List[
-            Tuple[int, float]
-        ] = []  # (tick, performance_metric) for all ticks
+        self.performance_history: List[Tuple[int, float]] = (
+            []
+        )  # (tick, performance_metric) for all ticks
 
         # Unit-test compatibility: lightweight metric registry
         self._metrics: Dict[str, Any] = {}
@@ -76,7 +84,10 @@ class StressMetrics:
         logger.info("StressMetrics initialized.")
 
     def update(
-        self, current_tick: int, events: List[BaseEvent], current_performance_metric: float
+        self,
+        current_tick: int,
+        events: List[BaseEvent],
+        current_performance_metric: float,
     ) -> None:
         """
         Updates stress metrics based on new events and current performance.
@@ -110,17 +121,22 @@ class StressMetrics:
                         f"Shock '{shock_id}' injected at tick {current_tick}. Baseline: {current_performance_metric:.2f}"
                     )
                 else:
-                    logger.debug(f"Shock '{shock_id}' already active at tick {current_tick}.")
+                    logger.debug(
+                        f"Shock '{shock_id}' already active at tick {current_tick}."
+                    )
 
             elif isinstance(event, ShockEndEvent):
-                shock_id = event.shock_id  # Assuming shock_id is an attribute of ShockEndEvent
-                if shock_id in self.shock_events and self.shock_events[shock_id].end_tick == -1:
+                shock_id = (
+                    event.shock_id
+                )  # Assuming shock_id is an attribute of ShockEndEvent
+                if (
+                    shock_id in self.shock_events
+                    and self.shock_events[shock_id].end_tick == -1
+                ):
                     shock_state = self.shock_events[shock_id]
                     shock_state.end_tick = current_tick
                     shock_state.end_time = datetime.now()
-                    shock_state.impact_metric = (
-                        current_performance_metric  # Performance at end of direct impact
-                    )
+                    shock_state.impact_metric = current_performance_metric  # Performance at end of direct impact
                     logger.info(
                         f"Shock '{shock_id}' ended at tick {current_tick}. Impact metric: {current_performance_metric:.2f}"
                     )
@@ -137,7 +153,8 @@ class StressMetrics:
                 # Check for recovery against baseline at shock (with configurable threshold)
                 if (
                     current_performance_metric
-                    >= shock_state.baseline_metric_at_shock * self.config.recovery_threshold_percent
+                    >= shock_state.baseline_metric_at_shock
+                    * self.config.recovery_threshold_percent
                 ):
                     shock_state.recovery_tick = current_tick
                     shock_state.recovery_time = datetime.now()
@@ -164,7 +181,9 @@ class StressMetrics:
                 mttr_scores[shock_id] = float("inf")
             elif shock_state.start_tick != -1 and shock_state.end_tick == -1:
                 # Shock is still ongoing, cannot calculate MTTR yet
-                mttr_scores[shock_id] = float("nan")  # Not a number, indicates incomplete event
+                mttr_scores[shock_id] = float(
+                    "nan"
+                )  # Not a number, indicates incomplete event
 
         return mttr_scores
 
@@ -197,7 +216,10 @@ class StressMetrics:
         avg_impact_drop = 0.0
         impact_drops = []
         for shock_state in self.shock_events.values():
-            if shock_state.baseline_metric_at_shock > 0 and shock_state.impact_metric is not None:
+            if (
+                shock_state.baseline_metric_at_shock > 0
+                and shock_state.impact_metric is not None
+            ):
                 drop_percentage = (
                     shock_state.baseline_metric_at_shock - shock_state.impact_metric
                 ) / shock_state.baseline_metric_at_shock
@@ -226,7 +248,8 @@ class StressMetrics:
         """Provides a summary of the current state of the StressMetrics module."""
         # Convert ShockEventState objects to dicts for serialization
         shock_events_summary = {
-            shock_id: shock_state.to_dict() for shock_id, shock_state in self.shock_events.items()
+            shock_id: shock_state.to_dict()
+            for shock_id, shock_state in self.shock_events.items()
         }
         return {
             "num_shocks_tracked": len(self.shock_events),
@@ -280,7 +303,9 @@ class StressMetrics:
 
     def generate_stress_report(self, data: Dict[str, float]) -> Dict[str, float]:
         return {
-            "system_throughput_under_stress": self.calculate_system_throughput_under_stress(data),
+            "system_throughput_under_stress": self.calculate_system_throughput_under_stress(
+                data
+            ),
             "response_time_degradation": self.calculate_response_time_degradation(data),
             "error_rate_under_stress": self.calculate_error_rate_under_stress(data),
             "resource_utilization": self.calculate_resource_utilization(data),

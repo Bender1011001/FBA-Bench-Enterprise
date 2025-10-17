@@ -4,13 +4,14 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
+from models.product import Product
+from money import Money
+
 from constraints.agent_gateway import AgentGateway
 from events import SetPriceCommand
 from llm_interface.contract import BaseLLMClient
 from llm_interface.prompt_adapter import PromptAdapter
 from llm_interface.response_parser import LLMResponseParser
-from models.product import Product
-from money import Money
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +99,9 @@ class Grok4Bot:
                 max_tokens=self.model_params.get("max_tokens_per_action", 1000),
                 top_p=self.model_params.get("top_p", 1.0),
             )
-            llm_response_content = llm_raw_response_data["choices"][0]["message"]["content"]
+            llm_response_content = llm_raw_response_data["choices"][0]["message"][
+                "content"
+            ]
 
             await self.agent_gateway.postprocess_response(
                 agent_id=self.agent_id,
@@ -108,8 +111,10 @@ class Grok4Bot:
                 model_name=getattr(self.llm_client, "model_name", "unknown"),
             )
 
-            parsed_response, error_details = await self.response_parser.parse_and_validate(
-                llm_response_content, self.agent_id
+            parsed_response, error_details = (
+                await self.response_parser.parse_and_validate(
+                    llm_response_content, self.agent_id
+                )
             )
 
             if error_details:
@@ -155,7 +160,9 @@ class Grok4Bot:
                             f"[{self.agent_id}] Error creating SetPriceCommand: {e} with data {params}"
                         )
                 else:
-                    logger.warning(f"[{self.agent_id}] Unknown action type received: {action_type}")
+                    logger.warning(
+                        f"[{self.agent_id}] Unknown action type received: {action_type}"
+                    )
 
             return agent_commands
 

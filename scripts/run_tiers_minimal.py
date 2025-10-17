@@ -1,7 +1,7 @@
+import asyncio
+import json
 import os
 import sys
-import json
-import asyncio
 from datetime import datetime
 from pathlib import Path
 
@@ -11,7 +11,6 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from infrastructure.openrouter_client import OpenRouterClient  # noqa: E402
-
 
 MODELS = [
     "x-ai/grok-4-fast:free",

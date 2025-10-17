@@ -54,7 +54,9 @@ def _has_path(d: Any, path: str) -> bool:
     return True
 
 
-def evaluate(run: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def evaluate(
+    run: Dict[str, Any], context: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
     """
     Completeness metric.
 
@@ -68,15 +70,27 @@ def evaluate(run: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> D
     """
     try:
         if not isinstance(run, dict):
-            return {"present": 0, "required": 0, "completeness": 0.0, "error": "invalid_run_type"}
+            return {
+                "present": 0,
+                "required": 0,
+                "completeness": 0.0,
+                "error": "invalid_run_type",
+            }
         try:
             inp = CompletenessInput(output=run.get("output"))  # type: ignore
         except ValidationError as ve:
             logger.error(f"completeness: invalid input {ve}")
-            return {"present": 0, "required": 0, "completeness": 0.0, "error": "validation_error"}
+            return {
+                "present": 0,
+                "required": 0,
+                "completeness": 0.0,
+                "error": "validation_error",
+            }
 
         ctx = CompletenessContext(**(context or {}))  # type: ignore
-        req = [f for f in (ctx.required_fields or []) if isinstance(f, str) and f.strip()]
+        req = [
+            f for f in (ctx.required_fields or []) if isinstance(f, str) and f.strip()
+        ]
         total = len(req)
         if total == 0:
             return {
@@ -97,7 +111,11 @@ def evaluate(run: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> D
                     present += 1
 
         completeness = float(present) / float(total) if total > 0 else 0.0
-        return {"present": int(present), "required": int(total), "completeness": completeness}
+        return {
+            "present": int(present),
+            "required": int(total),
+            "completeness": completeness,
+        }
     except Exception as e:
         logger.exception("completeness metric failed")
         return {

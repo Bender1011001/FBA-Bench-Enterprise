@@ -15,7 +15,9 @@ from pydantic import BaseModel, Field, field_validator
 
 
 class Issue(BaseModel):
-    id: str = Field(..., description="Stable identifier for the issue type, e.g., 'missing_field'")
+    id: str = Field(
+        ..., description="Stable identifier for the issue type, e.g., 'missing_field'"
+    )
     severity: str = Field(..., description="info|warning|error")
     message: str = Field(..., description="Human-readable description of the issue")
     path: Optional[List[str]] = Field(
@@ -33,7 +35,9 @@ class Issue(BaseModel):
 
 class ValidationSummary(BaseModel):
     count: int = Field(default=0, description="Total issues count")
-    by_severity: Dict[str, int] = Field(default_factory=dict, description="Counts by severity")
+    by_severity: Dict[str, int] = Field(
+        default_factory=dict, description="Counts by severity"
+    )
     details: Dict[str, Any] = Field(
         default_factory=dict, description="Validator-specific summary fields"
     )
@@ -53,8 +57,7 @@ class ValidationOutput(BaseModel):
 class ValidatorCallable(Protocol):
     def __call__(
         self, report: Dict[str, Any], context: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
-        ...
+    ) -> Dict[str, Any]: ...
 
 
 def normalize_output(obj: Union[ValidationOutput, Dict[str, Any]]) -> Dict[str, Any]:

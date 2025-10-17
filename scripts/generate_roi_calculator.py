@@ -1,5 +1,5 @@
 from openpyxl import Workbook
-from openpyxl.styles import NamedStyle, Font, PatternFill, Alignment
+from openpyxl.styles import Alignment, Font, NamedStyle
 from openpyxl.utils import get_column_letter
 
 # Create workbook

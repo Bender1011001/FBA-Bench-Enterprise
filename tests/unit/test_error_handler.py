@@ -28,7 +28,9 @@ class TestErrorHandler:
         """Create a mock logger for testing."""
         return Mock(spec=logging.Logger)
 
-    def test_handle_common_errors_for_agent_with_value_error(self, mock_agent, mock_logger):
+    def test_handle_common_errors_for_agent_with_value_error(
+        self, mock_agent, mock_logger
+    ):
         """Test handling ValueError with proper logging."""
         error = ValueError("Test value error")
 
@@ -45,7 +47,9 @@ class TestErrorHandler:
             assert "Test value error" in args[0]
             assert "test_agent" in args[0]
 
-    def test_handle_common_errors_for_agent_with_key_error(self, mock_agent, mock_logger):
+    def test_handle_common_errors_for_agent_with_key_error(
+        self, mock_agent, mock_logger
+    ):
         """Test handling KeyError with proper logging."""
         error = KeyError("missing_key")
 
@@ -62,7 +66,9 @@ class TestErrorHandler:
             assert "missing_key" in args[0]
             assert "test_agent" in args[0]
 
-    def test_handle_common_errors_for_agent_with_type_error(self, mock_agent, mock_logger):
+    def test_handle_common_errors_for_agent_with_type_error(
+        self, mock_agent, mock_logger
+    ):
         """Test handling TypeError with proper logging."""
         error = TypeError("Test type error")
 
@@ -79,7 +85,9 @@ class TestErrorHandler:
             assert "Test type error" in args[0]
             assert "test_agent" in args[0]
 
-    def test_handle_common_errors_for_agent_with_attribute_error(self, mock_agent, mock_logger):
+    def test_handle_common_errors_for_agent_with_attribute_error(
+        self, mock_agent, mock_logger
+    ):
         """Test handling AttributeError with proper logging."""
         error = AttributeError("Test attribute error")
 
@@ -96,7 +104,9 @@ class TestErrorHandler:
             assert "Test attribute error" in args[0]
             assert "test_agent" in args[0]
 
-    def test_handle_common_errors_for_agent_with_runtime_error(self, mock_agent, mock_logger):
+    def test_handle_common_errors_for_agent_with_runtime_error(
+        self, mock_agent, mock_logger
+    ):
         """Test handling RuntimeError with proper logging."""
         error = RuntimeError("Test runtime error")
 
@@ -113,7 +123,9 @@ class TestErrorHandler:
             assert "Test runtime error" in args[0]
             assert "test_agent" in args[0]
 
-    def test_handle_common_errors_for_agent_with_unexpected_error(self, mock_agent, mock_logger):
+    def test_handle_common_errors_for_agent_with_unexpected_error(
+        self, mock_agent, mock_logger
+    ):
         """Test handling unexpected errors with proper logging."""
         error = Exception("Unexpected error")
 

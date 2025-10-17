@@ -31,7 +31,8 @@ def client():
 
 def _create_agent(client: TestClient) -> str:
     r = client.post(
-        "/api/v1/agents", json={"name": "Runner", "framework": "baseline", "config": {"t": 1}}
+        "/api/v1/agents",
+        json={"name": "Runner", "framework": "baseline", "config": {"t": 1}},
     )
     assert r.status_code == 201, r.text
     return r.json()["id"]
@@ -57,7 +58,8 @@ def test_simulation_create_start_stop_persist(client: TestClient):
 
     # create
     r = client.post(
-        "/api/v1/simulation", json={"experiment_id": exp_id, "metadata": {"note": "adhoc"}}
+        "/api/v1/simulation",
+        json={"experiment_id": exp_id, "metadata": {"note": "adhoc"}},
     )
     assert r.status_code == 201, r.text
     sim = r.json()

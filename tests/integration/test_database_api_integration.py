@@ -66,7 +66,9 @@ class BenchmarkModel(Base):
         "BenchmarkMetricModel", back_populates="benchmark", cascade="all, delete-orphan"
     )
     validations = relationship(
-        "BenchmarkValidationModel", back_populates="benchmark", cascade="all, delete-orphan"
+        "BenchmarkValidationModel",
+        back_populates="benchmark",
+        cascade="all, delete-orphan",
     )
 
 
@@ -159,7 +161,9 @@ class DatabaseService:
         self.database_url = database_url
         # Use NullPool to avoid keeping SQLite file handles open between operations (Windows lock-safe)
         self.engine = create_engine(database_url, poolclass=NullPool)
-        self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
+        self.SessionLocal = sessionmaker(
+            autocommit=False, autoflush=False, bind=self.engine
+        )
         self.create_tables()
 
     def create_tables(self):
@@ -196,8 +200,16 @@ class DatabaseService:
                 end_time=benchmark_result.end_time,
                 duration_seconds=benchmark_result.duration_seconds,
                 success=benchmark_result.success,
-                errors=json.dumps(benchmark_result.errors) if benchmark_result.errors else None,
-                results=json.dumps(benchmark_result.results) if benchmark_result.results else None,
+                errors=(
+                    json.dumps(benchmark_result.errors)
+                    if benchmark_result.errors
+                    else None
+                ),
+                results=(
+                    json.dumps(benchmark_result.results)
+                    if benchmark_result.results
+                    else None
+                ),
             )
 
             db.add(benchmark_model)
@@ -218,7 +230,9 @@ class DatabaseService:
 
         try:
             benchmark_model = (
-                db.query(BenchmarkModel).filter(BenchmarkModel.id == benchmark_id).first()
+                db.query(BenchmarkModel)
+                .filter(BenchmarkModel.id == benchmark_id)
+                .first()
             )
 
             if not benchmark_model:
@@ -231,15 +245,25 @@ class DatabaseService:
                 "agent_ids": json.loads(benchmark_model.agent_ids),
                 "metric_names": json.loads(benchmark_model.metric_names),
                 "start_time": (
-                    benchmark_model.start_time.isoformat() if benchmark_model.start_time else None
+                    benchmark_model.start_time.isoformat()
+                    if benchmark_model.start_time
+                    else None
                 ),
                 "end_time": (
-                    benchmark_model.end_time.isoformat() if benchmark_model.end_time else None
+                    benchmark_model.end_time.isoformat()
+                    if benchmark_model.end_time
+                    else None
                 ),
                 "duration_seconds": benchmark_model.duration_seconds,
                 "success": benchmark_model.success,
-                "errors": json.loads(benchmark_model.errors) if benchmark_model.errors else [],
-                "results": json.loads(benchmark_model.results) if benchmark_model.results else {},
+                "errors": (
+                    json.loads(benchmark_model.errors) if benchmark_model.errors else []
+                ),
+                "results": (
+                    json.loads(benchmark_model.results)
+                    if benchmark_model.results
+                    else {}
+                ),
                 "created_at": benchmark_model.created_at.isoformat(),
                 "updated_at": benchmark_model.updated_at.isoformat(),
             }
@@ -277,7 +301,9 @@ class DatabaseService:
                         else None
                     ),
                     "end_time": (
-                        benchmark_model.end_time.isoformat() if benchmark_model.end_time else None
+                        benchmark_model.end_time.isoformat()
+                        if benchmark_model.end_time
+                        else None
                     ),
                     "duration_seconds": benchmark_model.duration_seconds,
                     "success": benchmark_model.success,
@@ -300,7 +326,9 @@ class DatabaseService:
         try:
             # Check if scenario already exists
             existing_scenario = (
-                db.query(ScenarioModel).filter(ScenarioModel.name == scenario_config.name).first()
+                db.query(ScenarioModel)
+                .filter(ScenarioModel.name == scenario_config.name)
+                .first()
             )
 
             if existing_scenario:
@@ -309,7 +337,9 @@ class DatabaseService:
                 existing_scenario.domain = scenario_config.domain
                 existing_scenario.duration_ticks = scenario_config.duration_ticks
                 existing_scenario.parameters = (
-                    json.dumps(scenario_config.parameters) if scenario_config.parameters else None
+                    json.dumps(scenario_config.parameters)
+                    if scenario_config.parameters
+                    else None
                 )
                 existing_scenario.enabled = scenario_config.enabled
                 existing_scenario.updated_at = datetime.utcnow()
@@ -352,7 +382,9 @@ class DatabaseService:
 
         try:
             scenario_model = (
-                db.query(ScenarioModel).filter(ScenarioModel.name == scenario_name).first()
+                db.query(ScenarioModel)
+                .filter(ScenarioModel.name == scenario_name)
+                .first()
             )
 
             if not scenario_model:
@@ -366,7 +398,9 @@ class DatabaseService:
                 "domain": scenario_model.domain,
                 "duration_ticks": scenario_model.duration_ticks,
                 "parameters": (
-                    json.loads(scenario_model.parameters) if scenario_model.parameters else {}
+                    json.loads(scenario_model.parameters)
+                    if scenario_model.parameters
+                    else {}
                 ),
                 "enabled": scenario_model.enabled,
                 "created_at": scenario_model.created_at.isoformat(),
@@ -396,7 +430,9 @@ class DatabaseService:
                     "domain": scenario_model.domain,
                     "duration_ticks": scenario_model.duration_ticks,
                     "parameters": (
-                        json.loads(scenario_model.parameters) if scenario_model.parameters else {}
+                        json.loads(scenario_model.parameters)
+                        if scenario_model.parameters
+                        else {}
                     ),
                     "enabled": scenario_model.enabled,
                     "created_at": scenario_model.created_at.isoformat(),
@@ -418,7 +454,9 @@ class DatabaseService:
         try:
             # Check if agent already exists
             existing_agent = (
-                db.query(AgentModel).filter(AgentModel.agent_id == agent_config.agent_id).first()
+                db.query(AgentModel)
+                .filter(AgentModel.agent_id == agent_config.agent_id)
+                .first()
             )
 
             if existing_agent:
@@ -426,7 +464,9 @@ class DatabaseService:
                 existing_agent.agent_type = agent_config.agent_type
                 existing_agent.agent_class = agent_config.agent_class
                 existing_agent.parameters = (
-                    json.dumps(agent_config.parameters) if agent_config.parameters else None
+                    json.dumps(agent_config.parameters)
+                    if agent_config.parameters
+                    else None
                 )
                 existing_agent.enabled = True
                 existing_agent.updated_at = datetime.utcnow()
@@ -443,7 +483,9 @@ class DatabaseService:
                     agent_type=agent_config.agent_type,
                     agent_class=agent_config.agent_class,
                     parameters=(
-                        json.dumps(agent_config.parameters) if agent_config.parameters else None
+                        json.dumps(agent_config.parameters)
+                        if agent_config.parameters
+                        else None
                     ),
                     enabled=True,
                 )
@@ -465,7 +507,9 @@ class DatabaseService:
         db = next(self.get_db())
 
         try:
-            agent_model = db.query(AgentModel).filter(AgentModel.agent_id == agent_id).first()
+            agent_model = (
+                db.query(AgentModel).filter(AgentModel.agent_id == agent_id).first()
+            )
 
             if not agent_model:
                 return None
@@ -476,7 +520,9 @@ class DatabaseService:
                 "agent_id": agent_model.agent_id,
                 "agent_type": agent_model.agent_type,
                 "agent_class": agent_model.agent_class,
-                "parameters": json.loads(agent_model.parameters) if agent_model.parameters else {},
+                "parameters": (
+                    json.loads(agent_model.parameters) if agent_model.parameters else {}
+                ),
                 "enabled": agent_model.enabled,
                 "created_at": agent_model.created_at.isoformat(),
                 "updated_at": agent_model.updated_at.isoformat(),
@@ -504,7 +550,9 @@ class DatabaseService:
                     "agent_type": agent_model.agent_type,
                     "agent_class": agent_model.agent_class,
                     "parameters": (
-                        json.loads(agent_model.parameters) if agent_model.parameters else {}
+                        json.loads(agent_model.parameters)
+                        if agent_model.parameters
+                        else {}
                     ),
                     "enabled": agent_model.enabled,
                     "created_at": agent_model.created_at.isoformat(),
@@ -526,7 +574,9 @@ class DatabaseService:
         try:
             # Check if metric already exists
             existing_metric = (
-                db.query(MetricModel).filter(MetricModel.name == metric_config.name).first()
+                db.query(MetricModel)
+                .filter(MetricModel.name == metric_config.name)
+                .first()
             )
 
             if existing_metric:
@@ -573,7 +623,9 @@ class DatabaseService:
         db = next(self.get_db())
 
         try:
-            metric_model = db.query(MetricModel).filter(MetricModel.name == metric_name).first()
+            metric_model = (
+                db.query(MetricModel).filter(MetricModel.name == metric_name).first()
+            )
 
             if not metric_model:
                 return None
@@ -635,7 +687,9 @@ class APIService:
 
     def __init__(self, database_service: DatabaseService):
         self.database_service = database_service
-        self.app = FastAPI(title="FBA-Bench API", description="API for FBA-Bench system")
+        self.app = FastAPI(
+            title="FBA-Bench API", description="API for FBA-Bench system"
+        )
         self.setup_routes()
 
     def setup_routes(self):
@@ -825,7 +879,9 @@ class MockAgentForDBAPI(BaseAgentRunner):
             "responses_count": len(self.responses),
             "actions_count": len(self.actions_taken),
             "avg_response_time": (
-                np.mean([r["processing_time"] for r in self.responses]) if self.responses else 0
+                np.mean([r["processing_time"] for r in self.responses])
+                if self.responses
+                else 0
             ),
             "success_rate": (
                 len([a for a in self.actions_taken if a["status"] == "completed"])
@@ -991,7 +1047,9 @@ class TestDatabaseAPIIntegration:
         """Create a benchmark engine instance."""
         return BenchmarkEngine(benchmark_config)
 
-    def test_database_service_save_and_get_scenario(self, database_service, scenario_config):
+    def test_database_service_save_and_get_scenario(
+        self, database_service, scenario_config
+    ):
         """Test database service save and get scenario."""
         # Save scenario
         scenario_id = database_service.save_scenario(scenario_config)
@@ -1048,7 +1106,9 @@ class TestDatabaseAPIIntegration:
         agent_ids = [a["agent_id"] for a in agents]
         assert agent_config.agent_id in agent_ids
 
-    def test_database_service_save_and_get_metric(self, database_service, metric_config):
+    def test_database_service_save_and_get_metric(
+        self, database_service, metric_config
+    ):
         """Test database service save and get metric."""
         # Save metric
         metric_id = database_service.save_metric(metric_config)

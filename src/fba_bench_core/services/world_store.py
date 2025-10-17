@@ -14,11 +14,12 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Protocol
 
+from money import Money
+
 from fba_events.bus import InMemoryEventBus as EventBus
 from fba_events.inventory import InventoryUpdate, WorldStateSnapshotEvent
 from fba_events.pricing import ProductPriceUpdated, SetPriceCommand
 from fba_events.time_events import TickEvent
-from money import Money
 
 logger = logging.getLogger(__name__)
 
@@ -92,7 +93,9 @@ class InMemoryStorageBackend:
         logger.info("InMemoryStorageBackend initialized.")
 
     async def initialize(self):
-        logger.info("InMemoryStorageBackend initialized - no external connection needed.")
+        logger.info(
+            "InMemoryStorageBackend initialized - no external connection needed."
+        )
 
     async def shutdown(self):
         logger.info("InMemoryStorageBackend shut down.")
@@ -114,7 +117,9 @@ class InMemoryStorageBackend:
 
     async def load_latest_state(self) -> Optional[Dict[str, Any]]:
         if self._latest_snapshot_id and self._latest_snapshot_id in self._snapshots:
-            logger.info(f"Loading latest in-memory state snapshot: {self._latest_snapshot_id}")
+            logger.info(
+                f"Loading latest in-memory state snapshot: {self._latest_snapshot_id}"
+            )
             return self._snapshots[self._latest_snapshot_id]["state"]
         logger.info("No latest in-memory state snapshot found.")
         return None
@@ -137,17 +142,22 @@ class JsonFileStorageBackend:
     def __init__(self, snapshot_dir: str = "world_store_snapshots"):
         self.snapshot_dir = Path(snapshot_dir)
         self._latest_snapshot_id: Optional[str] = None
-        logger.info(f"JsonFileStorageBackend initialized with directory: {self.snapshot_dir}")
+        logger.info(
+            f"JsonFileStorageBackend initialized with directory: {self.snapshot_dir}"
+        )
 
     async def initialize(self):
         try:
             self.snapshot_dir.mkdir(parents=True, exist_ok=True)
-            logger.info(f"JsonFileStorageBackend ensured directory exists: {self.snapshot_dir}")
+            logger.info(
+                f"JsonFileStorageBackend ensured directory exists: {self.snapshot_dir}"
+            )
             # Attempt to find the latest snapshot ID on startup
             await self._find_latest_snapshot_id()
         except Exception as e:
             logger.error(
-                f"Failed to initialize JsonFileStorageBackend directory: {e}", exc_info=True
+                f"Failed to initialize JsonFileStorageBackend directory: {e}",
+                exc_info=True,
             )
             raise
 
@@ -170,12 +180,15 @@ class JsonFileStorageBackend:
                         latest_id = file_path.stem  # filename without extension
             self._latest_snapshot_id = latest_id
             if latest_id:
-                logger.info(f"JsonFileStorageBackend identified latest snapshot as: {latest_id}")
+                logger.info(
+                    f"JsonFileStorageBackend identified latest snapshot as: {latest_id}"
+                )
             else:
                 logger.info("JsonFileStorageBackend found no existing snapshots.")
         except Exception as e:
             logger.error(
-                f"Error finding latest snapshot ID in JsonFileStorageBackend: {e}", exc_info=True
+                f"Error finding latest snapshot ID in JsonFileStorageBackend: {e}",
+                exc_info=True,
             )
 
     async def save_state(
@@ -196,7 +209,9 @@ class JsonFileStorageBackend:
             logger.info(f"Saved JSON state snapshot: {snapshot_id} to {snapshot_path}")
             return snapshot_id
         except Exception as e:
-            logger.error(f"Failed to save JSON state snapshot {snapshot_id}: {e}", exc_info=True)
+            logger.error(
+                f"Failed to save JSON state snapshot {snapshot_id}: {e}", exc_info=True
+            )
             raise
 
     async def load_latest_state(self) -> Optional[Dict[str, Any]]:
@@ -212,14 +227,20 @@ class JsonFileStorageBackend:
         snapshot_path = self._get_snapshot_path(snapshot_id)
         try:
             if not snapshot_path.exists():
-                logger.warning(f"JSON state snapshot {snapshot_id} not found at {snapshot_path}.")
+                logger.warning(
+                    f"JSON state snapshot {snapshot_id} not found at {snapshot_path}."
+                )
                 return None
             with open(snapshot_path) as f:
                 snapshot_data = json.load(f)
-            logger.info(f"Loaded JSON state snapshot by ID: {snapshot_id} from {snapshot_path}")
+            logger.info(
+                f"Loaded JSON state snapshot by ID: {snapshot_id} from {snapshot_path}"
+            )
             return snapshot_data.get("state")
         except Exception as e:
-            logger.error(f"Failed to load JSON state snapshot {snapshot_id}: {e}", exc_info=True)
+            logger.error(
+                f"Failed to load JSON state snapshot {snapshot_id}: {e}", exc_info=True
+            )
             return None
 
 
@@ -376,9 +397,9 @@ class WorldStore:
 
         # Command processing state for enhanced conflict resolution
         self._pending_commands_by_asin_this_tick: Dict[str, List[SetPriceCommand]] = {}
-        self._processed_command_ids_this_tick: set[
-            str
-        ] = set()  # To avoid re-processing exact duplicates within a tick
+        self._processed_command_ids_this_tick: set[str] = (
+            set()
+        )  # To avoid re-processing exact duplicates within a tick
         self._command_history: List[SetPriceCommand] = []
 
         # Arbitration configuration
@@ -433,7 +454,9 @@ class WorldStore:
 
         # Periodically persist snapshots
         if event.tick_number % 100 == 0:  # Example: save every 100 ticks
-            logger.info(f"Tick {event.tick_number}: Triggering WorldStore state snapshot.")
+            logger.info(
+                f"Tick {event.tick_number}: Triggering WorldStore state snapshot."
+            )
             await self.save_state_snapshot(tick=event.tick_number)
 
     # Note: TickEndEvent has been removed; per-tick tracking is cleared on TickEvent instead.
@@ -479,7 +502,10 @@ class WorldStore:
             else:
                 # Reject the command
                 self.commands_rejected += 1
-                if "already accepted for this ASIN in the current tick" in result.reason:
+                if (
+                    "already accepted for this ASIN in the current tick"
+                    in result.reason
+                ):
                     self.conflicts_arbitrated += 1
                 logger.warning(
                     f"SetPriceCommand rejected: agent={event.agent_id}, asin={event.asin}, reason={result.reason}, command_id={event.event_id}"
@@ -489,7 +515,9 @@ class WorldStore:
             self._command_history.append(event)
 
         except Exception as e:
-            logger.error(f"Error processing SetPriceCommand {event.event_id}: {e}", exc_info=True)
+            logger.error(
+                f"Error processing SetPriceCommand {event.event_id}: {e}", exc_info=True
+            )
             self.commands_rejected += 1
 
     async def _handle_inventory_update(self, event: InventoryUpdate):
@@ -508,7 +536,9 @@ class WorldStore:
             current_state = self._product_state.get(asin)
             if current_state:
                 current_state.inventory_quantity = new_quantity
-                current_state.cost_basis = cost_basis if cost_basis else current_state.cost_basis
+                current_state.cost_basis = (
+                    cost_basis if cost_basis else current_state.cost_basis
+                )
                 current_state.last_updated = datetime.now()
                 logger.debug(
                     f"Updated inventory for {asin}: new_quantity={new_quantity}, cost_basis={cost_basis}"
@@ -530,10 +560,13 @@ class WorldStore:
 
         except Exception as e:
             logger.error(
-                f"Error handling InventoryUpdate event {event.event_id}: {e}", exc_info=True
+                f"Error handling InventoryUpdate event {event.event_id}: {e}",
+                exc_info=True,
             )
 
-    async def _arbitrate_price_command(self, command: SetPriceCommand) -> CommandArbitrationResult:
+    async def _arbitrate_price_command(
+        self, command: SetPriceCommand
+    ) -> CommandArbitrationResult:
         """
         Arbitrate a price change command with enhanced conflict resolution.
 
@@ -567,7 +600,9 @@ class WorldStore:
             current_price = current_state.price
             # Avoid division by zero if current_price is zero, though unlikely for Money type unless explicitly set.
             if current_price.cents > 0:
-                price_change_ratio = abs((command.new_price.cents / current_price.cents) - 1.0)
+                price_change_ratio = abs(
+                    (command.new_price.cents / current_price.cents) - 1.0
+                )
                 if price_change_ratio > self.max_price_change_per_tick:
                     return CommandArbitrationResult(
                         accepted=False,
@@ -611,7 +646,9 @@ class WorldStore:
             arbitration_notes=f"Processed by WorldStore at {datetime.now().isoformat()}",
         )
 
-    async def _apply_price_change(self, command: SetPriceCommand, result: CommandArbitrationResult):
+    async def _apply_price_change(
+        self, command: SetPriceCommand, result: CommandArbitrationResult
+    ):
         """
         Apply validated price change to canonical state and publish update event.
         """
@@ -619,7 +656,9 @@ class WorldStore:
         new_price = result.final_price
         current_state = self._product_state.get(asin)
 
-        previous_price = current_state.price if current_state else Money(2000)  # Default $20.00
+        previous_price = (
+            current_state.price if current_state else Money(2000)
+        )  # Default $20.00
 
         if current_state:
             current_state.price = new_price
@@ -709,7 +748,9 @@ class WorldStore:
                 pass
         self._product_state[asin] = state
 
-    def arbitrate_commands(self, commands: List[Dict[str, Any]]) -> SimpleArbitrationResult:
+    def arbitrate_commands(
+        self, commands: List[Dict[str, Any]]
+    ) -> SimpleArbitrationResult:
         """
         Back-compat simple arbitration for dict-based commands.
 
@@ -927,15 +968,20 @@ class WorldStore:
         Publishes a WorldStateSnapshotEvent if successful.
         """
         if not self.storage_backend:
-            logger.warning("No storage backend configured for WorldStore, cannot save snapshot.")
+            logger.warning(
+                "No storage backend configured for WorldStore, cannot save snapshot."
+            )
             return None
 
         serializable_state = {
-            asin: product_state.to_dict() for asin, product_state in self._product_state.items()
+            asin: product_state.to_dict()
+            for asin, product_state in self._product_state.items()
         }
 
         timestamp = datetime.now()
-        snapshot_id = await self.storage_backend.save_state(serializable_state, timestamp, tick)
+        snapshot_id = await self.storage_backend.save_state(
+            serializable_state, timestamp, tick
+        )
         self.snapshots_saved += 1
 
         snapshot_event = WorldStateSnapshotEvent(
@@ -957,7 +1003,9 @@ class WorldStore:
         Returns True on success, False on failure.
         """
         if not self.storage_backend:
-            logger.warning("No storage backend configured for WorldStore, cannot load snapshot.")
+            logger.warning(
+                "No storage backend configured for WorldStore, cannot load snapshot."
+            )
             return False
 
         loaded_data = None
@@ -973,7 +1021,9 @@ class WorldStore:
                 f" Current products: {len(self._product_state)}"
             )
             return True
-        logger.warning(f"Failed to load WorldStore state snapshot {snapshot_id or 'latest'}.")
+        logger.warning(
+            f"Failed to load WorldStore state snapshot {snapshot_id or 'latest'}."
+        )
         return False
 
     def _load_state_from_dict(self, state_data: Dict[str, Any]):

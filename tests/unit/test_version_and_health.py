@@ -1,8 +1,8 @@
 from typing import Any, Dict
 
 from fastapi.testclient import TestClient
-
 from fba_bench import __version__
+
 from fba_bench_api.main import app
 
 

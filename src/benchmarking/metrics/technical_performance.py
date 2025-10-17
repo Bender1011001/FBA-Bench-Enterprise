@@ -308,7 +308,9 @@ class TechnicalPerformanceMetrics(BaseMetric):
         if latency_data:
             avg_latency = statistics.mean(latency_data)
             max_latency = max(latency_data)
-            latency_variance = statistics.variance(latency_data) if len(latency_data) > 1 else 0.0
+            latency_variance = (
+                statistics.variance(latency_data) if len(latency_data) > 1 else 0.0
+            )
 
             # Lower latency is better
             latency_score = self._calculate_latency_score(
@@ -320,11 +322,15 @@ class TechnicalPerformanceMetrics(BaseMetric):
         if throughput_data:
             avg_throughput = statistics.mean(throughput_data)
             throughput_variance = (
-                statistics.variance(throughput_data) if len(throughput_data) > 1 else 0.0
+                statistics.variance(throughput_data)
+                if len(throughput_data) > 1
+                else 0.0
             )
 
             # Higher throughput is better
-            throughput_score = self._calculate_throughput_score(avg_throughput, throughput_variance)
+            throughput_score = self._calculate_throughput_score(
+                avg_throughput, throughput_variance
+            )
 
         # Combine latency and throughput scores
         if latency_data and throughput_data:
@@ -449,7 +455,9 @@ class TechnicalPerformanceMetrics(BaseMetric):
             # Evaluate degradation components
             degradation_rate = self._evaluate_degradation_rate(profile)
             degradation_consistency = self._evaluate_degradation_consistency(profile)
-            recovery_from_degradation = self._evaluate_recovery_from_degradation(profile)
+            recovery_from_degradation = self._evaluate_recovery_from_degradation(
+                profile
+            )
             degradation_prediction = self._evaluate_degradation_prediction(profile)
 
             # Calculate weighted degradation score (lower degradation is better)
@@ -520,8 +528,12 @@ class TechnicalPerformanceMetrics(BaseMetric):
 
         # Calculate scaling efficiency
         # Ideally, throughput should scale linearly with concurrent users
-        expected_throughput = concurrent_users * 10  # Base assumption: 10 requests per user
-        scaling_efficiency = throughput / expected_throughput if expected_throughput > 0 else 0.0
+        expected_throughput = (
+            concurrent_users * 10
+        )  # Base assumption: 10 requests per user
+        scaling_efficiency = (
+            throughput / expected_throughput if expected_throughput > 0 else 0.0
+        )
 
         return min(1.0, scaling_efficiency)
 
@@ -646,14 +658,18 @@ class TechnicalPerformanceMetrics(BaseMetric):
 
         return latency_score
 
-    def _calculate_throughput_score(self, avg_throughput: float, variance: float) -> float:
+    def _calculate_throughput_score(
+        self, avg_throughput: float, variance: float
+    ) -> float:
         """Calculate throughput score."""
         # Higher throughput is better
         # Normalize to 0-1 range based on typical expectations
         min_acceptable_throughput = 10.0  # 10 requests per second
         max_acceptable_variance = 50.0  # 50 requests variance
 
-        throughput_score = min(1.0, avg_throughput / 1000.0)  # Normalize to 1000 rps as max
+        throughput_score = min(
+            1.0, avg_throughput / 1000.0
+        )  # Normalize to 1000 rps as max
         variance_score = max(0.0, 1.0 - variance / max_acceptable_variance)
 
         combined_score = (throughput_score + variance_score) / 2.0
@@ -692,7 +708,9 @@ class TechnicalPerformanceMetrics(BaseMetric):
         type_coverage = len(error_types) / 10.0  # Assuming 10 major error types
         severity_coverage = len(error_severity) / 5.0  # Assuming 5 severity levels
 
-        classification_score = (min(1.0, type_coverage) + min(1.0, severity_coverage)) / 2.0
+        classification_score = (
+            min(1.0, type_coverage) + min(1.0, severity_coverage)
+        ) / 2.0
 
         return classification_score
 
@@ -701,7 +719,9 @@ class TechnicalPerformanceMetrics(BaseMetric):
         error_patterns = analysis.error_patterns
 
         # Prevention effectiveness is demonstrated by identifying and addressing patterns
-        pattern_recognition = len(error_patterns) / 10.0  # Normalize by expected patterns
+        pattern_recognition = (
+            len(error_patterns) / 10.0
+        )  # Normalize by expected patterns
         prevention_score = min(1.0, pattern_recognition)
 
         return prevention_score
@@ -777,7 +797,9 @@ class TechnicalPerformanceMetrics(BaseMetric):
         degradation_rate = (initial_performance - final_performance) / time_period
 
         # Lower degradation rate is better
-        degradation_score = max(0.0, 1.0 - degradation_rate * 10)  # Scale degradation impact
+        degradation_score = max(
+            0.0, 1.0 - degradation_rate * 10
+        )  # Scale degradation impact
 
         return degradation_score
 
@@ -842,7 +864,9 @@ class TechnicalPerformanceMetrics(BaseMetric):
 
         # Calculate performance improvement
         improvement_ratio = optimized_performance / baseline_performance
-        improvement_score = min(1.0, improvement_ratio / 2.0)  # Normalize to reasonable range
+        improvement_score = min(
+            1.0, improvement_ratio / 2.0
+        )  # Normalize to reasonable range
 
         return improvement_score
 
@@ -861,7 +885,9 @@ class TechnicalPerformanceMetrics(BaseMetric):
             if resource in optimized_resources:
                 optimized_value = optimized_resources[resource]
                 if baseline_value > 0:
-                    reduction_ratio = (baseline_value - optimized_value) / baseline_value
+                    reduction_ratio = (
+                        baseline_value - optimized_value
+                    ) / baseline_value
                     reduction_score = max(0.0, reduction_ratio)
                     reduction_scores.append(reduction_score)
 
@@ -880,7 +906,9 @@ class TechnicalPerformanceMetrics(BaseMetric):
 
         return stability_score
 
-    def _evaluate_optimization_cost_effectiveness(self, result: Dict[str, Any]) -> float:
+    def _evaluate_optimization_cost_effectiveness(
+        self, result: Dict[str, Any]
+    ) -> float:
         """Evaluate optimization cost effectiveness."""
         optimization_cost = result.get("optimization_cost", 0.0)
         performance_gain = result.get("performance_gain", 0.0)
@@ -892,6 +920,8 @@ class TechnicalPerformanceMetrics(BaseMetric):
         # Calculate cost effectiveness
         total_benefit = performance_gain + resource_savings
         cost_effectiveness = total_benefit / optimization_cost
-        effectiveness_score = min(1.0, cost_effectiveness / 5.0)  # Normalize to reasonable range
+        effectiveness_score = min(
+            1.0, cost_effectiveness / 5.0
+        )  # Normalize to reasonable range
 
         return effectiveness_score

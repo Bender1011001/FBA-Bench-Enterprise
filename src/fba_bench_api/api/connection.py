@@ -3,6 +3,7 @@ Connection manager module.
 Handles active WebSocket or DB connections, etc.
 """
 
+
 class ConnectionManager:
     def __init__(self):
         self.active_connections = []

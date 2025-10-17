@@ -16,7 +16,9 @@ class SalesResult(BaseModel):
 
     product_id: UUID = Field(..., description="The unique ID of the product sold.")
     quantity_sold: int = Field(..., gt=0, description="The number of units sold.")
-    total_revenue: Money = Field(..., description="The total revenue generated from the sale.")
+    total_revenue: Money = Field(
+        ..., description="The total revenue generated from the sale."
+    )
 
     model_config = ConfigDict(
         frozen=True,

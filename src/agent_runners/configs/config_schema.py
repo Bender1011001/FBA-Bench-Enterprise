@@ -135,7 +135,9 @@ class AgentRunnerConfig:
             Framework(self.framework)
         except ValueError:
             valid_frameworks = [f.value for f in Framework]
-            raise ValueError(f"Invalid framework: {self.framework}. Valid: {valid_frameworks}")
+            raise ValueError(
+                f"Invalid framework: {self.framework}. Valid: {valid_frameworks}"
+            )
 
         # Set defaults based on framework
         self._set_framework_defaults()
@@ -212,7 +214,9 @@ class AgentRunnerConfig:
         return cls.from_dict(data)
 
 
-def validate_config(config: Union[Dict[str, Any], AgentRunnerConfig]) -> AgentRunnerConfig:
+def validate_config(
+    config: Union[Dict[str, Any], AgentRunnerConfig]
+) -> AgentRunnerConfig:
     """
     Validate and normalize configuration.
 
@@ -296,7 +300,11 @@ def merge_configs(
     def deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
         result = base.copy()
         for key, value in override.items():
-            if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            if (
+                key in result
+                and isinstance(result[key], dict)
+                and isinstance(value, dict)
+            ):
                 result[key] = deep_merge(result[key], value)
             else:
                 result[key] = value
@@ -313,7 +321,11 @@ class ConfigBuilder:
         self.config = create_default_config(framework, agent_id)
 
     def with_llm(
-        self, provider: str, model: str, temperature: float = 0.1, api_key: Optional[str] = None
+        self,
+        provider: str,
+        model: str,
+        temperature: float = 0.1,
+        api_key: Optional[str] = None,
     ) -> "ConfigBuilder":
         """Configure LLM settings."""
         self.config.llm_config = LLMConfig(
@@ -323,11 +335,16 @@ class ConfigBuilder:
 
     def with_memory(self, memory_type: str, window_size: int = 10) -> "ConfigBuilder":
         """Configure memory settings."""
-        self.config.memory_config = MemoryConfig(type=memory_type, window_size=window_size)
+        self.config.memory_config = MemoryConfig(
+            type=memory_type, window_size=window_size
+        )
         return self
 
     def with_agent_settings(
-        self, strategy: str, price_sensitivity: float = 0.1, target_asin: str = "B0DEFAULT"
+        self,
+        strategy: str,
+        price_sensitivity: float = 0.1,
+        target_asin: str = "B0DEFAULT",
     ) -> "ConfigBuilder":
         """Configure agent behavior settings."""
         if self.config.agent_config is None:

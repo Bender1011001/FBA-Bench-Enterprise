@@ -101,7 +101,9 @@ class MemoryMetrics:
         # Back-compat for tests expecting a _metrics container
         self._metrics: Dict[str, MemoryMetricResult] = {}
 
-        logger.info(f"MemoryMetrics initialized for agent {self.memory_manager.agent_id}")
+        logger.info(
+            f"MemoryMetrics initialized for agent {self.memory_manager.agent_id}"
+        )
 
     async def calculate_all_metrics(self) -> Dict[str, MemoryMetricResult]:
         """Calculate all memory metrics and return as a dictionary."""
@@ -121,19 +123,27 @@ class MemoryMetrics:
 
         # Consolidation metrics (if reflection enabled)
         if self.reflection_module:
-            results["consolidation_quality"] = await self.calculate_consolidation_quality()
-            results["reflection_effectiveness"] = await self.calculate_reflection_effectiveness()
-            results["memory_promotion_rate"] = await self.calculate_memory_promotion_rate()
+            results["consolidation_quality"] = (
+                await self.calculate_consolidation_quality()
+            )
+            results["reflection_effectiveness"] = (
+                await self.calculate_reflection_effectiveness()
+            )
+            results["memory_promotion_rate"] = (
+                await self.calculate_memory_promotion_rate()
+            )
 
         # Memory vs. performance correlation
-        results[
-            "memory_performance_correlation"
-        ] = await self.calculate_memory_performance_correlation()
+        results["memory_performance_correlation"] = (
+            await self.calculate_memory_performance_correlation()
+        )
         results["forgetting_cost"] = await self.calculate_forgetting_cost()
 
         # Advanced metrics
         results["memory_diversity"] = await self.calculate_memory_diversity()
-        results["access_pattern_analysis"] = await self.calculate_access_pattern_analysis()
+        results["access_pattern_analysis"] = (
+            await self.calculate_access_pattern_analysis()
+        )
 
         # Store results in history
         for result in results.values():
@@ -170,8 +180,10 @@ class MemoryMetrics:
                 "long_term_used": long_term_size,
                 "total_capacity": total_capacity,
                 "utilization_breakdown": {
-                    "short_term": short_term_size / self.memory_manager.config.short_term_capacity,
-                    "long_term": long_term_size / self.memory_manager.config.long_term_capacity,
+                    "short_term": short_term_size
+                    / self.memory_manager.config.short_term_capacity,
+                    "long_term": long_term_size
+                    / self.memory_manager.config.long_term_capacity,
                 },
             },
         )
@@ -230,11 +242,15 @@ class MemoryMetrics:
             metadata={
                 "recent_injections": len(recent_injections),
                 "avg_memories_per_retrieval": (
-                    statistics.mean([inj["retrieved_memories"] for inj in recent_injections])
+                    statistics.mean(
+                        [inj["retrieved_memories"] for inj in recent_injections]
+                    )
                     if recent_injections
                     else 0
                 ),
-                "budget_fit_rate": sum(1 for inj in recent_injections if inj["within_budget"])
+                "budget_fit_rate": sum(
+                    1 for inj in recent_injections if inj["within_budget"]
+                )
                 / len(recent_injections),
             },
         )
@@ -263,8 +279,12 @@ class MemoryMetrics:
 
             # Boost relevance for recently accessed memories
             if memory.last_accessed:
-                hours_since_access = (current_time - memory.last_accessed).total_seconds() / 3600
-                access_boost = max(0, 0.2 * (1 - hours_since_access / 168))  # Decay over a week
+                hours_since_access = (
+                    current_time - memory.last_accessed
+                ).total_seconds() / 3600
+                access_boost = max(
+                    0, 0.2 * (1 - hours_since_access / 168)
+                )  # Decay over a week
                 base_relevance += access_boost
 
             # Boost for frequently accessed memories
@@ -281,9 +301,15 @@ class MemoryMetrics:
             timestamp=datetime.now(),
             metadata={
                 "total_memories": len(all_memories),
-                "avg_importance_score": statistics.mean([m.importance_score for m in all_memories]),
-                "avg_access_count": statistics.mean([m.access_count for m in all_memories]),
-                "accessed_memories": len([m for m in all_memories if m.access_count > 0]),
+                "avg_importance_score": statistics.mean(
+                    [m.importance_score for m in all_memories]
+                ),
+                "avg_access_count": statistics.mean(
+                    [m.access_count for m in all_memories]
+                ),
+                "accessed_memories": len(
+                    [m for m in all_memories if m.access_count > 0]
+                ),
             },
         )
 
@@ -327,7 +353,8 @@ class MemoryMetrics:
             value=coherence,
             timestamp=datetime.now(),
             metadata={
-                "time_span_hours": (timestamps[-1] - timestamps[0]).total_seconds() / 3600,
+                "time_span_hours": (timestamps[-1] - timestamps[0]).total_seconds()
+                / 3600,
                 "avg_gap_hours": statistics.mean(time_gaps) if time_gaps else 0,
                 "gap_variance": gap_variance if len(time_gaps) > 1 else 0,
                 "memory_count": len(all_memories),
@@ -363,7 +390,9 @@ class MemoryMetrics:
         for count in domain_counts.values():
             if count > 0:
                 probability = count / total_memories
-                entropy -= probability * math.log2(probability) if probability > 0 else 0
+                entropy -= (
+                    probability * math.log2(probability) if probability > 0 else 0
+                )
 
         # Normalize entropy by maximum possible entropy
         max_domains = len(self.memory_manager.config.memory_domains)
@@ -493,7 +522,9 @@ class MemoryMetrics:
 
         # Memory usage metrics
         memory_usage = [inj.get("memory_tokens", 0) for inj in recent_history]
-        memories_retrieved = [inj.get("retrieved_memories", 0) for inj in recent_history]
+        memories_retrieved = [
+            inj.get("retrieved_memories", 0) for inj in recent_history
+        ]
 
         # Performance indicators (proxy metrics since we don't have direct performance data)
         # 1. Budget efficiency (higher is better)
@@ -504,12 +535,16 @@ class MemoryMetrics:
         # 2. Memory utilization efficiency (optimal range is 0.6-0.8)
         utilization_efficiency = []
         for inj in recent_history:
-            memory_ratio = inj.get("memory_tokens", 0) / max(1, inj.get("token_budget", 1000))
+            memory_ratio = inj.get("memory_tokens", 0) / max(
+                1, inj.get("token_budget", 1000)
+            )
             if 0.6 <= memory_ratio <= 0.8:
                 utilization_efficiency.append(1.0)
             else:
                 # Score decreases as utilization moves away from optimal range
-                utilization_efficiency.append(max(0.0, 1.0 - abs(memory_ratio - 0.7) * 2))
+                utilization_efficiency.append(
+                    max(0.0, 1.0 - abs(memory_ratio - 0.7) * 2)
+                )
 
         # 3. Memory diversity score (based on variety of memories retrieved)
         diversity_scores = []
@@ -526,7 +561,8 @@ class MemoryMetrics:
             # Weighted combination of performance indicators
             perf_score = (
                 budget_efficiency[i] * 0.4  # 40% weight for budget efficiency
-                + utilization_efficiency[i] * 0.4  # 40% weight for utilization efficiency
+                + utilization_efficiency[i]
+                * 0.4  # 40% weight for utilization efficiency
                 + diversity_scores[i] * 0.2  # 20% weight for diversity
             )
             performance_scores.append(perf_score)
@@ -537,7 +573,9 @@ class MemoryMetrics:
         # Memory usage vs performance correlation
         if len(set(memory_usage)) > 1 and len(set(performance_scores)) > 1:
             try:
-                usage_perf_corr = statistics.correlation(memory_usage, performance_scores)
+                usage_perf_corr = statistics.correlation(
+                    memory_usage, performance_scores
+                )
                 correlations["usage_performance"] = usage_perf_corr
             except statistics.StatisticsError:
                 correlations["usage_performance"] = 0.0
@@ -545,7 +583,9 @@ class MemoryMetrics:
         # Memory count vs performance correlation
         if len(set(memories_retrieved)) > 1 and len(set(performance_scores)) > 1:
             try:
-                count_perf_corr = statistics.correlation(memories_retrieved, performance_scores)
+                count_perf_corr = statistics.correlation(
+                    memories_retrieved, performance_scores
+                )
                 correlations["count_performance"] = count_perf_corr
             except statistics.StatisticsError:
                 correlations["count_performance"] = 0.0
@@ -565,7 +605,9 @@ class MemoryMetrics:
             metadata={
                 "sample_size": len(recent_history),
                 "correlations": correlations,
-                "avg_memory_usage": statistics.mean(memory_usage) if memory_usage else 0.0,
+                "avg_memory_usage": (
+                    statistics.mean(memory_usage) if memory_usage else 0.0
+                ),
                 "avg_performance_score": (
                     statistics.mean(performance_scores) if performance_scores else 0.0
                 ),
@@ -573,7 +615,9 @@ class MemoryMetrics:
                     "min": min(performance_scores) if performance_scores else 0.0,
                     "max": max(performance_scores) if performance_scores else 0.0,
                     "std_dev": (
-                        statistics.stdev(performance_scores) if len(performance_scores) > 1 else 0.0
+                        statistics.stdev(performance_scores)
+                        if len(performance_scores) > 1
+                        else 0.0
                     ),
                 },
             },
@@ -595,9 +639,13 @@ class MemoryMetrics:
 
         # Calculate cost based on budget overruns (truncated memories)
         total_retrievals = len(injection_history)
-        budget_failures = sum(1 for inj in injection_history if not inj["within_budget"])
+        budget_failures = sum(
+            1 for inj in injection_history if not inj["within_budget"]
+        )
 
-        forgetting_cost = budget_failures / total_retrievals if total_retrievals > 0 else 0.0
+        forgetting_cost = (
+            budget_failures / total_retrievals if total_retrievals > 0 else 0.0
+        )
 
         return MemoryMetricResult(
             metric_name="forgetting_cost",
@@ -633,7 +681,9 @@ class MemoryMetrics:
         # Temporal diversity (memories spread across time)
         timestamps = [memory.timestamp for memory in all_memories]
         time_span = (
-            (max(timestamps) - min(timestamps)).total_seconds() / 3600 if len(timestamps) > 1 else 0
+            (max(timestamps) - min(timestamps)).total_seconds() / 3600
+            if len(timestamps) > 1
+            else 0
         )
 
         # Combine diversity measures
@@ -687,7 +737,9 @@ class MemoryMetrics:
         # Calculate access pattern metrics
         access_rates = [m.access_count for m in accessed_memories]
         avg_access_rate = statistics.mean(access_rates)
-        access_variance = statistics.variance(access_rates) if len(access_rates) > 1 else 0
+        access_variance = (
+            statistics.variance(access_rates) if len(access_rates) > 1 else 0
+        )
 
         # Higher score for consistent access patterns (lower variance relative to mean)
         pattern_score = 1.0 / (1.0 + access_variance / max(1, avg_access_rate))
@@ -810,7 +862,9 @@ class MemoryMetrics:
                 "Consider reducing memory capacity or increasing retention period"
             )
         elif metrics.get("memory_utilization", 0) > 0.9:
-            recommendations.append("Memory utilization is high - consider increasing capacity")
+            recommendations.append(
+                "Memory utilization is high - consider increasing capacity"
+            )
 
         # Efficiency recommendations
         if metrics.get("memory_efficiency", 0) < 0.5:

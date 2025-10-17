@@ -67,7 +67,9 @@ class SupplierResponseEvent(BaseEvent):
 
         # Validate content: Must be a non-empty string.
         if not self.content:
-            raise ValueError("Response content cannot be empty for SupplierResponseEvent.")
+            raise ValueError(
+                "Response content cannot be empty for SupplierResponseEvent."
+            )
 
         # Validate quoted_price: If provided, must be a Money instance.
         if self.quoted_price is not None and not isinstance(self.quoted_price, Money):
@@ -97,7 +99,9 @@ class SupplierResponseEvent(BaseEvent):
                 self.content[:100] + "..." if len(self.content) > 100 else self.content
             ),  # Truncate long content
             "order_id": self.order_id,
-            "delivery_date": self.delivery_date.isoformat() if self.delivery_date else None,
+            "delivery_date": (
+                self.delivery_date.isoformat() if self.delivery_date else None
+            ),
             "quoted_price": str(self.quoted_price) if self.quoted_price else None,
             "response_time_hours": round(self.response_time_hours, 2),
         }
@@ -153,11 +157,15 @@ class PlaceOrderCommand(BaseEvent):
 
         # Validate quantity: Must be a positive integer.
         if self.quantity <= 0:
-            raise ValueError(f"Order quantity must be positive, but got {self.quantity}.")
+            raise ValueError(
+                f"Order quantity must be positive, but got {self.quantity}."
+            )
 
         # Validate max_price: Must be a Money object.
         if not isinstance(self.max_price, Money):
-            raise TypeError(f"Max price must be a Money object, but got {type(self.max_price)}.")
+            raise TypeError(
+                f"Max price must be a Money object, but got {type(self.max_price)}."
+            )
 
     def to_summary_dict(self) -> Dict[str, Any]:
         """
@@ -237,7 +245,9 @@ class SupplierDisputeEvent(BaseEvent):
 
         # Validate purchase_order_id: Must be a non-empty string.
         if not self.purchase_order_id:
-            raise ValueError("Purchase order ID cannot be empty for SupplierDisputeEvent.")
+            raise ValueError(
+                "Purchase order ID cannot be empty for SupplierDisputeEvent."
+            )
 
         # Validate disputed_amount: Must be a Money object.
         if not isinstance(self.disputed_amount, Money):
@@ -261,7 +271,9 @@ class SupplierDisputeEvent(BaseEvent):
             "purchase_order_id": self.purchase_order_id,
             "disputed_amount": str(self.disputed_amount),
             "reason": self.reason,
-            "details": self.details[:100] + "..." if len(self.details) > 100 else self.details,
+            "details": (
+                self.details[:100] + "..." if len(self.details) > 100 else self.details
+            ),
         }
 
 
@@ -299,11 +311,15 @@ class SupplyChainDisruptionEvent(BaseEvent):
 
         # Validate supplier_id: Must be a non-empty string.
         if not self.supplier_id:
-            raise ValueError("Supplier ID cannot be empty for SupplyChainDisruptionEvent.")
+            raise ValueError(
+                "Supplier ID cannot be empty for SupplyChainDisruptionEvent."
+            )
 
         # Validate disruption_type: Must be a non-empty string.
         if not self.disruption_type:
-            raise ValueError("Disruption type cannot be empty for SupplyChainDisruptionEvent.")
+            raise ValueError(
+                "Disruption type cannot be empty for SupplyChainDisruptionEvent."
+            )
 
         # Validate details: Must be a non-empty string.
         if not self.details:
@@ -318,7 +334,9 @@ class SupplyChainDisruptionEvent(BaseEvent):
             "timestamp": self.timestamp.isoformat(),
             "supplier_id": self.supplier_id,
             "disruption_type": self.disruption_type,
-            "details": self.details[:100] + "..." if len(self.details) > 100 else self.details,
+            "details": (
+                self.details[:100] + "..." if len(self.details) > 100 else self.details
+            ),
             "expected_duration": self.expected_duration,
             "affected_products": self.affected_products,
         }

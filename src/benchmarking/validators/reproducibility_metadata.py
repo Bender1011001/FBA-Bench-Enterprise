@@ -120,7 +120,9 @@ def reproducibility_metadata_validate(
 
     # If engine digest is provided but not present per-run, add an info-level note
     if cfg_digest:
-        any_run_digest = any(isinstance(r, dict) and r.get("config_digest") for r in runs)
+        any_run_digest = any(
+            isinstance(r, dict) and r.get("config_digest") for r in runs
+        )
         if not any_run_digest:
             out.add_issue(
                 Issue(

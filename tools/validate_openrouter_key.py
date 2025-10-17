@@ -1,8 +1,8 @@
+import json
 import os
 import sys
-import json
-import urllib.request
 import urllib.error
+import urllib.request
 
 # Load .env to populate OPENROUTER_API_KEY in local dev
 try:

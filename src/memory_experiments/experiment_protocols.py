@@ -40,18 +40,26 @@ class ExperimentProtocol:
         for config_dict in self.memory_configs:
             # Create base constraint config
             base_config = ConstraintConfig(
-                max_tokens_per_action=config_dict["budget_constraints"]["max_tokens_per_action"],
+                max_tokens_per_action=config_dict["budget_constraints"][
+                    "max_tokens_per_action"
+                ],
                 max_total_tokens=config_dict["budget_constraints"]["max_total_tokens"],
-                token_cost_per_1k=config_dict["budget_constraints"]["token_cost_per_1k"],
+                token_cost_per_1k=config_dict["budget_constraints"][
+                    "token_cost_per_1k"
+                ],
                 violation_penalty_weight=config_dict["budget_constraints"][
                     "violation_penalty_weight"
                 ],
                 grace_period_percentage=config_dict["budget_constraints"][
                     "grace_period_percentage"
                 ],
-                hard_fail_on_violation=config_dict["enforcement"]["hard_fail_on_violation"],
+                hard_fail_on_violation=config_dict["enforcement"][
+                    "hard_fail_on_violation"
+                ],
                 inject_budget_status=config_dict["enforcement"]["inject_budget_status"],
-                track_token_efficiency=config_dict["enforcement"]["track_token_efficiency"],
+                track_token_efficiency=config_dict["enforcement"][
+                    "track_token_efficiency"
+                ],
             )
 
             # Create memory config
@@ -77,17 +85,27 @@ class ExperimentProtocol:
             max_tokens_per_action=self.baseline_config["budget_constraints"][
                 "max_tokens_per_action"
             ],
-            max_total_tokens=self.baseline_config["budget_constraints"]["max_total_tokens"],
-            token_cost_per_1k=self.baseline_config["budget_constraints"]["token_cost_per_1k"],
+            max_total_tokens=self.baseline_config["budget_constraints"][
+                "max_total_tokens"
+            ],
+            token_cost_per_1k=self.baseline_config["budget_constraints"][
+                "token_cost_per_1k"
+            ],
             violation_penalty_weight=self.baseline_config["budget_constraints"][
                 "violation_penalty_weight"
             ],
             grace_period_percentage=self.baseline_config["budget_constraints"][
                 "grace_period_percentage"
             ],
-            hard_fail_on_violation=self.baseline_config["enforcement"]["hard_fail_on_violation"],
-            inject_budget_status=self.baseline_config["enforcement"]["inject_budget_status"],
-            track_token_efficiency=self.baseline_config["enforcement"]["track_token_efficiency"],
+            hard_fail_on_violation=self.baseline_config["enforcement"][
+                "hard_fail_on_violation"
+            ],
+            inject_budget_status=self.baseline_config["enforcement"][
+                "inject_budget_status"
+            ],
+            track_token_efficiency=self.baseline_config["enforcement"][
+                "track_token_efficiency"
+            ],
         )
 
         baseline_memory_settings = self.baseline_config["memory_configuration"]
@@ -95,13 +113,17 @@ class ExperimentProtocol:
             base_config=baseline_base,
             memory_mode=MemoryMode(baseline_memory_settings["memory_mode"]),
             short_term_capacity=baseline_memory_settings["short_term_capacity"],
-            short_term_retention_days=baseline_memory_settings["short_term_retention_days"],
+            short_term_retention_days=baseline_memory_settings[
+                "short_term_retention_days"
+            ],
             long_term_capacity=baseline_memory_settings["long_term_capacity"],
             reflection_enabled=baseline_memory_settings["reflection_enabled"],
             consolidation_algorithm=ConsolidationAlgorithm(
                 baseline_memory_settings["consolidation_algorithm"]
             ),
-            consolidation_percentage=baseline_memory_settings["consolidation_percentage"],
+            consolidation_percentage=baseline_memory_settings[
+                "consolidation_percentage"
+            ],
             enable_memory_injection=baseline_memory_settings["enable_memory_injection"],
             memory_budget_tokens=baseline_memory_settings["memory_budget_tokens"],
         )
@@ -118,7 +140,9 @@ class ExperimentProtocol:
             confidence_level=self.experimental_controls.get("confidence_level", 0.95),
             min_effect_size=self.experimental_controls.get("min_effect_size", 0.1),
             randomization_seed=self.experimental_controls.get("randomization_seed"),
-            max_simulation_ticks=self.experimental_controls.get("max_simulation_ticks", 1000),
+            max_simulation_ticks=self.experimental_controls.get(
+                "max_simulation_ticks", 1000
+            ),
         )
 
 

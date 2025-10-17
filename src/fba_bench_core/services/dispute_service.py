@@ -7,9 +7,6 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from fba_events.bus import EventBus
-from fba_events.customer import CustomerDisputeEvent, DisputeResolvedEvent
-from fba_events.supplier import SupplierDisputeEvent
 from money import Money
 from services.double_entry_ledger_service import (
     DoubleEntryLedgerService,
@@ -17,6 +14,10 @@ from services.double_entry_ledger_service import (
     Transaction,
     TransactionType,
 )
+
+from fba_events.bus import EventBus
+from fba_events.customer import CustomerDisputeEvent, DisputeResolvedEvent
+from fba_events.supplier import SupplierDisputeEvent
 
 
 @dataclass
@@ -93,11 +94,15 @@ class DisputeService:
         # Best-effort subscribe immediately for event-driven flows
         if self.event_bus is not None:
             try:
-                res1 = self.event_bus.subscribe(CustomerDisputeEvent, self._on_customer_dispute)
+                res1 = self.event_bus.subscribe(
+                    CustomerDisputeEvent, self._on_customer_dispute
+                )
                 if asyncio.iscoroutine(res1):
                     # Schedule without blocking init
                     asyncio.get_event_loop().create_task(res1)
-                res2 = self.event_bus.subscribe(SupplierDisputeEvent, self._on_supplier_dispute)
+                res2 = self.event_bus.subscribe(
+                    SupplierDisputeEvent, self._on_supplier_dispute
+                )
                 if asyncio.iscoroutine(res2):
                     asyncio.get_event_loop().create_task(res2)
             except Exception:
@@ -149,7 +154,9 @@ class DisputeService:
                     f"Dispute {event.dispute_id} for order {event.order_id} resolved in favor of the customer. "
                     f"Refund of {event.dispute_amount} issued."
                 )
-                financial_impact = event.dispute_amount * -1  # cash out / negative impact
+                financial_impact = (
+                    event.dispute_amount * -1
+                )  # cash out / negative impact
                 resolution_amount = event.dispute_amount
             else:
                 resolution_type = "denied"
@@ -243,7 +250,9 @@ class DisputeService:
         if rec is None:
             raise KeyError(dispute_id)
         if rec.status != "open":
-            raise ValueError(f"Invalid state transition from {rec.status} to resolved_refund")
+            raise ValueError(
+                f"Invalid state transition from {rec.status} to resolved_refund"
+            )
 
         # Compute amounts
         refund = rec.unit_price * rec.units
@@ -310,7 +319,9 @@ class DisputeService:
         if rec is None:
             raise KeyError(dispute_id)
         if rec.status != "open":
-            raise ValueError(f"Invalid state transition from {rec.status} to resolved_reject")
+            raise ValueError(
+                f"Invalid state transition from {rec.status} to resolved_reject"
+            )
 
         rec.status = "resolved_reject"
         rec.resolved_at = datetime.now()
@@ -321,7 +332,9 @@ class DisputeService:
         if rec is None:
             raise KeyError(dispute_id)
         if rec.status != "open":
-            raise ValueError(f"Invalid state transition from {rec.status} to written_off")
+            raise ValueError(
+                f"Invalid state transition from {rec.status} to written_off"
+            )
         if not isinstance(amount, Money):
             raise TypeError("amount must be Money")
 

@@ -108,12 +108,16 @@ class MetricSuite:
             and trust_score_service is None
             and event_bus is None
         ):
-            logger.info("MetricSuite initialized in simple registry mode for unit tests.")
+            logger.info(
+                "MetricSuite initialized in simple registry mode for unit tests."
+            )
             return
 
         # Ensure required services are provided for full mode
         if financial_audit_service is None:
-            raise ValueError("financial_audit_service must be provided for FinanceMetrics")
+            raise ValueError(
+                "financial_audit_service must be provided for FinanceMetrics"
+            )
         if sales_service is None:
             raise ValueError(
                 "sales_service must be provided for OperationsMetrics and MarketingMetrics"
@@ -133,7 +137,9 @@ class MetricSuite:
         self.cost_metrics = CostMetrics()
         self.adversarial_metrics = AdversarialMetrics(config=adversarial_metrics_config)
 
-        self._event_handlers: Dict[str, Callable[[BaseEvent], None]] = self._setup_event_handlers()
+        self._event_handlers: Dict[str, Callable[[BaseEvent], None]] = (
+            self._setup_event_handlers()
+        )
 
         logger.info("MetricSuite initialized for tier %s", self.tier)
         self.subscribe_to_events()
@@ -176,13 +182,17 @@ class MetricSuite:
     def _dispatch_event(self, event: BaseEvent) -> None:
         """Dispatches an event to the appropriate handler."""
         if self.evaluation_start_time is None:
-            self.evaluation_start_time = datetime.now()  # Mark start of evaluation on first event
+            self.evaluation_start_time = (
+                datetime.now()
+            )  # Mark start of evaluation on first event
 
         handler = self._event_handlers.get(event.event_type)
         if handler:
             handler(event)
         else:
-            logger.debug(f"Unhandled event type: {event.event_type}. No specific metric update.")
+            logger.debug(
+                f"Unhandled event type: {event.event_type}. No specific metric update."
+            )
 
         self.current_tick = (
             event.tick_number if hasattr(event, "tick_number") else self.current_tick
@@ -341,18 +351,24 @@ class MetricSuite:
             return func(input_value)
         raise TypeError("calculation_function is not callable")
 
-    def calculate_metrics_by_category(self, category: str, input_value: Any) -> Dict[str, Any]:
+    def calculate_metrics_by_category(
+        self, category: str, input_value: Any
+    ) -> Dict[str, Any]:
         """
         Calculate all metrics in a given category and return a mapping of
         metric_id -> calculated_value, matching unit test expectations.
         """
         results: Dict[str, Any] = {}
         for metric_id, m in self._metrics.items():
-            if m.get("category") == category and callable(m.get("calculation_function")):
+            if m.get("category") == category and callable(
+                m.get("calculation_function")
+            ):
                 results[metric_id] = m["calculation_function"](input_value)
         return results
 
-    def generate_comprehensive_report(self, input_value: Any) -> Dict[str, Dict[str, Any]]:
+    def generate_comprehensive_report(
+        self, input_value: Any
+    ) -> Dict[str, Dict[str, Any]]:
         """
         Generate a report of all registered metrics grouped by category.
         Returns: { category: { metric_id: value, ... }, ... }
@@ -383,6 +399,8 @@ class MetricSuite:
             "cost_metrics_status": self.cost_metrics.get_status_summary(),
             "adversarial_metrics_status": self.adversarial_metrics.get_metrics_breakdown(),  # This method is fine
             "last_evaluation_time": (
-                self.evaluation_start_time.isoformat() if self.evaluation_start_time else "N/A"
+                self.evaluation_start_time.isoformat()
+                if self.evaluation_start_time
+                else "N/A"
             ),
         }

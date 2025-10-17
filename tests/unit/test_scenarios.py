@@ -39,14 +39,19 @@ class TestCurriculumValidator(unittest.TestCase):
         self.assertIsNotNone(rule_id)
         self.assertIn(rule_id, self.curriculum_validator._validation_rules)
         self.assertEqual(
-            self.curriculum_validator._validation_rules[rule_id]["name"], "Prerequisite Check"
+            self.curriculum_validator._validation_rules[rule_id]["name"],
+            "Prerequisite Check",
         )
         self.assertEqual(
-            self.curriculum_validator._validation_rules[rule_id]["condition"], "prerequisites_met"
+            self.curriculum_validator._validation_rules[rule_id]["condition"],
+            "prerequisites_met",
         )
-        self.assertEqual(self.curriculum_validator._validation_rules[rule_id]["severity"], "error")
         self.assertEqual(
-            self.curriculum_validator._validation_rules[rule_id]["message"], "Prerequisites not met"
+            self.curriculum_validator._validation_rules[rule_id]["severity"], "error"
+        )
+        self.assertEqual(
+            self.curriculum_validator._validation_rules[rule_id]["message"],
+            "Prerequisites not met",
         )
 
     def test_update_validation_rule(self):
@@ -141,7 +146,8 @@ class TestCurriculumValidator(unittest.TestCase):
             "Beginner Curriculum",
         )
         self.assertEqual(
-            len(self.curriculum_validator._curriculum_templates[template_id]["levels"]), 2
+            len(self.curriculum_validator._curriculum_templates[template_id]["levels"]),
+            2,
         )
 
     def test_update_curriculum_template(self):
@@ -195,7 +201,8 @@ class TestCurriculumValidator(unittest.TestCase):
             "Updated curriculum for beginners",
         )
         self.assertEqual(
-            len(self.curriculum_validator._curriculum_templates[template_id]["levels"]), 2
+            len(self.curriculum_validator._curriculum_templates[template_id]["levels"]),
+            2,
         )
 
     def test_delete_curriculum_template(self):
@@ -254,7 +261,9 @@ class TestCurriculumValidator(unittest.TestCase):
         }
 
         # Mock the validation function
-        with patch.object(self.curriculum_validator, "_prerequisites_met") as mock_prerequisites:
+        with patch.object(
+            self.curriculum_validator, "_prerequisites_met"
+        ) as mock_prerequisites:
             mock_prerequisites.return_value = True
 
             # Validate the curriculum
@@ -297,7 +306,9 @@ class TestCurriculumValidator(unittest.TestCase):
         }
 
         # Mock the validation function
-        with patch.object(self.curriculum_validator, "_prerequisites_met") as mock_prerequisites:
+        with patch.object(
+            self.curriculum_validator, "_prerequisites_met"
+        ) as mock_prerequisites:
             mock_prerequisites.return_value = False
 
             # Validate the curriculum
@@ -326,7 +337,9 @@ class TestCurriculumValidator(unittest.TestCase):
         template_id = self.curriculum_validator.add_curriculum_template(template_data)
 
         # Get the template
-        retrieved_template = self.curriculum_validator.get_curriculum_template(template_id)
+        retrieved_template = self.curriculum_validator.get_curriculum_template(
+            template_id
+        )
 
         self.assertIsNotNone(retrieved_template)
         self.assertEqual(retrieved_template["name"], "Beginner Curriculum")
@@ -394,8 +407,16 @@ class TestScenarioFramework(unittest.TestCase):
             "description": "A test scenario",
             "category": "test",
             "parameters": {
-                "param1": {"type": "string", "description": "Parameter 1", "default": "default1"},
-                "param2": {"type": "integer", "description": "Parameter 2", "default": 10},
+                "param1": {
+                    "type": "string",
+                    "description": "Parameter 1",
+                    "default": "default1",
+                },
+                "param2": {
+                    "type": "integer",
+                    "description": "Parameter 2",
+                    "default": 10,
+                },
             },
             "steps": [
                 {"name": "Step 1", "description": "First step"},
@@ -408,9 +429,15 @@ class TestScenarioFramework(unittest.TestCase):
 
         self.assertIsNotNone(scenario_id)
         self.assertIn(scenario_id, self.scenario_framework._scenarios)
-        self.assertEqual(self.scenario_framework._scenarios[scenario_id]["name"], "Test Scenario")
-        self.assertEqual(self.scenario_framework._scenarios[scenario_id]["category"], "test")
-        self.assertEqual(len(self.scenario_framework._scenarios[scenario_id]["steps"]), 2)
+        self.assertEqual(
+            self.scenario_framework._scenarios[scenario_id]["name"], "Test Scenario"
+        )
+        self.assertEqual(
+            self.scenario_framework._scenarios[scenario_id]["category"], "test"
+        )
+        self.assertEqual(
+            len(self.scenario_framework._scenarios[scenario_id]["steps"]), 2
+        )
 
     def test_update_scenario(self):
         """Test updating a scenario."""
@@ -419,8 +446,16 @@ class TestScenarioFramework(unittest.TestCase):
             "description": "A test scenario",
             "category": "test",
             "parameters": {
-                "param1": {"type": "string", "description": "Parameter 1", "default": "default1"},
-                "param2": {"type": "integer", "description": "Parameter 2", "default": 10},
+                "param1": {
+                    "type": "string",
+                    "description": "Parameter 1",
+                    "default": "default1",
+                },
+                "param2": {
+                    "type": "integer",
+                    "description": "Parameter 2",
+                    "default": 10,
+                },
             },
             "steps": [
                 {"name": "Step 1", "description": "First step"},
@@ -437,9 +472,21 @@ class TestScenarioFramework(unittest.TestCase):
             "description": "An updated test scenario",
             "category": "updated_test",
             "parameters": {
-                "param1": {"type": "string", "description": "Parameter 1", "default": "default1"},
-                "param2": {"type": "integer", "description": "Parameter 2", "default": 10},
-                "param3": {"type": "boolean", "description": "Parameter 3", "default": True},
+                "param1": {
+                    "type": "string",
+                    "description": "Parameter 1",
+                    "default": "default1",
+                },
+                "param2": {
+                    "type": "integer",
+                    "description": "Parameter 2",
+                    "default": 10,
+                },
+                "param3": {
+                    "type": "boolean",
+                    "description": "Parameter 3",
+                    "default": True,
+                },
             },
             "steps": [
                 {"name": "Step 1", "description": "First step"},
@@ -452,7 +499,8 @@ class TestScenarioFramework(unittest.TestCase):
         self.scenario_framework.update_scenario(scenario_id, updated_data)
 
         self.assertEqual(
-            self.scenario_framework._scenarios[scenario_id]["name"], "Updated Test Scenario"
+            self.scenario_framework._scenarios[scenario_id]["name"],
+            "Updated Test Scenario",
         )
         self.assertEqual(
             self.scenario_framework._scenarios[scenario_id]["description"],
@@ -461,8 +509,12 @@ class TestScenarioFramework(unittest.TestCase):
         self.assertEqual(
             self.scenario_framework._scenarios[scenario_id]["category"], "updated_test"
         )
-        self.assertEqual(len(self.scenario_framework._scenarios[scenario_id]["parameters"]), 3)
-        self.assertEqual(len(self.scenario_framework._scenarios[scenario_id]["steps"]), 3)
+        self.assertEqual(
+            len(self.scenario_framework._scenarios[scenario_id]["parameters"]), 3
+        )
+        self.assertEqual(
+            len(self.scenario_framework._scenarios[scenario_id]["steps"]), 3
+        )
         self.assertEqual(
             len(self.scenario_framework._scenarios[scenario_id]["expected_outcomes"]), 3
         )
@@ -561,7 +613,8 @@ class TestScenarioFramework(unittest.TestCase):
         self.assertIsNotNone(category_id)
         self.assertIn(category_id, self.scenario_framework._scenario_categories)
         self.assertEqual(
-            self.scenario_framework._scenario_categories[category_id]["name"], "Test Category"
+            self.scenario_framework._scenario_categories[category_id]["name"],
+            "Test Category",
         )
         self.assertEqual(
             self.scenario_framework._scenario_categories[category_id]["description"],
@@ -575,8 +628,16 @@ class TestScenarioFramework(unittest.TestCase):
             "description": "A template for test scenarios",
             "category": "test",
             "parameters": {
-                "param1": {"type": "string", "description": "Parameter 1", "default": "default1"},
-                "param2": {"type": "integer", "description": "Parameter 2", "default": 10},
+                "param1": {
+                    "type": "string",
+                    "description": "Parameter 1",
+                    "default": "default1",
+                },
+                "param2": {
+                    "type": "integer",
+                    "description": "Parameter 2",
+                    "default": 10,
+                },
             },
             "steps": [
                 {"name": "Step 1", "description": "First step", "template": True},
@@ -589,12 +650,15 @@ class TestScenarioFramework(unittest.TestCase):
         self.assertIsNotNone(template_id)
         self.assertIn(template_id, self.scenario_framework._scenario_templates)
         self.assertEqual(
-            self.scenario_framework._scenario_templates[template_id]["name"], "Test Template"
+            self.scenario_framework._scenario_templates[template_id]["name"],
+            "Test Template",
         )
         self.assertEqual(
             self.scenario_framework._scenario_templates[template_id]["category"], "test"
         )
-        self.assertEqual(len(self.scenario_framework._scenario_templates[template_id]["steps"]), 2)
+        self.assertEqual(
+            len(self.scenario_framework._scenario_templates[template_id]["steps"]), 2
+        )
 
     def test_create_scenario_from_template(self):
         """Test creating a scenario from a template."""
@@ -603,8 +667,16 @@ class TestScenarioFramework(unittest.TestCase):
             "description": "A template for test scenarios",
             "category": "test",
             "parameters": {
-                "param1": {"type": "string", "description": "Parameter 1", "default": "default1"},
-                "param2": {"type": "integer", "description": "Parameter 2", "default": 10},
+                "param1": {
+                    "type": "string",
+                    "description": "Parameter 1",
+                    "default": "default1",
+                },
+                "param2": {
+                    "type": "integer",
+                    "description": "Parameter 2",
+                    "default": 10,
+                },
             },
             "steps": [
                 {"name": "Step 1", "description": "First step", "template": True},
@@ -622,24 +694,30 @@ class TestScenarioFramework(unittest.TestCase):
             "parameters": {"param1": "custom_value1", "param2": 20},
         }
 
-        scenario_id = self.scenario_framework.create_scenario_from_template(scenario_data)
+        scenario_id = self.scenario_framework.create_scenario_from_template(
+            scenario_data
+        )
 
         self.assertIsNotNone(scenario_id)
         self.assertIn(scenario_id, self.scenario_framework._scenarios)
         self.assertEqual(
-            self.scenario_framework._scenarios[scenario_id]["name"], "Scenario from Template"
+            self.scenario_framework._scenarios[scenario_id]["name"],
+            "Scenario from Template",
         )
         self.assertEqual(
             self.scenario_framework._scenarios[scenario_id]["description"],
             "A scenario created from a template",
         )
         self.assertEqual(
-            self.scenario_framework._scenarios[scenario_id]["parameters"]["param1"], "custom_value1"
+            self.scenario_framework._scenarios[scenario_id]["parameters"]["param1"],
+            "custom_value1",
         )
         self.assertEqual(
             self.scenario_framework._scenarios[scenario_id]["parameters"]["param2"], 20
         )
-        self.assertEqual(len(self.scenario_framework._scenarios[scenario_id]["steps"]), 2)
+        self.assertEqual(
+            len(self.scenario_framework._scenarios[scenario_id]["steps"]), 2
+        )
 
     def test_execute_scenario(self):
         """Test executing a scenario."""
@@ -648,8 +726,16 @@ class TestScenarioFramework(unittest.TestCase):
             "description": "A test scenario",
             "category": "test",
             "parameters": {
-                "param1": {"type": "string", "description": "Parameter 1", "default": "default1"},
-                "param2": {"type": "integer", "description": "Parameter 2", "default": 10},
+                "param1": {
+                    "type": "string",
+                    "description": "Parameter 1",
+                    "default": "default1",
+                },
+                "param2": {
+                    "type": "integer",
+                    "description": "Parameter 2",
+                    "default": 10,
+                },
             },
             "steps": [
                 {"name": "Step 1", "description": "First step"},
@@ -661,7 +747,9 @@ class TestScenarioFramework(unittest.TestCase):
         scenario_id = self.scenario_framework.create_scenario(scenario_data)
 
         # Mock the scenario execution
-        with patch.object(self.scenario_framework, "_execute_scenario_steps") as mock_execute:
+        with patch.object(
+            self.scenario_framework, "_execute_scenario_steps"
+        ) as mock_execute:
             mock_execute.return_value = {
                 "status": "success",
                 "results": ["Step 1 completed", "Step 2 completed"],
@@ -671,7 +759,9 @@ class TestScenarioFramework(unittest.TestCase):
             # Execute the scenario
             execution_params = {"param1": "custom_value1", "param2": 20}
 
-            result = self.scenario_framework.execute_scenario(scenario_id, execution_params)
+            result = self.scenario_framework.execute_scenario(
+                scenario_id, execution_params
+            )
 
             self.assertEqual(result["status"], "success")
             self.assertEqual(len(result["results"]), 2)
@@ -685,8 +775,16 @@ class TestScenarioFramework(unittest.TestCase):
             "description": "A test scenario",
             "category": "test",
             "parameters": {
-                "param1": {"type": "string", "description": "Parameter 1", "default": "default1"},
-                "param2": {"type": "integer", "description": "Parameter 2", "default": 10},
+                "param1": {
+                    "type": "string",
+                    "description": "Parameter 1",
+                    "default": "default1",
+                },
+                "param2": {
+                    "type": "integer",
+                    "description": "Parameter 2",
+                    "default": 10,
+                },
             },
             "steps": [
                 {"name": "Step 1", "description": "First step"},

@@ -22,12 +22,13 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Dict, List, Optional
 
+from money import Money
+
 from fba_bench_core.event_bus import EventBus, get_event_bus
 from fba_bench_core.services.world_store import WorldStore
 from fba_events.inventory import InventoryUpdate
 from fba_events.supplier import PlaceOrderCommand
 from fba_events.time_events import TickEvent
-from money import Money
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +85,9 @@ class SupplyChainService:
         await self.event_bus.subscribe(PlaceOrderCommand, self._on_place_order)
         await self.event_bus.subscribe(TickEvent, self._on_tick)
         self._started = True
-        logger.info("SupplyChainService started and subscribed to PlaceOrderCommand and TickEvent.")
+        logger.info(
+            "SupplyChainService started and subscribed to PlaceOrderCommand and TickEvent."
+        )
 
     async def stop(self) -> None:
         # EventBus doesn't expose unsubscribe; rely on _started flag if needed
@@ -157,7 +160,9 @@ class SupplyChainService:
             self._current_tick = int(getattr(event, "tick_number", self._current_tick))
             await self.process_tick()
         except Exception as e:
-            logger.error(f"Error processing TickEvent in SupplyChainService: {e}", exc_info=True)
+            logger.error(
+                f"Error processing TickEvent in SupplyChainService: {e}", exc_info=True
+            )
 
     async def process_tick(self) -> None:
         """
@@ -172,8 +177,12 @@ class SupplyChainService:
             if po.arrival_tick <= self._current_tick:
                 # Determine delivered quantity under disruption
                 # Apply disruption-based partial fulfillment only once; deliver full remainder on the next tick.
-                if self._disruption_active and not getattr(po, "partial_applied", False):
-                    delivered = max(0, min(po.quantity, int(po.quantity * self._fulfillment_rate)))
+                if self._disruption_active and not getattr(
+                    po, "partial_applied", False
+                ):
+                    delivered = max(
+                        0, min(po.quantity, int(po.quantity * self._fulfillment_rate))
+                    )
                     next_partial_applied = True
                 else:
                     delivered = po.quantity
@@ -182,7 +191,9 @@ class SupplyChainService:
                 # Deliver arrived units
                 if delivered > 0:
                     try:
-                        current_qty = self.world_store.get_product_inventory_quantity(po.asin)
+                        current_qty = self.world_store.get_product_inventory_quantity(
+                            po.asin
+                        )
                     except Exception:
                         current_qty = 0
 

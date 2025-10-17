@@ -80,13 +80,17 @@ class SimulationTracer(Tracer):
         self.end_span(trace_id)
         return trace_id
 
-    def get_simulation_trace(self, scenario_id: str, trace_id: str) -> Optional[Dict[str, Any]]:
+    def get_simulation_trace(
+        self, scenario_id: str, trace_id: str
+    ) -> Optional[Dict[str, Any]]:
         data = self._simulation_spans.get(trace_id)
         if data and data.get("scenario_id") == scenario_id:
             return data
         return None
 
-    def get_simulation_traces_by_tick(self, scenario_id: str, tick: int) -> List[Dict[str, Any]]:
+    def get_simulation_traces_by_tick(
+        self, scenario_id: str, tick: int
+    ) -> List[Dict[str, Any]]:
         t = int(tick)
         return [
             d
@@ -94,5 +98,11 @@ class SimulationTracer(Tracer):
             if d.get("scenario_id") == scenario_id and d.get("tick") == t
         ]
 
-    def get_simulation_traces_by_scenario(self, scenario_id: str) -> List[Dict[str, Any]]:
-        return [d for d in self._simulation_spans.values() if d.get("scenario_id") == scenario_id]
+    def get_simulation_traces_by_scenario(
+        self, scenario_id: str
+    ) -> List[Dict[str, Any]]:
+        return [
+            d
+            for d in self._simulation_spans.values()
+            if d.get("scenario_id") == scenario_id
+        ]

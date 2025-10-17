@@ -31,6 +31,8 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from money import Money
+
 from ledger_utils import (
     balance_sheet_from_ledger,
     hash_inventory_state,
@@ -39,7 +41,6 @@ from ledger_utils import (
     income_statement_from_ledger,
     trial_balance,
 )
-from money import Money
 
 logger = logging.getLogger(__name__)
 

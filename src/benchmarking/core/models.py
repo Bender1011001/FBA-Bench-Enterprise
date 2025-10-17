@@ -5,10 +5,11 @@ Pydantic models for benchmark results, experiments, and configurations.
 Used in test_engine_new_api.py and benchmarking workflows.
 """
 
-from enum import Enum
-from pydantic import BaseModel, Field
-from typing import Dict, Any, List
 from datetime import datetime
+from enum import Enum
+from typing import Any, Dict, List
+
+from pydantic import BaseModel, Field
 
 
 class MetricsAggregationMode(Enum):
@@ -39,7 +40,9 @@ class BenchmarkResult(BaseModel):
     """
 
     experiment_id: str = Field(..., description="Unique ID for the experiment")
-    metric_name: str = Field(..., description="Name of the metric (e.g., 'profit_margin')")
+    metric_name: str = Field(
+        ..., description="Name of the metric (e.g., 'profit_margin')"
+    )
     value: float = Field(..., description="The measured value")
     timestamp: datetime = Field(
         default_factory=datetime.now, description="When the result was recorded"
@@ -55,7 +58,9 @@ class ExperimentConfig(BaseModel):
 
     experiment_id: str = Field(..., description="Unique ID for the experiment")
     scenario_path: str = Field(..., description="Path to scenario YAML")
-    agent_config: Dict[str, Any] = Field(default_factory=dict, description="Agent configuration")
+    agent_config: Dict[str, Any] = Field(
+        default_factory=dict, description="Agent configuration"
+    )
     iterations: int = Field(1, ge=1, description="Number of iterations")
     metrics: List[str] = Field(default_factory=list, description="Metrics to track")
 

@@ -2,8 +2,13 @@ import json
 from typing import Any, Dict
 
 import pytest
-
-from fba_bench.core.llm_outputs import AgentResponse, FbaDecision, PriceDecision, TaskPlan, ToolCall
+from fba_bench.core.llm_outputs import (
+    AgentResponse,
+    FbaDecision,
+    PriceDecision,
+    TaskPlan,
+    ToolCall,
+)
 from fba_bench.core.llm_validation import (
     CONTRACT_REGISTRY,
     get_schema,
@@ -45,7 +50,9 @@ def test_get_schema_returns_dict_with_properties():
 
 
 def test_validate_fba_decision_strict_success_from_dict():
-    ok, instance, errors = validate_output(FbaDecision, _mk_fba_decision_payload(), strict=True)
+    ok, instance, errors = validate_output(
+        FbaDecision, _mk_fba_decision_payload(), strict=True
+    )
     assert ok is True
     assert instance is not None
     assert errors == []
@@ -78,7 +85,10 @@ def test_validate_task_plan_positive():
 
 
 def test_validate_tool_call_positive():
-    payload = {"tool_name": "set_price", "arguments": {"asin": "B07XAMPLE", "price": 23.1}}
+    payload = {
+        "tool_name": "set_price",
+        "arguments": {"asin": "B07XAMPLE", "price": 23.1},
+    }
     ok, instance, errors = validate_output(ToolCall, payload, strict=True)
     assert ok and instance is not None and errors == []
     assert instance.tool_name == "set_price"
@@ -90,9 +100,15 @@ def test_validate_agent_response_positive():
         "content": "Lowering price slightly to improve competitiveness.",
         "citations": ["https://example.com/market-report"],
         "tool_calls": [
-            {"tool_name": "set_price", "arguments": {"asin": "B07XAMPLE", "price": 23.47}}
+            {
+                "tool_name": "set_price",
+                "arguments": {"asin": "B07XAMPLE", "price": 23.47},
+            }
         ],
-        "plan": {"objective": "Improve competitiveness", "steps": ["Analyze", "Adjust", "Observe"]},
+        "plan": {
+            "objective": "Improve competitiveness",
+            "steps": ["Analyze", "Adjust", "Observe"],
+        },
     }
     ok, instance, errors = validate_output(AgentResponse, payload, strict=True)
     assert ok and instance is not None and errors == []
@@ -115,7 +131,9 @@ def test_extra_fields_in_strict_mode_fail():
     ok, instance, errors = validate_output(FbaDecision, payload, strict=True)
     assert not ok and instance is None
     # Ensure "unexpected" field flagged
-    assert any("unexpected" in e.get("msg", "") or "extra" in e.get("type", "") for e in errors)
+    assert any(
+        "unexpected" in e.get("msg", "") or "extra" in e.get("type", "") for e in errors
+    )
 
 
 def test_type_mismatch_steps_not_list_fails():
@@ -184,7 +202,9 @@ def test_validate_with_jsonschema_optional():
     if not has_jsonschema:
         errors = validate_with_jsonschema(schema, {"a": 1})
         assert errors and "not available" in errors[0]["message"]
-        pytest.skip("jsonschema not installed; skipping strict jsonschema validation tests")
+        pytest.skip(
+            "jsonschema not installed; skipping strict jsonschema validation tests"
+        )
 
     # Positive
     errors = validate_with_jsonschema(schema, {"a": 1})

@@ -6,7 +6,6 @@ Stores logs and results in artifacts/year_runs/<timestamp>/
 
 import os
 import subprocess
-import sys
 from datetime import datetime
 from pathlib import Path
 

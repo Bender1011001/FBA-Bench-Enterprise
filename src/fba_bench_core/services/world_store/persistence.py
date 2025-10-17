@@ -7,7 +7,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Protocol
+from typing import Any, Dict, Optional, Protocol
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +53,9 @@ class InMemoryStorageBackend:
         logger.info("InMemoryStorageBackend initialized.")
 
     async def initialize(self):
-        logger.info("InMemoryStorageBackend initialized - no external connection needed.")
+        logger.info(
+            "InMemoryStorageBackend initialized - no external connection needed."
+        )
 
     async def shutdown(self):
         logger.info("InMemoryStorageBackend shut down.")
@@ -62,6 +64,7 @@ class InMemoryStorageBackend:
         self, state: Dict[str, Any], timestamp: datetime, tick: Optional[int] = None
     ) -> str:
         import uuid
+
         snapshot_id = f"snapshot_{uuid.uuid4()!s}"
         snapshot_data = {
             "id": snapshot_id,
@@ -76,7 +79,9 @@ class InMemoryStorageBackend:
 
     async def load_latest_state(self) -> Optional[Dict[str, Any]]:
         if self._latest_snapshot_id and self._latest_snapshot_id in self._snapshots:
-            logger.info(f"Loading latest in-memory state snapshot: {self._latest_snapshot_id}")
+            logger.info(
+                f"Loading latest in-memory state snapshot: {self._latest_snapshot_id}"
+            )
             return self._snapshots[self._latest_snapshot_id]["state"]
         logger.info("No latest in-memory state snapshot found.")
         return None
@@ -99,17 +104,22 @@ class JsonFileStorageBackend:
     def __init__(self, snapshot_dir: str = "world_store_snapshots"):
         self.snapshot_dir = Path(snapshot_dir)
         self._latest_snapshot_id: Optional[str] = None
-        logger.info(f"JsonFileStorageBackend initialized with directory: {self.snapshot_dir}")
+        logger.info(
+            f"JsonFileStorageBackend initialized with directory: {self.snapshot_dir}"
+        )
 
     async def initialize(self):
         try:
             self.snapshot_dir.mkdir(parents=True, exist_ok=True)
-            logger.info(f"JsonFileStorageBackend ensured directory exists: {self.snapshot_dir}")
+            logger.info(
+                f"JsonFileStorageBackend ensured directory exists: {self.snapshot_dir}"
+            )
             # Attempt to find the latest snapshot ID on startup
             await self._find_latest_snapshot_id()
         except Exception as e:
             logger.error(
-                f"Failed to initialize JsonFileStorageBackend directory: {e}", exc_info=True
+                f"Failed to initialize JsonFileStorageBackend directory: {e}",
+                exc_info=True,
             )
             raise
 
@@ -132,12 +142,15 @@ class JsonFileStorageBackend:
                         latest_id = file_path.stem  # filename without extension
             self._latest_snapshot_id = latest_id
             if latest_id:
-                logger.info(f"JsonFileStorageBackend identified latest snapshot as: {latest_id}")
+                logger.info(
+                    f"JsonFileStorageBackend identified latest snapshot as: {latest_id}"
+                )
             else:
                 logger.info("JsonFileStorageBackend found no existing snapshots.")
         except Exception as e:
             logger.error(
-                f"Error finding latest snapshot ID in JsonFileStorageBackend: {e}", exc_info=True
+                f"Error finding latest snapshot ID in JsonFileStorageBackend: {e}",
+                exc_info=True,
             )
 
     async def save_state(
@@ -158,7 +171,9 @@ class JsonFileStorageBackend:
             logger.info(f"Saved JSON state snapshot: {snapshot_id} to {snapshot_path}")
             return snapshot_id
         except Exception as e:
-            logger.error(f"Failed to save JSON state snapshot {snapshot_id}: {e}", exc_info=True)
+            logger.error(
+                f"Failed to save JSON state snapshot {snapshot_id}: {e}", exc_info=True
+            )
             raise
 
     async def load_latest_state(self) -> Optional[Dict[str, Any]]:
@@ -174,12 +189,18 @@ class JsonFileStorageBackend:
         snapshot_path = self._get_snapshot_path(snapshot_id)
         try:
             if not snapshot_path.exists():
-                logger.warning(f"JSON state snapshot {snapshot_id} not found at {snapshot_path}.")
+                logger.warning(
+                    f"JSON state snapshot {snapshot_id} not found at {snapshot_path}."
+                )
                 return None
             with open(snapshot_path) as f:
                 snapshot_data = json.load(f)
-            logger.info(f"Loaded JSON state snapshot by ID: {snapshot_id} from {snapshot_path}")
+            logger.info(
+                f"Loaded JSON state snapshot by ID: {snapshot_id} from {snapshot_path}"
+            )
             return snapshot_data.get("state")
         except Exception as e:
-            logger.error(f"Failed to load JSON state snapshot {snapshot_id}: {e}", exc_info=True)
+            logger.error(
+                f"Failed to load JSON state snapshot {snapshot_id}: {e}", exc_info=True
+            )
             return None

@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
-from llm_interface.config import LLMConfig
+from llm_interface.llm_config import LLMConfig
 from llm_interface.openrouter_client import OpenRouterClient
 
 logger = logging.getLogger(__name__)
@@ -73,7 +73,10 @@ async def test_llm(req: LLMTestRequest) -> LLMTestResponse:
     client = OpenRouterClient(cfg)
 
     # Safe minimal JSON prompt by default to keep responses compact
-    prompt = req.prompt or 'Respond ONLY with a compact JSON object: {"ping": "pong", "ok": true}'
+    prompt = (
+        req.prompt
+        or 'Respond ONLY with a compact JSON object: {"ping": "pong", "ok": true}'
+    )
 
     try:
         resp = await client.generate_response(
@@ -86,7 +89,9 @@ async def test_llm(req: LLMTestRequest) -> LLMTestResponse:
             app_title=os.getenv("OPENROUTER_APP_TITLE", "FBA-Bench"),
         )
     except Exception as e:
-        logger.error("OpenRouter test failed for model %s: %s", req.model, e, exc_info=True)
+        logger.error(
+            "OpenRouter test failed for model %s: %s", req.model, e, exc_info=True
+        )
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY, detail=f"LLM call failed: {e!s}"
         )

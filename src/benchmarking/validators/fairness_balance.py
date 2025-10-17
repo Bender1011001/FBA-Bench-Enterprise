@@ -67,10 +67,18 @@ def fairness_balance_validate(
     for idx, run in enumerate(runs):
         if not isinstance(run, dict) or run.get("status") != "success":
             continue
-        grp_val = run.get(group_path) if "." not in group_path else _get_nested(run, group_path)
+        grp_val = (
+            run.get(group_path)
+            if "." not in group_path
+            else _get_nested(run, group_path)
+        )
         if grp_val is None:
             grp_val = "unknown"
-        met_val = _get_nested(run, metric_path) if "." in metric_path else run.get(metric_path)
+        met_val = (
+            _get_nested(run, metric_path)
+            if "." in metric_path
+            else run.get(metric_path)
+        )
         if isinstance(met_val, (int, float)):
             groups.setdefault(str(grp_val), []).append(float(met_val))
         else:
@@ -106,7 +114,9 @@ def fairness_balance_validate(
         )
         return normalize_output(out)
 
-    means: Dict[str, float] = {g: (sum(vals) / len(vals)) for g, vals in filtered.items()}
+    means: Dict[str, float] = {
+        g: (sum(vals) / len(vals)) for g, vals in filtered.items()
+    }
     if means:
         max_mean = max(means.values())
         min_mean = min(means.values())

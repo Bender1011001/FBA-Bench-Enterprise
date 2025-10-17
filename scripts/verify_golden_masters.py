@@ -9,6 +9,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+
 def main():
     # Run specific tests that verify against golden masters
     # These tests use GoldenMasterTester.compare_against_golden and CIIntegration.verify_reproducibility

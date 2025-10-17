@@ -2,6 +2,9 @@ import asyncio
 from datetime import datetime
 
 import pytest
+from money import Money
+from services.supply_chain_service import SupplyChainService
+from services.world_store import WorldStore, set_world_store
 
 from agents.multi_domain_controller import MultiDomainController
 from agents.skill_coordinator import SkillCoordinator
@@ -10,9 +13,6 @@ from agents.skill_modules.product_sourcing import ProductSourcingSkill
 from event_bus import get_event_bus, set_event_bus
 from fba_events.supplier import PlaceOrderCommand
 from fba_events.time_events import TickEvent
-from money import Money
-from services.supply_chain_service import SupplyChainService
-from services.world_store import WorldStore, set_world_store
 
 
 @pytest.mark.asyncio

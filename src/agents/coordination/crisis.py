@@ -6,13 +6,11 @@ Handles emergency protocols, action generation for different crisis types, and p
 
 import asyncio
 import logging
-from datetime import datetime
 from typing import List
-
-from .models import BusinessPriority
 
 from agents.skill_modules.base_skill import SkillAction
 
+from .models import BusinessPriority
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +31,9 @@ class CrisisManager:
         """
         self.controller = controller
 
-    async def handle_crisis_mode(self, crisis_type: str, severity: str) -> List[SkillAction]:
+    async def handle_crisis_mode(
+        self, crisis_type: str, severity: str
+    ) -> List[SkillAction]:
         """Handle crisis situations with emergency protocols."""
         logger.warning(f"Crisis mode activated: {crisis_type} (severity: {severity})")
 
@@ -44,21 +44,31 @@ class CrisisManager:
         crisis_actions = []
 
         if crisis_type == "cash_flow":
-            crisis_actions.extend(await self._generate_cash_flow_crisis_actions(severity))
+            crisis_actions.extend(
+                await self._generate_cash_flow_crisis_actions(severity)
+            )
         elif crisis_type == "reputation":
-            crisis_actions.extend(await self._generate_reputation_crisis_actions(severity))
+            crisis_actions.extend(
+                await self._generate_reputation_crisis_actions(severity)
+            )
         elif crisis_type == "operational":
-            crisis_actions.extend(await self._generate_operational_crisis_actions(severity))
+            crisis_actions.extend(
+                await self._generate_operational_crisis_actions(severity)
+            )
 
         # Log crisis response
-        await self.controller.coordination._log_strategic_decision(f"crisis_response_{crisis_type}", [], crisis_actions)
+        await self.controller.coordination._log_strategic_decision(
+            f"crisis_response_{crisis_type}", [], crisis_actions
+        )
 
         # Schedule priority restoration
         asyncio.create_task(self._restore_priority_after_crisis(original_priority))
 
         return crisis_actions
 
-    async def _generate_cash_flow_crisis_actions(self, severity: str) -> List[SkillAction]:
+    async def _generate_cash_flow_crisis_actions(
+        self, severity: str
+    ) -> List[SkillAction]:
         """Generate emergency cash flow preservation actions."""
         actions = []
 
@@ -97,7 +107,9 @@ class CrisisManager:
 
         return actions
 
-    async def _generate_reputation_crisis_actions(self, severity: str) -> List[SkillAction]:
+    async def _generate_reputation_crisis_actions(
+        self, severity: str
+    ) -> List[SkillAction]:
         """Generate reputation management crisis actions."""
         actions = []
 
@@ -120,7 +132,9 @@ class CrisisManager:
 
         return actions
 
-    async def _generate_operational_crisis_actions(self, severity: str) -> List[SkillAction]:
+    async def _generate_operational_crisis_actions(
+        self, severity: str
+    ) -> List[SkillAction]:
         """Generate operational crisis response actions."""
         actions = []
 

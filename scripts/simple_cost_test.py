@@ -42,8 +42,9 @@ def main() -> int:
 
     # Test cost tracking service
     try:
-        from fba_events.bus import InMemoryEventBus as EventBus  # prefer in-repo bus implementation
         from services.cost_tracking_service import CostTrackingService
+
+        from fba_events.bus import InMemoryEventBus as EventBus  # prefer in-repo bus implementation
 
         print("✓ Successfully imported CostTrackingService and EventBus")
 

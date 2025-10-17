@@ -163,7 +163,9 @@ class APISettings:
     # API settings
     api_prefix: str = "/api/v1"
     cors_origins: List[str] = field(default_factory=lambda: ["*"])
-    cors_methods: List[str] = field(default_factory=lambda: ["GET", "POST", "PUT", "DELETE"])
+    cors_methods: List[str] = field(
+        default_factory=lambda: ["GET", "POST", "PUT", "DELETE"]
+    )
     cors_headers: List[str] = field(default_factory=lambda: ["*"])
 
     # Rate limiting
@@ -327,9 +329,15 @@ class GlobalVariables:
         self.system.environment = EnvironmentType(
             os.getenv("FBA_ENV", self.system.environment.value)
         )
-        self.system.debug = os.getenv("FBA_DEBUG", str(self.system.debug)).lower() == "true"
-        self.system.testing = os.getenv("FBA_TESTING", str(self.system.testing)).lower() == "true"
-        self.system.log_level = LogLevel(os.getenv("FBA_LOG_LEVEL", self.system.log_level.value))
+        self.system.debug = (
+            os.getenv("FBA_DEBUG", str(self.system.debug)).lower() == "true"
+        )
+        self.system.testing = (
+            os.getenv("FBA_TESTING", str(self.system.testing)).lower() == "true"
+        )
+        self.system.log_level = LogLevel(
+            os.getenv("FBA_LOG_LEVEL", self.system.log_level.value)
+        )
 
         # API settings
         self.api.host = os.getenv("FBA_API_HOST", self.api.host)
@@ -342,13 +350,17 @@ class GlobalVariables:
         self.database.db_port = int(os.getenv("FBA_DB_PORT", self.database.db_port))
         self.database.db_name = os.getenv("FBA_DB_NAME", self.database.db_name)
         self.database.db_user = os.getenv("FBA_DB_USER", self.database.db_user)
-        self.database.db_password = os.getenv("FBA_DB_PASSWORD", self.database.db_password)
+        self.database.db_password = os.getenv(
+            "FBA_DB_PASSWORD", self.database.db_password
+        )
 
         # Redis settings
         self.cache.redis_host = os.getenv("FBA_REDIS_HOST", self.cache.redis_host)
         self.cache.redis_port = int(os.getenv("FBA_REDIS_PORT", self.cache.redis_port))
         self.cache.redis_db = int(os.getenv("FBA_REDIS_DB", self.cache.redis_db))
-        self.cache.redis_password = os.getenv("FBA_REDIS_PASSWORD", self.cache.redis_password)
+        self.cache.redis_password = os.getenv(
+            "FBA_REDIS_PASSWORD", self.cache.redis_password
+        )
 
         # Feature flags
         self.feature_flags["enable_experimental_features"] = (

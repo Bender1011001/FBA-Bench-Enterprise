@@ -67,7 +67,9 @@ class Product:
         # Misc/optional fields used by tests/unit/test_models.py
         self.description: Optional[str] = payload.get("description")
         self.features: List[Any] = list(payload.get("features", []) or [])
-        self.specifications: Dict[str, Any] = dict(payload.get("specifications", {}) or {})
+        self.specifications: Dict[str, Any] = dict(
+            payload.get("specifications", {}) or {}
+        )
         # Handle both inventory field names for compatibility
         # Prioritize inventory_units if provided, otherwise use inventory
         inventory_value = payload.get("inventory_units")
@@ -82,7 +84,9 @@ class Product:
         self.reserved_units: int = int(payload.get("reserved_units", 0) or 0)
         self.sales_velocity: float = float(payload.get("sales_velocity", 0.0) or 0.0)
         self.conversion_rate: float = float(payload.get("conversion_rate", 0.0) or 0.0)
-        self.sales_history: List[Dict[str, Any]] = list(payload.get("sales_history", []) or [])
+        self.sales_history: List[Dict[str, Any]] = list(
+            payload.get("sales_history", []) or []
+        )
         self.customer_reviews: List[Dict[str, Any]] = list(
             payload.get("customer_reviews", []) or []
         )
@@ -132,7 +136,9 @@ class Product:
                 # Try parent factory, then wrap back to compat
                 try:
                     parent = CoreMoney.from_dollars(amount_dollars, currency)  # type: ignore[attr-defined]
-                    cents = Product._money_cents(parent) or int(round(amount_dollars * 100))
+                    cents = Product._money_cents(parent) or int(
+                        round(amount_dollars * 100)
+                    )
                     cur = Product._money_currency(parent)
                     return _CompatMoney(int(cents), cur)  # type: ignore[misc]
                 except Exception:
@@ -320,7 +326,9 @@ class Product:
         try:
             pc = self._money_cents(self.price) or 0
             cc = self._money_cents(self.cost) or 0
-            return self._construct_money((pc - cc) / 100.0, self._money_currency(self.price))
+            return self._construct_money(
+                (pc - cc) / 100.0, self._money_currency(self.price)
+            )
         except Exception:
             # Final fallback: numeric delta coerced back to Money
             delta = self._as_float(self.price) - self._as_float(self.cost)

@@ -83,7 +83,9 @@ class SimSeed:
         """
         with cls._seed_lock:
             if cls._master_seed is not None:
-                raise RuntimeError("Master seed already set. Cannot re-seed during a run.")
+                raise RuntimeError(
+                    "Master seed already set. Cannot re-seed during a run."
+                )
 
             cls._master_seed = seed
             cls._component_seeds.clear()
@@ -121,12 +123,14 @@ class SimSeed:
 
             # Use a combination of the master seed and salt to create a deterministic sub-seed
             combined_string = f"{cls._master_seed}-{salt}"
-            derived_seed = int(hashlib.sha256(combined_string.encode()).hexdigest(), 16) % (
-                2**32 - 1
-            )
+            derived_seed = int(
+                hashlib.sha256(combined_string.encode()).hexdigest(), 16
+            ) % (2**32 - 1)
 
             # Create audit entry
-            cls._add_audit_entry("derived", "derive_seed", derived_seed, f"salt: {salt}")
+            cls._add_audit_entry(
+                "derived", "derive_seed", derived_seed, f"salt: {salt}"
+            )
 
             return derived_seed
 
@@ -144,22 +148,32 @@ class SimSeed:
         with cls._seed_lock:
             if component_name not in cls._component_seeds:
                 if cls._master_seed is None:
-                    raise RuntimeError("Master seed not set. Call set_master_seed() first.")
+                    raise RuntimeError(
+                        "Master seed not set. Call set_master_seed() first."
+                    )
 
                 # Create component-specific seed
                 component_seed = cls.derive_seed(f"component_{component_name}")
                 cls._component_seeds[component_name] = component_seed
 
-                logger.debug(f"Created component seed for '{component_name}': {component_seed}")
+                logger.debug(
+                    f"Created component seed for '{component_name}': {component_seed}"
+                )
 
             cls._add_audit_entry(
-                component_name, "get_component_seed", cls._component_seeds[component_name]
+                component_name,
+                "get_component_seed",
+                cls._component_seeds[component_name],
             )
             return cls._component_seeds[component_name]
 
     @classmethod
     def register_rng_source(
-        cls, source_name: str, rng_instance: Any, component: str, source_type: str = "unknown"
+        cls,
+        source_name: str,
+        rng_instance: Any,
+        component: str,
+        source_type: str = "unknown",
     ):
         """
         Register an RNG source for tracking and validation.
@@ -172,7 +186,9 @@ class SimSeed:
         """
         with cls._seed_lock:
             if source_name in cls._registered_sources:
-                logger.warning(f"RNG source '{source_name}' already registered, updating...")
+                logger.warning(
+                    f"RNG source '{source_name}' already registered, updating..."
+                )
 
             cls._registered_sources[source_name] = RNGSourceInfo(
                 name=source_name,
@@ -203,7 +219,9 @@ class SimSeed:
                         f"Registered and seeded RNG '{source_name}' for component '{component}'"
                     )
                 else:
-                    logger.warning(f"RNG instance '{source_name}' does not have a 'seed' method")
+                    logger.warning(
+                        f"RNG instance '{source_name}' does not have a 'seed' method"
+                    )
 
             except Exception as e:
                 logger.error(f"Failed to seed RNG '{source_name}': {e}")
@@ -222,12 +240,17 @@ class SimSeed:
             # Check if any unregistered calls were detected
             if cls._unregistered_calls:
                 issues.extend(
-                    [f"Unregistered RNG call: {call}" for call in cls._unregistered_calls]
+                    [
+                        f"Unregistered RNG call: {call}"
+                        for call in cls._unregistered_calls
+                    ]
                 )
 
             # Check for RNG sources that haven't been used
             unused_sources = [
-                name for name, info in cls._registered_sources.items() if info.usage_count == 0
+                name
+                for name, info in cls._registered_sources.items()
+                if info.usage_count == 0
             ]
 
             if unused_sources:
@@ -243,7 +266,9 @@ class SimSeed:
                     f"RNG usage detected across {len(thread_usage)} threads: {dict(thread_usage)}"
                 )
 
-            logger.info(f"Randomness audit completed. Found {len(issues)} potential issues.")
+            logger.info(
+                f"Randomness audit completed. Found {len(issues)} potential issues."
+            )
 
         return issues
 
@@ -267,7 +292,9 @@ class SimSeed:
                 # Create thread-specific seed
                 thread_seed = cls.derive_seed(f"thread_{current_thread}")
                 cls._thread_local.rng_state = random.Random(thread_seed)
-                cls._thread_local.np_rng = np.random.Generator(np.random.PCG64(thread_seed))
+                cls._thread_local.np_rng = np.random.Generator(
+                    np.random.PCG64(thread_seed)
+                )
 
                 cls._add_audit_entry(
                     "thread_safety",
@@ -276,7 +303,9 @@ class SimSeed:
                     f"thread_id: {current_thread}",
                 )
 
-                logger.debug(f"Thread-local RNG state created for thread {current_thread}")
+                logger.debug(
+                    f"Thread-local RNG state created for thread {current_thread}"
+                )
 
             return True
 
@@ -294,7 +323,9 @@ class SimSeed:
         return cls._thread_local.rng_state, cls._thread_local.np_rng
 
     @classmethod
-    def validate_determinism(cls, simulation_run: Any = None) -> DeterminismValidationResult:
+    def validate_determinism(
+        cls, simulation_run: Any = None
+    ) -> DeterminismValidationResult:
         """
         Validate that the simulation maintains determinism.
 
@@ -328,17 +359,22 @@ class SimSeed:
                 seed_usage[seed].append(component)
 
             conflicts = {
-                seed: components for seed, components in seed_usage.items() if len(components) > 1
+                seed: components
+                for seed, components in seed_usage.items()
+                if len(components) > 1
             }
             if conflicts:
                 result.seed_conflicts = [
-                    f"Seed {seed} used by: {components}" for seed, components in conflicts.items()
+                    f"Seed {seed} used by: {components}"
+                    for seed, components in conflicts.items()
                 ]
                 result.warnings.extend(result.seed_conflicts)
 
             # Check audit trail for anomalies
             if cls._audit_enabled and len(cls._audit_trail) == 0:
-                result.warnings.append("No audit trail entries found - possible tracking issue")
+                result.warnings.append(
+                    "No audit trail entries found - possible tracking issue"
+                )
 
             # Validate thread usage patterns
             threads_in_audit = set(entry.thread_id for entry in cls._audit_trail)
@@ -354,7 +390,9 @@ class SimSeed:
         return result
 
     @classmethod
-    def _add_audit_entry(cls, component: str, operation: str, seed_value: int, details: str = ""):
+    def _add_audit_entry(
+        cls, component: str, operation: str, seed_value: int, details: str = ""
+    ):
         """Add an entry to the audit trail."""
         if not cls._audit_enabled:
             return

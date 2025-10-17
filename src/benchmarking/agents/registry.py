@@ -102,7 +102,9 @@ class AgentRegistry:
 
     # ---------------------------- Registration ----------------------------
 
-    def register_agent(self, descriptor: AgentDescriptor, *, default_latest: bool = True) -> None:
+    def register_agent(
+        self, descriptor: AgentDescriptor, *, default_latest: bool = True
+    ) -> None:
         """
         Register an AgentDescriptor.
 
@@ -134,7 +136,9 @@ class AgentRegistry:
             if slug not in self._by_slug_version:
                 self._by_slug_version[slug] = {}
             if ver in self._by_slug_version[slug]:
-                raise ValueError(f"Duplicate agent registration for slug {slug} version {ver}")
+                raise ValueError(
+                    f"Duplicate agent registration for slug {slug} version {ver}"
+                )
             self._by_slug_version[slug][ver] = descriptor
 
         # Determine default
@@ -144,7 +148,9 @@ class AgentRegistry:
         elif default_latest:
             # Compare versions when possible; if new one is higher, update
             new_key = _to_version_key(ver)
-            old_key = _to_version_key(current_default.version if current_default else None)
+            old_key = _to_version_key(
+                current_default.version if current_default else None
+            )
             if new_key and (not old_key or new_key > old_key):
                 self._by_slug[slug] = descriptor
 
@@ -256,7 +262,9 @@ class AgentRegistry:
                 continue
             if enabled is not None and d.enabled is not enabled:
                 continue
-            if capabilities and not includes_all(d.supported_capabilities, capabilities):
+            if capabilities and not includes_all(
+                d.supported_capabilities, capabilities
+            ):
                 continue
             if tags and not includes_all(d.tags, tags):
                 continue
@@ -382,7 +390,9 @@ class AgentRegistry:
             enabled=kwargs.get("enabled", True),
             default_config_model=kwargs.get("default_config_model"),
         )
-        self.register_agent(descriptor, default_latest=kwargs.get("default_latest", True))
+        self.register_agent(
+            descriptor, default_latest=kwargs.get("default_latest", True)
+        )
 
     def get(self, slug: str, version: Optional[str] = None) -> AgentDescriptor:
         """

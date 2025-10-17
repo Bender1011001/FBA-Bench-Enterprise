@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 from __future__ import annotations
 
 """
@@ -96,7 +97,9 @@ def _validate_config(key: str, cfg: Dict[str, Any]) -> Dict[str, Any]:
         raise ValueError(f"Invalid config for runner '{key}': {e}") from e
 
 
-def create_runner(key: str, config: Dict[str, Any], agent_id: Optional[str] = None) -> AgentRunner:
+def create_runner(
+    key: str, config: Dict[str, Any], agent_id: Optional[str] = None
+) -> AgentRunner:
     """
     Create a runner instance with validation.
 

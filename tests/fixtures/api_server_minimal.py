@@ -75,7 +75,11 @@ class DashboardService:
             "total_transactions": 0,
         }
         self.agents = {}
-        self.command_stats = {"total_commands": 0, "accepted_commands": 0, "rejected_commands": 0}
+        self.command_stats = {
+            "total_commands": 0,
+            "accepted_commands": 0,
+            "rejected_commands": 0,
+        }
         self.event_stats = {"events_processed": 0, "events_per_second": 0.0}
 
         logger.info("DashboardService initialized")
@@ -204,7 +208,9 @@ class DashboardService:
         if self.simulation_orchestrator:
             try:
                 orchestrator_status = self.simulation_orchestrator.get_status()
-                self.current_tick = orchestrator_status.get("current_tick", self.current_tick)
+                self.current_tick = orchestrator_status.get(
+                    "current_tick", self.current_tick
+                )
             except Exception as e:
                 logger.error(f"Error getting orchestrator status: {e}")
 
@@ -242,10 +248,14 @@ class DashboardService:
         filtered_events = self.last_events
 
         if event_type:
-            filtered_events = [e for e in filtered_events if e.get("type") == event_type]
+            filtered_events = [
+                e for e in filtered_events if e.get("type") == event_type
+            ]
 
         if since_tick is not None:
-            filtered_events = [e for e in filtered_events if e.get("tick_number", 0) >= since_tick]
+            filtered_events = [
+                e for e in filtered_events if e.get("tick_number", 0) >= since_tick
+            ]
 
         # Return the most recent events up to the limit
         return filtered_events[-limit:] if limit else filtered_events
@@ -368,7 +378,11 @@ async def websocket_events(websocket: WebSocket):
         snapshot = dashboard_service.get_simulation_snapshot()
         await websocket.send_text(
             json.dumps(
-                {"type": "snapshot", "data": snapshot, "timestamp": datetime.now().isoformat()}
+                {
+                    "type": "snapshot",
+                    "data": snapshot,
+                    "timestamp": datetime.now().isoformat(),
+                }
             )
         )
 
@@ -380,12 +394,16 @@ async def websocket_events(websocket: WebSocket):
 
                 if message.get("type") == "ping":
                     await websocket.send_text(
-                        json.dumps({"type": "pong", "timestamp": datetime.now().isoformat()})
+                        json.dumps(
+                            {"type": "pong", "timestamp": datetime.now().isoformat()}
+                        )
                     )
 
             except asyncio.TimeoutError:
                 await websocket.send_text(
-                    json.dumps({"type": "heartbeat", "timestamp": datetime.now().isoformat()})
+                    json.dumps(
+                        {"type": "heartbeat", "timestamp": datetime.now().isoformat()}
+                    )
                 )
 
     except WebSocketDisconnect:
@@ -399,4 +417,10 @@ if __name__ == "__main__":
     print("📊 API: http://localhost:8000")
     print("📖 Docs: http://localhost:8000/docs")
 
-    uvicorn.run("api_server_minimal:app", host="0.0.0.0", port=8000, reload=True, log_level="info")
+    uvicorn.run(
+        "api_server_minimal:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+        log_level="info",
+    )

@@ -1,8 +1,7 @@
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from fba_bench_api.main import app
-from fba_bench_api.main import create_app as _create_app
+from fba_bench_api.main import app, create_app as _create_app
 
 
 @pytest.mark.asyncio
@@ -41,11 +40,15 @@ async def test_rate_limiting_settings_but_not_health():
         for _ in range(120):
             resp = await client.get("/api/v1/settings")
             codes.append(resp.status_code)
-        assert any(code == 429 for code in codes), "Expected at least one 429 for settings endpoint"
+        assert any(
+            code == 429 for code in codes
+        ), "Expected at least one 429 for settings endpoint"
 
         # Health endpoints are exempt; should never return 429s even under load
         health_codes = []
         for _ in range(200):
             resp = await client.get("/health")
             health_codes.append(resp.status_code)
-        assert all(code != 429 for code in health_codes), "Health endpoint must not be rate limited"
+        assert all(
+            code != 429 for code in health_codes
+        ), "Health endpoint must not be rate limited"

@@ -5,21 +5,19 @@ Handles action arbitration, strategic filtering, business priority evaluation,
 and alignment validation for agent actions.
 """
 
-import asyncio
 import logging
-from typing import List, Dict, Any, Tuple
+from datetime import datetime
+from typing import Any, Dict, List, Tuple
 
 from money import Money
 
-from .models import (
-    BusinessPriority,
-    StrategicObjective,
-    BusinessState,
-    StrategicDecision,
-)
-from datetime import datetime
 from agents.skill_modules.base_skill import SkillAction
 
+from .models import (
+    BusinessPriority,
+    StrategicDecision,
+    StrategicObjective,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +38,9 @@ class CoordinationManager:
         """
         self.controller = controller
 
-    async def evaluate_business_priorities(self, current_state: Dict[str, Any]) -> BusinessPriority:
+    async def evaluate_business_priorities(
+        self, current_state: Dict[str, Any]
+    ) -> BusinessPriority:
         """
         Evaluate current business priorities based on state and context.
 
@@ -113,7 +113,9 @@ class CoordinationManager:
         self.controller.current_business_state.customer_satisfaction = csat
         self.controller.current_business_state.operational_efficiency = op_eff
         self.controller.current_business_state.growth_trajectory = (
-            "growing" if growth_rate > 0.02 else ("declining" if growth_rate < -0.02 else "stable")
+            "growing"
+            if growth_rate > 0.02
+            else ("declining" if growth_rate < -0.02 else "stable")
         )
         self.controller.current_business_state.risk_level = risk
 
@@ -127,7 +129,9 @@ class CoordinationManager:
             focus_areas.append(StrategicObjective.OPERATIONAL_EFFICIENCY)
         if not focus_areas:
             # If all healthy, drive profitability and market share
-            focus_areas.extend([StrategicObjective.PROFITABILITY, StrategicObjective.MARKET_SHARE])
+            focus_areas.extend(
+                [StrategicObjective.PROFITABILITY, StrategicObjective.MARKET_SHARE]
+            )
 
         # Deduplicate while preserving order
         seen = set()
@@ -140,11 +144,15 @@ class CoordinationManager:
         self.controller.current_business_state.strategic_focus = deduped
 
         # Store snapshot; keep bounded history for memory safety
-        self.controller.state_history.append((datetime.now(), self.controller.current_business_state))
+        self.controller.state_history.append(
+            (datetime.now(), self.controller.current_business_state)
+        )
         if len(self.controller.state_history) > 200:
             self.controller.state_history = self.controller.state_history[-100:]
 
-    async def arbitrate_actions(self, competing_actions: List[SkillAction]) -> List[SkillAction]:
+    async def arbitrate_actions(
+        self, competing_actions: List[SkillAction]
+    ) -> List[SkillAction]:
         """
         Arbitrate between competing actions from different skills.
 
@@ -170,11 +178,15 @@ class CoordinationManager:
         final_approved = await self._apply_business_rules(resource_approved)
 
         # Log strategic decision
-        await self._log_strategic_decision("action_arbitration", competing_actions, final_approved)
+        await self._log_strategic_decision(
+            "action_arbitration", competing_actions, final_approved
+        )
 
         return final_approved
 
-    def _group_actions_by_domain(self, actions: List[SkillAction]) -> Dict[str, List[SkillAction]]:
+    def _group_actions_by_domain(
+        self, actions: List[SkillAction]
+    ) -> Dict[str, List[SkillAction]]:
         """Group actions by business domain."""
         domain_mapping = {
             "SupplyManager": "inventory_management",
@@ -192,7 +204,9 @@ class CoordinationManager:
 
         return domain_actions
 
-    async def _apply_strategic_filter(self, actions: List[SkillAction]) -> List[SkillAction]:
+    async def _apply_strategic_filter(
+        self, actions: List[SkillAction]
+    ) -> List[SkillAction]:
         """
         Filter actions based on strategic alignment and current business priority.
         Heavily favors cash-preserving actions during SURVIVAL and downranks expensive growth plays.
@@ -227,7 +241,10 @@ class CoordinationManager:
 
             if priority == BusinessPriority.SURVIVAL:
                 # Penalize high spend marketing; boost cost-saving/financial actions
-                if action.action_type in ("run_marketing_campaign",) and budget_cents > 0:
+                if (
+                    action.action_type in ("run_marketing_campaign",)
+                    and budget_cents > 0
+                ):
                     align -= 0.2
                 if action.action_type in (
                     "optimize_costs",
@@ -238,7 +255,11 @@ class CoordinationManager:
                     align += 0.2
             elif priority == BusinessPriority.GROWTH:
                 # Encourage growth actions
-                if action.action_type in ("run_marketing_campaign", "place_order", "set_price"):
+                if action.action_type in (
+                    "run_marketing_campaign",
+                    "place_order",
+                    "set_price",
+                ):
                     align += 0.1
 
             if align >= threshold:
@@ -343,7 +364,9 @@ class CoordinationManager:
             ]
         }
 
-        weights = priority_action_weights.get(self.controller.current_priority, default_weights)
+        weights = priority_action_weights.get(
+            self.controller.current_priority, default_weights
+        )
         return weights.get(action.action_type, 0.5)
 
     def _calculate_outcome_alignment(self, action: SkillAction) -> float:
@@ -355,7 +378,8 @@ class CoordinationManager:
         outcome_weights = {
             "profit_improvement": (
                 0.8
-                if StrategicObjective.PROFITABILITY in self.controller.current_business_state.strategic_focus
+                if StrategicObjective.PROFITABILITY
+                in self.controller.current_business_state.strategic_focus
                 else 0.5
             ),
             "customer_satisfaction_improvement": (
@@ -364,15 +388,25 @@ class CoordinationManager:
                 in self.controller.current_business_state.strategic_focus
                 else 0.5
             ),
-            "cost_savings": 0.9 if self.controller.current_priority == BusinessPriority.SURVIVAL else 0.6,
-            "revenue_growth": 0.9 if self.controller.current_priority == BusinessPriority.GROWTH else 0.6,
+            "cost_savings": (
+                0.9
+                if self.controller.current_priority == BusinessPriority.SURVIVAL
+                else 0.6
+            ),
+            "revenue_growth": (
+                0.9
+                if self.controller.current_priority == BusinessPriority.GROWTH
+                else 0.6
+            ),
         }
 
         alignment = 0.0
         outcome_count = 0
 
         for outcome_key, outcome_value in action.expected_outcome.items():
-            if outcome_key in outcome_weights and isinstance(outcome_value, (int, float)):
+            if outcome_key in outcome_weights and isinstance(
+                outcome_value, (int, float)
+            ):
                 weight = outcome_weights[outcome_key]
                 # Normalize outcome value and apply weight
                 normalized_value = min(1.0, abs(outcome_value))
@@ -381,16 +415,21 @@ class CoordinationManager:
 
         return alignment / max(1, outcome_count)
 
-    async def _apply_resource_constraints(self, actions: List[SkillAction]) -> List[SkillAction]:
+    async def _apply_resource_constraints(
+        self, actions: List[SkillAction]
+    ) -> List[SkillAction]:
         """Apply resource constraints and budget limits."""
         approved_actions = []
         remaining_budgets = {
-            domain: allocation for domain, allocation in self.controller.resource_plan.allocations.items()
+            domain: allocation
+            for domain, allocation in self.controller.resource_plan.allocations.items()
         }
 
         # Sort actions by priority and strategic alignment
         sorted_actions = sorted(
-            actions, key=lambda a: a.priority * self._calculate_priority_alignment(a), reverse=True
+            actions,
+            key=lambda a: a.priority * self._calculate_priority_alignment(a),
+            reverse=True,
         )
 
         for action in sorted_actions:
@@ -413,11 +452,15 @@ class CoordinationManager:
                 )
             elif (
                 budget_required.cents
-                <= self.controller.resource_plan.allocations.get("strategic_reserve", Money(0)).cents
+                <= self.controller.resource_plan.allocations.get(
+                    "strategic_reserve", Money(0)
+                ).cents
             ):
                 # Use strategic reserve for high-priority actions
                 approved_actions.append(action)
-                reserve = self.controller.resource_plan.allocations.get("strategic_reserve", Money(0))
+                reserve = self.controller.resource_plan.allocations.get(
+                    "strategic_reserve", Money(0)
+                )
                 self.controller.resource_plan.allocations["strategic_reserve"] = Money(
                     reserve.cents - budget_required.cents
                 )
@@ -438,7 +481,9 @@ class CoordinationManager:
         }
         return skill_domain_mapping.get(action.skill_source, "other")
 
-    async def _apply_business_rules(self, actions: List[SkillAction]) -> List[SkillAction]:
+    async def _apply_business_rules(
+        self, actions: List[SkillAction]
+    ) -> List[SkillAction]:
         """Apply business rules and approval thresholds."""
         approved_actions = []
 
@@ -449,7 +494,9 @@ class CoordinationManager:
                 budget_required = Money(budget_required)
 
             domain = self._get_action_domain(action)
-            threshold = self.controller.resource_plan.approval_thresholds.get(domain, Money(0))
+            threshold = self.controller.resource_plan.approval_thresholds.get(
+                domain, Money(0)
+            )
 
             # Auto-approve if under threshold
             if budget_required.cents <= threshold.cents:
@@ -488,11 +535,15 @@ class CoordinationManager:
             objective_overlap = len(set(action_objectives) & set(plan_objectives))
             if objective_overlap > 0:
                 alignment_score += 0.4
-                reasoning_parts.append(f"Supports {objective_overlap} strategic objectives")
+                reasoning_parts.append(
+                    f"Supports {objective_overlap} strategic objectives"
+                )
 
             # Check resource allocation alignment
             domain = self._get_action_domain(action)
-            domain_priority = self.controller.resource_plan.priority_multipliers.get(domain, 1.0)
+            domain_priority = self.controller.resource_plan.priority_multipliers.get(
+                domain, 1.0
+            )
 
             if domain_priority >= 1.0:
                 alignment_score += 0.3
@@ -507,7 +558,9 @@ class CoordinationManager:
             is_aligned = alignment_score >= 0.6
 
             reasoning = (
-                "; ".join(reasoning_parts) if reasoning_parts else "No clear strategic alignment"
+                "; ".join(reasoning_parts)
+                if reasoning_parts
+                else "No clear strategic alignment"
             )
 
             return is_aligned, alignment_score, reasoning
@@ -522,7 +575,10 @@ class CoordinationManager:
             "set_price": ["profitability", "market_share"],
             "place_order": ["operational_efficiency", "profitability"],
             "run_marketing_campaign": ["market_share", "brand_reputation"],
-            "respond_to_customer_message": ["customer_satisfaction", "brand_reputation"],
+            "respond_to_customer_message": [
+                "customer_satisfaction",
+                "brand_reputation",
+            ],
             "optimize_costs": ["profitability", "financial_stability"],
             "assess_financial_health": ["financial_stability"],
             "budget_alert": ["financial_stability"],
@@ -538,7 +594,9 @@ class CoordinationManager:
         approved_actions: List[SkillAction],
     ):
         """Log strategic decision for tracking and analysis."""
-        rejected_actions = [action for action in all_actions if action not in approved_actions]
+        rejected_actions = [
+            action for action in all_actions if action not in approved_actions
+        ]
 
         # Calculate expected impact
         expected_impact = {}
@@ -564,7 +622,9 @@ class CoordinationManager:
 
         # Keep decision history manageable
         if len(self.controller.strategic_decisions) > 1000:
-            self.controller.strategic_decisions = self.controller.strategic_decisions[-500:]
+            self.controller.strategic_decisions = self.controller.strategic_decisions[
+                -500:
+            ]
 
         # Update decision success tracking
         self._update_decision_tracking(decision)
@@ -573,23 +633,30 @@ class CoordinationManager:
         """Update decision tracking metrics."""
         # Simple success rate calculation based on action confidence
         if decision.actions_approved:
-            avg_confidence = sum(action.confidence for action in decision.actions_approved) / len(
-                decision.actions_approved
-            )
+            avg_confidence = sum(
+                action.confidence for action in decision.actions_approved
+            ) / len(decision.actions_approved)
             # Update running average
-            self.controller.decision_success_rate = (self.controller.decision_success_rate * 0.9) + (avg_confidence * 0.1)
+            self.controller.decision_success_rate = (
+                self.controller.decision_success_rate * 0.9
+            ) + (avg_confidence * 0.1)
 
         # Update strategic alignment score
         alignment_scores = []
         for action in decision.actions_approved:
             is_aligned, alignment_score, _ = self.validate_strategic_alignment(
                 action,
-                {"objectives": [obj.value for obj in self.controller.current_business_state.strategic_focus]},
+                {
+                    "objectives": [
+                        obj.value
+                        for obj in self.controller.current_business_state.strategic_focus
+                    ]
+                },
             )
             alignment_scores.append(alignment_score)
 
         if alignment_scores:
             avg_alignment = sum(alignment_scores) / len(alignment_scores)
-            self.controller.strategic_alignment_score = (self.controller.strategic_alignment_score * 0.9) + (
-                avg_alignment * 0.1
-            )
+            self.controller.strategic_alignment_score = (
+                self.controller.strategic_alignment_score * 0.9
+            ) + (avg_alignment * 0.1)

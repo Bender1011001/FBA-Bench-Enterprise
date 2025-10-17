@@ -55,7 +55,9 @@ async def test_engine_with_function_metrics_and_aggregation(monkeypatch):
     }
     cfg = EngineConfig(
         scenarios=[
-            ScenarioSpec(key=sc_key, params=params, repetitions=1, seeds=[123], timeout_seconds=5)
+            ScenarioSpec(
+                key=sc_key, params=params, repetitions=1, seeds=[123], timeout_seconds=5
+            )
         ],
         runners=[RunnerSpec(key="diy", config={"agent_id": "test-agent"})],
         metrics=["technical_performance", "keyword_coverage", "accuracy_score"],
@@ -84,7 +86,11 @@ async def test_engine_with_function_metrics_and_aggregation(monkeypatch):
     acc = run.metrics["accuracy_score"]
 
     assert isinstance(tech, dict) and "latency_ms" in tech and "fast_enough" in tech
-    assert isinstance(cov, dict) and cov["keyword_total"] == 2 and 0.0 <= cov["coverage"] <= 1.0
+    assert (
+        isinstance(cov, dict)
+        and cov["keyword_total"] == 2
+        and 0.0 <= cov["coverage"] <= 1.0
+    )
     assert (
         isinstance(acc, dict)
         and acc["mode"] in ("exact", "overlap")

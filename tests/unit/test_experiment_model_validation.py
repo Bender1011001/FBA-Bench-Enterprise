@@ -1,21 +1,22 @@
-import pytest
 from datetime import datetime
+
+import pytest
 from pydantic import ValidationError
 
 from src.fba_bench_api.models.experiment import ExperimentORM
 from src.fba_bench_api.models.experiments import (
-    ConfigTemplateSave,
     BenchmarkConfigRequest,
+    ConfigTemplateSave,
     ExperimentCreateRequest,
-    ExperimentStatusResponse,
-    ExperimentResultsResponse,
     ExperimentParticipant,
-    ExperimentRunCreate,
+    ExperimentResultsResponse,
     ExperimentRun,
-    RunStatusType,
-    RunStatus,
-    RunProgress,
+    ExperimentRunCreate,
     ExperimentRunResponse,
+    ExperimentStatusResponse,
+    RunProgress,
+    RunStatus,
+    RunStatusType,
 )
 
 

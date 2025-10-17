@@ -1,11 +1,11 @@
 import asyncio
 import logging
 import os
-from typing import Dict, Optional, Any, List, Union
 import random
+from typing import Any, Dict, List, Optional, Union
 
 import aiohttp
-from aiohttp import ClientTimeout, ClientResponseError
+from aiohttp import ClientResponseError, ClientTimeout
 
 logger = logging.getLogger(__name__)
 

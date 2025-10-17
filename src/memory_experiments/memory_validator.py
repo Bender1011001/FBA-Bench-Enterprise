@@ -14,9 +14,10 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
+from money import Money  # Assuming Money class is used for financial values
+
 from fba_events import BaseEvent  # Corrected import path
 from fba_events.bus import EventBus  # Corrected import path
-from money import Money  # Assuming Money class is used for financial values
 
 from .dual_memory_manager import DualMemoryManager, MemoryEvent
 from .memory_config import MemoryConfig
@@ -80,7 +81,9 @@ class ValidationResult:
     def to_dict(self) -> Dict[str, Any]:
         # Manually convert nested objects to dicts for full JSON serialization
         data = asdict(self)
-        data["inconsistencies_found"] = [inc.to_dict() for inc in self.inconsistencies_found]
+        data["inconsistencies_found"] = [
+            inc.to_dict() for inc in self.inconsistencies_found
+        ]
         return data
 
 
@@ -107,8 +110,12 @@ class MemoryConsistencyChecker:
         self.contradiction_threshold = config.validation_config.contradiction_threshold
         self.temporal_window_hours = config.validation_config.temporal_window_hours
         self.confidence_threshold = config.validation_config.confidence_threshold
-        self.dramatic_price_change_percent = config.validation_config.dramatic_price_change_percent
-        self.high_inventory_threshold = config.validation_config.high_inventory_threshold
+        self.dramatic_price_change_percent = (
+            config.validation_config.dramatic_price_change_percent
+        )
+        self.high_inventory_threshold = (
+            config.validation_config.high_inventory_threshold
+        )
         self.tight_budget_threshold = config.validation_config.tight_budget_threshold
 
         # Tracking and statistics
@@ -147,15 +154,21 @@ class MemoryConsistencyChecker:
         inconsistencies.extend(fact_contradictions)
 
         # Check action-memory consistency
-        action_inconsistencies = await self.flag_inconsistencies(proposed_action, retrieved_facts)
+        action_inconsistencies = await self.flag_inconsistencies(
+            proposed_action, retrieved_facts
+        )
         inconsistencies.extend(action_inconsistencies)
 
         # Check temporal consistency
-        temporal_inconsistencies = await self._check_temporal_consistency(retrieved_facts)
+        temporal_inconsistencies = await self._check_temporal_consistency(
+            retrieved_facts
+        )
         inconsistencies.extend(temporal_inconsistencies)
 
         # Check confidence consistency
-        confidence_inconsistencies = await self._check_confidence_consistency(retrieved_facts)
+        confidence_inconsistencies = await self._check_confidence_consistency(
+            retrieved_facts
+        )
         inconsistencies.extend(confidence_inconsistencies)
 
         # Determine overall validation result
@@ -202,7 +215,9 @@ class MemoryConsistencyChecker:
 
         return validation_result
 
-    async def detect_contradictions(self, fact_set: List[MemoryEvent]) -> List[MemoryInconsistency]:
+    async def detect_contradictions(
+        self, fact_set: List[MemoryEvent]
+    ) -> List[MemoryInconsistency]:
         """
         Identify conflicting information within a set of facts.
 
@@ -227,7 +242,9 @@ class MemoryConsistencyChecker:
 
         # Check for contradictions within each domain
         for domain, domain_facts in facts_by_domain.items():
-            domain_contradictions = await self._detect_domain_contradictions(domain, domain_facts)
+            domain_contradictions = await self._detect_domain_contradictions(
+                domain, domain_facts
+            )
             inconsistencies.extend(domain_contradictions)
 
         # Check for cross-domain contradictions
@@ -237,7 +254,9 @@ class MemoryConsistencyChecker:
         inconsistencies.extend(cross_domain_contradictions)
 
         # Check for temporal contradictions (more specific than general temporal consistency)
-        temporal_contradictions = await self._detect_temporal_contradictions_specific(fact_set)
+        temporal_contradictions = await self._detect_temporal_contradictions_specific(
+            fact_set
+        )
         inconsistencies.extend(temporal_contradictions)
 
         logger.debug(f"Found {len(inconsistencies)} contradictions")
@@ -256,7 +275,9 @@ class MemoryConsistencyChecker:
         Returns:
             List of detected inconsistencies
         """
-        logger.debug(f"Flagging inconsistencies for action: {agent_action.get('type', 'unknown')}")
+        logger.debug(
+            f"Flagging inconsistencies for action: {agent_action.get('type', 'unknown')}"
+        )
 
         inconsistencies = []
         current_time = datetime.now()
@@ -315,22 +336,24 @@ class MemoryConsistencyChecker:
 
         if self.validation_history:
             # Calculate success rates
-            passed_validations = len([v for v in self.validation_history if v.validation_passed])
+            passed_validations = len(
+                [v for v in self.validation_history if v.validation_passed]
+            )
             stats["validation_success_rate"] = passed_validations / max(
                 1, len(self.validation_history)
             )
 
             # Calculate average confidence
-            avg_confidence = sum(v.confidence_score for v in self.validation_history) / max(
-                1, len(self.validation_history)
-            )
+            avg_confidence = sum(
+                v.confidence_score for v in self.validation_history
+            ) / max(1, len(self.validation_history))
             stats["average_confidence_score"] = avg_confidence
 
             # Recent validation summary
             recent_validation = self.validation_history[-1]
-            stats[
-                "latest_validation"
-            ] = recent_validation.to_dict()  # Using to_dict for full serialization
+            stats["latest_validation"] = (
+                recent_validation.to_dict()
+            )  # Using to_dict for full serialization
 
         if self.detected_inconsistencies:
             # Inconsistency type distribution
@@ -358,9 +381,13 @@ class MemoryConsistencyChecker:
         inconsistencies = []
 
         if domain == "pricing":
-            inconsistencies.extend(await self._check_pricing_contradictions(domain_facts))
+            inconsistencies.extend(
+                await self._check_pricing_contradictions(domain_facts)
+            )
         elif domain == "inventory":
-            inconsistencies.extend(await self._check_inventory_contradictions(domain_facts))
+            inconsistencies.extend(
+                await self._check_inventory_contradictions(domain_facts)
+            )
         # Add more domain-specific contradiction checks as needed
 
         return inconsistencies
@@ -372,27 +399,35 @@ class MemoryConsistencyChecker:
         inconsistencies = []
         current_time = datetime.now()
 
-        prices_by_asin: Dict[
-            str, List[Tuple[Money, datetime, str]]
-        ] = {}  # (price, timestamp, event_id)
+        prices_by_asin: Dict[str, List[Tuple[Money, datetime, str]]] = (
+            {}
+        )  # (price, timestamp, event_id)
         for fact in pricing_facts:
             # Attempt to extract price. This is still heuristic, ideally events would have structured data
             price_match = re.search(
-                r"price(?: change)?(?: from)?.*?([$€£]?\d+\.?\d*)", fact.content, re.IGNORECASE
+                r"price(?: change)?(?: from)?.*?([$€£]?\d+\.?\d*)",
+                fact.content,
+                re.IGNORECASE,
             )
             asin_match = re.search(r"ASIN (\w+)", fact.content)
 
             if price_match and asin_match:
                 try:
                     price_str = price_match.group(1).lstrip("$€£")
-                    price_money = Money.from_dollars(price_str, currency="USD")  # Assuming currency
+                    price_money = Money.from_dollars(
+                        price_str, currency="USD"
+                    )  # Assuming currency
                     asin = asin_match.group(1)
 
                     if asin not in prices_by_asin:
                         prices_by_asin[asin] = []
-                    prices_by_asin[asin].append((price_money, fact.timestamp, fact.event_id))
+                    prices_by_asin[asin].append(
+                        (price_money, fact.timestamp, fact.event_id)
+                    )
                 except Exception as e:
-                    logger.debug(f"Could not parse price from memory event {fact.event_id}: {e}")
+                    logger.debug(
+                        f"Could not parse price from memory event {fact.event_id}: {e}"
+                    )
 
         for asin, prices in prices_by_asin.items():
             prices.sort(key=lambda x: x[1])  # Sort by timestamp
@@ -402,7 +437,9 @@ class MemoryConsistencyChecker:
                     time_diff_hours = (ts2 - ts1).total_seconds() / 3600
                     if (
                         time_diff_hours < self.temporal_window_hours
-                        and await self._are_pricing_facts_contradictory_robust(price1, price2, asin)
+                        and await self._are_pricing_facts_contradictory_robust(
+                            price1, price2, asin
+                        )
                     ):
                         inconsistencies.append(
                             MemoryInconsistency(
@@ -429,11 +466,13 @@ class MemoryConsistencyChecker:
         inconsistencies = []
         current_time = datetime.now()
 
-        inventory_levels_by_asin: Dict[
-            str, List[Tuple[int, datetime, str]]
-        ] = {}  # (level, timestamp, event_id)
+        inventory_levels_by_asin: Dict[str, List[Tuple[int, datetime, str]]] = (
+            {}
+        )  # (level, timestamp, event_id)
         for fact in inventory_facts:
-            level_match = re.search(r"inventory(?: level)?.*?(\d+)", fact.content, re.IGNORECASE)
+            level_match = re.search(
+                r"inventory(?: level)?.*?(\d+)", fact.content, re.IGNORECASE
+            )
             asin_match = re.search(r"ASIN (\w+)", fact.content)
 
             if level_match and asin_match:
@@ -443,7 +482,9 @@ class MemoryConsistencyChecker:
 
                     if asin not in inventory_levels_by_asin:
                         inventory_levels_by_asin[asin] = []
-                    inventory_levels_by_asin[asin].append((level, fact.timestamp, fact.event_id))
+                    inventory_levels_by_asin[asin].append(
+                        (level, fact.timestamp, fact.event_id)
+                    )
                 except Exception as e:
                     logger.debug(
                         f"Could not parse inventory level from memory event {fact.event_id}: {e}"
@@ -490,14 +531,19 @@ class MemoryConsistencyChecker:
 
             for price_fact in pricing_facts:
                 for sales_fact in sales_facts:
-                    if await self._are_pricing_sales_contradictory_robust(price_fact, sales_fact):
+                    if await self._are_pricing_sales_contradictory_robust(
+                        price_fact, sales_fact
+                    ):
                         inconsistencies.append(
                             MemoryInconsistency(
                                 inconsistency_id=str(uuid.uuid4()),
                                 inconsistency_type=InconsistencyType.LOGICAL_INCONSISTENCY,
                                 severity=ValidationSeverity.HIGH,
                                 description="Pricing strategy appears to contradict recent sales performance data.",
-                                conflicting_memories=[price_fact.event_id, sales_fact.event_id],
+                                conflicting_memories=[
+                                    price_fact.event_id,
+                                    sales_fact.event_id,
+                                ],
                                 evidence=[
                                     f"Pricing: {price_fact.content[:100]}",
                                     f"Sales: {sales_fact.content[:100]}",
@@ -527,7 +573,9 @@ class MemoryConsistencyChecker:
                         asin = asin_match.group(1)
                         if asin not in pricing_events:
                             pricing_events[asin] = []
-                        pricing_events[asin].append((new_price, fact.timestamp, fact.event_id))
+                        pricing_events[asin].append(
+                            (new_price, fact.timestamp, fact.event_id)
+                        )
                     except Exception as e:
                         logger.debug(
                             f"Could not parse price from ProductPriceUpdated event {fact.event_id}: {e}"
@@ -571,7 +619,10 @@ class MemoryConsistencyChecker:
                 severity = ValidationSeverity.LOW
                 resolution = "Consider refreshing this information or noting its age."
 
-                if "price" in fact.content.lower() or "inventory" in fact.content.lower():
+                if (
+                    "price" in fact.content.lower()
+                    or "inventory" in fact.content.lower()
+                ):
                     severity = ValidationSeverity.MEDIUM
                     resolution = "This is time-sensitive data. Agent should refresh or confirm current status."
 
@@ -611,7 +662,8 @@ class MemoryConsistencyChecker:
 
         if (
             low_confidence_facts
-            and len(low_confidence_facts) > len(retrieved_facts) * self.confidence_threshold
+            and len(low_confidence_facts)
+            > len(retrieved_facts) * self.confidence_threshold
         ):  # If a majority are low confidence (using threshold as percentage)
             inconsistencies.append(
                 MemoryInconsistency(
@@ -642,7 +694,9 @@ class MemoryConsistencyChecker:
             return inconsistencies
 
         try:
-            proposed_price = Money.from_dollars(proposed_price_raw, currency="USD")  # Assuming USD
+            proposed_price = Money.from_dollars(
+                proposed_price_raw, currency="USD"
+            )  # Assuming USD
         except (ValueError, TypeError):
             inconsistencies.append(
                 MemoryInconsistency(
@@ -718,12 +772,16 @@ class MemoryConsistencyChecker:
 
         # Filter relevant inventory facts for this ASIN
         inventory_facts = [
-            f for f in known_facts if "inventory" in f.content.lower() and asin in f.content
+            f
+            for f in known_facts
+            if "inventory" in f.content.lower() and asin in f.content
         ]
 
         for fact in inventory_facts:
             # Attempt to extract inventory level from fact content
-            level_match = re.search(r"inventory(?: level)?.*?(\d+)", fact.content, re.IGNORECASE)
+            level_match = re.search(
+                r"inventory(?: level)?.*?(\d+)", fact.content, re.IGNORECASE
+            )
 
             if level_match:
                 try:
@@ -804,7 +862,10 @@ class MemoryConsistencyChecker:
                 re.IGNORECASE,
             )
 
-            if budget_status_match and campaign_budget.to_decimal() > self.tight_budget_threshold:
+            if (
+                budget_status_match
+                and campaign_budget.to_decimal() > self.tight_budget_threshold
+            ):
                 inconsistencies.append(
                     MemoryInconsistency(
                         inconsistency_type=InconsistencyType.LOGICAL_INCONSISTENCY,
@@ -842,7 +903,9 @@ class MemoryConsistencyChecker:
 
         if contextual_facts:
             for fact in contextual_facts:
-                if await self._does_context_contraindicate_action_robust(fact, agent_action):
+                if await self._does_context_contraindicate_action_robust(
+                    fact, agent_action
+                ):
                     inconsistencies.append(
                         MemoryInconsistency(
                             inconsistency_type=InconsistencyType.MISSING_CONTEXT,
@@ -862,7 +925,9 @@ class MemoryConsistencyChecker:
         # Check if expected impact aligns with known facts
         if expected_impact:
             for fact in known_facts:
-                if await self._does_expected_impact_contradict_fact(expected_impact, fact):
+                if await self._does_expected_impact_contradict_fact(
+                    expected_impact, fact
+                ):
                     inconsistencies.append(
                         MemoryInconsistency(
                             inconsistency_type=InconsistencyType.INVALID_IMPACT,
@@ -901,9 +966,9 @@ class MemoryConsistencyChecker:
 
         # Boost confidence based on number and quality of retrieved facts
         if retrieved_facts:
-            avg_fact_importance = sum(f.importance_score for f in retrieved_facts) / len(
-                retrieved_facts
-            )
+            avg_fact_importance = sum(
+                f.importance_score for f in retrieved_facts
+            ) / len(retrieved_facts)
 
             # More facts and higher average importance should increase confidence in validation
             base_confidence += (avg_fact_importance * 0.1) * min(
@@ -914,18 +979,26 @@ class MemoryConsistencyChecker:
         return max(0.0, min(1.0, base_confidence))
 
     async def _generate_validation_recommendations(
-        self, inconsistencies: List[MemoryInconsistency], proposed_action: Dict[str, Any]
+        self,
+        inconsistencies: List[MemoryInconsistency],
+        proposed_action: Dict[str, Any],
     ) -> List[str]:
         """Generate recommendations based on validation results."""
         recommendations = []
 
         if not inconsistencies:
-            recommendations.append("Validation passed successfully. Proceed with confidence.")
+            recommendations.append(
+                "Validation passed successfully. Proceed with confidence."
+            )
             return recommendations
 
         # Group recommendations by inconsistency type
         contradiction_count = len(
-            [i for i in inconsistencies if i.inconsistency_type == InconsistencyType.CONTRADICTION]
+            [
+                i
+                for i in inconsistencies
+                if i.inconsistency_type == InconsistencyType.CONTRADICTION
+            ]
         )
         temporal_count = len(
             [
@@ -963,7 +1036,11 @@ class MemoryConsistencyChecker:
             ]
         )
         invalid_impact_count = len(
-            [i for i in inconsistencies if i.inconsistency_type == InconsistencyType.INVALID_IMPACT]
+            [
+                i
+                for i in inconsistencies
+                if i.inconsistency_type == InconsistencyType.INVALID_IMPACT
+            ]
         )
 
         if contradiction_count > 0:
@@ -1022,9 +1099,7 @@ class MemoryConsistencyChecker:
             logger.warning(
                 f"Currency mismatch in pricing facts for ASIN {asin}: {price1.currency} vs {price2.currency}"
             )
-            return (
-                False  # Not a contradiction if currencies are different, but a data quality issue
-            )
+            return False  # Not a contradiction if currencies are different, but a data quality issue
 
         # Define a tunable threshold for "contradictory" price difference, e.g., 20%
         # This is now configured by `dramatic_price_change_percent`
@@ -1041,7 +1116,9 @@ class MemoryConsistencyChecker:
     ) -> bool:
         """Check if two parsed inventory facts for the same ASIN significantly contradict."""
         # Simple percentage difference check for inventory levels
-        level_diff_percentage = abs((level1 - level2) / level1) if level1 != 0 else float("inf")
+        level_diff_percentage = (
+            abs((level1 - level2) / level1) if level1 != 0 else float("inf")
+        )
 
         # A 50% difference might be considered contradictory unless explained by an event
         return level_diff_percentage > 0.5
@@ -1057,11 +1134,17 @@ class MemoryConsistencyChecker:
 
         # Heuristic 1: Price increase, but significant sales decrease
         # This would ideally be a rule checking time-aligned "ProductPriceUpdated" and "SaleOccurred" events.
-        if "price increased" in price_content and "sales decreased significantly" in sales_content:
+        if (
+            "price increased" in price_content
+            and "sales decreased significantly" in sales_content
+        ):
             return True
 
         # Heuristic 2: Price decrease, but significant sales decrease (unexpected)
-        if "price decreased" in price_content and "sales decreased significantly" in sales_content:
+        if (
+            "price decreased" in price_content
+            and "sales decreased significantly" in sales_content
+        ):
             return True  # Could indicate a product quality issue, or misinterpretation of demand.
 
         return False
@@ -1094,7 +1177,9 @@ class MemoryConsistencyChecker:
             # If market is crashing, a price increase might be contra-indicated
             # Robustly parse the current price from the fact for comparison
             current_price_match = re.search(
-                r"price(?: change)?(?: from)?.*?([$€£]?\d+\.?\d*)", fact.content, re.IGNORECASE
+                r"price(?: change)?(?: from)?.*?([$€£]?\d+\.?\d*)",
+                fact.content,
+                re.IGNORECASE,
             )
             if current_price_match:
                 try:
@@ -1109,7 +1194,8 @@ class MemoryConsistencyChecker:
                         if (
                             proposed_price_money > current_price_money
                             and fact.timestamp
-                            > datetime.now() - timedelta(hours=self.temporal_window_hours)
+                            > datetime.now()
+                            - timedelta(hours=self.temporal_window_hours)
                         ):
                             return True
                 except Exception as e:
@@ -1189,7 +1275,9 @@ class MemoryValidator:  # Expose MemoryConsistencyChecker as MemoryValidator for
         return bool(result.validation_passed)
 
     def get_statistics(self) -> Dict[str, Any]:
-        checker = MemoryConsistencyChecker(agent_id="backward_compat_agent", config=MemoryConfig())
+        checker = MemoryConsistencyChecker(
+            agent_id="backward_compat_agent", config=MemoryConfig()
+        )
         return checker.get_validation_statistics()
 
 
@@ -1310,7 +1398,9 @@ class MemoryIntegrationGateway:
 
         return should_proceed, validation_result
 
-    async def post_action_learning(self, action: Dict[str, Any], outcome: Dict[str, Any]) -> bool:
+    async def post_action_learning(
+        self, action: Dict[str, Any], outcome: Dict[str, Any]
+    ) -> bool:
         """
         Update memory system based on action results.
 
@@ -1414,7 +1504,9 @@ class MemoryIntegrationGateway:
         elif action_type == "run_marketing_campaign" and "campaign_type" in action.get(
             "parameters", {}
         ):
-            query_parts.append(f"marketing campaign for {action['parameters']['campaign_type']}")
+            query_parts.append(
+                f"marketing campaign for {action['parameters']['campaign_type']}"
+            )
 
         query = " ".join(query_parts) if query_parts else "general market conditions"
 
@@ -1475,7 +1567,9 @@ class MemoryIntegrationGateway:
 
         return domain_mapping.get(action_type, "general")
 
-    async def _update_consistency_patterns(self, action: Dict[str, Any], outcome: Dict[str, Any]):
+    async def _update_consistency_patterns(
+        self, action: Dict[str, Any], outcome: Dict[str, Any]
+    ):
         """Update consistency checker with new patterns learned based on outcomes."""
         action_type = action.get("type", "unknown")
         success = outcome.get("success", False)
@@ -1522,7 +1616,9 @@ class MemoryIntegrationGateway:
         except Exception as e:
             logger.error(f"Failed to publish validation event: {e}", exc_info=True)
 
-    async def _publish_learning_event(self, action: Dict[str, Any], outcome: Dict[str, Any]):
+    async def _publish_learning_event(
+        self, action: Dict[str, Any], outcome: Dict[str, Any]
+    ):
         """Publish learning event."""
         learning_event_data = {
             "agent_id": self.agent_id,

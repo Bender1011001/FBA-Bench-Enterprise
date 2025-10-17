@@ -274,7 +274,10 @@ class ComprehensiveIntegrationVerification:
             # Test multi-agent scenarios
             multi_agent_score = await self._test_multi_agent_scenarios()
 
-            all_scores = list(tier_scores.values()) + [progression_score, multi_agent_score]
+            all_scores = list(tier_scores.values()) + [
+                progression_score,
+                multi_agent_score,
+            ]
             overall_score = sum(all_scores) / len(all_scores)
 
             return {
@@ -501,7 +504,12 @@ class ComprehensiveIntegrationVerification:
             from agents.skill_modules.supply_manager import SupplyManager
 
             # Test each skill module
-            skills = [SupplyManager(), MarketingManager(), CustomerService(), FinancialAnalyst()]
+            skills = [
+                SupplyManager(),
+                MarketingManager(),
+                CustomerService(),
+                FinancialAnalyst(),
+            ]
             return 0.9  # Mock score
         except Exception:
             return 0.0
@@ -689,7 +697,9 @@ class ComprehensiveIntegrationVerification:
             )
 
         if passed_tests / total_tests < 0.95:
-            recommendations.append("Test pass rate below 95% - investigate failing tests")
+            recommendations.append(
+                "Test pass rate below 95% - investigate failing tests"
+            )
 
         return IntegrationVerificationReport(
             timestamp=datetime.now().isoformat(),
@@ -702,9 +712,7 @@ class ComprehensiveIntegrationVerification:
                 "overall_health": (
                     "excellent"
                     if overall_score >= 0.9
-                    else "good"
-                    if overall_score >= 0.8
-                    else "needs_improvement"
+                    else "good" if overall_score >= 0.8 else "needs_improvement"
                 ),
                 "critical_systems_operational": passed_tests >= total_tests * 0.8,
                 "performance_targets_met": True,
@@ -766,7 +774,8 @@ class ComprehensiveIntegrationVerification:
 async def main():
     """Run comprehensive integration verification."""
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     # Initialize verification system
@@ -786,7 +795,9 @@ async def main():
     print(f"Overall Score: {report.overall_score:.2%}")
     print(f"Tests Passed: {report.passed_tests}/{report.total_tests}")
     print(f"System Health: {report.system_health['overall_health'].upper()}")
-    print(f"Requirements Coverage: {report.requirements_coverage['validation_rate']:.1%}")
+    print(
+        f"Requirements Coverage: {report.requirements_coverage['validation_rate']:.1%}"
+    )
 
     print("\nTest Results:")
     for result in report.verification_results:
@@ -806,9 +817,13 @@ async def main():
         print("\n🎉 FBA-BENCH VALIDATION COMPLETE - MASTER-LEVEL SOLUTION VERIFIED!")
         print("All implemented improvements work correctly together.")
     elif report.overall_score >= 0.8:
-        print("\n✅ FBA-Bench validation largely successful with minor improvements needed.")
+        print(
+            "\n✅ FBA-Bench validation largely successful with minor improvements needed."
+        )
     else:
-        print("\n⚠️  FBA-Bench validation indicates significant issues requiring attention.")
+        print(
+            "\n⚠️  FBA-Bench validation indicates significant issues requiring attention."
+        )
 
 
 if __name__ == "__main__":

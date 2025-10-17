@@ -41,9 +41,12 @@ class AccuracyContext(BaseModel):
     expected_output: Any = Field(description="Reference answer, str or structured")
     mode: str = Field(default="exact", description="exact|overlap")
     field_path: Optional[str] = Field(
-        default=None, description="Optional dot-path to extract from outputs for comparison"
+        default=None,
+        description="Optional dot-path to extract from outputs for comparison",
     )
-    tokenizer: str = Field(default="simple", description="simple tokenizer for overlap mode")
+    tokenizer: str = Field(
+        default="simple", description="simple tokenizer for overlap mode"
+    )
     case_insensitive: bool = Field(default=True)
     strip_punctuation: bool = Field(default=True)
 
@@ -85,7 +88,9 @@ def _extract_by_path(obj: Any, path: Optional[str]) -> Any:
     return cur
 
 
-def _tokenize_simple(s: str, case_insensitive: bool, strip_punctuation: bool) -> List[str]:
+def _tokenize_simple(
+    s: str, case_insensitive: bool, strip_punctuation: bool
+) -> List[str]:
     if strip_punctuation:
         s = _PUNCT_RE.sub(" ", s)
     if case_insensitive:
@@ -106,7 +111,9 @@ def _jaccard(a: Set[str], b: Set[str]) -> float:
 # -----------------------------
 # Metric implementation
 # -----------------------------
-def evaluate(run: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def evaluate(
+    run: Dict[str, Any], context: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
     """
     Accuracy metric.
 
@@ -167,7 +174,12 @@ def evaluate(run: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> D
 
     except Exception as e:
         logger.exception("accuracy_score metric failed")
-        return {"accuracy": 0.0, "mode": "exact", "error": "exception", "reason": str(e)}
+        return {
+            "accuracy": 0.0,
+            "mode": "exact",
+            "error": "exception",
+            "reason": str(e),
+        }
 
 
 # -----------------------------

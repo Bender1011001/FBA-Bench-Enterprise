@@ -3,8 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Dict
 
-from sqlalchemy import Enum as SAEnum
-from sqlalchemy import String
+from sqlalchemy import Enum as SAEnum, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base, JSONEncoded, TimestampMixin, utcnow
@@ -42,6 +41,10 @@ class AgentORM(TimestampMixin, Base):
             "name": self.name,
             "framework": self.framework,
             "config": self.config or {},
-            "created_at": self.created_at if isinstance(self.created_at, datetime) else utcnow(),
-            "updated_at": self.updated_at if isinstance(self.updated_at, datetime) else utcnow(),
+            "created_at": (
+                self.created_at if isinstance(self.created_at, datetime) else utcnow()
+            ),
+            "updated_at": (
+                self.updated_at if isinstance(self.updated_at, datetime) else utcnow()
+            ),
         }

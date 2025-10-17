@@ -16,7 +16,11 @@ def _flatten_numeric_dict(
     out: Dict[str, float] = {}
     for k, v in (d or {}).items():
         key = f"{parent_key}{sep}{k}" if parent_key else k
-        if isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(float(v)):
+        if (
+            isinstance(v, (int, float))
+            and not isinstance(v, bool)
+            and math.isfinite(float(v))
+        ):
             out[key] = float(v)
         elif isinstance(v, dict):
             out.update(_flatten_numeric_dict(v, key, sep))
@@ -25,7 +29,14 @@ def _flatten_numeric_dict(
 
 def _numeric_stats(values: List[float]) -> Dict[str, float]:
     if not values:
-        return {"count": 0, "mean": 0.0, "median": 0.0, "stddev": 0.0, "min": 0.0, "max": 0.0}
+        return {
+            "count": 0,
+            "mean": 0.0,
+            "median": 0.0,
+            "stddev": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+        }
     return {
         "count": len(values),
         "mean": float(statistics.mean(values)),
@@ -100,7 +111,9 @@ def _collect_metric_values(
     return nums, bools, dicts
 
 
-def aggregate_metric_values(runs: List[Dict[str, Any]], metric_key: str) -> Dict[str, Any]:
+def aggregate_metric_values(
+    runs: List[Dict[str, Any]], metric_key: str
+) -> Dict[str, Any]:
     """
     Compute aggregate statistics for a specific metric across runs.
 

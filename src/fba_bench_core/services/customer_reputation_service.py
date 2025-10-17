@@ -1,10 +1,11 @@
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
+from services.world_store import WorldStore
+
 from fba_events.bus import EventBus
 from fba_events.customer import CustomerDisputeEvent, DisputeResolvedEvent
 from fba_events.sales import SaleOccurred
-from services.world_store import WorldStore
 
 
 @dataclass
@@ -59,7 +60,9 @@ class CustomerReputationService:
         self.event_bus.subscribe(DisputeResolvedEvent, self.on_dispute_resolved)
 
     def _update_reputation(self, change: float):
-        current_reputation = self.world_store.get("customer_reputation", self.INITIAL_REPUTATION)
+        current_reputation = self.world_store.get(
+            "customer_reputation", self.INITIAL_REPUTATION
+        )
         new_reputation = max(0, min(100, current_reputation + change))
         self.world_store.set("customer_reputation", new_reputation)
 
@@ -76,7 +79,9 @@ class CustomerReputationService:
         if event.resolved_for_customer:
             self._update_reputation(self.DISPUTE_LOST_REPUTATION_LOSS)
         else:
-            self._update_reputation(self.DISPUTE_REPUTATION_LOSS * 0.5)  # Smaller gain for winning
+            self._update_reputation(
+                self.DISPUTE_REPUTATION_LOSS * 0.5
+            )  # Smaller gain for winning
 
     def update_reputation_score(self, event: ReputationEvent) -> float:
         """

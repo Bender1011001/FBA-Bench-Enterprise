@@ -55,7 +55,9 @@ class Account:
 
         # Contra accounts flip the normal balance
         if self.is_contra:
-            self.normal_balance = "credit" if self.normal_balance == "debit" else "debit"
+            self.normal_balance = (
+                "credit" if self.normal_balance == "debit" else "debit"
+            )
 
 
 @dataclass

@@ -162,7 +162,9 @@ class InMemoryStore(MemoryStore):
         """
         candidates = []
 
-        memory_ids = self.domain_index.get(domain, set()) if domain else self.memories.keys()
+        memory_ids = (
+            self.domain_index.get(domain, set()) if domain else self.memories.keys()
+        )
         query_l = query.lower()
 
         for memory_id in memory_ids:
@@ -223,8 +225,12 @@ class DualMemoryManager:
         self.last_reflection_time: Optional[datetime] = None
 
         # Initialize memory stores
-        self.short_term_store = self._create_memory_store(self.config.short_term_store_type)
-        self.long_term_store = self._create_memory_store(self.config.long_term_store_type)
+        self.short_term_store = self._create_memory_store(
+            self.config.short_term_store_type
+        )
+        self.long_term_store = self._create_memory_store(
+            self.config.long_term_store_type
+        )
 
         # Memory access tracking
         self.retrieval_stats: Dict[str, int] = {}
@@ -249,10 +255,14 @@ class DualMemoryManager:
             return True  # No-op for memory-free mode
 
         # Create memory event from FBA event
-        memory_event = MemoryEvent.from_event(event, self.agent_id, self.current_tick, domain)
+        memory_event = MemoryEvent.from_event(
+            event, self.agent_id, self.current_tick, domain
+        )
 
         # Calculate initial importance score
-        memory_event.importance_score = await self._calculate_importance_score(memory_event)
+        memory_event.importance_score = await self._calculate_importance_score(
+            memory_event
+        )
 
         # Store in appropriate memory based on mode
         if self.config.memory_mode == MemoryMode.LONG_TERM_ONLY:
@@ -262,7 +272,10 @@ class DualMemoryManager:
             return await self.short_term_store.store(memory_event)
 
     async def retrieve_memories(
-        self, query: str, max_memories: Optional[int] = None, domain: Optional[str] = None
+        self,
+        query: str,
+        max_memories: Optional[int] = None,
+        domain: Optional[str] = None,
     ) -> List[MemoryEvent]:
         """
         Retrieve relevant memories from both stores based on query.
@@ -285,10 +298,14 @@ class DualMemoryManager:
         long_term_memories = []
 
         if self.config.memory_mode != MemoryMode.LONG_TERM_ONLY:
-            short_term_memories = await self.short_term_store.retrieve(query, max_memories, domain)
+            short_term_memories = await self.short_term_store.retrieve(
+                query, max_memories, domain
+            )
 
         if self.config.memory_mode != MemoryMode.SHORT_TERM_ONLY:
-            long_term_memories = await self.long_term_store.retrieve(query, max_memories, domain)
+            long_term_memories = await self.long_term_store.retrieve(
+                query, max_memories, domain
+            )
 
         # Combine and rank memories
         all_memories = short_term_memories + long_term_memories
@@ -352,7 +369,9 @@ class DualMemoryManager:
             "total_memory_count": short_term_size + long_term_size,
             "memory_mode": self.config.memory_mode.value,
             "last_reflection": (
-                self.last_reflection_time.isoformat() if self.last_reflection_time else None
+                self.last_reflection_time.isoformat()
+                if self.last_reflection_time
+                else None
             ),
             "retrieval_stats": self.retrieval_stats.copy(),
             "consolidation_stats": self.consolidation_stats.copy(),
@@ -425,7 +444,9 @@ class DualMemoryManager:
         current_time = datetime.now()
 
         candidates = [
-            memory for memory in all_short_term if (current_time - memory.timestamp) > min_age
+            memory
+            for memory in all_short_term
+            if (current_time - memory.timestamp) > min_age
         ]
 
         return candidates
@@ -442,7 +463,9 @@ class DualMemoryManager:
             # Check long-term capacity
             long_term_size = await self.long_term_store.size()
             if long_term_size >= self.config.long_term_capacity:
-                logger.warning(f"Long-term memory at capacity ({self.config.long_term_capacity})")
+                logger.warning(
+                    f"Long-term memory at capacity ({self.config.long_term_capacity})"
+                )
                 break
 
             # Mark as promoted

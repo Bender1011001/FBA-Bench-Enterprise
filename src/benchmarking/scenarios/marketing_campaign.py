@@ -9,12 +9,13 @@ import logging
 from datetime import datetime
 from typing import Any, Dict, List
 
+from money import Money
+
 from benchmarking.agents.base import BaseAgent
 from benchmarking.core.results import AgentRunResult
 from benchmarking.scenarios.base import BaseScenario, ScenarioConfig
 from fba_events.marketing import RunMarketingCampaignCommand
 from fba_events.time_events import TickEvent
-from money import Money
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +29,9 @@ class MarketingCampaignScenario(BaseScenario):
         super().__init__(config)
         self.campaign_budget: float = config.parameters.get("campaign_budget", 1000.0)
         self.target_audience: str = config.parameters.get("target_audience", "all")
-        self.campaign_duration_ticks: int = config.parameters.get("campaign_duration_ticks", 10)
+        self.campaign_duration_ticks: int = config.parameters.get(
+            "campaign_duration_ticks", 10
+        )
         self.current_tick: int = 0
         self.campaign_active: bool = False
         self.impressions: int = 0
@@ -51,7 +54,9 @@ class MarketingCampaignScenario(BaseScenario):
             f"Marketing campaign initialized with budget: ${self.campaign_budget}, target: {self.target_audience}"
         )
 
-    async def run(self, agent: BaseAgent, run_number: int, *args, **kwargs) -> AgentRunResult:
+    async def run(
+        self, agent: BaseAgent, run_number: int, *args, **kwargs
+    ) -> AgentRunResult:
         """
         Execute a single iteration (tick) of the marketing campaign with world-model integration:
           1) Agent proposes a campaign (RunMarketingCampaignCommand)
@@ -84,7 +89,9 @@ class MarketingCampaignScenario(BaseScenario):
             str(self.config.parameters.get("initial_product_price", "19.99"))
         )
         if world_store and not world_store.get_product_state(product_asin):
-            world_store.initialize_product(product_asin, initial_price, initial_inventory=1000)
+            world_store.initialize_product(
+                product_asin, initial_price, initial_inventory=1000
+            )
 
         sale_revenue_cents_before = 0
         spend_cents_before = 0
@@ -114,7 +121,9 @@ class MarketingCampaignScenario(BaseScenario):
                 ):
                     spend_str = e.get("data", {}).get("spend", "0")
                     try:
-                        spend_cents_before += int(Money.from_dollars(spend_str.strip("$")).cents)
+                        spend_cents_before += int(
+                            Money.from_dollars(spend_str.strip("$")).cents
+                        )
                     except Exception:
                         pass
 
@@ -132,7 +141,9 @@ class MarketingCampaignScenario(BaseScenario):
                 str(agent_decision_output.get("budget", self.campaign_budget))
             )
             duration_days = int(
-                agent_decision_output.get("duration_days", max(1, self.campaign_duration_ticks))
+                agent_decision_output.get(
+                    "duration_days", max(1, self.campaign_duration_ticks)
+                )
             )
 
             # Publish campaign command
@@ -204,11 +215,15 @@ class MarketingCampaignScenario(BaseScenario):
                 ):
                     spend_str = e.get("data", {}).get("spend", "0")
                     try:
-                        spend_cents_after += int(Money.from_dollars(spend_str.strip("$")).cents)
+                        spend_cents_after += int(
+                            Money.from_dollars(spend_str.strip("$")).cents
+                        )
                     except Exception:
                         pass
 
-        revenue_cents_delta = max(0, sale_revenue_cents_after - sale_revenue_cents_before)
+        revenue_cents_delta = max(
+            0, sale_revenue_cents_after - sale_revenue_cents_before
+        )
         spend_cents_delta = max(0, spend_cents_after - spend_cents_before)
 
         # Fallback deterministic spend if none recorded
@@ -219,9 +234,13 @@ class MarketingCampaignScenario(BaseScenario):
             spend_cents_delta = max(0, daily_budget_cents)
 
         acos = (
-            (spend_cents_delta / revenue_cents_delta) if revenue_cents_delta > 0 else float("inf")
+            (spend_cents_delta / revenue_cents_delta)
+            if revenue_cents_delta > 0
+            else float("inf")
         )
-        roas = (revenue_cents_delta / spend_cents_delta) if spend_cents_delta > 0 else 0.0
+        roas = (
+            (revenue_cents_delta / spend_cents_delta) if spend_cents_delta > 0 else 0.0
+        )
 
         end_time = datetime.now()
         duration = (end_time - start_time).total_seconds()

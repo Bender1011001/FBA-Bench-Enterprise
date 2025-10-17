@@ -71,7 +71,9 @@ class MetricMetadata:
             "version": self.version,
             "author": self.author,
             "category": self.category,
-            "aggregation_methods": [method.value for method in self.aggregation_methods],
+            "aggregation_methods": [
+                method.value for method in self.aggregation_methods
+            ],
         }
 
     @classmethod
@@ -87,7 +89,8 @@ class MetricMetadata:
             author=data.get("author", ""),
             category=data.get("category", "general"),
             aggregation_methods=[
-                AggregationMethod(method) for method in data.get("aggregation_methods", ["mean"])
+                AggregationMethod(method)
+                for method in data.get("aggregation_methods", ["mean"])
             ],
         )
 
@@ -197,7 +200,9 @@ class BaseMetric(abc.ABC):
         )
 
     def aggregate(
-        self, results: List[MetricResult], method: AggregationMethod = AggregationMethod.MEAN
+        self,
+        results: List[MetricResult],
+        method: AggregationMethod = AggregationMethod.MEAN,
     ) -> Any:
         """Aggregate multiple metric results."""
         if not results:
@@ -354,7 +359,10 @@ class StringMetric(BaseMetric):
             )
 
         return MetricValidationResult(
-            metric_name=self.name, is_valid=True, validation_score=1.0, message="Valid string value"
+            metric_name=self.name,
+            is_valid=True,
+            validation_score=1.0,
+            message="Valid string value",
         )
 
 
@@ -417,7 +425,10 @@ class ListMetric(BaseMetric):
                 )
 
         return MetricValidationResult(
-            metric_name=self.name, is_valid=True, validation_score=1.0, message="Valid list value"
+            metric_name=self.name,
+            is_valid=True,
+            validation_score=1.0,
+            message="Valid list value",
         )
 
 
@@ -428,7 +439,9 @@ class CustomMetric(BaseMetric):
         self,
         metadata: MetricMetadata,
         calculation_func: Callable[[Dict[str, Any]], Any],
-        validation_func: Optional[Callable[[MetricResult], MetricValidationResult]] = None,
+        validation_func: Optional[
+            Callable[[MetricResult], MetricValidationResult]
+        ] = None,
     ):
         """Initialize the custom metric."""
         super().__init__(metadata)
@@ -496,7 +509,9 @@ class MetricRegistry:
         description: str,
         value_type: MetricValueType,
         calculation_func: Callable[[Dict[str, Any]], Any],
-        validation_func: Optional[Callable[[MetricResult], MetricValidationResult]] = None,
+        validation_func: Optional[
+            Callable[[MetricResult], MetricValidationResult]
+        ] = None,
         **kwargs,
     ) -> CustomMetric:
         """Register a custom metric with a function."""
@@ -518,13 +533,21 @@ class MetricRegistry:
 
     def get_metrics_by_category(self, category: str) -> List[BaseMetric]:
         """Get metrics by category."""
-        return [metric for metric in self._metrics.values() if metric.metadata.category == category]
+        return [
+            metric
+            for metric in self._metrics.values()
+            if metric.metadata.category == category
+        ]
 
     def get_metrics_by_tag(self, tag: str) -> List[BaseMetric]:
         """Get metrics by tag."""
-        return [metric for metric in self._metrics.values() if tag in metric.metadata.tags]
+        return [
+            metric for metric in self._metrics.values() if tag in metric.metadata.tags
+        ]
 
-    def create_metric(self, metric_type: str, metadata: MetricMetadata, **kwargs) -> BaseMetric:
+    def create_metric(
+        self, metric_type: str, metadata: MetricMetadata, **kwargs
+    ) -> BaseMetric:
         """Create a metric of the specified type."""
         if metric_type not in self._metric_types:
             raise ValueError(f"Unknown metric type: {metric_type}")
@@ -548,7 +571,9 @@ class MetricSuite:
         """Add a metric to the suite."""
         self.metrics[metric.name] = metric
         self.metric_weights[metric.name] = weight
-        logger.debug(f"Added metric {metric.name} to suite {self.name} with weight {weight}")
+        logger.debug(
+            f"Added metric {metric.name} to suite {self.name} with weight {weight}"
+        )
 
     def remove_metric(self, metric_name: str) -> None:
         """Remove a metric from the suite."""
@@ -565,7 +590,9 @@ class MetricSuite:
 
         await asyncio.gather(*init_tasks)
         self._is_initialized = True
-        logger.info(f"Initialized metric suite {self.name} with {len(self.metrics)} metrics")
+        logger.info(
+            f"Initialized metric suite {self.name} with {len(self.metrics)} metrics"
+        )
 
     async def calculate_all(self, context: Dict[str, Any]) -> Dict[str, MetricResult]:
         """Calculate all metrics in the suite."""
@@ -578,13 +605,18 @@ class MetricSuite:
         for metric in self.metrics.values():
             calculation_tasks.append(metric.calculate(context))
 
-        metric_results = await asyncio.gather(*calculation_tasks, return_exceptions=True)
+        metric_results = await asyncio.gather(
+            *calculation_tasks, return_exceptions=True
+        )
 
         for metric, result in zip(self.metrics.values(), metric_results):
             if isinstance(result, Exception):
                 logger.error(f"Error calculating metric {metric.name}: {result}")
                 results[metric.name] = MetricResult(
-                    name=metric.name, value=None, context=context, metadata={"error": str(result)}
+                    name=metric.name,
+                    value=None,
+                    context=context,
+                    metadata={"error": str(result)},
                 )
             else:
                 results[metric.name] = result
@@ -604,11 +636,17 @@ class MetricSuite:
             else:
                 logger.warning(f"No metric found for result: {metric_name}")
 
-        validation_results_list = await asyncio.gather(*validation_tasks, return_exceptions=True)
+        validation_results_list = await asyncio.gather(
+            *validation_tasks, return_exceptions=True
+        )
 
-        for metric_name, validation_result in zip(results.keys(), validation_results_list):
+        for metric_name, validation_result in zip(
+            results.keys(), validation_results_list
+        ):
             if isinstance(validation_result, Exception):
-                logger.error(f"Error validating metric {metric_name}: {validation_result}")
+                logger.error(
+                    f"Error validating metric {metric_name}: {validation_result}"
+                )
                 validation_results[metric_name] = MetricValidationResult(
                     metric_name=metric_name,
                     is_valid=False,
@@ -659,7 +697,9 @@ class MetricSuite:
                 summary["metrics"][metric_name] = {
                     "value": results[metric_name].value,
                     "is_valid": validation_results[metric_name].is_valid,
-                    "validation_score": validation_results[metric_name].validation_score,
+                    "validation_score": validation_results[
+                        metric_name
+                    ].validation_score,
                     "message": validation_results[metric_name].message,
                 }
 
@@ -790,7 +830,9 @@ class ValidationEngine:
             del self.rules[rule_name]
             logger.debug(f"Removed validation rule: {rule_name}")
 
-    async def validate_all(self, context: Dict[str, Any]) -> Dict[str, MetricValidationResult]:
+    async def validate_all(
+        self, context: Dict[str, Any]
+    ) -> Dict[str, MetricValidationResult]:
         """Run all validation rules."""
         results = {}
         validation_tasks = []

@@ -5,8 +5,6 @@ import uuid
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
-from types import SimpleNamespace
-
 from .models import (
     PlanPriority,
     PlanStatus,
@@ -14,7 +12,6 @@ from .models import (
     StrategicObjective,
     TacticalAction,
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -126,7 +123,9 @@ async def analyze_external_events_impact(
             "event_id": event.get("event_id", str(uuid.uuid4())),
             "event_type": event.get("type", "unknown"),
             "impact_level": assess_event_impact_level(event),
-            "affected_objectives": identify_affected_objectives(event, strategic_objectives),
+            "affected_objectives": identify_affected_objectives(
+                event, strategic_objectives
+            ),
             "recommended_actions": suggest_responses_to_event(event),
         }
         event_impacts.append(impact)
@@ -199,7 +198,9 @@ def suggest_responses_to_event(
             ["competitive_analysis", "differentiation_strategy", "market_positioning"]
         )
     elif event_type == "demand_change":
-        responses.extend(["demand_forecasting", "inventory_adjustment", "marketing_strategy"])
+        responses.extend(
+            ["demand_forecasting", "inventory_adjustment", "marketing_strategy"]
+        )
 
     return responses
 
@@ -326,7 +327,9 @@ async def calculate_action_objective_alignment(
 
     relevant_metrics = action_objective_synergies.get(action_type, [])
     for metric in relevant_metrics:
-        if any(metric in target_metric for target_metric in objective.target_metrics.keys()):
+        if any(
+            metric in target_metric for target_metric in objective.target_metrics.keys()
+        ):
             alignment_score += float(planner_params.synergy_bonus)
 
     return min(1.0, alignment_score)
@@ -341,6 +344,7 @@ def archive_completed_objectives(
 
     Accepts status enums from either local or external definitions by comparing string values.
     """
+
     def _is_terminal(status: Any) -> bool:
         # Normalize to string label
         try:
@@ -381,9 +385,7 @@ async def calculate_action_priority_score(
 
     # Strategic alignment bonus
     if action.strategic_objective_id:
-        strategic_objective = strategic_objectives.get(
-            action.strategic_objective_id
-        )
+        strategic_objective = strategic_objectives.get(action.strategic_objective_id)
         if strategic_objective and strategic_objective.priority in [
             PlanPriority.HIGH,
             PlanPriority.CRITICAL,
@@ -392,7 +394,9 @@ async def calculate_action_priority_score(
 
     # Urgency bonus based on scheduling
     current_time = datetime.now()
-    hours_until_execution = (action.scheduled_execution - current_time).total_seconds() / 3600
+    hours_until_execution = (
+        action.scheduled_execution - current_time
+    ).total_seconds() / 3600
     if hours_until_execution < 1:
         score += 0.4  # Very urgent
     elif hours_until_execution < 4:
@@ -429,7 +433,9 @@ async def apply_constraints_to_prioritization(
 
         if not resource_conflict:
             prioritized_actions.append(action)
-            used_resources[action.action_type] = used_resources.get(action.action_type, 0) + 1
+            used_resources[action.action_type] = (
+                used_resources.get(action.action_type, 0) + 1
+            )
 
     return prioritized_actions
 
@@ -447,14 +453,17 @@ def cleanup_old_actions(
     old_actions = [
         action_id
         for action_id, action in list(tactical_actions.items())
-        if action.status in [PlanStatus.COMPLETED, PlanStatus.FAILED, PlanStatus.CANCELLED]
+        if action.status
+        in [PlanStatus.COMPLETED, PlanStatus.FAILED, PlanStatus.CANCELLED]
         and action.created_at < cutoff_time
     ]
 
     for action_id in old_actions:
         del tactical_actions[action_id]
 
-    logger.info(f"Cleaned up {len(old_actions)} old tactical actions for agent {agent_id}")
+    logger.info(
+        f"Cleaned up {len(old_actions)} old tactical actions for agent {agent_id}"
+    )
 
 
 def should_reschedule_failed_action(
@@ -463,9 +472,15 @@ def should_reschedule_failed_action(
 ) -> bool:
     """Determine if a failed action should be rescheduled."""
     # Reschedule if failure was due to temporary issues
-    temporary_failures = ["resource_unavailable", "network_error", "temporary_constraint"]
+    temporary_failures = [
+        "resource_unavailable",
+        "network_error",
+        "temporary_constraint",
+    ]
 
-    return any(temp_failure in failure_reason.lower() for temp_failure in temporary_failures)
+    return any(
+        temp_failure in failure_reason.lower() for temp_failure in temporary_failures
+    )
 
 
 def reschedule_failed_action(
@@ -486,7 +501,8 @@ def reschedule_failed_action(
         priority=action.priority,
         status=PlanStatus.ACTIVE,
         created_at=datetime.now(),
-        scheduled_execution=datetime.now() + timedelta(hours=1),  # Reschedule for 1 hour later
+        scheduled_execution=datetime.now()
+        + timedelta(hours=1),  # Reschedule for 1 hour later
         estimated_duration_hours=action.estimated_duration_hours,
         expected_impact=action.expected_impact.copy(),
     )
@@ -516,14 +532,18 @@ try:  # pragma: no cover
             from datetime import datetime, timedelta
 
             try:
-                cleanup_days = getattr(self._planner_params, "tactical_action_cleanup_days", 1)
+                cleanup_days = getattr(
+                    self._planner_params, "tactical_action_cleanup_days", 1
+                )
             except Exception:
                 cleanup_days = 1
             cutoff_time = datetime.now() - timedelta(days=int(cleanup_days))
 
             # Build list of stale completed/failed/cancelled actions
             stale_ids = []
-            for action_id, action in list(getattr(self, "tactical_actions", {}).items()):
+            for action_id, action in list(
+                getattr(self, "tactical_actions", {}).items()
+            ):
                 status = getattr(action, "status", None)
                 try:
                     s = status.value  # Enum-like

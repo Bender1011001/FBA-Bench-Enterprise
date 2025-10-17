@@ -31,12 +31,16 @@ class LookupInput(SkillInputModel):
 
     model_config = ConfigDict(
         str_strip_whitespace=False,  # Do not strip, tests require whitespace-sensitive keys
-        json_schema_extra={"examples": [{"key": "SKU-42", "table": {"SKU-42": "Widget XL"}}]},
+        json_schema_extra={
+            "examples": [{"key": "SKU-42", "table": {"SKU-42": "Widget XL"}}]
+        },
     )
 
 
 class LookupOutput(SkillOutputModel):
-    value: Optional[str] = Field(default=None, description="Lookup result or None if not found")
+    value: Optional[str] = Field(
+        default=None, description="Lookup result or None if not found"
+    )
     found: bool = Field(default=False, description="True if key was found exactly")
 
 

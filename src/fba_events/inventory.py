@@ -70,7 +70,9 @@ class InventoryUpdate(BaseEvent):
 
         # Validate change_reason: Must be a non-empty string.
         if not self.change_reason or not isinstance(self.change_reason, str):
-            raise ValueError("Change reason must be a non-empty string for InventoryUpdate.")
+            raise ValueError(
+                "Change reason must be a non-empty string for InventoryUpdate."
+            )
 
     def get_quantity_change(self) -> int:
         """
@@ -97,7 +99,9 @@ class InventoryUpdate(BaseEvent):
             "change_reason": self.change_reason,
             "agent_id": self.agent_id,
             "command_id": self.command_id,
-            "cost_basis": str(self.cost_basis) if isinstance(self.cost_basis, Money) else None,
+            "cost_basis": (
+                str(self.cost_basis) if isinstance(self.cost_basis, Money) else None
+            ),
         }
 
 

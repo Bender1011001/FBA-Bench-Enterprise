@@ -15,8 +15,9 @@ import pytest
 # Add current directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from events import ProductPriceUpdated, SetPriceCommand
 from money import Money
+
+from events import ProductPriceUpdated, SetPriceCommand
 
 
 # Standalone WorldStore implementation for testing
@@ -55,10 +56,14 @@ class WorldStoreTest:
                 return
 
             # Get current price
-            current_price = self._product_state.get(event.asin, Money(2000))  # Default $20.00
+            current_price = self._product_state.get(
+                event.asin, Money(2000)
+            )  # Default $20.00
 
             # Validate price change magnitude
-            price_change_ratio = abs((event.new_price.cents / current_price.cents) - 1.0)
+            price_change_ratio = abs(
+                (event.new_price.cents / current_price.cents) - 1.0
+            )
             if price_change_ratio > self.max_price_change_per_tick:
                 self.commands_rejected += 1
                 print(
@@ -84,7 +89,9 @@ class WorldStoreTest:
             )
 
             await self.event_bus.publish(update_event)
-            print(f"   ✅ Command accepted: {event.asin} {previous_price} -> {event.new_price}")
+            print(
+                f"   ✅ Command accepted: {event.asin} {previous_price} -> {event.new_price}"
+            )
 
         except Exception as e:
             print(f"   ❌ Error processing command: {e}")
@@ -154,9 +161,13 @@ class AgentTest:
     async def handle_price_update(self, event: ProductPriceUpdated):
         """Handle price update events."""
         self.price_updates_received.append(event)
-        print(f"   🤖 Agent {self.agent_id} received update: {event.asin} = {event.new_price}")
+        print(
+            f"   🤖 Agent {self.agent_id} received update: {event.asin} = {event.new_price}"
+        )
 
-    async def send_price_command(self, asin: str, new_price: Money, reason: str = "Test command"):
+    async def send_price_command(
+        self, asin: str, new_price: Money, reason: str = "Test command"
+    ):
         """Send a SetPriceCommand."""
         command = SetPriceCommand(
             event_id=str(uuid.uuid4()),

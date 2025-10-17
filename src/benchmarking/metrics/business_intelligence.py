@@ -160,14 +160,18 @@ class BusinessIntelligenceMetrics(BaseMetric):
                     pass
         roi = 0.0
         if total_spend > 0:
-            roi = max(0.0, min(1.0, total_profit / total_spend))  # normalize into 0..1 by clipping
+            roi = max(
+                0.0, min(1.0, total_profit / total_spend)
+            )  # normalize into 0..1 by clipping
 
         # Resource allocation efficiency: correlate spend to outcome (clicks->sales or impressions->units)
         # Use a simple efficiency: sales_count per $100 spend normalized
         units_sold = sum(int(s.get("units_sold", 0)) for s in sales)
         efficiency = 0.0
         if total_spend > 0:
-            efficiency = max(0.0, min(1.0, (units_sold / max(1.0, total_spend / 100.0)) / 100.0))
+            efficiency = max(
+                0.0, min(1.0, (units_sold / max(1.0, total_spend / 100.0)) / 100.0)
+            )
 
         # Strategic decision quality: correlate controller current_priority with approved actions
         # Expect "decisions" entries: {priority: float(0..1), action_type: str, success: bool}
@@ -239,7 +243,12 @@ class BusinessIntelligenceMetrics(BaseMetric):
             outcome_score = self._evaluate_decision_outcome(decision)
 
             # Calculate weighted decision score
-            weights = {"alignment": 0.3, "timing": 0.2, "implementation": 0.2, "outcome": 0.3}
+            weights = {
+                "alignment": 0.3,
+                "timing": 0.2,
+                "implementation": 0.2,
+                "outcome": 0.3,
+            }
 
             decision_score = (
                 alignment_score * weights["alignment"]
@@ -333,7 +342,9 @@ class BusinessIntelligenceMetrics(BaseMetric):
             market_positioning = self._evaluate_market_positioning(analysis)
             advantage_sustainability = self._evaluate_advantage_sustainability(analysis)
             competitor_analysis = self._evaluate_competitor_analysis(analysis)
-            opportunity_identification = self._evaluate_opportunity_identification(analysis)
+            opportunity_identification = self._evaluate_opportunity_identification(
+                analysis
+            )
 
             # Calculate weighted intelligence score
             weights = {
@@ -375,14 +386,18 @@ class BusinessIntelligenceMetrics(BaseMetric):
                 assessment = RiskAssessment(
                     risk_level=assessment.get("risk_level", 0.0),
                     risk_categories=assessment.get("risk_categories", {}),
-                    mitigation_effectiveness=assessment.get("mitigation_effectiveness", 0.0),
+                    mitigation_effectiveness=assessment.get(
+                        "mitigation_effectiveness", 0.0
+                    ),
                     risk_adjusted_return=assessment.get("risk_adjusted_return", 0.0),
                 )
 
             # Evaluate risk assessment components
             identification_accuracy = self._evaluate_risk_identification(assessment)
             quantification_accuracy = self._evaluate_risk_quantification(assessment)
-            mitigation_effectiveness = self._evaluate_mitigation_effectiveness(assessment)
+            mitigation_effectiveness = self._evaluate_mitigation_effectiveness(
+                assessment
+            )
             risk_return_balance = self._evaluate_risk_return_balance(assessment)
 
             # Calculate weighted risk assessment score
@@ -692,14 +707,18 @@ class BusinessIntelligenceMetrics(BaseMetric):
 
         return positioning_score / 100.0  # Normalize to 0-1
 
-    def _evaluate_advantage_sustainability(self, position: CompetitivePosition) -> float:
+    def _evaluate_advantage_sustainability(
+        self, position: CompetitivePosition
+    ) -> float:
         """Evaluate sustainability of competitive advantage."""
         brand_strength = position.brand_strength
         innovation_index = position.innovation_index
         customer_loyalty = position.customer_loyalty
 
         # Sustainable advantage requires strong brand, innovation, and loyalty
-        sustainability_score = (brand_strength + innovation_index + customer_loyalty) / 3.0
+        sustainability_score = (
+            brand_strength + innovation_index + customer_loyalty
+        ) / 3.0
 
         return sustainability_score / 100.0  # Normalize to 0-1
 
@@ -714,7 +733,9 @@ class BusinessIntelligenceMetrics(BaseMetric):
 
         return analysis_score
 
-    def _evaluate_opportunity_identification(self, position: CompetitivePosition) -> float:
+    def _evaluate_opportunity_identification(
+        self, position: CompetitivePosition
+    ) -> float:
         """Evaluate opportunity identification capability."""
         innovation_index = position.innovation_index
         market_share = position.market_share
@@ -730,7 +751,9 @@ class BusinessIntelligenceMetrics(BaseMetric):
         risk_level = risk.risk_level
 
         # Good risk identification should cover multiple categories
-        category_coverage = len(risk_categories) / 10.0  # Assuming 10 major risk categories
+        category_coverage = (
+            len(risk_categories) / 10.0
+        )  # Assuming 10 major risk categories
         level_appropriateness = 1.0 - abs(
             risk_level - 0.5
         )  # Moderate risk level is often appropriate
@@ -771,7 +794,9 @@ class BusinessIntelligenceMetrics(BaseMetric):
         # Good risk-return balance maximizes return for given risk level
         expected_return = risk_level * 2.0  # Simple linear relationship
         balance_score = (
-            min(1.0, risk_adjusted_return / expected_return) if expected_return > 0 else 0.0
+            min(1.0, risk_adjusted_return / expected_return)
+            if expected_return > 0
+            else 0.0
         )
 
         return balance_score
@@ -833,7 +858,9 @@ class BusinessIntelligenceMetrics(BaseMetric):
             return 0.0
 
         # Evaluate based on number and effectiveness of strategies
-        strategy_count_score = min(1.0, len(strategies) / 5.0)  # Normalize by expected number
+        strategy_count_score = min(
+            1.0, len(strategies) / 5.0
+        )  # Normalize by expected number
         effectiveness_score = strategy_effectiveness / 100.0
 
         optimization_score = (strategy_count_score + effectiveness_score) / 2.0
@@ -859,7 +886,9 @@ class BusinessIntelligenceMetrics(BaseMetric):
                 alignment_score += min(weight, allocation_weight)
 
         alignment_score = (
-            alignment_score / total_priority_weight if total_priority_weight > 0 else 0.0
+            alignment_score / total_priority_weight
+            if total_priority_weight > 0
+            else 0.0
         )
 
         return alignment_score
@@ -893,15 +922,21 @@ class BusinessIntelligenceMetrics(BaseMetric):
         adaptation_events = decision.get("adaptation_events", [])
 
         # Flexibility is demonstrated by successful reallocations
-        successful_reallocations = sum(1 for r in reallocation_history if r.get("success", False))
+        successful_reallocations = sum(
+            1 for r in reallocation_history if r.get("success", False)
+        )
         total_reallocations = len(reallocation_history)
 
         reallocation_success = (
-            successful_reallocations / total_reallocations if total_reallocations > 0 else 0.0
+            successful_reallocations / total_reallocations
+            if total_reallocations > 0
+            else 0.0
         )
 
         # Adaptability is demonstrated by handling adaptation events
-        successful_adaptations = sum(1 for a in adaptation_events if a.get("success", False))
+        successful_adaptations = sum(
+            1 for a in adaptation_events if a.get("success", False)
+        )
         total_adaptations = len(adaptation_events)
 
         adaptation_success = (
@@ -921,7 +956,9 @@ class BusinessIntelligenceMetrics(BaseMetric):
             return 0.0
 
         cost_effectiveness = total_benefit / total_cost
-        effectiveness_score = min(1.0, cost_effectiveness / 3.0)  # Normalize to reasonable range
+        effectiveness_score = min(
+            1.0, cost_effectiveness / 3.0
+        )  # Normalize to reasonable range
 
         return effectiveness_score
 
@@ -944,7 +981,9 @@ class BusinessIntelligenceMetrics(BaseMetric):
                     actual_value, (int, float)
                 ):
                     if predicted_value != 0:
-                        accuracy = 1.0 - abs(predicted_value - actual_value) / abs(predicted_value)
+                        accuracy = 1.0 - abs(predicted_value - actual_value) / abs(
+                            predicted_value
+                        )
                     else:
                         accuracy = 1.0 if actual_value == 0 else 0.0
                 else:
@@ -994,7 +1033,9 @@ class BusinessIntelligenceMetrics(BaseMetric):
             return 0.0
 
         # Evaluate based on number of scenarios and their accuracy
-        scenario_count_score = min(1.0, len(scenarios) / 5.0)  # Normalize by expected number
+        scenario_count_score = min(
+            1.0, len(scenarios) / 5.0
+        )  # Normalize by expected number
         accuracy_score = scenario_accuracy / 100.0
 
         planning_score = (scenario_count_score + accuracy_score) / 2.0

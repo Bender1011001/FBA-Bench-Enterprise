@@ -2,14 +2,13 @@ import asyncio
 from datetime import datetime
 
 import pytest
-
-from events import TickEvent
-from fba_events.bus import InMemoryEventBus as EventBus
-from fba_events.bus import set_event_bus
-from fba_events.pricing import SetPriceCommand
 from money import Money
 from services.market_simulator import MarketSimulationService
 from services.world_store import WorldStore
+
+from events import TickEvent
+from fba_events.bus import InMemoryEventBus as EventBus, set_event_bus
+from fba_events.pricing import SetPriceCommand
 
 
 @pytest.mark.asyncio
@@ -38,7 +37,9 @@ async def test_market_simulator_demand_and_sale_and_inventory_update():
     asin = "UNIT-TEST-ASIN-001"
     initial_price = Money.from_dollars("20.00")
     initial_inventory = 1000
-    world_store.initialize_product(asin, initial_price, initial_inventory=initial_inventory)
+    world_store.initialize_product(
+        asin, initial_price, initial_inventory=initial_inventory
+    )
 
     # Act 1: agent sets the same price (so ref price == current price) -> demand == base_demand
     set_price_cmd = SetPriceCommand(
@@ -55,7 +56,10 @@ async def test_market_simulator_demand_and_sale_and_inventory_update():
     # Publish an initial TickEvent that aligns simulation_time
     await bus.publish(
         TickEvent(
-            event_id="t0", timestamp=datetime.now(), tick_number=0, simulation_time=datetime.now()
+            event_id="t0",
+            timestamp=datetime.now(),
+            tick_number=0,
+            simulation_time=datetime.now(),
         )
     )
     await asyncio.sleep(0.02)
@@ -69,7 +73,8 @@ async def test_market_simulator_demand_and_sale_and_inventory_update():
     sale_events = [
         e
         for e in recorded
-        if e.get("event_type") == "SaleOccurred" and e.get("data", {}).get("asin") == asin
+        if e.get("event_type") == "SaleOccurred"
+        and e.get("data", {}).get("asin") == asin
     ]
     assert sale_events, "Expected a SaleOccurred event"
 
@@ -94,7 +99,8 @@ async def test_market_simulator_demand_and_sale_and_inventory_update():
     sale_events2 = [
         e
         for e in recorded2
-        if e.get("event_type") == "SaleOccurred" and e.get("data", {}).get("asin") == asin
+        if e.get("event_type") == "SaleOccurred"
+        and e.get("data", {}).get("asin") == asin
     ]
     assert sale_events2, "Expected another SaleOccurred event after marketing boost"
     last_sale2 = sale_events2[-1]

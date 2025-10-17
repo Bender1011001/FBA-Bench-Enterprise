@@ -1,9 +1,25 @@
 [run]
 branch = True
-source = api
+source = src
+parallel = true
 
 [report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise AssertionError
+    raise NotImplementedError
 omit =
     tests/*
+    */tests/*
     */site-packages/*
     */__pycache__/*
+    */.venv/*
+    */venv/*
+    */env/*
+    */.tox/*
+    */build/*
+    */dist/*
+    *.egg-info/*
+show_missing = True
+fail_under = 80

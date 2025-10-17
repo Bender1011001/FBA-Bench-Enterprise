@@ -1,1 +1,0 @@
-fba_events -> enterprise/fba-bench-enterprise\fba_events (reason: enterprise dependency: full event bus for services)

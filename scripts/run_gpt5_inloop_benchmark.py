@@ -48,6 +48,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Tuple
 
+# Money helpers (used by prompt adapter expectations)
+from money import Money
+from services.cost_tracking_service import CostTrackingService
+
 # Budget enforcement
 from constraints.budget_enforcer import BudgetEnforcer
 from learning.episodic_learning import EpisodicLearningManager
@@ -58,12 +62,8 @@ from llm_interface.openrouter_client import OpenRouterClient
 from llm_interface.prompt_adapter import PromptAdapter
 from llm_interface.response_parser import LLMResponseParser
 
-# Money helpers (used by prompt adapter expectations)
-from money import Money
-
 # Load repo-local modules
 from scenarios.scenario_engine import ScenarioEngine
-from services.cost_tracking_service import CostTrackingService
 
 # -----------------------------------------------------------------------------
 # Logging

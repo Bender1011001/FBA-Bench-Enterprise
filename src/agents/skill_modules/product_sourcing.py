@@ -18,11 +18,12 @@ import logging
 from math import floor
 from typing import Any, Dict, List, Optional
 
+from money import Money
+
 # WorldStore global accessor (read-only usage for catalog)
 from fba_bench_core.services.world_store import get_world_store
 from fba_events.base import BaseEvent
 from fba_events.time_events import TickEvent
-from money import Money
 
 from .base_skill import BaseSkill, SkillAction, SkillContext
 
@@ -52,7 +53,9 @@ class ProductSourcingSkill(BaseSkill):
         """
         return ["TickEvent"]
 
-    def __init__(self, agent_id: str, event_bus, config: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, agent_id: str, event_bus, config: Optional[Dict[str, Any]] = None
+    ):
         super().__init__("ProductSourcing", agent_id, event_bus)
         self.config = config or {}
         self._has_emitted_initial_action: bool = False
@@ -89,7 +92,9 @@ class ProductSourcingSkill(BaseSkill):
                         return [action]
             return None
         except Exception as e:
-            logger.error("ProductSourcingSkill.process_event error: %s", e, exc_info=True)
+            logger.error(
+                "ProductSourcingSkill.process_event error: %s", e, exc_info=True
+            )
             return None
 
     async def generate_actions(
@@ -115,7 +120,9 @@ class ProductSourcingSkill(BaseSkill):
         """
         world_store = get_world_store()  # uses global singleton
         if world_store is None:
-            logger.warning("WorldStore is not initialized; cannot source supplier catalog.")
+            logger.warning(
+                "WorldStore is not initialized; cannot source supplier catalog."
+            )
             return None
 
         catalog_by_id: Dict[str, Any] = {}
@@ -148,7 +155,9 @@ class ProductSourcingSkill(BaseSkill):
             return None
 
         supplier_id = str(best.get("supplier_id", "")).strip()
-        product_id = str(best.get("product_id", "")).strip()  # Use as ASIN in our system
+        product_id = str(
+            best.get("product_id", "")
+        ).strip()  # Use as ASIN in our system
         product_name = str(best.get("product_name", "")).strip()
         try:
             unit_cost = float(best.get("unit_cost", 0.0))
@@ -156,7 +165,9 @@ class ProductSourcingSkill(BaseSkill):
             unit_cost = 0.0
 
         if not supplier_id or not product_id or unit_cost <= 0.0:
-            logger.warning("Invalid catalog entry for initial sourcing; skipping. Entry=%s", best)
+            logger.warning(
+                "Invalid catalog entry for initial sourcing; skipping. Entry=%s", best
+            )
             return None
 
         invest_cents = int(self.initial_investment_cents * self.investment_ratio)
@@ -169,7 +180,8 @@ class ProductSourcingSkill(BaseSkill):
         units_to_buy = min(units_to_buy, self.max_units_cap)
         if units_to_buy <= 0:
             logger.info(
-                "Budget too small for unit_cost=%.2f; skipping initial sourcing.", unit_cost
+                "Budget too small for unit_cost=%.2f; skipping initial sourcing.",
+                unit_cost,
             )
             return None
 

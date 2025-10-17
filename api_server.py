@@ -10,9 +10,8 @@ This will start the server at http://localhost:8000 (configurable via env vars).
 """
 
 import os
-import uvicorn
-from api.server import app  # Import the FastAPI app instance
 
+import uvicorn
 
 if __name__ == "__main__":
     host = os.getenv("UVICORN_HOST", "0.0.0.0")

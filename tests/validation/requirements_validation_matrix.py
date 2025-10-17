@@ -734,9 +734,11 @@ class RequirementsValidationMatrix:
                     # Calculate weighted coverage based on validation types
                     coverage_scores = []
                     for mapping in requirement.test_mappings:
-                        weight = {"direct": 1.0, "integration": 0.8, "indirect": 0.6}.get(
-                            mapping.validation_type, 0.5
-                        )
+                        weight = {
+                            "direct": 1.0,
+                            "integration": 0.8,
+                            "indirect": 0.6,
+                        }.get(mapping.validation_type, 0.5)
 
                         coverage_scores.append(mapping.coverage_percentage * weight)
 
@@ -749,7 +751,9 @@ class RequirementsValidationMatrix:
                         requirement.validation_status = RequirementStatus.VALIDATED
                         validated_requirements += 1
                     elif max_coverage >= 0.5:
-                        requirement.validation_status = RequirementStatus.PARTIALLY_VALIDATED
+                        requirement.validation_status = (
+                            RequirementStatus.PARTIALLY_VALIDATED
+                        )
                     else:
                         requirement.validation_status = RequirementStatus.NOT_VALIDATED
                 else:
@@ -777,7 +781,9 @@ class RequirementsValidationMatrix:
                 if req.validation_status == RequirementStatus.NOT_VALIDATED
             ),
             "validation_rate": (
-                validated_requirements / total_requirements if total_requirements > 0 else 0
+                validated_requirements / total_requirements
+                if total_requirements > 0
+                else 0
             ),
             "overall_coverage_score": self.matrix.overall_coverage,
         }
@@ -809,7 +815,8 @@ class RequirementsValidationMatrix:
                         "priority": req.priority.value,
                         "test_count": len(req.test_mappings),
                         "max_coverage": max(
-                            [tm.coverage_percentage for tm in req.test_mappings], default=0.0
+                            [tm.coverage_percentage for tm in req.test_mappings],
+                            default=0.0,
                         ),
                     }
                     for req in category.requirements
@@ -832,7 +839,9 @@ class RequirementsValidationMatrix:
                     )
 
         critical_validated = sum(
-            1 for req in critical_requirements if req["status"] == RequirementStatus.VALIDATED.value
+            1
+            for req in critical_requirements
+            if req["status"] == RequirementStatus.VALIDATED.value
         )
 
         # Test coverage analysis
@@ -852,7 +861,9 @@ class RequirementsValidationMatrix:
                     test_file_coverage[test_file][
                         "total_coverage_score"
                     ] += mapping.coverage_percentage
-                    test_file_coverage[test_file]["test_methods"].add(mapping.test_method)
+                    test_file_coverage[test_file]["test_methods"].add(
+                        mapping.test_method
+                    )
 
         # Convert sets to lists for JSON serialization
         for test_file in test_file_coverage:
@@ -871,7 +882,9 @@ class RequirementsValidationMatrix:
                 "total": len(critical_requirements),
                 "validated": critical_validated,
                 "validation_rate": (
-                    critical_validated / len(critical_requirements) if critical_requirements else 0
+                    critical_validated / len(critical_requirements)
+                    if critical_requirements
+                    else 0
                 ),
                 "details": critical_requirements,
             },
@@ -1001,7 +1014,8 @@ class RequirementsValidationMatrix:
 async def main():
     """Run requirements validation matrix analysis."""
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     # Initialize validation matrix

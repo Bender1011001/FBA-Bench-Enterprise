@@ -54,7 +54,9 @@ class TickEvent(BaseEvent):
 
         # Validate tick_number: Must be non-negative.
         if self.tick_number < 0:
-            raise ValueError(f"Tick number must be >= 0, but got {self.tick_number} for TickEvent.")
+            raise ValueError(
+                f"Tick number must be >= 0, but got {self.tick_number} for TickEvent."
+            )
 
         # Default simulation_time to event timestamp when not provided
         if self.simulation_time is None:

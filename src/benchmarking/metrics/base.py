@@ -116,8 +116,12 @@ class BaseMetric(abc.ABC):
         description: Optional[str] = None,
         category: Optional[MetricCategory] = None,
     ):
-        if config is not None and any(v is not None for v in (name, description, category)):
-            raise TypeError("Provide either config or (name, description, category), not both")
+        if config is not None and any(
+            v is not None for v in (name, description, category)
+        ):
+            raise TypeError(
+                "Provide either config or (name, description, category), not both"
+            )
 
         if config is not None:
             # Config-driven init (primarily for the extended registry path)
@@ -202,7 +206,8 @@ class CognitiveMetrics(BaseMetric):
         memory = sum(
             1
             for e in events
-            if e.get("type") == "AgentGoalStatusUpdateEvent" and e.get("status") == "completed"
+            if e.get("type") == "AgentGoalStatusUpdateEvent"
+            and e.get("status") == "completed"
         )
 
         # Normalize into [0,1]
@@ -243,13 +248,19 @@ class BusinessMetrics(BaseMetric):
         events: List[Dict[str, Any]] = list(context.get("events", []))
 
         revenue = sum(
-            float(e.get("revenue", 0.0) or 0.0) for e in events if e.get("type") == "SaleOccurred"
+            float(e.get("revenue", 0.0) or 0.0)
+            for e in events
+            if e.get("type") == "SaleOccurred"
         )
         profit = sum(
-            float(e.get("profit", 0.0) or 0.0) for e in events if e.get("type") == "SaleOccurred"
+            float(e.get("profit", 0.0) or 0.0)
+            for e in events
+            if e.get("type") == "SaleOccurred"
         )
         ad_spend = sum(
-            float(e.get("amount", 0.0) or 0.0) for e in events if e.get("type") == "AdSpendEvent"
+            float(e.get("amount", 0.0) or 0.0)
+            for e in events
+            if e.get("type") == "AdSpendEvent"
         )
 
         roi = (profit / revenue) if revenue > 0 else 0.0
@@ -262,14 +273,22 @@ class BusinessMetrics(BaseMetric):
             0.0,
             min(
                 1.0,
-                (max(0.0, min(1.0, roi)) + max(0.0, min(1.0, efficiency)) + strategic_alignment)
+                (
+                    max(0.0, min(1.0, roi))
+                    + max(0.0, min(1.0, efficiency))
+                    + strategic_alignment
+                )
                 / 3.0,
             ),
         )
 
         details = {
             "roi": {"value": roi},
-            "efficiency": {"value": efficiency, "ad_spend": ad_spend, "revenue": revenue},
+            "efficiency": {
+                "value": efficiency,
+                "ad_spend": ad_spend,
+                "revenue": revenue,
+            },
             "strategic_alignment": {"value": strategic_alignment},
         }
 
@@ -301,17 +320,23 @@ class TechnicalMetrics(BaseMetric):
             for e in events
             if e.get("type") == "ApiCallEvent"
         ]
-        avg_latency_ms = (sum(response_times) / len(response_times)) if response_times else 0.0
+        avg_latency_ms = (
+            (sum(response_times) / len(response_times)) if response_times else 0.0
+        )
 
         error_count = sum(
-            int(e.get("error_count", 0) or 0) for e in events if e.get("type") == "SystemErrorEvent"
+            int(e.get("error_count", 0) or 0)
+            for e in events
+            if e.get("type") == "SystemErrorEvent"
         )
 
         cpu = float(perf_data.get("cpu_usage", 0.0) or 0.0)  # expected in [0,1]
         mem = float(perf_data.get("memory_usage", 0.0) or 0.0)
 
         # Normalize sub-scores in [0,1] (higher is better)
-        perf_score = max(0.0, min(1.0, 1.0 - (avg_latency_ms / 1000.0)))  # 0 latency => 1.0
+        perf_score = max(
+            0.0, min(1.0, 1.0 - (avg_latency_ms / 1000.0))
+        )  # 0 latency => 1.0
         reliability_score = max(0.0, min(1.0, 1.0 - min(1.0, error_count / 10.0)))
         resource_score = max(0.0, min(1.0, 1.0 - max(0.0, min(1.0, (cpu + mem) / 2.0))))
 

@@ -12,7 +12,9 @@ import yaml
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from experiment_cli import main as cli_main  # Import the main function from experiment_cli.py
+from experiment_cli import (
+    main as cli_main,
+)  # Import the main function from experiment_cli.py
 from scenarios.curriculum_validator import CurriculumValidator
 from scenarios.dynamic_generator import DynamicScenarioGenerator
 from scenarios.scenario_engine import ScenarioEngine
@@ -63,7 +65,9 @@ agent_constraints: {initial_capital: 5000}
         )
 
     # International Expansion (Tier 3 Business Type)
-    with open(os.path.join(TEST_BUSINESS_TYPES_DIR, "international_expansion.yaml"), "w") as f:
+    with open(
+        os.path.join(TEST_BUSINESS_TYPES_DIR, "international_expansion.yaml"), "w"
+    ) as f:
         f.write(
             """
 scenario_name: International Expansion Dummy
@@ -77,7 +81,9 @@ agent_constraints: {initial_capital: 2000}
         )
 
     # Cooperative Joint Venture (Multi-Agent)
-    with open(os.path.join(TEST_MULTI_AGENT_DIR, "cooperative_joint_venture.yaml"), "w") as f:
+    with open(
+        os.path.join(TEST_MULTI_AGENT_DIR, "cooperative_joint_venture.yaml"), "w"
+    ) as f:
         f.write(
             """
 scenario_name: Cooperative Joint Venture Dummy
@@ -132,7 +138,9 @@ async def test_scenario_loading_and_validation():
     engine = ScenarioEngine()
 
     # Test loading a valid scenario
-    scenario = engine.load_scenario(os.path.join(TEST_SCENARIO_DIR, "tier_0_baseline.yaml"))
+    scenario = engine.load_scenario(
+        os.path.join(TEST_SCENARIO_DIR, "tier_0_baseline.yaml")
+    )
     assert scenario.config_data["scenario_name"] == "Test Tier 0 Baseline"
     assert scenario.config_data["difficulty_tier"] == 0
     assert scenario.validate_scenario_consistency() is True
@@ -165,9 +173,12 @@ async def test_scenario_engine_run_simulation():
     mock_agent = MockAgent()
 
     # Patch the BotFactory.create_bot if it's used in cli_main logic
-    with patch("baseline_bots.bot_factory.BotFactory.create_bot", return_value=mock_agent):
+    with patch(
+        "baseline_bots.bot_factory.BotFactory.create_bot", return_value=mock_agent
+    ):
         results = await engine.run_simulation(
-            os.path.join(TEST_SCENARIO_DIR, "tier_0_baseline.yaml"), {"MockAgent": mock_agent}
+            os.path.join(TEST_SCENARIO_DIR, "tier_0_baseline.yaml"),
+            {"MockAgent": mock_agent},
         )
 
     assert results is not None
@@ -236,7 +247,9 @@ async def test_curriculum_progression_validation():
 
     recommendations = validator.recommend_tier_adjustments(report)
     assert isinstance(recommendations, list)
-    assert len(recommendations) > 0  # Should have some recommendations based on dummy data
+    assert (
+        len(recommendations) > 0
+    )  # Should have some recommendations based on dummy data
 
 
 @pytest.mark.asyncio
@@ -249,9 +262,15 @@ async def test_dynamic_scenario_generation():
         dynamic_rand_config = yaml.safe_load(f)
 
     # Generate a scenario from tier_0_baseline template
-    generated_scenario = generator.generate_scenario("tier_0_baseline", dynamic_rand_config)
-    assert generated_scenario.config_data["scenario_name"].startswith("Test Tier 0 Baseline")
-    assert generated_scenario.config_data["difficulty_tier"] == 0  # Base tier from template
+    generated_scenario = generator.generate_scenario(
+        "tier_0_baseline", dynamic_rand_config
+    )
+    assert generated_scenario.config_data["scenario_name"].startswith(
+        "Test Tier 0 Baseline"
+    )
+    assert (
+        generated_scenario.config_data["difficulty_tier"] == 0
+    )  # Base tier from template
     assert isinstance(
         generated_scenario.config_data["agent_constraints"]["initial_capital"], int
     )  # Randomized
@@ -259,8 +278,14 @@ async def test_dynamic_scenario_generation():
     # Test scaling difficulty
     scaled_scenario_t3 = generator.scale_difficulty(generated_scenario, target_tier=3)
     assert scaled_scenario_t3.config_data["difficulty_tier"] == 3
-    assert scaled_scenario_t3.config_data["market_conditions"]["competition_levels"] == "extreme"
-    assert scaled_scenario_t3.config_data["agent_constraints"]["information_asymmetry"] is True
+    assert (
+        scaled_scenario_t3.config_data["market_conditions"]["competition_levels"]
+        == "extreme"
+    )
+    assert (
+        scaled_scenario_t3.config_data["agent_constraints"]["information_asymmetry"]
+        is True
+    )
     assert (
         len(scaled_scenario_t3.config_data["external_events"]) > 0
     )  # Should have events after scaling
@@ -269,9 +294,18 @@ async def test_dynamic_scenario_generation():
 @pytest.mark.asyncio
 @patch(
     "sys.argv",
-    ["experiment_cli.py", "run", "--scenario", "Test Tier 0 Baseline", "--agents", "MockAgent"],
+    [
+        "experiment_cli.py",
+        "run",
+        "--scenario",
+        "Test Tier 0 Baseline",
+        "--agents",
+        "MockAgent",
+    ],
 )
-@patch("scenarios.scenario_engine.ScenarioEngine.run_simulation", new_callable=AsyncMock)
+@patch(
+    "scenarios.scenario_engine.ScenarioEngine.run_simulation", new_callable=AsyncMock
+)
 @patch("baseline_bots.bot_factory.BotFactory.create_bot", return_value=MockAgent())
 async def test_cli_run_scenario(mock_create_bot, mock_run_simulation):
     """Test CLI integration for running a single scenario."""
@@ -305,11 +339,23 @@ async def test_cli_run_scenario(mock_create_bot, mock_run_simulation):
 @pytest.mark.asyncio
 @patch(
     "sys.argv",
-    ["experiment_cli.py", "run", "--tier", "0", "--agents", "MockAgent", "--validate-curriculum"],
+    [
+        "experiment_cli.py",
+        "run",
+        "--tier",
+        "0",
+        "--agents",
+        "MockAgent",
+        "--validate-curriculum",
+    ],
 )
-@patch("scenarios.scenario_engine.ScenarioEngine.run_simulation", new_callable=AsyncMock)
+@patch(
+    "scenarios.scenario_engine.ScenarioEngine.run_simulation", new_callable=AsyncMock
+)
 @patch("baseline_bots.bot_factory.BotFactory.create_bot", return_value=MockAgent())
-async def test_cli_run_tier_and_validate_curriculum(mock_create_bot, mock_run_simulation):
+async def test_cli_run_tier_and_validate_curriculum(
+    mock_create_bot, mock_run_simulation
+):
     """Test CLI integration for running scenarios in a tier and curriculum validation."""
     mock_run_simulation.side_effect = [
         {
@@ -330,13 +376,20 @@ async def test_cli_run_tier_and_validate_curriculum(mock_create_bot, mock_run_si
     assert len(output_files) >= 1
 
     # Find the report associated with this run
-    report_files = [f for f in output_files[0].parent.glob("curriculum_validation_report.json")]
+    report_files = [
+        f for f in output_files[0].parent.glob("curriculum_validation_report.json")
+    ]
     assert len(report_files) == 1
     with open(report_files[0]) as f:
         report = json.load(f)
         assert "overall_performance_summary" in report
         assert "tier_progression_validation" in report
-        assert report["tier_progression_validation"]["tier_summaries"]["0"]["avg_success_rate"] > 0
+        assert (
+            report["tier_progression_validation"]["tier_summaries"]["0"][
+                "avg_success_rate"
+            ]
+            > 0
+        )
 
 
 @pytest.mark.asyncio
@@ -365,14 +418,23 @@ async def test_cli_generate_scenario(mock_cli_parse_args):
     assert output_file_path.exists()
 
     generated_config = ScenarioConfig.from_yaml(str(output_file_path))
-    assert generated_config.config_data["scenario_name"].startswith("Test Tier 0 Baseline")
-    assert isinstance(generated_config.config_data["agent_constraints"]["initial_capital"], int)
+    assert generated_config.config_data["scenario_name"].startswith(
+        "Test Tier 0 Baseline"
+    )
+    assert isinstance(
+        generated_config.config_data["agent_constraints"]["initial_capital"], int
+    )
     assert generated_config.validate_scenario_consistency() is True
 
 
 @pytest.mark.asyncio
-@patch("sys.argv", ["experiment_cli.py", "run", "--benchmark-scenarios", "--agents", "MockAgent"])
-@patch("scenarios.scenario_engine.ScenarioEngine.run_simulation", new_callable=AsyncMock)
+@patch(
+    "sys.argv",
+    ["experiment_cli.py", "run", "--benchmark-scenarios", "--agents", "MockAgent"],
+)
+@patch(
+    "scenarios.scenario_engine.ScenarioEngine.run_simulation", new_callable=AsyncMock
+)
 @patch("baseline_bots.bot_factory.BotFactory.create_bot", return_value=MockAgent())
 async def test_cli_benchmark_scenarios(mock_create_bot, mock_run_simulation):
     """Test CLI integration for benchmarking all scenarios."""
@@ -418,4 +480,6 @@ async def test_cli_benchmark_scenarios(mock_create_bot, mock_run_simulation):
         results = json.load(f)
         assert len(results) == 4
         assert any(r["scenario_name"] == "Test Tier 0 Baseline" for r in results)
-        assert any(r["scenario_name"] == "International Expansion Dummy" for r in results)
+        assert any(
+            r["scenario_name"] == "International Expansion Dummy" for r in results
+        )

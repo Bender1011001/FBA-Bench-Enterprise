@@ -39,8 +39,8 @@ from typing import Any, Dict, List, Optional
 sys.path.insert(0, str(Path(__file__).parent))
 
 # from instrumentation.clearml_tracking import ClearMLTracker  # Disabled for standalone run
+
 from llm_interface.generic_openai_client import GenericOpenAIClient
-from services.cost_tracking_service import CostTrackingService
 
 # Configure logging
 logging.basicConfig(

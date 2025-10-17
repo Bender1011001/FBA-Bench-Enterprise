@@ -20,7 +20,9 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/golden", tags=["GoldenRun"])
 
 # Configuration: allow overriding base dir via environment
-GOLDEN_BASE_DIR = Path(os.getenv("GOLDEN_BASE_DIR", "golden_masters/golden_run_baseline")).resolve()
+GOLDEN_BASE_DIR = Path(
+    os.getenv("GOLDEN_BASE_DIR", "golden_masters/golden_run_baseline")
+).resolve()
 RUN_DIR_PREFIX = "golden_run_baseline_"
 RUN_TS_REGEX = re.compile(r"^golden_run_baseline_(\d{8}-\d{6})$")
 RUN_FILE_PATTERN = re.compile(r"^run_(\d+)\.json$", re.IGNORECASE)
@@ -192,7 +194,8 @@ async def get_golden_latest() -> Dict[str, Any]:
     """
     if not GOLDEN_BASE_DIR.exists():
         raise HTTPException(
-            status_code=404, detail=f"Golden base directory not found: {GOLDEN_BASE_DIR}"
+            status_code=404,
+            detail=f"Golden base directory not found: {GOLDEN_BASE_DIR}",
         )
 
     latest = _find_latest_run_dir()

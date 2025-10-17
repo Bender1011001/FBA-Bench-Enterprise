@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 from datetime import datetime, timezone
 from typing import Literal, Optional
@@ -12,7 +13,6 @@ from fba_bench_api.api.errors import SimulationNotFoundError, SimulationStateErr
 from fba_bench_api.core.database_async import get_async_db_session
 from fba_bench_api.core.persistence_async import AsyncPersistenceManager
 from fba_bench_api.core.redis_client import get_redis
-import json
 
 logger = logging.getLogger(__name__)
 
@@ -26,11 +26,15 @@ SimStatus = Literal["pending", "running", "stopped", "completed", "failed"]
 
 
 class SimulationCreate(BaseModel):
-    experiment_id: Optional[str] = Field(None, description="Optional experiment id to associate")
+    experiment_id: Optional[str] = Field(
+        None, description="Optional experiment id to associate"
+    )
     metadata: Optional[dict] = Field(default_factory=dict)
 
     model_config = ConfigDict(
-        json_schema_extra={"example": {"experiment_id": None, "metadata": {"note": "ad-hoc run"}}}
+        json_schema_extra={
+            "example": {"experiment_id": None, "metadata": {"note": "ad-hoc run"}}
+        }
     )
 
 
@@ -45,7 +49,9 @@ class Simulation(BaseModel):
 
 
 class SpeedUpdate(BaseModel):
-    speed: float = Field(..., gt=0, description="Time acceleration multiplier (>0). 1.0=real-time")
+    speed: float = Field(
+        ..., gt=0, description="Time acceleration multiplier (>0). 1.0=real-time"
+    )
 
 
 def get_pm(db: AsyncSession = Depends(get_async_db_session)) -> AsyncPersistenceManager:
@@ -104,9 +110,13 @@ async def create_simulation(
 
 
 @router.post(
-    "/{simulation_id}/start", response_model=Simulation, description="Start a pending simulation"
+    "/{simulation_id}/start",
+    response_model=Simulation,
+    description="Start a pending simulation",
 )
-async def start_simulation(simulation_id: str, pm: AsyncPersistenceManager = Depends(get_pm)):
+async def start_simulation(
+    simulation_id: str, pm: AsyncPersistenceManager = Depends(get_pm)
+):
     current = await pm.simulations().get(simulation_id)
     if not current:
         raise SimulationNotFoundError(simulation_id)
@@ -121,9 +131,13 @@ async def start_simulation(simulation_id: str, pm: AsyncPersistenceManager = Dep
 
 
 @router.post(
-    "/{simulation_id}/stop", response_model=Simulation, description="Stop a running simulation"
+    "/{simulation_id}/stop",
+    response_model=Simulation,
+    description="Stop a running simulation",
 )
-async def stop_simulation(simulation_id: str, pm: AsyncPersistenceManager = Depends(get_pm)):
+async def stop_simulation(
+    simulation_id: str, pm: AsyncPersistenceManager = Depends(get_pm)
+):
     current = await pm.simulations().get(simulation_id)
     if not current:
         raise SimulationNotFoundError(simulation_id)
@@ -137,8 +151,12 @@ async def stop_simulation(simulation_id: str, pm: AsyncPersistenceManager = Depe
     return Simulation(**updated)  # type: ignore[arg-type]
 
 
-@router.get("/{simulation_id}", response_model=Simulation, description="Get simulation status")
-async def get_simulation(simulation_id: str, pm: AsyncPersistenceManager = Depends(get_pm)):
+@router.get(
+    "/{simulation_id}", response_model=Simulation, description="Get simulation status"
+)
+async def get_simulation(
+    simulation_id: str, pm: AsyncPersistenceManager = Depends(get_pm)
+):
     redis = await get_redis()
     cache_key = f"simulation:{simulation_id}"
     cached = await redis.get(cache_key)

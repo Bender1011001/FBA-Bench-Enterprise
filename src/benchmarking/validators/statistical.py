@@ -53,7 +53,9 @@ class StatisticalValidator:
       }
     """
 
-    def __init__(self, confidence: float = 0.95, mad_k: float = 5.0, alpha: float = 0.05) -> None:
+    def __init__(
+        self, confidence: float = 0.95, mad_k: float = 5.0, alpha: float = 0.05
+    ) -> None:
         if not (0.0 < confidence < 1.0):
             raise ValueError("confidence must be in (0, 1)")
         if not (0.0 < alpha < 1.0):
@@ -62,7 +64,9 @@ class StatisticalValidator:
         self.mad_k = mad_k
         self.alpha = alpha
 
-    def _basic_stats(self, data: Sequence[float]) -> Tuple[int, float | None, float | None]:
+    def _basic_stats(
+        self, data: Sequence[float]
+    ) -> Tuple[int, float | None, float | None]:
         n = len(data)
         if n == 0:
             return 0, None, None
@@ -108,7 +112,12 @@ class StatisticalValidator:
                     + t
                     * (
                         c[2]
-                        + t * (c[3] + t * (c[4] + t * (c[5] + t * (c[6] + t * (c[7] + t * c[8])))))
+                        + t
+                        * (
+                            c[3]
+                            + t
+                            * (c[4] + t * (c[5] + t * (c[6] + t * (c[7] + t * c[8]))))
+                        )
                     )
                 )
             except Exception:
@@ -197,7 +206,11 @@ class StatisticalValidator:
             }
             if ht.reject_null:
                 issues.append(
-                    {"severity": "info", "message": "mean_diff_significant", "p_value": ht.p_value}
+                    {
+                        "severity": "info",
+                        "message": "mean_diff_significant",
+                        "p_value": ht.p_value,
+                    }
                 )
 
         summary_dict = {

@@ -5,7 +5,6 @@ Test suite for missing features in FBA-Bench.
 from unittest.mock import MagicMock
 
 import pytest
-
 from money import Money
 
 # Assume the existence of these modules for the purpose of testing
@@ -36,7 +35,10 @@ class TestImplementedFeatures:
         This test now calls a mock function that simulates the scenario.
         """
         result = run_negotiation_scenario(
-            agent1_type="buyer", agent2_type="seller", product="widgets", initial_offer=100.0
+            agent1_type="buyer",
+            agent2_type="seller",
+            product="widgets",
+            initial_offer=100.0,
         )
         assert result["success"]
         assert result["final_price"] > 0
@@ -70,7 +72,11 @@ class TestImplementedFeatures:
         cash_account = "1000"
 
         # Create a transaction for the sale
-        from services.double_entry_ledger_service import LedgerEntry, Transaction, TransactionType
+        from services.double_entry_ledger_service import (
+            LedgerEntry,
+            Transaction,
+            TransactionType,
+        )
 
         # 1. Sale on credit
         transaction = Transaction(

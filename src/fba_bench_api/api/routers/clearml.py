@@ -2,11 +2,13 @@
 Stub router for ClearML status.
 """
 
-from fastapi import APIRouter
 import logging
+
+from fastapi import APIRouter
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
 
 @router.get("/stack/clearml/status")
 async def clearml_status():

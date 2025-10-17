@@ -3,6 +3,7 @@ Simulation manager module.
 Handles running simulations inside experiments.
 """
 
+
 class SimulationManager:
     def __init__(self):
         self.simulations = {}

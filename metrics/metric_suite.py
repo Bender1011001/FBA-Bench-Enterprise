@@ -4,8 +4,8 @@ Calculates scores across 7 domains with weighted final score.
 """
 
 import logging
-from typing import Dict, Any, List
 from dataclasses import dataclass
+from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 

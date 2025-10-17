@@ -1,18 +1,18 @@
 import os
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime, timedelta
-import jwt
-from fastapi import HTTPException
-from starlette.websockets import WebSocketState
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import jwt
+import pytest
 from api.dependencies import (
-    get_current_user,
     ConnectionManager,
     SimulationManager,
+    get_current_user,
     get_max_ws_connections_global,
 )
-from starlette.websockets import WebSocketDisconnect
+from fastapi import HTTPException
+from starlette.websockets import WebSocketDisconnect, WebSocketState
+
 from simulation_orchestrator import SimulationOrchestrator  # Ensure import works
 
 

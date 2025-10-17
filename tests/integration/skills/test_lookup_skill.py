@@ -13,7 +13,9 @@ def test_lookup_hit_and_miss_case_sensitive():
     assert out_hit["value"] == "Widget XL"
 
     # Miss due to case sensitivity
-    out_miss = skill.run({"key": "SKU-42 ", "table": table})  # note trailing space -> not in dict
+    out_miss = skill.run(
+        {"key": "SKU-42 ", "table": table}
+    )  # note trailing space -> not in dict
     assert out_miss["found"] is False
     assert out_miss["value"] is None
 

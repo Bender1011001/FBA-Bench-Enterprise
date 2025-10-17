@@ -38,7 +38,10 @@ class PolicyComplianceOutput(BaseModel):
     compliant: bool
 
     def as_dict(self) -> Dict[str, Any]:
-        return {"policy_violations": int(self.policy_violations), "compliant": bool(self.compliant)}
+        return {
+            "policy_violations": int(self.policy_violations),
+            "compliant": bool(self.compliant),
+        }
 
 
 def _extract_violation_count(output: Any) -> int:
@@ -61,7 +64,9 @@ def _extract_violation_count(output: Any) -> int:
     return 0
 
 
-def evaluate(run: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def evaluate(
+    run: Dict[str, Any], context: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
     """
     Policy compliance metric.
 
@@ -73,18 +78,33 @@ def evaluate(run: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> D
     """
     try:
         if not isinstance(run, dict):
-            return {"policy_violations": 0, "compliant": False, "error": "invalid_run_type"}
+            return {
+                "policy_violations": 0,
+                "compliant": False,
+                "error": "invalid_run_type",
+            }
         try:
             inp = PolicyComplianceInput(output=run.get("output"))  # type: ignore
         except ValidationError as ve:
             logger.error(f"policy_compliance: invalid input {ve}")
-            return {"policy_violations": 0, "compliant": False, "error": "validation_error"}
+            return {
+                "policy_violations": 0,
+                "compliant": False,
+                "error": "validation_error",
+            }
 
         count = _extract_violation_count(inp.output)
-        return PolicyComplianceOutput(policy_violations=count, compliant=(count == 0)).as_dict()
+        return PolicyComplianceOutput(
+            policy_violations=count, compliant=(count == 0)
+        ).as_dict()
     except Exception as e:
         logger.exception("policy_compliance metric failed")
-        return {"policy_violations": 0, "compliant": False, "error": "exception", "reason": str(e)}
+        return {
+            "policy_violations": 0,
+            "compliant": False,
+            "error": "exception",
+            "reason": str(e),
+        }
 
 
 register_metric("policy_compliance", evaluate)

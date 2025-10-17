@@ -2,14 +2,13 @@ import asyncio
 from datetime import datetime
 
 import pytest
-
-from events import TickEvent
-from fba_events.bus import InMemoryEventBus as EventBus
-from fba_events.bus import set_event_bus
-from fba_events.supplier import PlaceOrderCommand
 from money import Money
 from services.supply_chain_service import SupplyChainService
 from services.world_store import WorldStore
+
+from events import TickEvent
+from fba_events.bus import InMemoryEventBus as EventBus, set_event_bus
+from fba_events.supplier import PlaceOrderCommand
 
 
 @pytest.mark.asyncio
@@ -24,7 +23,9 @@ async def test_supply_chain_schedules_and_delivers_inventory():
     await world_store.start()
 
     # Base lead time = 2 ticks
-    supply_chain = SupplyChainService(world_store=world_store, event_bus=bus, base_lead_time=2)
+    supply_chain = SupplyChainService(
+        world_store=world_store, event_bus=bus, base_lead_time=2
+    )
     await supply_chain.start()
 
     # Init product
@@ -53,7 +54,10 @@ async def test_supply_chain_schedules_and_delivers_inventory():
     # Tick 0
     await bus.publish(
         TickEvent(
-            event_id="t0", timestamp=datetime.now(), tick_number=0, simulation_time=datetime.now()
+            event_id="t0",
+            timestamp=datetime.now(),
+            tick_number=0,
+            simulation_time=datetime.now(),
         )
     )
     await asyncio.sleep(0.02)
@@ -62,7 +66,10 @@ async def test_supply_chain_schedules_and_delivers_inventory():
     # Tick 1
     await bus.publish(
         TickEvent(
-            event_id="t1", timestamp=datetime.now(), tick_number=1, simulation_time=datetime.now()
+            event_id="t1",
+            timestamp=datetime.now(),
+            tick_number=1,
+            simulation_time=datetime.now(),
         )
     )
     await asyncio.sleep(0.02)
@@ -71,7 +78,10 @@ async def test_supply_chain_schedules_and_delivers_inventory():
     # Tick 2 -> arrival should process
     await bus.publish(
         TickEvent(
-            event_id="t2", timestamp=datetime.now(), tick_number=2, simulation_time=datetime.now()
+            event_id="t2",
+            timestamp=datetime.now(),
+            tick_number=2,
+            simulation_time=datetime.now(),
         )
     )
     await asyncio.sleep(0.05)
@@ -87,7 +97,8 @@ async def test_supply_chain_schedules_and_delivers_inventory():
     inv_updates = [
         e
         for e in recorded
-        if e.get("event_type") == "InventoryUpdate" and e.get("data", {}).get("asin") == asin
+        if e.get("event_type") == "InventoryUpdate"
+        and e.get("data", {}).get("asin") == asin
     ]
     assert inv_updates, "Expected InventoryUpdate event for delivery"
 
@@ -104,7 +115,9 @@ async def test_supply_chain_disruption_delays_and_reduces_fulfillment():
     await world_store.start()
 
     # Base lead time = 2 ticks; disruption adds +1 lead time and 50% fulfillment
-    supply_chain = SupplyChainService(world_store=world_store, event_bus=bus, base_lead_time=2)
+    supply_chain = SupplyChainService(
+        world_store=world_store, event_bus=bus, base_lead_time=2
+    )
     supply_chain.set_disruption(active=True, lead_time_increase=1, fulfillment_rate=0.5)
     await supply_chain.start()
 
@@ -145,17 +158,25 @@ async def test_supply_chain_disruption_delays_and_reduces_fulfillment():
     # Tick 3 -> first partial delivery (50% of 40 = 20)
     await bus.publish(
         TickEvent(
-            event_id="td3", timestamp=datetime.now(), tick_number=3, simulation_time=datetime.now()
+            event_id="td3",
+            timestamp=datetime.now(),
+            tick_number=3,
+            simulation_time=datetime.now(),
         )
     )
     await asyncio.sleep(0.05)
     inv_after_first = world_store.get_product_inventory_quantity(asin)
-    assert inv_after_first == 20, f"Expected partial delivery of 20 units, got {inv_after_first}"
+    assert (
+        inv_after_first == 20
+    ), f"Expected partial delivery of 20 units, got {inv_after_first}"
 
     # Remaining 20 should be scheduled for next tick (re-queued)
     await bus.publish(
         TickEvent(
-            event_id="td4", timestamp=datetime.now(), tick_number=4, simulation_time=datetime.now()
+            event_id="td4",
+            timestamp=datetime.now(),
+            tick_number=4,
+            simulation_time=datetime.now(),
         )
     )
     await asyncio.sleep(0.05)
@@ -169,7 +190,8 @@ async def test_supply_chain_disruption_delays_and_reduces_fulfillment():
     inv_updates = [
         e
         for e in recorded
-        if e.get("event_type") == "InventoryUpdate" and e.get("data", {}).get("asin") == asin
+        if e.get("event_type") == "InventoryUpdate"
+        and e.get("data", {}).get("asin") == asin
     ]
     assert (
         len(inv_updates) >= 2

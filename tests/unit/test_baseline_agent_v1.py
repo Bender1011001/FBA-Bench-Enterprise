@@ -2,11 +2,11 @@ import asyncio
 from datetime import datetime, timezone
 
 import pytest
+from money import Money
 
 from agents.baseline.baseline_agent_v1 import BaselineAgentV1
 from event_bus import AsyncioQueueBackend, EventBus
 from events import WorldStateSnapshotEvent
-from money import Money
 from src.fba_bench_core.services.toolbox_api_service import ToolboxAPIService
 from src.fba_bench_core.services.toolbox_schemas import ObserveRequest
 
@@ -58,7 +58,9 @@ def toolbox(event_bus: EventBus):
     return svc
 
 
-async def seed_snapshot(event_bus: EventBus, asin: str, price_cents: int, conversion_rate: float):
+async def seed_snapshot(
+    event_bus: EventBus, asin: str, price_cents: int, conversion_rate: float
+):
     snapshot = WorldStateSnapshotEvent(
         event_id="snap-baseline",
         timestamp=datetime.now(timezone.utc),
@@ -82,7 +84,9 @@ async def seed_snapshot(event_bus: EventBus, asin: str, price_cents: int, conver
 
 
 @pytest.mark.asyncio
-async def test_low_conversion_decreases_price(event_bus: EventBus, toolbox: ToolboxAPIService):
+async def test_low_conversion_decreases_price(
+    event_bus: EventBus, toolbox: ToolboxAPIService
+):
     asin = "B00BASL01"
     await seed_snapshot(event_bus, asin, 2000, 0.03)  # $20.00, low CR
 
@@ -103,11 +107,15 @@ async def test_low_conversion_decreases_price(event_bus: EventBus, toolbox: Tool
     # Also ensure toolbox observe reflects the starting state (price unchanged until WorldStore updates)
     obs = toolbox.observe(ObserveRequest(asin=asin))
     assert obs.found is True
-    assert obs.price.cents == 2000  # cache remains at snapshot until ProductPriceUpdated
+    assert (
+        obs.price.cents == 2000
+    )  # cache remains at snapshot until ProductPriceUpdated
 
 
 @pytest.mark.asyncio
-async def test_high_conversion_increases_price(event_bus: EventBus, toolbox: ToolboxAPIService):
+async def test_high_conversion_increases_price(
+    event_bus: EventBus, toolbox: ToolboxAPIService
+):
     asin = "B00BASL02"
     await seed_snapshot(event_bus, asin, 2000, 0.25)  # $20.00, high CR
 

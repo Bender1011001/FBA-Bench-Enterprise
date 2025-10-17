@@ -1,16 +1,13 @@
 import os
-from unittest.mock import MagicMock
 
 import pytest
+from api.db import Base, get_db
+from api.models import User
+from api.server import app
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
 from stripe.error import SignatureVerificationError
-
-from api.server import app
-from api.db import get_db, Base
-from api.models import User
 
 # Set test-specific env
 os.environ["STRIPE_WEBHOOK_SECRET"] = "whsec_test_secret"
@@ -20,6 +17,7 @@ os.environ["DATABASE_URL"] = "sqlite:///./test_webhooks.db"
 engine = create_engine(os.environ["DATABASE_URL"])
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+
 # Override get_db for tests
 def override_get_db():
     db = TestingSessionLocal()
@@ -27,6 +25,7 @@ def override_get_db():
         yield db
     finally:
         db.close()
+
 
 app.dependency_overrides[get_db] = override_get_db
 
@@ -75,7 +74,9 @@ class TestStripeWebhooks:
         assert response.status_code == 400
         assert response.json() == {"detail": "invalid_signature"}
 
-    def test_checkout_session_completed_sets_active_by_metadata_user_id(self, monkeypatch):
+    def test_checkout_session_completed_sets_active_by_metadata_user_id(
+        self, monkeypatch
+    ):
         # Setup
         db = TestingSessionLocal()
         user_id = "user-123"
@@ -117,7 +118,9 @@ class TestStripeWebhooks:
         assert updated_user.subscription_status == "active"
         db.close()
 
-    def test_checkout_session_completed_sets_active_by_customer_email(self, monkeypatch):
+    def test_checkout_session_completed_sets_active_by_customer_email(
+        self, monkeypatch
+    ):
         # Setup
         db = TestingSessionLocal()
         user_id = "user-456"

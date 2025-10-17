@@ -84,7 +84,9 @@ class CompetitorPersona:
         self.internal_state: Dict[str, Any] = {}
         self.last_action_tick: int = 0
 
-    async def act(self, market_conditions: MarketConditions) -> Optional[CompetitorState]:
+    async def act(
+        self, market_conditions: MarketConditions
+    ) -> Optional[CompetitorState]:
         pass
 
     def _calculate_minimum_price(self) -> Money:
@@ -104,7 +106,9 @@ class IrrationalSlasher(CompetitorPersona):
         self.slash_probability = 0.15
         self.slash_duration_range = (3, 7)
 
-    async def act(self, market_conditions: MarketConditions) -> Optional[CompetitorState]:
+    async def act(
+        self, market_conditions: MarketConditions
+    ) -> Optional[CompetitorState]:
         current_tick = market_conditions.current_tick
         is_slashing = self._get_state_value("is_slashing", False)
         slash_end_tick = self._get_state_value("slash_end_tick", 0)
@@ -147,12 +151,16 @@ class IrrationalSlasher(CompetitorPersona):
         final_probability = min(base_probability, 0.4)
         return random.random() < final_probability
 
-    async def _slash_pricing(self, market_conditions: MarketConditions) -> CompetitorState:
+    async def _slash_pricing(
+        self, market_conditions: MarketConditions
+    ) -> CompetitorState:
         slash_price = self._calculate_minimum_price()
         current_state = market_conditions.current_state
 
         # Ensure numeric types do not mix Decimal with float to avoid TypeError
-        boosted_velocity = float(Decimal(str(current_state.sales_velocity)) * Decimal("1.5"))
+        boosted_velocity = float(
+            Decimal(str(current_state.sales_velocity)) * Decimal("1.5")
+        )
         return CompetitorState(
             asin=current_state.competitor_id,
             price=slash_price,
@@ -162,12 +170,16 @@ class IrrationalSlasher(CompetitorPersona):
             last_updated=market_conditions.current_tick,
         )
 
-    async def _rational_pricing(self, market_conditions: MarketConditions) -> CompetitorState:
+    async def _rational_pricing(
+        self, market_conditions: MarketConditions
+    ) -> CompetitorState:
         current_state = market_conditions.current_state
         market_avg = market_conditions.market_average_price
 
         rational_price = market_avg * Decimal("0.95")
-        final_price = Money(max(rational_price.cents, self._calculate_minimum_price().cents))
+        final_price = Money(
+            max(rational_price.cents, self._calculate_minimum_price().cents)
+        )
 
         return CompetitorState(
             asin=current_state.competitor_id,
@@ -186,7 +198,9 @@ class SlowFollower(CompetitorPersona):
         self.evaluation_interval_range = (4, 8)
         self.max_price_change_percent = Decimal("0.10")
 
-    async def act(self, market_conditions: MarketConditions) -> Optional[CompetitorState]:
+    async def act(
+        self, market_conditions: MarketConditions
+    ) -> Optional[CompetitorState]:
         current_tick = market_conditions.current_tick
         next_evaluation_tick = self._get_state_value("next_evaluation_tick", 0)
 
@@ -217,8 +231,12 @@ class SlowFollower(CompetitorPersona):
         target_price = market_avg * Decimal("1.02")
 
         # Apply conservative adjustment limits
-        max_increase = Money(int(current_price.cents * (1 + self.max_price_change_percent)))
-        max_decrease = Money(int(current_price.cents * (1 - self.max_price_change_percent)))
+        max_increase = Money(
+            int(current_price.cents * (1 + self.max_price_change_percent))
+        )
+        max_decrease = Money(
+            int(current_price.cents * (1 - self.max_price_change_percent))
+        )
 
         if target_price > current_price:
             new_price = Money(min(target_price.cents, max_increase.cents))
@@ -347,7 +365,9 @@ async def test_slow_follower():
             print(f"Tick {tick}: No action (waiting)")
 
     # Verify SlowFollower doesn't act too frequently
-    assert action_count < 6, f"SlowFollower acted too frequently: {action_count} times in 14 ticks"
+    assert (
+        action_count < 6
+    ), f"SlowFollower acted too frequently: {action_count} times in 14 ticks"
     print(f"SlowFollower acted {action_count} times in 14 ticks (expected < 6)")
     print("SlowFollower test completed!\n")
 
@@ -404,7 +424,9 @@ async def test_persona_diversity():
 
     if slasher_result and follower_result:
         # Slasher should typically price lower when slashing
-        print(f"Price difference: Slasher={slasher_result.price}, Follower={follower_result.price}")
+        print(
+            f"Price difference: Slasher={slasher_result.price}, Follower={follower_result.price}"
+        )
         # Note: This assertion might not always pass due to randomness
         # assert slasher_result.price < follower_result.price, "Slasher should price lower than follower"
 

@@ -9,8 +9,7 @@ logger = logging.getLogger(__name__)
 class AbstractSalesService(Protocol):
     """Protocol for a sales service."""
 
-    def get_current_inventory_value(self) -> float:
-        ...
+    def get_current_inventory_value(self) -> float: ...
 
 
 @dataclass
@@ -27,8 +26,12 @@ class OperationsMetrics:
         initial_inventory_value: float = 0.0,
         config: Optional[OperationsMetricsConfig] = None,
     ):
-        if sales_service is not None and not isinstance(sales_service, AbstractSalesService):
-            raise TypeError("sales_service must implement AbstractSalesService protocol.")
+        if sales_service is not None and not isinstance(
+            sales_service, AbstractSalesService
+        ):
+            raise TypeError(
+                "sales_service must implement AbstractSalesService protocol."
+            )
         self.sales_service = sales_service
         self.config = config if config else OperationsMetricsConfig()
         self.total_revenue = 0.0
@@ -61,7 +64,9 @@ class OperationsMetrics:
 
         # Resolve inventory value via service if available, else via events fallback, else last known value
         current_inventory_value = self._resolve_inventory_value(events)
-        self.inventory_history.append({"tick": current_tick, "value": current_inventory_value})
+        self.inventory_history.append(
+            {"tick": current_tick, "value": current_inventory_value}
+        )
 
         # Check for stockouts (simplified: if inventory value drops to zero)
         if current_inventory_value == 0:
@@ -90,12 +95,16 @@ class OperationsMetrics:
         latest_val: Optional[float] = None
         for e in reversed(events):  # prefer most recent event first
             if isinstance(e, dict):
-                if "inventory_value" in e and isinstance(e["inventory_value"], (int, float)):
+                if "inventory_value" in e and isinstance(
+                    e["inventory_value"], (int, float)
+                ):
                     latest_val = float(e["inventory_value"])
                     break
                 qty = e.get("inventory_quantity")
                 unit_cost = e.get("unit_cost") or e.get("cost_basis")
-                if isinstance(qty, (int, float)) and isinstance(unit_cost, (int, float)):
+                if isinstance(qty, (int, float)) and isinstance(
+                    unit_cost, (int, float)
+                ):
                     latest_val = float(qty) * float(unit_cost)
                     break
 
@@ -113,7 +122,9 @@ class OperationsMetrics:
 
         # Calculate average inventory value
         inventory_values = [d["value"] for d in self.inventory_history]
-        inventory_values.insert(0, self.initial_inventory_value)  # Include initial inventory
+        inventory_values.insert(
+            0, self.initial_inventory_value
+        )  # Include initial inventory
         average_inventory_value = sum(inventory_values) / len(inventory_values)
 
         if average_inventory_value > 0:
@@ -155,7 +166,9 @@ class OperationsMetrics:
         total = float(data.get("total_units", 0.0))
         return defective / total if total > 0 else 0.0
 
-    def calculate_overall_equipment_effectiveness(self, data: Dict[str, float]) -> float:
+    def calculate_overall_equipment_effectiveness(
+        self, data: Dict[str, float]
+    ) -> float:
         availability = float(data.get("availability", 0.0))
         performance = float(data.get("performance", 0.0))
         quality = float(data.get("quality", 0.0))

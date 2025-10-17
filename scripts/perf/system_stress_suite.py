@@ -9,12 +9,12 @@ from dataclasses import dataclass
 from typing import Any, Dict, List
 
 import psutil
-
-from fba_events.bus import InMemoryEventBus as EventBus
 from money import Money
 from redteam.adversarial_event_injector import AdversarialEventInjector
 from redteam.exploit_registry import ExploitDefinition, ExploitRegistry
 from redteam.resistance_scorer import AdversaryResistanceScorer
+
+from fba_events.bus import InMemoryEventBus as EventBus
 
 
 @dataclass

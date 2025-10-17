@@ -1,6 +1,6 @@
 from schema import validate_genome_yaml
 
-with open('genomes/student_agent_gen_0.yaml', 'r') as f:
+with open('genomes/student_agent_gen_0.yaml') as f:
     content = f.read()
 
 try:

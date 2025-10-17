@@ -153,7 +153,11 @@ class TestCognitiveMetrics(unittest.TestCase):
             "events": [
                 {"type": "AgentDecisionEvent", "tick_number": 1},
                 {"type": "AgentPlannedGoalEvent", "tick_number": 2},
-                {"type": "AgentGoalStatusUpdateEvent", "status": "completed", "tick_number": 3},
+                {
+                    "type": "AgentGoalStatusUpdateEvent",
+                    "status": "completed",
+                    "tick_number": 3,
+                },
             ],
             "tick_number": 3,
         }
@@ -186,7 +190,12 @@ class TestBusinessMetrics(unittest.TestCase):
         """Test business metrics calculation."""
         context = {
             "events": [
-                {"type": "SaleOccurred", "revenue": 1000, "profit": 200, "tick_number": 1},
+                {
+                    "type": "SaleOccurred",
+                    "revenue": 1000,
+                    "profit": 200,
+                    "tick_number": 1,
+                },
                 {"type": "AdSpendEvent", "amount": 100, "tick_number": 2},
             ],
             "tick_number": 2,
@@ -256,7 +265,11 @@ class TestEthicalMetrics(unittest.TestCase):
         context = {
             "events": [
                 {"type": "BiasDetectionEvent", "bias_score": 0.1, "tick_number": 1},
-                {"type": "SafetyViolationEvent", "violation_count": 0, "tick_number": 2},
+                {
+                    "type": "SafetyViolationEvent",
+                    "violation_count": 0,
+                    "tick_number": 2,
+                },
             ],
             "tick_number": 2,
         }
@@ -344,7 +357,9 @@ class TestConfidenceInterval(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
-        self.interval = ConfidenceInterval(lower_bound=1.0, upper_bound=3.0, confidence_level=0.95)
+        self.interval = ConfidenceInterval(
+            lower_bound=1.0, upper_bound=3.0, confidence_level=0.95
+        )
 
     def test_init(self):
         """Test ConfidenceInterval initialization."""
@@ -405,7 +420,9 @@ class TestOutlierDetector(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
-        self.detector = OutlierDetector(outlier_indices=[5], outlier_values=[100.0], method="iqr")
+        self.detector = OutlierDetector(
+            outlier_indices=[5], outlier_values=[100.0], method="iqr"
+        )
 
     def test_init(self):
         """Test OutlierDetector initialization."""

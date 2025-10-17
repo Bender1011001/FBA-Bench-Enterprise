@@ -16,23 +16,19 @@ class ScenarioPlugin(Protocol):
     description: str
     scenario_type: str
 
-    def initialize(self, config: Dict[str, Any]):
-        ...
+    def initialize(self, config: Dict[str, Any]): ...
 
-    async def generate_initial_state(self) -> Dict[str, Any]:
-        ...
+    async def generate_initial_state(self) -> Dict[str, Any]: ...
 
-    async def inject_events(self, current_time: int) -> List[Dict[str, Any]]:
-        ...
+    async def inject_events(self, current_time: int) -> List[Dict[str, Any]]: ...
 
-    async def validate_scenario_constraints(self, scenario_data: Dict[str, Any]) -> bool:
-        ...
+    async def validate_scenario_constraints(
+        self, scenario_data: Dict[str, Any]
+    ) -> bool: ...
 
-    def get_documentation_template(self) -> str:
-        ...
+    def get_documentation_template(self) -> str: ...
 
-    def get_plugin_info(self) -> Dict[str, Any]:
-        ...
+    def get_plugin_info(self) -> Dict[str, Any]: ...
 
 
 class BaseScenarioPlugin:
@@ -67,7 +63,9 @@ class BaseScenarioPlugin:
         }
 
     async def inject_events(self, current_time: int) -> List[Dict[str, Any]]:
-        logger.info("Injecting events for scenario %s at time %s", self.name, current_time)
+        logger.info(
+            "Injecting events for scenario %s at time %s", self.name, current_time
+        )
         events: List[Dict[str, Any]] = []
         if current_time == 10:
             events.append(
@@ -91,11 +89,14 @@ class BaseScenarioPlugin:
             )
         return events
 
-    async def validate_scenario_constraints(self, scenario_data: Dict[str, Any]) -> bool:
+    async def validate_scenario_constraints(
+        self, scenario_data: Dict[str, Any]
+    ) -> bool:
         logger.info("Validating scenario constraints for %s", self.name)
         if scenario_data.get("initial_cash", 0) < 0:
             logger.error(
-                "Scenario validation failed: initial_cash cannot be negative for %s.", self.name
+                "Scenario validation failed: initial_cash cannot be negative for %s.",
+                self.name,
             )
             return False
         return True

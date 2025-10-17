@@ -76,7 +76,9 @@ def resource_manager():
 @pytest.fixture
 def simulation_config():
     """Provides a default SimulationConfig."""
-    return SimulationConfig(tick_interval_seconds=0.1, max_ticks=100, time_acceleration=1.0)
+    return SimulationConfig(
+        tick_interval_seconds=0.1, max_ticks=100, time_acceleration=1.0
+    )
 
 
 @pytest.fixture
@@ -163,7 +165,9 @@ async def test_llm_batcher_processing(llm_batcher, mock_llm_callback):
 async def test_llm_batcher_cost_estimation(llm_batcher):
     requests = [
         LLMRequest("req_cost1", "short prompt", "model_X", AsyncMock()),
-        LLMRequest("req_cost2", "a much longer prompt for testing", "model_X", AsyncMock()),
+        LLMRequest(
+            "req_cost2", "a much longer prompt for testing", "model_X", AsyncMock()
+        ),
     ]
     optimized_batch = llm_batcher.optimize_batch_composition(requests)
     tokens, cost = llm_batcher.estimate_batch_cost(optimized_batch)
@@ -266,11 +270,17 @@ async def test_resource_manager_token_allocation(resource_manager):
 
     assert resource_manager.allocate_tokens("agent1", "prompt", 30) == True
     assert resource_manager.get_current_token_usage("agent1") == 30
-    assert resource_manager.allocate_tokens("agent1", "prompt", 30) == False  # Exceeds agent budget
+    assert (
+        resource_manager.allocate_tokens("agent1", "prompt", 30) == False
+    )  # Exceeds agent budget
 
-    assert resource_manager.allocate_tokens("agent2", "prompt", 60) == True  # Uses global cap
+    assert (
+        resource_manager.allocate_tokens("agent2", "prompt", 60) == True
+    )  # Uses global cap
     assert resource_manager.get_current_token_usage("total") == 90
-    assert resource_manager.allocate_tokens("agent3", "prompt", 20) == False  # Exceeds global cap
+    assert (
+        resource_manager.allocate_tokens("agent3", "prompt", 20) == False
+    )  # Exceeds global cap
 
 
 @pytest.mark.asyncio
@@ -318,8 +328,14 @@ async def test_fast_forward_engine_detect_idle(fast_forward_engine):
 
     # Mostly inactive
     old_time = datetime.now() - timedelta(seconds=100)  # Much older than threshold
-    agent_activities = {"a1": old_time, "a2": old_time, "a3": active_now}  # 1 out of 3 active
-    fast_forward_engine.orchestrator.config.tick_interval_seconds = 1  # make threshold effective
+    agent_activities = {
+        "a1": old_time,
+        "a2": old_time,
+        "a3": active_now,
+    }  # 1 out of 3 active
+    fast_forward_engine.orchestrator.config.tick_interval_seconds = (
+        1  # make threshold effective
+    )
     fast_forward_engine.idle_detection_threshold_ticks = 1
     assert (
         fast_forward_engine.detect_idle_period(agent_activities, 0.5) == True
@@ -350,7 +366,9 @@ async def test_fast_forward_engine_fast_forward_to_tick(fast_forward_engine):
 
 
 @pytest.mark.asyncio
-async def test_distributed_coordinator_spawn_worker(distributed_coordinator, distributed_event_bus):
+async def test_distributed_coordinator_spawn_worker(
+    distributed_coordinator, distributed_event_bus
+):
     await distributed_coordinator.start()
     worker_id = await distributed_coordinator.spawn_worker({"p_test": ["a1", "a2"]})
     assert worker_id in distributed_coordinator._workers
@@ -383,7 +401,9 @@ async def test_distributed_coordinator_tick_progression(distributed_coordinator)
     # Give coordination loop time to run
     await asyncio.sleep(2.0)
 
-    assert distributed_coordinator.current_global_tick == 1  # Should have advanced to tick 1
+    assert (
+        distributed_coordinator.current_global_tick == 1
+    )  # Should have advanced to tick 1
 
     await distributed_coordinator.stop()
 
@@ -392,7 +412,9 @@ async def test_distributed_coordinator_tick_progression(distributed_coordinator)
 
 
 @pytest.mark.asyncio
-async def test_performance_monitor_resource_tracking(performance_monitor, resource_manager):
+async def test_performance_monitor_resource_tracking(
+    performance_monitor, resource_manager
+):
     # Simulate some resource usage
     resource_manager.record_llm_cost("mock_model", 0.01, 100)
 
@@ -410,7 +432,9 @@ async def test_performance_monitor_resource_tracking(performance_monitor, resour
 
 
 @pytest.mark.asyncio
-async def test_performance_monitor_bottleneck_detection(performance_monitor, resource_manager):
+async def test_performance_monitor_bottleneck_detection(
+    performance_monitor, resource_manager
+):
     # Mock high CPU
     with patch("psutil.cpu_percent", return_value=95):
         metrics = performance_monitor.monitor_system_resources()
@@ -423,20 +447,26 @@ async def test_performance_monitor_bottleneck_detection(performance_monitor, res
         "monitor_memory_usage",
         return_value={"system_percent": 90, "process_memory_mb": 1000},
     ):
-        metrics = performance_monitor.monitor_system_resources()  # Fetch new metrics based on mock
+        metrics = (
+            performance_monitor.monitor_system_resources()
+        )  # Fetch new metrics based on mock
         bottlenecks = performance_monitor.detect_bottlenecks(metrics)
         assert "High System Memory Usage" in "".join(bottlenecks)
 
     # Test cost limit approaching
     resource_manager.enforce_cost_limits(10.0)
     resource_manager.record_llm_cost("test_model", 9.5, 1000)  # 95% of limit
-    metrics = resource_manager.get_resource_metrics()  # Get latest metrics including cost
+    metrics = (
+        resource_manager.get_resource_metrics()
+    )  # Get latest metrics including cost
     bottlenecks = performance_monitor.detect_bottlenecks(metrics)
     assert "Approaching LLM Cost Limit" in "".join(bottlenecks)
 
 
 @pytest.mark.asyncio
-async def test_performance_monitor_generate_report(performance_monitor, resource_manager):
+async def test_performance_monitor_generate_report(
+    performance_monitor, resource_manager
+):
     await performance_monitor.start()
     # Simulate some activity to generate history
     resource_manager.record_llm_cost("m1", 0.02, 50)
@@ -472,7 +502,9 @@ async def test_event_bus_distributed_backend_integration(
     await distributed_backend_event_bus.subscribe(EventTest, handler)
 
     # Publish via the high-level EventBus API
-    test_event = EventTest("test_dist_event", datetime.now(), {"value": "distributed_test"})
+    test_event = EventTest(
+        "test_dist_event", datetime.now(), {"value": "distributed_test"}
+    )
     await distributed_backend_event_bus.publish(test_event)
 
     await asyncio.sleep(0.2)  # Give time for event to pass through distributed bus

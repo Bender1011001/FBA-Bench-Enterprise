@@ -1,7 +1,7 @@
 import pytest
+from fba_bench.core.types import SimulationState, ToolCall
 
 from agents.advanced_agent import AdvancedAgent
-from fba_bench.core.types import SimulationState, ToolCall
 
 
 @pytest.mark.asyncio

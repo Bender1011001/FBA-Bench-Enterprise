@@ -44,7 +44,9 @@ class AppSettings(BaseSettings):
 
     # Environment (development|staging|production), best-effort auto-detection
     environment: str = Field(
-        default_factory=lambda: _get_env_first(["ENVIRONMENT", "APP_ENV", "ENV"], "development")
+        default_factory=lambda: _get_env_first(
+            ["ENVIRONMENT", "APP_ENV", "ENV"], "development"
+        )
         or "development"
     )
 
@@ -57,25 +59,41 @@ class AppSettings(BaseSettings):
     )
 
     # Auth
-    auth_enabled_raw: Optional[str] = Field(default=None, validation_alias="AUTH_ENABLED")
-    auth_test_bypass_raw: Optional[str] = Field(default=None, validation_alias="AUTH_TEST_BYPASS")
-    auth_protect_docs_raw: Optional[str] = Field(default=None, validation_alias="AUTH_PROTECT_DOCS")
+    auth_enabled_raw: Optional[str] = Field(
+        default=None, validation_alias="AUTH_ENABLED"
+    )
+    auth_test_bypass_raw: Optional[str] = Field(
+        default=None, validation_alias="AUTH_TEST_BYPASS"
+    )
+    auth_protect_docs_raw: Optional[str] = Field(
+        default=None, validation_alias="AUTH_PROTECT_DOCS"
+    )
 
     auth_jwt_alg: str = Field(default="RS256", validation_alias="AUTH_JWT_ALG")
-    auth_jwt_public_key: Optional[str] = Field(default=None, validation_alias="AUTH_JWT_PUBLIC_KEY")
-    auth_jwt_issuer: Optional[str] = Field(default=None, validation_alias="AUTH_JWT_ISSUER")
-    auth_jwt_audience: Optional[str] = Field(default=None, validation_alias="AUTH_JWT_AUDIENCE")
+    auth_jwt_public_key: Optional[str] = Field(
+        default=None, validation_alias="AUTH_JWT_PUBLIC_KEY"
+    )
+    auth_jwt_issuer: Optional[str] = Field(
+        default=None, validation_alias="AUTH_JWT_ISSUER"
+    )
+    auth_jwt_audience: Optional[str] = Field(
+        default=None, validation_alias="AUTH_JWT_AUDIENCE"
+    )
     auth_jwt_clock_skew: int = Field(default=60, validation_alias="AUTH_JWT_CLOCK_SKEW")
 
     # Redis / Database (for future centralization)
-    redis_url_fba: Optional[str] = Field(default=None, validation_alias="FBA_BENCH_REDIS_URL")
+    redis_url_fba: Optional[str] = Field(
+        default=None, validation_alias="FBA_BENCH_REDIS_URL"
+    )
     redis_url_compat: Optional[str] = Field(default=None, validation_alias="REDIS_URL")
     db_url: Optional[str] = Field(default=None, validation_alias="DATABASE_URL")
     db_url_fba: Optional[str] = Field(default=None, validation_alias="FBA_BENCH_DB_URL")
 
     # Logging
     logging_level: Optional[str] = Field(default=None, validation_alias="FBA_LOG_LEVEL")
-    logging_format: Optional[str] = Field(default=None, validation_alias="FBA_LOG_FORMAT")
+    logging_format: Optional[str] = Field(
+        default=None, validation_alias="FBA_LOG_FORMAT"
+    )
     logging_file: Optional[str] = Field(default=None, validation_alias="FBA_LOG_FILE")
     logging_include_tracebacks_raw: Optional[str] = Field(
         default=None, validation_alias="FBA_LOG_INCLUDE_TRACEBACKS"
@@ -88,13 +106,22 @@ class AppSettings(BaseSettings):
     clearml_local_ui: str = Field(
         default="http://localhost:8080", validation_alias="FBA_BENCH_CLEARML_LOCAL_UI"
     )
-    clearml_web_port: int = Field(default=8080, validation_alias="FBA_BENCH_CLEARML_WEB_PORT")
-    clearml_file_port: int = Field(default=8081, validation_alias="FBA_BENCH_CLEARML_FILE_PORT")
-    clearml_api_port: int = Field(default=8008, validation_alias="FBA_BENCH_CLEARML_API_PORT")
-    clearml_compose_filename: str = Field(
-        default="docker-compose.clearml.yml", validation_alias="FBA_BENCH_CLEARML_COMPOSE"
+    clearml_web_port: int = Field(
+        default=8080, validation_alias="FBA_BENCH_CLEARML_WEB_PORT"
     )
-    repo_root_hint: Optional[str] = Field(default=None, validation_alias="FBA_BENCH_ROOT")
+    clearml_file_port: int = Field(
+        default=8081, validation_alias="FBA_BENCH_CLEARML_FILE_PORT"
+    )
+    clearml_api_port: int = Field(
+        default=8008, validation_alias="FBA_BENCH_CLEARML_API_PORT"
+    )
+    clearml_compose_filename: str = Field(
+        default="docker-compose.clearml.yml",
+        validation_alias="FBA_BENCH_CLEARML_COMPOSE",
+    )
+    repo_root_hint: Optional[str] = Field(
+        default=None, validation_alias="FBA_BENCH_ROOT"
+    )
 
     model_config = SettingsConfigDict(extra="ignore")
 
@@ -148,12 +175,18 @@ class AppSettings(BaseSettings):
                 if "enabled" in auth:
                     mapped["AUTH_ENABLED"] = str(bool(auth.get("enabled"))).lower()
                 if "test_bypass" in auth:
-                    mapped["AUTH_TEST_BYPASS"] = str(bool(auth.get("test_bypass"))).lower()
+                    mapped["AUTH_TEST_BYPASS"] = str(
+                        bool(auth.get("test_bypass"))
+                    ).lower()
                 if "protect_docs" in auth:
-                    mapped["AUTH_PROTECT_DOCS"] = str(bool(auth.get("protect_docs"))).lower()
+                    mapped["AUTH_PROTECT_DOCS"] = str(
+                        bool(auth.get("protect_docs"))
+                    ).lower()
                 if "jwt_alg" in auth and isinstance(auth.get("jwt_alg"), str):
                     mapped["AUTH_JWT_ALG"] = auth["jwt_alg"]
-                if "jwt_public_key" in auth and isinstance(auth.get("jwt_public_key"), str):
+                if "jwt_public_key" in auth and isinstance(
+                    auth.get("jwt_public_key"), str
+                ):
                     mapped["AUTH_JWT_PUBLIC_KEY"] = auth["jwt_public_key"]
                 if "jwt_issuer" in auth and isinstance(auth.get("jwt_issuer"), str):
                     mapped["AUTH_JWT_ISSUER"] = auth["jwt_issuer"]
@@ -203,7 +236,9 @@ class AppSettings(BaseSettings):
                         pass
                 if "file_port" in clearml:
                     try:
-                        mapped["FBA_BENCH_CLEARML_FILE_PORT"] = int(clearml["file_port"])
+                        mapped["FBA_BENCH_CLEARML_FILE_PORT"] = int(
+                            clearml["file_port"]
+                        )
                     except Exception:
                         pass
                 if "api_port" in clearml:
@@ -225,7 +260,13 @@ class AppSettings(BaseSettings):
         # Precedence (highest -> lowest) achieved by source order here:
         # init kwargs > env vars > .env > YAML overlay > file secrets > defaults
         # Ensure env vars override YAML by placing env before YAML.
-        return (init_settings, env_settings, dotenv_settings, yaml_source, file_secret_settings)
+        return (
+            init_settings,
+            env_settings,
+            dotenv_settings,
+            yaml_source,
+            file_secret_settings,
+        )
 
     # --------- Derived helpers ---------
 

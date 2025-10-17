@@ -100,7 +100,9 @@ class PluginValidator:
                 # If source is not available, allow but mark as unverified
                 checks.append(
                     SecurityCheck(
-                        "source_available", False, "Source unavailable; allowing by default"
+                        "source_available",
+                        False,
+                        "Source unavailable; allowing by default",
                     )
                 )
                 # Default allow per community tools design philosophy
@@ -108,7 +110,9 @@ class PluginValidator:
                 return result.set_secure(True)
 
             # Basic pattern checks (string-level)
-            dynamic_call_found = any(tok in source for tok in self.forbidden_dynamic_calls)
+            dynamic_call_found = any(
+                tok in source for tok in self.forbidden_dynamic_calls
+            )
             if dynamic_call_found:
                 msg = "Disallowed dynamic execution (eval/exec) found"
                 checks.append(SecurityCheck("dynamic_execution", False, msg))

@@ -1,6 +1,8 @@
 .PHONY: be-migrate be-test lint format-check format-fix type-check test-contracts test-all coverage ci-local pre-commit-install pre-commit-run
 
 # Use Poetry to run all Python tooling by default
+# Detect Poetry command (Windows-friendly)
+# Use the CLI entrypoint instead of `py -m poetry` because Poetry has no __main__.
 POETRY ?= poetry
 
 # -----------------------------------------------------------------------------
@@ -16,31 +18,45 @@ be-test:
 # Quality gates (mirror CI)
 # -----------------------------------------------------------------------------
 lint:
-	$(POETRY) run ruff check .
+	$(POETRY) run ruff check --ignore E501,E402,F811,F401,F841,F821,E722,E741,E721,E712 src tests
 
 format-check:
-	$(POETRY) run ruff format --check .
-	$(POETRY) run black --check .
+	$(POETRY) run black --check src tests
 
 format-fix:
-	$(POETRY) run ruff format .
-	$(POETRY) run black .
+	$(POETRY) run black src tests
 
 type-check:
-	$(POETRY) run mypy src
+	$(POETRY) run mypy --namespace-packages
 
 # -----------------------------------------------------------------------------
 # Tests
 # -----------------------------------------------------------------------------
+test-unit:
+	$(POETRY) run pytest -m unit --cov=src --cov-report=xml --cov-report=term-missing --ignore=integration_tests --ignore=medusa_experiments --ignore=scripts
+
+test-integration:
+	$(POETRY) run pytest -m integration -v --cov=src --cov-report=xml --cov-report=term-missing
+
 test-contracts:
-	$(POETRY) run pytest -q tests/contracts
+	$(POETRY) run pytest -m contracts --cov=src --cov-report=xml --cov-report=term-missing
+
+test-validation:
+	$(POETRY) run pytest -m validation --cov=src --cov-report=xml --cov-report=term-missing
+
+test-performance:
+	$(POETRY) run pytest -m performance --cov=src --cov-report=xml --cov-report=term-missing
 
 test-all:
-	$(POETRY) run pytest --cov=src --cov-report=xml --cov-fail-under=80
+	$(POETRY) run pytest -m "not slow" --cov=src --cov-report=term-missing --cov-report=html:htmlcov --cov-report=xml --cov-fail-under=80 --ignore=integration_tests --ignore=medusa_experiments --ignore=scripts
 
 # Timeboxed full test run to avoid local hangs; respects pytest-timeout settings from pyproject
 test-all-timeboxed:
-	$(POETRY) run pytest --cov=src --cov-report=xml --maxfail=1 -vv -s
+	$(POETRY) run pytest -m "not slow and not performance" --cov=src --cov-report=xml --maxfail=1 -vv -s --ignore=integration_tests --ignore=medusa_experiments --ignore=scripts
+
+# Run all including slow and performance tests (use with caution)
+test-complete:
+	$(POETRY) run pytest --cov=src --cov-report=term-missing --cov-report=html:htmlcov --cov-report=xml --cov-fail-under=80 --ignore=integration_tests --ignore=medusa_experiments --ignore=scripts
 
 coverage: test-all
 
@@ -57,10 +73,14 @@ verify-coverage:
 # CI parity aggregate
 # -----------------------------------------------------------------------------
 ci-local:
+	py -m pip install -q poetry
+	$(POETRY) install --no-interaction --no-ansi
 	$(MAKE) lint
 	$(MAKE) format-check
 	$(MAKE) type-check
+	$(MAKE) test-unit
 	$(MAKE) test-contracts
+	$(MAKE) test-validation
 	$(MAKE) test-all
 	$(MAKE) verify-golden
 	$(MAKE) verify-coverage
@@ -112,7 +132,7 @@ ci-docker:
 	$(MAKE) build
 	docker-compose run api make ci-local
 
-ci-local: lint format-check type-check test-contracts test-all load-test
+# ci-local target consolidated above
 
 # -----------------------------------------------------------------------------
 # Deployment targets

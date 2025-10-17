@@ -63,7 +63,9 @@ class DependencyManager:
             name="OpenAI", import_name="openai", install_package="openai>=1.12.0"
         ),
         "anthropic": FrameworkDependency(
-            name="Anthropic", import_name="anthropic", install_package="anthropic>=0.8.0"
+            name="Anthropic",
+            import_name="anthropic",
+            install_package="anthropic>=0.8.0",
         ),
     }
 
@@ -289,7 +291,9 @@ class DependencyManager:
         for extra in dependency.optional_extras:
             extra_name = extra.split(">=")[0].split("==")[0]  # Extract package name
             try:
-                import_module(extra_name.replace("-", "_"))  # Convert package name to module name
+                import_module(
+                    extra_name.replace("-", "_")
+                )  # Convert package name to module name
             except ImportError:
                 issues.append(f"Optional dependency '{extra_name}' not available")
 

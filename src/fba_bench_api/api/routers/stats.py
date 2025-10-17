@@ -2,11 +2,13 @@
 Stub router for system stats.
 """
 
-from fastapi import APIRouter
 import logging
+
+from fastapi import APIRouter
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
 
 @router.get("/stats")
 async def get_stats():

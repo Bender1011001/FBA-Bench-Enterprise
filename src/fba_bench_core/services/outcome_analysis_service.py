@@ -66,7 +66,9 @@ class OutcomeAnalysisService:
             etype = ev.get("event_type", "")
             data = ev.get("data", {}) or {}
             # Agent association can come from various fields in summaries
-            ev_agent = data.get("agent_id") or data.get("agent") or data.get("source_agent")
+            ev_agent = (
+                data.get("agent_id") or data.get("agent") or data.get("source_agent")
+            )
             if ev_agent and ev_agent != agent_id:
                 continue
 
@@ -99,7 +101,11 @@ class OutcomeAnalysisService:
                 except Exception:
                     pass
 
-            if etype in ("ComplianceViolationEvent", "BudgetWarning", "BudgetViolation"):
+            if etype in (
+                "ComplianceViolationEvent",
+                "BudgetWarning",
+                "BudgetViolation",
+            ):
                 errors += 1
                 confidence_validation -= 0.1
 

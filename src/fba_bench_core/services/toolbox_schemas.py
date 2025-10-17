@@ -6,9 +6,8 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
-
 from money import Money
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 # Defaults and common validators
 _DEFAULT_ASIN_REGEX = os.getenv("ASIN_REGEX", r"^[A-Z0-9]{8,12}$")
@@ -38,13 +37,17 @@ def _validate_asin(value: str) -> str:
 
 def _validate_money_instance(val: Money) -> Money:
     if isinstance(val, float):
-        raise TypeError("Money must not be a float - use Money.from_dollars or Money(int_cents)")
+        raise TypeError(
+            "Money must not be a float - use Money.from_dollars or Money(int_cents)"
+        )
     if not isinstance(val, Money):
         raise TypeError(f"Value must be Money, got {type(val)}")
     return val
 
 
-def _require_positive_int(name: str, val: Optional[int], allow_zero: bool = False) -> Optional[int]:
+def _require_positive_int(
+    name: str, val: Optional[int], allow_zero: bool = False
+) -> Optional[int]:
     if val is None:
         return val
     if not isinstance(val, int):

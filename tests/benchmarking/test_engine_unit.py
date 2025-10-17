@@ -4,7 +4,13 @@ import pytest
 from pydantic import ValidationError
 
 # Import new engine API and models
-from benchmarking.core.engine import Engine, EngineConfig, EngineReport, RunnerSpec, ScenarioSpec
+from benchmarking.core.engine import (
+    Engine,
+    EngineConfig,
+    EngineReport,
+    RunnerSpec,
+    ScenarioSpec,
+)
 from benchmarking.scenarios.registry import scenario_registry
 
 
@@ -167,7 +173,10 @@ async def test_metrics_application_mean_aggregates(monkeypatch):
     # All runs should carry dummy_metric=1.0
     assert all(r.metrics.get("dummy_metric") == 1.0 for r in sr.runs)
     # Aggregated mean equals 1.0
-    assert pytest.approx(sr.aggregates["metrics"]["mean"]["dummy_metric"], rel=0, abs=1e-9) == 1.0
+    assert (
+        pytest.approx(sr.aggregates["metrics"]["mean"]["dummy_metric"], rel=0, abs=1e-9)
+        == 1.0
+    )
 
 
 @pytest.mark.unit
@@ -204,7 +213,9 @@ async def test_validator_injection(monkeypatch):
             return DummyValidator()
         return None
 
-    monkeypatch.setattr(ValidatorRegistry, "create_validator", create_validator, raising=True)
+    monkeypatch.setattr(
+        ValidatorRegistry, "create_validator", create_validator, raising=True
+    )
 
     from agent_runners import registry as runner_registry
 

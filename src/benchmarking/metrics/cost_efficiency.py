@@ -90,7 +90,9 @@ def _as_float(x: Any) -> Optional[float]:
         return None
 
 
-def _resolve_cost_like(inp: CostEfficiencyInput, ctx: CostEfficiencyContext) -> Optional[float]:
+def _resolve_cost_like(
+    inp: CostEfficiencyInput, ctx: CostEfficiencyContext
+) -> Optional[float]:
     # direct cost field from artifacts -> metrics -> output
     for src in (inp.artifacts, inp.metrics, inp.output):
         if isinstance(src, dict) and ctx.min_cost_field in src:
@@ -149,7 +151,9 @@ def _resolve_score_like(inp: CostEfficiencyInput, ctx: CostEfficiencyContext) ->
     return 1.0
 
 
-def evaluate(run: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def evaluate(
+    run: Dict[str, Any], context: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
     """
     Cost-efficiency metric.
 
@@ -166,7 +170,11 @@ def evaluate(run: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> D
     """
     try:
         if not isinstance(run, dict):
-            return {"supported": False, "efficiency": None, "reason": "invalid_run_type"}
+            return {
+                "supported": False,
+                "efficiency": None,
+                "reason": "invalid_run_type",
+            }
 
         try:
             inp = CostEfficiencyInput(
@@ -176,7 +184,11 @@ def evaluate(run: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> D
             )  # type: ignore
         except ValidationError as ve:
             logger.error(f"cost_efficiency: invalid input {ve}")
-            return {"supported": False, "efficiency": None, "reason": "validation_error"}
+            return {
+                "supported": False,
+                "efficiency": None,
+                "reason": "validation_error",
+            }
 
         ctx = CostEfficiencyContext(**(context or {}))  # type: ignore
 
@@ -185,7 +197,11 @@ def evaluate(run: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> D
             return {"supported": False, "efficiency": None, "reason": "missing_usage"}
 
         if cost_like <= 0:
-            return {"supported": False, "efficiency": None, "reason": "non_positive_cost"}
+            return {
+                "supported": False,
+                "efficiency": None,
+                "reason": "non_positive_cost",
+            }
 
         score_like = _resolve_score_like(inp, ctx)
         efficiency = float(score_like) / float(cost_like)

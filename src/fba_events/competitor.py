@@ -60,7 +60,9 @@ class CompetitorState:
 
         # Validate price: Must be an instance of the Money class.
         if not isinstance(self.price, Money):
-            raise TypeError(f"Competitor price must be a Money type, but got {type(self.price)}.")
+            raise TypeError(
+                f"Competitor price must be a Money type, but got {type(self.price)}."
+            )
 
         # Validate BSR: Best Seller Rank must be a positive integer (>= 1).
         if self.bsr < 1:
@@ -111,7 +113,9 @@ class CompetitorPricesUpdated(BaseEvent):
 
         # Validate tick_number: Must be non-negative.
         if self.tick_number < 0:
-            raise ValueError("Tick number must be >= 0 for CompetitorPricesUpdated event.")
+            raise ValueError(
+                "Tick number must be >= 0 for CompetitorPricesUpdated event."
+            )
 
         # Validate competitors list: Ensure all elements are `CompetitorState` instances.
         for i, competitor in enumerate(self.competitors):
@@ -123,7 +127,9 @@ class CompetitorPricesUpdated(BaseEvent):
         # Validate for duplicate ASINs within the competitors list to maintain data integrity.
         asins = [comp.asin for comp in self.competitors]
         if len(asins) != len(set(asins)):
-            raise ValueError("Duplicate competitor ASINs found in the 'competitors' list.")
+            raise ValueError(
+                "Duplicate competitor ASINs found in the 'competitors' list."
+            )
 
     def get_competitor_by_asin(self, asin: str) -> Optional[CompetitorState]:
         """
@@ -196,7 +202,9 @@ class CompetitorPricesUpdated(BaseEvent):
                 else None
             ),
             "price_range": (
-                [str(p) for p in self.get_price_range()] if self.get_price_range() else None
+                [str(p) for p in self.get_price_range()]
+                if self.get_price_range()
+                else None
             ),
             "market_summary": self.market_summary,
         }

@@ -134,7 +134,9 @@ class RateLimiter:
 
             # Remove old requests
             self.requests = [
-                req_time for req_time in self.requests if now - req_time < self.time_window
+                req_time
+                for req_time in self.requests
+                if now - req_time < self.time_window
             ]
 
             # Check if we can make a new request
@@ -244,7 +246,10 @@ class ExternalService:
         return self._make_request("GET", endpoint, params=params)
 
     def post(
-        self, endpoint: str, data: Optional[Dict] = None, json_data: Optional[Dict] = None
+        self,
+        endpoint: str,
+        data: Optional[Dict] = None,
+        json_data: Optional[Dict] = None,
     ) -> ServiceResponse:
         """Make a POST request."""
         if json_data:
@@ -253,7 +258,10 @@ class ExternalService:
             return self._make_request("POST", endpoint, data=data)
 
     def put(
-        self, endpoint: str, data: Optional[Dict] = None, json_data: Optional[Dict] = None
+        self,
+        endpoint: str,
+        data: Optional[Dict] = None,
+        json_data: Optional[Dict] = None,
     ) -> ServiceResponse:
         """Make a PUT request."""
         if json_data:
@@ -345,7 +353,9 @@ class OpenAIService(ExternalService):
         super().__init__(config)
         self.model = config.custom_auth_params.get("model", "gpt-4")
 
-    def chat_completion(self, messages: List[Dict[str, str]], **kwargs) -> ServiceResponse:
+    def chat_completion(
+        self, messages: List[Dict[str, str]], **kwargs
+    ) -> ServiceResponse:
         """
         Create a chat completion.
 
@@ -366,7 +376,9 @@ class OpenAIService(ExternalService):
 
         return self.post(endpoint, json_data=data)
 
-    def embedding(self, text: str, model: str = "text-embedding-ada-002") -> ServiceResponse:
+    def embedding(
+        self, text: str, model: str = "text-embedding-ada-002"
+    ) -> ServiceResponse:
         """
         Create an embedding for text.
 
@@ -406,7 +418,9 @@ class WeatherService(ExternalService):
         super().__init__(config)
         self.api_key = config.api_key
 
-    def get_current_weather(self, location: str, units: str = "metric") -> ServiceResponse:
+    def get_current_weather(
+        self, location: str, units: str = "metric"
+    ) -> ServiceResponse:
         """
         Get current weather for a location.
 
@@ -422,7 +436,9 @@ class WeatherService(ExternalService):
 
         return self.get(endpoint, params=params)
 
-    def get_forecast(self, location: str, days: int = 5, units: str = "metric") -> ServiceResponse:
+    def get_forecast(
+        self, location: str, days: int = 5, units: str = "metric"
+    ) -> ServiceResponse:
         """
         Get weather forecast for a location.
 
@@ -453,7 +469,9 @@ class ExchangeRateService(ExternalService):
         super().__init__(config)
         self.api_key = config.api_key
 
-    def get_exchange_rate(self, from_currency: str, to_currency: str) -> ServiceResponse:
+    def get_exchange_rate(
+        self, from_currency: str, to_currency: str
+    ) -> ServiceResponse:
         """
         Get exchange rate between two currencies.
 
@@ -525,7 +543,9 @@ class ExternalServiceManager:
             self.services[name] = service
             self.service_configs[name] = config
 
-            logger.info(f"Registered external service: {name} ({config.service_type.value})")
+            logger.info(
+                f"Registered external service: {name} ({config.service_type.value})"
+            )
 
     def get_service(self, name: str) -> Optional[ExternalService]:
         """

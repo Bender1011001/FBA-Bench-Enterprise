@@ -107,7 +107,9 @@ class StatisticalValidator:
 
         if len(data) == 1:
             x = float(data[0])
-            return ConfidenceInterval(lower_bound=x, upper_bound=x, confidence_level=confidence)
+            return ConfidenceInterval(
+                lower_bound=x, upper_bound=x, confidence_level=confidence
+            )
 
         n = len(data)
         mean = statistics.mean(data)
@@ -127,7 +129,9 @@ class StatisticalValidator:
 
         margin = critical * std_err
         return ConfidenceInterval(
-            lower_bound=mean - margin, upper_bound=mean + margin, confidence_level=confidence
+            lower_bound=mean - margin,
+            upper_bound=mean + margin,
+            confidence_level=confidence,
         )
 
     # Significance testing -----------------------------------------------------
@@ -144,7 +148,10 @@ class StatisticalValidator:
         if not sample1 or not sample2:
             # Degenerate case: cannot test significance; return non-significant
             return SignificanceTest(
-                p_value=1.0, is_significant=False, test_type=test_type, test_statistic=0.0
+                p_value=1.0,
+                is_significant=False,
+                test_type=test_type,
+                test_statistic=0.0,
             )
 
         m1, m2 = statistics.mean(sample1), statistics.mean(sample2)
@@ -170,11 +177,16 @@ class StatisticalValidator:
             p = 0.5
 
         return SignificanceTest(
-            p_value=p, is_significant=p < self.alpha, test_type=test_type, test_statistic=t_stat
+            p_value=p,
+            is_significant=p < self.alpha,
+            test_type=test_type,
+            test_statistic=t_stat,
         )
 
     # Outlier detection --------------------------------------------------------
-    def detect_outliers(self, data: List[float], method: str = "iqr") -> OutlierDetector:
+    def detect_outliers(
+        self, data: List[float], method: str = "iqr"
+    ) -> OutlierDetector:
         """
         Detect outliers using Tukey's IQR method by default.
 
@@ -209,5 +221,7 @@ class StatisticalValidator:
         outlier_values = [data[i] for i in outlier_indices]
 
         return OutlierDetector(
-            outlier_indices=outlier_indices, outlier_values=outlier_values, method=method
+            outlier_indices=outlier_indices,
+            outlier_values=outlier_values,
+            method=method,
         )

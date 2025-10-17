@@ -21,11 +21,12 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Dict, List, Optional
 
-from fba_bench_core.event_bus import EventBus, get_event_bus
-from fba_events.time_events import TickEvent  # via shim
-from fba_events.marketing import AdSpendEvent, RunMarketingCampaignCommand
 from money import Money
 from services.world_store import WorldStore
+
+from fba_bench_core.event_bus import EventBus, get_event_bus
+from fba_events.marketing import AdSpendEvent, RunMarketingCampaignCommand
+from fba_events.time_events import TickEvent  # via shim
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +80,9 @@ class MarketingService:
     async def start(self) -> None:
         if self._started:
             return
-        await self.event_bus.subscribe(RunMarketingCampaignCommand, self._on_run_campaign)
+        await self.event_bus.subscribe(
+            RunMarketingCampaignCommand, self._on_run_campaign
+        )
         await self.event_bus.subscribe(TickEvent, self._on_tick)
         self._started = True
         logger.info(
@@ -144,7 +147,9 @@ class MarketingService:
             self._current_tick = int(getattr(event, "tick_number", self._current_tick))
             await self.process_tick()
         except Exception as e:
-            logger.error(f"Error processing TickEvent in MarketingService: {e}", exc_info=True)
+            logger.error(
+                f"Error processing TickEvent in MarketingService: {e}", exc_info=True
+            )
 
     async def process_tick(self) -> None:
         """
@@ -184,7 +189,9 @@ class MarketingService:
             # Update marketing visibility in WorldStore
             current_vis = 1.0
             try:
-                current_vis = float(self.world_store.get_marketing_visibility(camp.asin))
+                current_vis = float(
+                    self.world_store.get_marketing_visibility(camp.asin)
+                )
             except Exception:
                 current_vis = 1.0
 
@@ -196,7 +203,8 @@ class MarketingService:
                 self.world_store.set_marketing_visibility(camp.asin, new_vis)
             except Exception as e:
                 logger.error(
-                    f"Failed to set marketing visibility for {camp.asin}: {e}", exc_info=True
+                    f"Failed to set marketing visibility for {camp.asin}: {e}",
+                    exc_info=True,
                 )
 
             # Decrement campaign counters

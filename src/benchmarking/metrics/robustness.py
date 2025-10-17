@@ -28,15 +28,21 @@ _WS_RE = re.compile(r"\s+", flags=re.UNICODE)
 
 
 class RobustnessInput(BaseModel):
-    output: Any = Field(description="Scenario output; typically a string or structured content")
+    output: Any = Field(
+        description="Scenario output; typically a string or structured content"
+    )
 
     class Config:
         frozen = False
 
 
 class RobustnessContext(BaseModel):
-    expected_signal: Any = Field(default=None, description="Reference signal to compare against")
-    mode: str = Field(default="normalized_overlap", description="normalized_overlap|exact_casefold")
+    expected_signal: Any = Field(
+        default=None, description="Reference signal to compare against"
+    )
+    mode: str = Field(
+        default="normalized_overlap", description="normalized_overlap|exact_casefold"
+    )
     case_insensitive: bool = Field(default=True)
     strip_whitespace: bool = Field(default=True)
 
@@ -77,7 +83,9 @@ def _jaccard_chars(a: str, b: str) -> float:
     return float(inter / union) if union > 0 else 0.0
 
 
-def evaluate(run: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def evaluate(
+    run: Dict[str, Any], context: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
     """
     Robustness metric.
 

@@ -86,7 +86,9 @@ class ServiceConfig:
                 # Basic auth would be handled by the requests library
                 import base64
 
-                auth_string = f"{self.custom_auth_params.get('username', '')}:{self.api_key}"
+                auth_string = (
+                    f"{self.custom_auth_params.get('username', '')}:{self.api_key}"
+                )
                 auth_bytes = auth_string.encode("utf-8")
                 auth_header = base64.b64encode(auth_bytes).decode("utf-8")
                 self.headers["Authorization"] = f"Basic {auth_header}"
@@ -154,7 +156,9 @@ class RateLimiter:
 
             # Remove old requests
             self.requests = [
-                req_time for req_time in self.requests if now - req_time < self.time_window
+                req_time
+                for req_time in self.requests
+                if now - req_time < self.time_window
             ]
 
             # Check if we can make a new request
@@ -185,7 +189,11 @@ class ResponseCache:
         self.lock = threading.Lock()
 
     def _get_cache_key(
-        self, url: str, method: str, params: Optional[Dict] = None, data: Optional[Dict] = None
+        self,
+        url: str,
+        method: str,
+        params: Optional[Dict] = None,
+        data: Optional[Dict] = None,
     ) -> str:
         """
         Generate a cache key for the request.
@@ -199,12 +207,21 @@ class ResponseCache:
         Returns:
             Cache key string
         """
-        key_data = {"url": url, "method": method, "params": params or {}, "data": data or {}}
+        key_data = {
+            "url": url,
+            "method": method,
+            "params": params or {},
+            "data": data or {},
+        }
         key_json = json.dumps(key_data, sort_keys=True)
         return hashlib.md5(key_json.encode()).hexdigest()
 
     def get(
-        self, url: str, method: str, params: Optional[Dict] = None, data: Optional[Dict] = None
+        self,
+        url: str,
+        method: str,
+        params: Optional[Dict] = None,
+        data: Optional[Dict] = None,
     ) -> Optional[Dict]:
         """
         Get cached response if available and not expired.
@@ -436,7 +453,9 @@ class ProductionService:
             error_message=f"Request failed after {self.config.max_retries + 1} attempts: {last_exception}",
         )
 
-    def _add_hmac_authentication(self, method: str, url: str, request_kwargs: Dict) -> None:
+    def _add_hmac_authentication(
+        self, method: str, url: str, request_kwargs: Dict
+    ) -> None:
         """
         Add HMAC authentication to the request.
 
@@ -487,15 +506,21 @@ class ProductionService:
         else:
             return response.text
 
-    def get(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> ServiceResponse:
+    def get(
+        self, endpoint: str, params: Optional[Dict[str, Any]] = None
+    ) -> ServiceResponse:
         """Make a GET request."""
         return self._make_request("GET", endpoint, params=params)
 
-    def post(self, endpoint: str, json_data: Optional[Dict[str, Any]] = None) -> ServiceResponse:
+    def post(
+        self, endpoint: str, json_data: Optional[Dict[str, Any]] = None
+    ) -> ServiceResponse:
         """Make a POST request."""
         return self._make_request("POST", endpoint, json=json_data)
 
-    def put(self, endpoint: str, json_data: Optional[Dict[str, Any]] = None) -> ServiceResponse:
+    def put(
+        self, endpoint: str, json_data: Optional[Dict[str, Any]] = None
+    ) -> ServiceResponse:
         """Make a PUT request."""
         return self._make_request("PUT", endpoint, json=json_data)
 
@@ -518,7 +543,9 @@ class AmazonSellerCentralService(ProductionService):
 
         # Amazon SP-API specific configuration
         self.region = config.custom_auth_params.get("region", "us-east-1")
-        self.marketplace_id = config.custom_auth_params.get("marketplace_id", "ATVPDKIKX0DER")
+        self.marketplace_id = config.custom_auth_params.get(
+            "marketplace_id", "ATVPDKIKX0DER"
+        )
 
         # Set up AWS Signature Version 4 authentication if needed
         if config.auth_method == "aws_sigv4":
@@ -567,7 +594,9 @@ class AmazonSellerCentralService(ProductionService):
 
         return self.get(endpoint, params=params)
 
-    def get_inventory_summaries(self, marketplace_id: Optional[str] = None) -> ServiceResponse:
+    def get_inventory_summaries(
+        self, marketplace_id: Optional[str] = None
+    ) -> ServiceResponse:
         """
         Get inventory summaries from Amazon.
 
@@ -578,7 +607,10 @@ class AmazonSellerCentralService(ProductionService):
             ServiceResponse with inventory summaries data
         """
         endpoint = "/inventory/v1/summaries"
-        params = {"MarketplaceId": marketplace_id or self.marketplace_id, "details": "true"}
+        params = {
+            "MarketplaceId": marketplace_id or self.marketplace_id,
+            "details": "true",
+        }
 
         return self.get(endpoint, params=params)
 
@@ -644,7 +676,9 @@ class OpenAIService(ProductionService):
 
         return self.post(endpoint, json_data=json_data)
 
-    def create_embedding(self, text: str, model: str = "text-embedding-ada-002") -> ServiceResponse:
+    def create_embedding(
+        self, text: str, model: str = "text-embedding-ada-002"
+    ) -> ServiceResponse:
         """
         Create an embedding for text using OpenAI.
 
@@ -679,7 +713,9 @@ class OpenAIService(ProductionService):
 class WeatherService(ProductionService):
     """Service for weather API integration."""
 
-    def get_current_weather(self, location: str, units: str = "metric") -> ServiceResponse:
+    def get_current_weather(
+        self, location: str, units: str = "metric"
+    ) -> ServiceResponse:
         """
         Get current weather for a location.
 
@@ -722,7 +758,9 @@ class WeatherService(ProductionService):
 class ExchangeRateService(ProductionService):
     """Service for exchange rate API integration."""
 
-    def get_exchange_rate(self, from_currency: str, to_currency: str) -> ServiceResponse:
+    def get_exchange_rate(
+        self, from_currency: str, to_currency: str
+    ) -> ServiceResponse:
         """
         Get exchange rate between two currencies.
 
@@ -752,7 +790,9 @@ class ExchangeRateService(ProductionService):
 
         return self.get(endpoint, params=params)
 
-    def get_historical_rates(self, date: str, base_currency: str = "USD") -> ServiceResponse:
+    def get_historical_rates(
+        self, date: str, base_currency: str = "USD"
+    ) -> ServiceResponse:
         """
         Get historical exchange rates for a date.
 
@@ -808,7 +848,9 @@ class ServiceManager:
 
             self.service_configs[name] = config
 
-            logger.info(f"Registered production service: {name} ({config.service_type.value})")
+            logger.info(
+                f"Registered production service: {name} ({config.service_type.value})"
+            )
 
     def get_service(self, name: str) -> Optional[ProductionService]:
         """

@@ -1,47 +1,55 @@
+# syntax=docker/dockerfile:1.7
+# API-focused container for FBA-Bench (updated for src/ structure)
+# - Uses Poetry for dependency management
+# - Supports development and testing use cases
+# - Includes all necessary modules from new structure
+
 FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1
+    PIP_NO_CACHE_DIR=1 \
+    POETRY_VERSION=1.8.3 \
+    POETRY_VIRTUALENVS_CREATE=false
 
 WORKDIR /app
-# Ensure all repo-root packages/modules (e.g., agents, llm_interface, constraints, event_bus.py) are importable in runtime and tests
-ENV PYTHONPATH=/app
+# Set PYTHONPATH for src/ structure
+ENV PYTHONPATH=/app/src
 
-# Minimal build deps for installing wheels when needed
-RUN apt-get update && apt-get install -y --no-install-recommends build-essential ca-certificates && rm -rf /var/lib/apt/lists/*
+# Install system dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        build-essential \
+        ca-certificates \
+        curl \
+        libffi-dev \
+        libpq-dev \
+        gcc \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy project files
-COPY pyproject.toml README.md ./
-COPY fba_bench ./fba_bench
-COPY fba_bench_api ./fba_bench_api
-COPY agent_runners ./agent_runners
-COPY benchmarking ./benchmarking
-COPY observability ./observability
-COPY services ./services
-COPY models ./models
-COPY metrics ./metrics
-COPY memory_experiments ./memory_experiments
-COPY reproducibility ./reproducibility
-COPY redteam ./redteam
-COPY scenarios ./scenarios
-COPY plugins ./plugins
-COPY fba_events ./fba_events
+# Install Poetry
+RUN python -m pip install --upgrade pip setuptools wheel \
+ && python -m pip install "poetry==${POETRY_VERSION}"
 
-# Additional top-level packages required by tests and runtime
-COPY agents ./agents
-COPY constraints ./constraints
-COPY infrastructure ./infrastructure
-COPY instrumentation ./instrumentation
-COPY learning ./learning
-COPY llm_interface ./llm_interface
-COPY baseline_bots ./baseline_bots
-COPY tools ./tools
-COPY config ./config
-COPY api ./api
-COPY community ./community
+# Copy project configuration
+COPY pyproject.toml poetry.lock* README.md ./
 
-# Root-level modules used by tests/integration
+# Install dependencies
+RUN poetry install --no-interaction --no-ansi
+
+# Copy source code from new structure
+COPY src/ ./src/
+COPY alembic/ ./alembic/
+COPY alembic.ini ./
+
+# Copy infrastructure and legacy modules still in root
+COPY infrastructure/ ./infrastructure/
+COPY baseline_bots/ ./baseline_bots/
+COPY config/ ./config/
+COPY constraints/ ./constraints/
+COPY tools/ ./tools/
+
+# Copy root-level modules and scripts
 COPY event_bus.py ./
 COPY personas.py ./
 COPY experiment_cli.py ./
@@ -56,19 +64,22 @@ COPY error_handler.py ./
 COPY financial_audit.py ./
 COPY ledger_utils.py ./
 COPY sitecustomize.py ./
-
-# Include local money library so runtime imports resolve
-COPY money ./money
 COPY events.py ./
-# Include tests in the image so we can run pytest inside Docker
 
-# Install the package and dependencies
-RUN python -m pip install --upgrade pip setuptools wheel poetry-core && \
-    pip install .
+# Include tests for integration testing
+COPY tests/ ./tests/
 
-# Create a writable data dir for SQLite persistence
-RUN mkdir -p /data
+# Create non-root user and writable directories
+RUN useradd -ms /bin/bash appuser \
+ && mkdir -p /data /app/logs \
+ && chown -R appuser:appuser /app /data
+
+USER appuser
 
 EXPOSE 8000
 
-CMD ["uvicorn", "fba_bench_api.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=5s --retries=6 \
+    CMD curl -fsS http://127.0.0.1:8000/api/v1/health || exit 1
+
+CMD ["python", "-m", "uvicorn", "api_server:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

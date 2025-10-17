@@ -1,15 +1,15 @@
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict, List, Optional
-import os
 
 from constraints.agent_gateway import AgentGateway
+from llm_interface.config import LLMConfig
 from llm_interface.openrouter_client import OpenRouterClient
 from llm_interface.prompt_adapter import PromptAdapter
 from llm_interface.response_parser import LLMResponseParser
-from llm_interface.config import LLMConfig
 
 
 @dataclass
@@ -190,8 +190,9 @@ class OpenRouterBot:
             from datetime import datetime as _dt
             from uuid import uuid4 as _uuid4
 
-            from events import SetPriceCommand  # type: ignore
             from money import Money  # type: ignore
+
+            from events import SetPriceCommand  # type: ignore
 
             converted: List[Any] = []
             for a in list(actions or []):

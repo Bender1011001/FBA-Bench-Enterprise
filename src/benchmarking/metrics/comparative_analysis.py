@@ -366,7 +366,9 @@ class ComparativeAnalysisEngine(BaseMetric):
 
             standardized_scores = [_norm(a, b) for a, b in pairs]
             standardized_score = (
-                float(statistics.mean(standardized_scores)) if standardized_scores else 0.0
+                float(statistics.mean(standardized_scores))
+                if standardized_scores
+                else 0.0
             )
             normalization_factors = [
                 (100.0 / float(b)) if float(b) != 0.0 else 0.0 for _, b in pairs
@@ -381,7 +383,9 @@ class ComparativeAnalysisEngine(BaseMetric):
         score = self.calculate_benchmark_standardization_score(raw_scores)
         return {"standardized_score": float(score), "standardized_scores": []}
 
-    def calculate_head_to_head_comparison(self, agent1_scores, agent2_scores=None, metrics=None):
+    def calculate_head_to_head_comparison(
+        self, agent1_scores, agent2_scores=None, metrics=None
+    ):
         if agent2_scores is not None and metrics is not None:
             a1 = {"name": "agent1"}
             a2 = {"name": "agent2"}
@@ -404,13 +408,19 @@ class ComparativeAnalysisEngine(BaseMetric):
         # historical_data: list of {"date": ..., "score": float}
         if isinstance(historical_data, list):
             if len(historical_data) < 2:
-                return {"improvement_rate": 0.0, "score": 0.0, "trend": "insufficient_data"}
+                return {
+                    "improvement_rate": 0.0,
+                    "score": 0.0,
+                    "trend": "insufficient_data",
+                }
             scores = [float(d.get("score", 0.0)) for d in historical_data]
             improvement = scores[-1] - scores[0]
             rate = improvement / max(1, len(scores) - 1)
             # Map to 0..100
             value = max(0.0, min(100.0, (rate + 1.0) * 50.0))
-            trend = "improving" if rate > 0.0 else ("declining" if rate < 0.0 else "stable")
+            trend = (
+                "improving" if rate > 0.0 else ("declining" if rate < 0.0 else "stable")
+            )
             return {
                 "improvement_rate": float(rate),
                 "score": float(value),
@@ -439,7 +449,11 @@ class ComparativeAnalysisEngine(BaseMetric):
                     "normalized_mean": value,
                     "normalized_values": [float(x) for x in norm],
                     "normalized_scores": [float(x) for x in norm],
-                    "parameters": {"min": float(smin), "max": float(smax), "spread": float(spread)},
+                    "parameters": {
+                        "min": float(smin),
+                        "max": float(smax),
+                        "spread": float(spread),
+                    },
                 }
             # default: z_score quality mapped
             mean = statistics.mean(scores)
@@ -463,7 +477,9 @@ class ComparativeAnalysisEngine(BaseMetric):
             "parameters": {},
         }
 
-    def calculate_performance_gap_analysis(self, agent_scores, benchmark_scores=None, metrics=None):
+    def calculate_performance_gap_analysis(
+        self, agent_scores, benchmark_scores=None, metrics=None
+    ):
         if benchmark_scores is not None and metrics is not None:
             # positive gap means agent below benchmark
             gaps = {}
@@ -520,8 +536,15 @@ class ComparativeAnalysisEngine(BaseMetric):
                         strengths.append(k)
                     elif ratio <= 0.9:
                         weaknesses.append(k)
-            summary = {"strength_count": len(strengths), "weakness_count": len(weaknesses)}
-            return {"strengths": strengths, "weaknesses": weaknesses, "profile_summary": summary}
+            summary = {
+                "strength_count": len(strengths),
+                "weakness_count": len(weaknesses),
+            }
+            return {
+                "strengths": strengths,
+                "weaknesses": weaknesses,
+                "profile_summary": summary,
+            }
         score = self.calculate_strength_weakness_score(agent_data)
         return {
             "strengths": [],
@@ -592,7 +615,11 @@ class ComparativeAnalysisEngine(BaseMetric):
             method_diversity = ranking.get("method_diversity", 0.0)
 
             # Calculate weighted ranking score
-            weights = {"ranking_accuracy": 0.4, "rank_stability": 0.3, "method_diversity": 0.3}
+            weights = {
+                "ranking_accuracy": 0.4,
+                "rank_stability": 0.3,
+                "method_diversity": 0.3,
+            }
 
             ranking_score = (
                 ranking_accuracy * weights["ranking_accuracy"]
@@ -739,7 +766,9 @@ class ComparativeAnalysisEngine(BaseMetric):
 
         for normalization in normalizations:
             # Evaluate normalization components
-            normalization_effectiveness = normalization.get("normalization_effectiveness", 0.0)
+            normalization_effectiveness = normalization.get(
+                "normalization_effectiveness", 0.0
+            )
             fairness_improvement = normalization.get("fairness_improvement", 0.0)
             method_appropriateness = normalization.get("method_appropriateness", 0.0)
 
@@ -841,16 +870,24 @@ class ComparativeAnalysisEngine(BaseMetric):
             agent2_scores.append(agent2_value)
 
         # Calculate overall scores
-        agent1_overall = sum(agent1_scores[i] * weights[metrics[i]] for i in range(len(metrics)))
-        agent2_overall = sum(agent2_scores[i] * weights[metrics[i]] for i in range(len(metrics)))
+        agent1_overall = sum(
+            agent1_scores[i] * weights[metrics[i]] for i in range(len(metrics))
+        )
+        agent2_overall = sum(
+            agent2_scores[i] * weights[metrics[i]] for i in range(len(metrics))
+        )
 
         # Determine winner
         if agent1_overall > agent2_overall:
             overall_winner = agent1_data.get("name", "Agent 1")
-            win_margin = (agent1_overall - agent2_overall) / max(agent1_overall, agent2_overall)
+            win_margin = (agent1_overall - agent2_overall) / max(
+                agent1_overall, agent2_overall
+            )
         elif agent2_overall > agent1_overall:
             overall_winner = agent2_data.get("name", "Agent 2")
-            win_margin = (agent2_overall - agent1_overall) / max(agent1_overall, agent2_overall)
+            win_margin = (agent2_overall - agent1_overall) / max(
+                agent1_overall, agent2_overall
+            )
         else:
             overall_winner = "Tie"
             win_margin = 0.0
@@ -871,7 +908,10 @@ class ComparativeAnalysisEngine(BaseMetric):
                 [s1 - s2 for s1, s2 in zip(agent1_scores, agent2_scores)]
             ) / math.sqrt(len(agent1_scores))
             margin_of_error = 1.96 * std_err  # 95% CI
-            confidence_interval = (win_margin - margin_of_error, win_margin + margin_of_error)
+            confidence_interval = (
+                win_margin - margin_of_error,
+                win_margin + margin_of_error,
+            )
         else:
             confidence_interval = (0.0, 0.0)
 
@@ -921,14 +961,19 @@ class ComparativeAnalysisEngine(BaseMetric):
             raise ValueError(f"Unsupported ranking method: {method}")
 
     def _rank_by_weighted_score(
-        self, agents_data: List[Dict[str, Any]], metrics: List[str], weights: Dict[str, float]
+        self,
+        agents_data: List[Dict[str, Any]],
+        metrics: List[str],
+        weights: Dict[str, float],
     ) -> List[PerformanceRanking]:
         """Rank agents by weighted score."""
         rankings = []
 
         for agent_data in agents_data:
             # Calculate weighted score
-            score = sum(agent_data.get(metric, 0.0) * weights[metric] for metric in metrics)
+            score = sum(
+                agent_data.get(metric, 0.0) * weights[metric] for metric in metrics
+            )
 
             # Calculate confidence (simplified)
             metric_values = [agent_data.get(metric, 0.0) for metric in metrics]
@@ -961,7 +1006,10 @@ class ComparativeAnalysisEngine(BaseMetric):
         return rankings
 
     def _rank_by_mean_rank(
-        self, agents_data: List[Dict[str, Any]], metrics: List[str], weights: Dict[str, float]
+        self,
+        agents_data: List[Dict[str, Any]],
+        metrics: List[str],
+        weights: Dict[str, float],
     ) -> List[PerformanceRanking]:
         """Rank agents by mean rank across metrics."""
         rankings = []
@@ -969,7 +1017,10 @@ class ComparativeAnalysisEngine(BaseMetric):
         # Calculate ranks for each metric
         metric_ranks = {}
         for metric in metrics:
-            values = [(i, agent_data.get(metric, 0.0)) for i, agent_data in enumerate(agents_data)]
+            values = [
+                (i, agent_data.get(metric, 0.0))
+                for i, agent_data in enumerate(agents_data)
+            ]
             values.sort(key=lambda x: x[1], reverse=True)
             metric_ranks[metric] = {i: rank + 1 for rank, (i, _) in enumerate(values)}
 
@@ -993,7 +1044,8 @@ class ComparativeAnalysisEngine(BaseMetric):
                 PerformanceRanking(
                     agent_name=agent_data.get("name", "Unknown"),
                     rank=0,  # Will be assigned later
-                    score=1.0 / mean_rank,  # Convert to score (lower rank = higher score)
+                    score=1.0
+                    / mean_rank,  # Convert to score (lower rank = higher score)
                     confidence=confidence,
                     rank_stability=rank_stability,
                     comparison_group="all_agents",
@@ -1008,7 +1060,10 @@ class ComparativeAnalysisEngine(BaseMetric):
         return rankings
 
     def _rank_by_bayesian(
-        self, agents_data: List[Dict[str, Any]], metrics: List[str], weights: Dict[str, float]
+        self,
+        agents_data: List[Dict[str, Any]],
+        metrics: List[str],
+        weights: Dict[str, float],
     ) -> List[PerformanceRanking]:
         """Rank agents using Bayesian ranking."""
         rankings = []
@@ -1058,7 +1113,10 @@ class ComparativeAnalysisEngine(BaseMetric):
         return rankings
 
     def _rank_by_elo(
-        self, agents_data: List[Dict[str, Any]], metrics: List[str], weights: Dict[str, float]
+        self,
+        agents_data: List[Dict[str, Any]],
+        metrics: List[str],
+        weights: Dict[str, float],
     ) -> List[PerformanceRanking]:
         """Rank agents using ELO rating system."""
         rankings = []
@@ -1070,10 +1128,12 @@ class ComparativeAnalysisEngine(BaseMetric):
         for i in range(len(agents_data)):
             for j in range(i + 1, len(agents_data)):
                 agent1_score = sum(
-                    agents_data[i].get(metric, 0.0) * weights[metric] for metric in metrics
+                    agents_data[i].get(metric, 0.0) * weights[metric]
+                    for metric in metrics
                 )
                 agent2_score = sum(
-                    agents_data[j].get(metric, 0.0) * weights[metric] for metric in metrics
+                    agents_data[j].get(metric, 0.0) * weights[metric]
+                    for metric in metrics
                 )
 
                 # Determine winner
@@ -1123,7 +1183,10 @@ class ComparativeAnalysisEngine(BaseMetric):
         return rankings
 
     def _rank_by_condorcet(
-        self, agents_data: List[Dict[str, Any]], metrics: List[str], weights: Dict[str, float]
+        self,
+        agents_data: List[Dict[str, Any]],
+        metrics: List[str],
+        weights: Dict[str, float],
     ) -> List[PerformanceRanking]:
         """Rank agents using Condorcet method."""
         rankings = []
@@ -1137,10 +1200,12 @@ class ComparativeAnalysisEngine(BaseMetric):
             for j in range(n_agents):
                 if i != j:
                     agent1_score = sum(
-                        agents_data[i].get(metric, 0.0) * weights[metric] for metric in metrics
+                        agents_data[i].get(metric, 0.0) * weights[metric]
+                        for metric in metrics
                     )
                     agent2_score = sum(
-                        agents_data[j].get(metric, 0.0) * weights[metric] for metric in metrics
+                        agents_data[j].get(metric, 0.0) * weights[metric]
+                        for metric in metrics
                     )
 
                     if agent1_score > agent2_score:
@@ -1162,7 +1227,9 @@ class ComparativeAnalysisEngine(BaseMetric):
 
             # Calculate confidence
             total_comparisons = n_agents - 1
-            confidence = abs(score) / total_comparisons if total_comparisons > 0 else 0.0
+            confidence = (
+                abs(score) / total_comparisons if total_comparisons > 0 else 0.0
+            )
 
             # Rank stability
             rank_stability = confidence
@@ -1186,7 +1253,10 @@ class ComparativeAnalysisEngine(BaseMetric):
         return rankings
 
     def create_strength_weakness_profile(
-        self, agent_data: Dict[str, Any], benchmark_data: Dict[str, Any], metrics: List[str]
+        self,
+        agent_data: Dict[str, Any],
+        benchmark_data: Dict[str, Any],
+        metrics: List[str],
     ) -> StrengthWeaknessProfile:
         """
         Create strength and weakness profile for an agent.
@@ -1224,7 +1294,9 @@ class ComparativeAnalysisEngine(BaseMetric):
         # Calculate overall balance
         if len(metrics) > 0:
             balance_ratio = len(strengths) / len(metrics)
-            overall_balance = 1.0 - abs(0.5 - balance_ratio) * 2  # 1.0 = perfectly balanced
+            overall_balance = (
+                1.0 - abs(0.5 - balance_ratio) * 2
+            )  # 1.0 = perfectly balanced
         else:
             overall_balance = 0.0
 
@@ -1273,7 +1345,9 @@ class ComparativeAnalysisEngine(BaseMetric):
 
         for data_point in historical_data:
             timestamp = data_point.get("timestamp", datetime.now())
-            score = sum(data_point.get(metric, 0.0) * weights[metric] for metric in metrics)
+            score = sum(
+                data_point.get(metric, 0.0) * weights[metric] for metric in metrics
+            )
 
             time_points.append(timestamp)
             performance_scores.append(score)
@@ -1482,12 +1556,16 @@ class ComparativeAnalysisEngine(BaseMetric):
             gap_values.append(gap)
 
         # Calculate overall gap
-        overall_gap = sum(gap * weights[metric] for gap, metric in zip(gap_values, metrics))
+        overall_gap = sum(
+            gap * weights[metric] for gap, metric in zip(gap_values, metrics)
+        )
 
         # Calculate gap significance
         if len(gap_values) > 1:
             gap_std = statistics.stdev(gap_values)
-            gap_significance = abs(overall_gap) / (gap_std + 1e-6)  # Avoid division by zero
+            gap_significance = abs(overall_gap) / (
+                gap_std + 1e-6
+            )  # Avoid division by zero
         else:
             gap_significance = abs(overall_gap)
 
@@ -1505,9 +1583,13 @@ class ComparativeAnalysisEngine(BaseMetric):
         closure_recommendations = []
         for metric, gap in gap_metrics.items():
             if gap > 0.1:  # Significant gap
-                closure_recommendations.append(f"Focus on improving {metric} performance")
+                closure_recommendations.append(
+                    f"Focus on improving {metric} performance"
+                )
             elif gap > 0.05:  # Moderate gap
-                closure_recommendations.append(f"Consider optimizing {metric} performance")
+                closure_recommendations.append(
+                    f"Consider optimizing {metric} performance"
+                )
 
         return PerformanceGap(
             agent_name=agent_data.get("name", "Unknown"),
@@ -1545,13 +1627,18 @@ class ComparativeAnalysisEngine(BaseMetric):
                     comparison_matrix[agent1_name][agent2_name] = 1.0  # Self-comparison
                 else:
                     # Calculate similarity score
-                    similarity = self._calculate_agent_similarity(agent1, agent2, metrics)
+                    similarity = self._calculate_agent_similarity(
+                        agent1, agent2, metrics
+                    )
                     comparison_matrix[agent1_name][agent2_name] = similarity
 
         return comparison_matrix
 
     def _calculate_agent_similarity(
-        self, agent1_data: Dict[str, Any], agent2_data: Dict[str, Any], metrics: List[str]
+        self,
+        agent1_data: Dict[str, Any],
+        agent2_data: Dict[str, Any],
+        metrics: List[str],
     ) -> float:
         """Calculate similarity between two agents."""
         values1 = [agent1_data.get(metric, 0.0) for metric in metrics]
@@ -1606,7 +1693,10 @@ class ComparativeAnalysisEngine(BaseMetric):
         return clusters
 
     def perform_pca_analysis(
-        self, agents_data: List[Dict[str, Any]], metrics: List[str], n_components: int = 2
+        self,
+        agents_data: List[Dict[str, Any]],
+        metrics: List[str],
+        n_components: int = 2,
     ) -> Dict[str, Any]:
         """
         Perform PCA analysis on agent performance data.

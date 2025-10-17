@@ -164,7 +164,9 @@ class ECommerceScenario(ScenarioTemplate):
                 "id": f"competitor_{i}",
                 "name": f"Competitor {i}",
                 "market_share": random.uniform(0.1, 0.3),
-                "pricing_strategy": random.choice(["aggressive", "moderate", "premium"]),
+                "pricing_strategy": random.choice(
+                    ["aggressive", "moderate", "premium"]
+                ),
                 "reputation": random.uniform(0.5, 1.0),
             }
             competitors.append(competitor)
@@ -280,7 +282,9 @@ class ECommerceScenario(ScenarioTemplate):
         profit = total_revenue - total_cost
 
         # Calculate market share
-        agent_orders = [order for order in self.orders if order.get("agent_id") == agent_id]
+        agent_orders = [
+            order for order in self.orders if order.get("agent_id") == agent_id
+        ]
         market_share = len(agent_orders) / total_orders if total_orders > 0 else 0
 
         # Update metrics
@@ -409,14 +413,24 @@ class HealthcareScenario(ScenarioTemplate):
             {
                 "id": "diabetes",
                 "name": "Type 2 Diabetes",
-                "symptoms": ["increased thirst", "frequent urination", "fatigue", "blurred vision"],
+                "symptoms": [
+                    "increased thirst",
+                    "frequent urination",
+                    "fatigue",
+                    "blurred vision",
+                ],
                 "severity": random.uniform(0.5, 0.8),
                 "prevalence": random.uniform(0.05, 0.15),
             },
             {
                 "id": "hypertension",
                 "name": "High Blood Pressure",
-                "symptoms": ["headaches", "shortness of breath", "nosebleeds", "chest pain"],
+                "symptoms": [
+                    "headaches",
+                    "shortness of breath",
+                    "nosebleeds",
+                    "chest pain",
+                ],
                 "severity": random.uniform(0.4, 0.7),
                 "prevalence": random.uniform(0.2, 0.4),
             },
@@ -566,7 +580,9 @@ class HealthcareScenario(ScenarioTemplate):
         for patient in self.patients:
             if patient["status"] in ["diagnosed", "treating"]:
                 # Find available staff
-                available_staff = [s for s in self.medical_staff if len(s["patients_assigned"]) < 5]
+                available_staff = [
+                    s for s in self.medical_staff if len(s["patients_assigned"]) < 5
+                ]
                 if available_staff:
                     staff = random.choice(available_staff)
                     staff["patients_assigned"].append(patient["id"])
@@ -590,17 +606,27 @@ class HealthcareScenario(ScenarioTemplate):
         # Calculate healthcare specific metrics
         total_patients = len(self.patients)
         diagnosed_patients = len(
-            [p for p in self.patients if p["status"] in ["diagnosed", "treating", "recovered"]]
+            [
+                p
+                for p in self.patients
+                if p["status"] in ["diagnosed", "treating", "recovered"]
+            ]
         )
         treated_patients = len(
             [p for p in self.patients if p["status"] in ["treating", "recovered"]]
         )
-        recovered_patients = len([p for p in self.patients if p["status"] == "recovered"])
+        recovered_patients = len(
+            [p for p in self.patients if p["status"] == "recovered"]
+        )
 
         # Calculate diagnostic accuracy (simplified)
-        agent_diagnoses = [p for p in self.patients if p.get("diagnosed_by") == agent_id]
+        agent_diagnoses = [
+            p for p in self.patients if p.get("diagnosed_by") == agent_id
+        ]
         if agent_diagnoses:
-            correct_diagnoses = sum(1 for p in agent_diagnoses if p.get("diagnosis_correct", False))
+            correct_diagnoses = sum(
+                1 for p in agent_diagnoses if p.get("diagnosis_correct", False)
+            )
             self.diagnostic_accuracy = correct_diagnoses / len(agent_diagnoses)
 
         # Calculate treatment effectiveness
@@ -640,7 +666,8 @@ class HealthcareScenario(ScenarioTemplate):
             return 0.0
 
         total_wait_time = sum(
-            self.current_tick - p.get("arrival_time", self.current_tick) for p in waiting_patients
+            self.current_tick - p.get("arrival_time", self.current_tick)
+            for p in waiting_patients
         )
 
         return total_wait_time / len(waiting_patients)
@@ -667,7 +694,11 @@ class FinancialScenario(ScenarioTemplate):
         self.market_data = []
         self.portfolios = {}
         self.instruments = []
-        self.market_conditions = {"volatility": 0.2, "trend": "stable", "liquidity": 0.7}
+        self.market_conditions = {
+            "volatility": 0.2,
+            "trend": "stable",
+            "liquidity": 0.7,
+        }
 
     def _validate_domain_parameters(self) -> List[str]:
         """
@@ -720,7 +751,9 @@ class FinancialScenario(ScenarioTemplate):
             }
         )
 
-        logger.info(f"Initialized financial scenario with {len(self.instruments)} instruments")
+        logger.info(
+            f"Initialized financial scenario with {len(self.instruments)} instruments"
+        )
 
     def _generate_instruments(self, count: int) -> List[Dict[str, Any]]:
         """Generate financial instruments."""
@@ -815,7 +848,9 @@ class FinancialScenario(ScenarioTemplate):
         """Update instrument prices."""
         for instrument in self.instruments:
             # Calculate price change
-            volatility_factor = instrument["volatility"] * self.market_conditions["volatility"]
+            volatility_factor = (
+                instrument["volatility"] * self.market_conditions["volatility"]
+            )
 
             # Apply trend
             trend_factor = 0.0
@@ -836,7 +871,12 @@ class FinancialScenario(ScenarioTemplate):
 
             # Update market data
             market_data = next(
-                (md for md in self.market_data if md["instrument_id"] == instrument["id"]), None
+                (
+                    md
+                    for md in self.market_data
+                    if md["instrument_id"] == instrument["id"]
+                ),
+                None,
             )
             if market_data:
                 market_data["prices"].append(instrument["current_price"])
@@ -928,11 +968,15 @@ class FinancialScenario(ScenarioTemplate):
 
         # Calculate Sharpe ratio (simplified, assuming risk-free rate of 2%)
         risk_free_rate = 0.02
-        sharpe_ratio = (total_return - risk_free_rate) / volatility if volatility > 0 else 0.0
+        sharpe_ratio = (
+            (total_return - risk_free_rate) / volatility if volatility > 0 else 0.0
+        )
 
         # Calculate diversification
         holdings = portfolio.get("holdings", {})
-        diversification = len(holdings) / len(self.instruments) if self.instruments else 0.0
+        diversification = (
+            len(holdings) / len(self.instruments) if self.instruments else 0.0
+        )
 
         # Update metrics
         financial_metrics = {
@@ -1119,7 +1163,9 @@ class LegalScenario(ScenarioTemplate):
         for i in range(count):
             # Assign random legal issues
             num_issues = random.randint(0, 3)
-            issues = random.sample(self.legal_issues, min(num_issues, len(self.legal_issues)))
+            issues = random.sample(
+                self.legal_issues, min(num_issues, len(self.legal_issues))
+            )
 
             document = {
                 "id": f"document_{i}",
@@ -1127,9 +1173,12 @@ class LegalScenario(ScenarioTemplate):
                 "title": f"Document {i}",
                 "content": f"Content of document {i}",
                 "relevant_issues": [issue["id"] for issue in issues],
-                "confidentiality": random.choice(["public", "confidential", "privileged"]),
+                "confidentiality": random.choice(
+                    ["public", "confidential", "privileged"]
+                ),
                 "page_count": random.randint(1, 50),
-                "creation_date": datetime.now() - timedelta(days=random.randint(0, 365)),
+                "creation_date": datetime.now()
+                - timedelta(days=random.randint(0, 365)),
             }
             documents.append(document)
 
@@ -1141,8 +1190,12 @@ class LegalScenario(ScenarioTemplate):
 
         for i in range(count):
             # Assign random legal issues
-            num_issues = 1 if complexity == "simple" else (2 if complexity == "medium" else 3)
-            issues = random.sample(self.legal_issues, min(num_issues, len(self.legal_issues)))
+            num_issues = (
+                1 if complexity == "simple" else (2 if complexity == "medium" else 3)
+            )
+            issues = random.sample(
+                self.legal_issues, min(num_issues, len(self.legal_issues))
+            )
 
             # Assign relevant documents
             relevant_docs = random.sample(self.documents, random.randint(5, 20))
@@ -1201,9 +1254,13 @@ class LegalScenario(ScenarioTemplate):
                 if random.random() < 0.2:  # 20% chance of progress
                     # Update case status
                     if random.random() < 0.7:  # 70% chance of positive progress
-                        case["progress"] = case.get("progress", 0) + random.uniform(0.1, 0.3)
+                        case["progress"] = case.get("progress", 0) + random.uniform(
+                            0.1, 0.3
+                        )
                     else:  # 30% chance of setback
-                        case["progress"] = case.get("progress", 0) - random.uniform(0.05, 0.15)
+                        case["progress"] = case.get("progress", 0) - random.uniform(
+                            0.05, 0.15
+                        )
 
                     # Check if case should be resolved
                     if case.get("progress", 0) >= 1.0:
@@ -1250,7 +1307,9 @@ class LegalScenario(ScenarioTemplate):
 
         # Calculate legal specific metrics
         total_documents = len(self.documents)
-        reviewed_documents = len([d for d in self.documents if d.get("reviewed_by") == agent_id])
+        reviewed_documents = len(
+            [d for d in self.documents if d.get("reviewed_by") == agent_id]
+        )
 
         # Calculate document accuracy
         agent_reviews = [d for d in self.documents if d.get("reviewed_by") == agent_id]
@@ -1272,7 +1331,9 @@ class LegalScenario(ScenarioTemplate):
         # Calculate compliance score
         agent_cases = [c for c in self.cases if c.get("handled_by") == agent_id]
         if agent_cases:
-            compliant_cases = sum(1 for c in agent_cases if c.get("compliance_score", 0) > 0.8)
+            compliant_cases = sum(
+                1 for c in agent_cases if c.get("compliance_score", 0) > 0.8
+            )
             self.compliance_score = compliant_cases / len(agent_cases)
 
         # Update metrics
@@ -1296,7 +1357,8 @@ class LegalScenario(ScenarioTemplate):
             return 0.0
 
         total_time = sum(
-            d.get("review_end_time", 0) - d.get("review_start_time", 0) for d in agent_reviews
+            d.get("review_end_time", 0) - d.get("review_start_time", 0)
+            for d in agent_reviews
         )
 
         return total_time / len(agent_reviews)
@@ -1482,7 +1544,9 @@ class ScientificScenario(ScenarioTemplate):
                     "id": f"experiment_{len(self.experiments)}",
                     "dataset_id": dataset["id"],
                     "hypothesis_id": hypothesis["id"],
-                    "method": random.choice(["controlled", "observational", "simulation"]),
+                    "method": random.choice(
+                        ["controlled", "observational", "simulation"]
+                    ),
                     "status": "running",  # running, completed, failed
                     "start_time": tick,
                     "expected_duration": random.randint(5, 20),
@@ -1492,7 +1556,9 @@ class ScientificScenario(ScenarioTemplate):
         # Update running experiments
         for experiment in self.experiments:
             if experiment["status"] == "running":
-                experiment["progress"] = experiment.get("progress", 0) + random.uniform(0.1, 0.2)
+                experiment["progress"] = experiment.get("progress", 0) + random.uniform(
+                    0.1, 0.2
+                )
 
                 if experiment["progress"] >= 1.0:
                     # Experiment completed
@@ -1520,20 +1586,32 @@ class ScientificScenario(ScenarioTemplate):
 
         # Calculate scientific specific metrics
         total_datasets = len(self.datasets)
-        analyzed_datasets = len([d for d in self.datasets if d.get("analyzed_by") == agent_id])
+        analyzed_datasets = len(
+            [d for d in self.datasets if d.get("analyzed_by") == agent_id]
+        )
 
         # Calculate hypothesis accuracy
-        agent_hypotheses = [h for h in self.hypotheses if h.get("proposed_by") == agent_id]
+        agent_hypotheses = [
+            h for h in self.hypotheses if h.get("proposed_by") == agent_id
+        ]
         if agent_hypotheses:
-            tested_hypotheses = [h for h in agent_hypotheses if h["status"] != "untested"]
+            tested_hypotheses = [
+                h for h in agent_hypotheses if h["status"] != "untested"
+            ]
             if tested_hypotheses:
-                correct_hypotheses = sum(1 for h in tested_hypotheses if h["status"] == "supported")
+                correct_hypotheses = sum(
+                    1 for h in tested_hypotheses if h["status"] == "supported"
+                )
                 self.hypothesis_accuracy = correct_hypotheses / len(tested_hypotheses)
 
         # Calculate experiment reproducibility
-        agent_experiments = [e for e in self.experiments if e.get("conducted_by") == agent_id]
+        agent_experiments = [
+            e for e in self.experiments if e.get("conducted_by") == agent_id
+        ]
         if agent_experiments:
-            completed_experiments = [e for e in agent_experiments if e["status"] == "completed"]
+            completed_experiments = [
+                e for e in agent_experiments if e["status"] == "completed"
+            ]
             if completed_experiments:
                 reproducibility_scores = [
                     e.get("reproducibility", 0.0) for e in completed_experiments
@@ -1554,7 +1632,9 @@ class ScientificScenario(ScenarioTemplate):
             "experiments_conducted": len(agent_experiments),
             "experiment_reproducibility": self.experiment_reproducibility,
             "research_impact": self.research_impact,
-            "publications": len([p for p in self.publications if p.get("author") == agent_id]),
+            "publications": len(
+                [p for p in self.publications if p.get("author") == agent_id]
+            ),
         }
 
         base_metrics.update(scientific_metrics)

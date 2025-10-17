@@ -38,7 +38,7 @@ export FBA_BENCH_REDIS_URL="redis://localhost:6379/0"
 
 # Start API server in background
 echo "🔧 Starting API server..."
-nohup poetry run uvicorn fba_bench_api.main:app --host 0.0.0.0 --port 8000 --reload >/dev/null 2>&1 &
+nohup poetry run uvicorn api_server:app --host 0.0.0.0 --port 8000 --reload >/dev/null 2>&1 &
 API_PID=$!
 
 # Start frontend in background

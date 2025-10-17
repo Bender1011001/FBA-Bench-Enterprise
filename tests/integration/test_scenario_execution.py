@@ -121,7 +121,9 @@ class MockAgentForScenario(BaseAgentRunner):
             return
 
         # Calculate task completion rate
-        completed_actions = len([a for a in self.actions_taken if a["status"] == "completed"])
+        completed_actions = len(
+            [a for a in self.actions_taken if a["status"] == "completed"]
+        )
         self.performance_metrics["task_completion_rate"] = completed_actions / len(
             self.actions_taken
         )
@@ -157,7 +159,11 @@ class TestScenarioWithValidation(BaseScenario):
 
         if "complexity" in self.parameters:
             complexity = self.parameters["complexity"]
-            if not isinstance(complexity, (int, float)) or complexity < 1 or complexity > 10:
+            if (
+                not isinstance(complexity, (int, float))
+                or complexity < 1
+                or complexity > 10
+            ):
                 errors.append("Complexity must be a number between 1 and 10")
 
         return errors
@@ -223,7 +229,9 @@ class TestScenarioWithValidation(BaseScenario):
             # Simulate task completion
             if tick % 5 == 0:
                 tasks_completed = agent_state.get("tasks_completed", 0)
-                agent_state["tasks_completed"] = tasks_completed + np.random.randint(1, 3)
+                agent_state["tasks_completed"] = tasks_completed + np.random.randint(
+                    1, 3
+                )
 
             # Record tick execution
             agent_state["execution_history"].append(
@@ -245,7 +253,9 @@ class TestScenarioWithValidation(BaseScenario):
             "timestamp": datetime.now().isoformat(),
             "status": "completed",
             "tick": tick,
-            "agent_states": {aid: state.copy() for aid, state in self.agent_states.items()},
+            "agent_states": {
+                aid: state.copy() for aid, state in self.agent_states.items()
+            },
         }
 
         self.execution_history.append(
@@ -268,11 +278,17 @@ class TestScenarioWithValidation(BaseScenario):
         tasks_completed = agent_state.get("tasks_completed", 0)
 
         # Calculate efficiency metrics
-        efficiency_score = progress / (self.current_tick + 1) if self.current_tick > 0 else 0
+        efficiency_score = (
+            progress / (self.current_tick + 1) if self.current_tick > 0 else 0
+        )
 
         # Calculate task completion rate
-        expected_tasks = self.duration_ticks / 5 * 2  # Expected tasks based on simulation
-        task_completion_rate = tasks_completed / expected_tasks if expected_tasks > 0 else 0
+        expected_tasks = (
+            self.duration_ticks / 5 * 2
+        )  # Expected tasks based on simulation
+        task_completion_rate = (
+            tasks_completed / expected_tasks if expected_tasks > 0 else 0
+        )
 
         # Aggregate validation results
         validation_results = agent_state.get("validation_results", [])
@@ -289,14 +305,19 @@ class TestScenarioWithValidation(BaseScenario):
             "task_completion_rate": task_completion_rate,
             "validation_success_rate": validation_success_rate,
             "overall_score": (
-                progress + efficiency_score + task_completion_rate + validation_success_rate
+                progress
+                + efficiency_score
+                + task_completion_rate
+                + validation_success_rate
             )
             / 4,
         }
 
         return {**base_metrics, **scenario_metrics}
 
-    def _validate_agent_state(self, agent_id: str, agent_state: Dict[str, Any]) -> Dict[str, Any]:
+    def _validate_agent_state(
+        self, agent_id: str, agent_state: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Validate agent state at checkpoints."""
         validation_result = {
             "agent_id": agent_id,
@@ -316,7 +337,9 @@ class TestScenarioWithValidation(BaseScenario):
         tasks_completed = agent_state.get("tasks_completed", 0)
         if tasks_completed < 0:
             validation_result["valid"] = False
-            validation_result["errors"].append(f"Negative tasks completed: {tasks_completed}")
+            validation_result["errors"].append(
+                f"Negative tasks completed: {tasks_completed}"
+            )
 
         # Check for warnings
         if progress < 0.3 and self.current_tick > self.duration_ticks * 0.5:
@@ -342,7 +365,9 @@ class TestScenarioWithValidation(BaseScenario):
             "successful_validations": successful_validations,
             "failed_validations": total_validations - successful_validations,
             "success_rate": (
-                successful_validations / total_validations if total_validations > 0 else 0
+                successful_validations / total_validations
+                if total_validations > 0
+                else 0
             ),
             "total_errors": total_errors,
             "total_warnings": total_warnings,
@@ -384,7 +409,10 @@ class TestScenarioExecution:
                 "difficulty": "medium",
                 "complexity": 5,
                 "test_data": {"key": "value"},
-                "validation_config": {"enable_validation": True, "validation_interval": 10},
+                "validation_config": {
+                    "enable_validation": True,
+                    "validation_interval": 10,
+                },
             },
         )
 
@@ -664,7 +692,9 @@ class TestScenarioExecution:
             parameters={"difficulty": "invalid", "complexity": 5},
         )
 
-        invalid_difficulty_scenario = TestScenarioWithValidation(invalid_difficulty_config)
+        invalid_difficulty_scenario = TestScenarioWithValidation(
+            invalid_difficulty_config
+        )
         errors = invalid_difficulty_scenario.validate()
 
         assert len(errors) > 0
@@ -679,11 +709,15 @@ class TestScenarioExecution:
             parameters={"difficulty": "medium", "complexity": 15},
         )
 
-        invalid_complexity_scenario = TestScenarioWithValidation(invalid_complexity_config)
+        invalid_complexity_scenario = TestScenarioWithValidation(
+            invalid_complexity_config
+        )
         errors = invalid_complexity_scenario.validate()
 
         assert len(errors) > 0
-        assert any("Complexity must be a number between 1 and 10" in error for error in errors)
+        assert any(
+            "Complexity must be a number between 1 and 10" in error for error in errors
+        )
 
     @pytest.mark.asyncio
     async def test_scenario_template_execution(self, scenario_config):
@@ -872,14 +906,20 @@ class TestScenarioExecution:
             await test_scenario.evaluate_agent_performance("nonexistent_agent")
 
     @pytest.mark.asyncio
-    async def test_scenario_concurrent_execution(self, benchmark_engine, scenario_config):
+    async def test_scenario_concurrent_execution(
+        self, benchmark_engine, scenario_config
+    ):
         """Test scenario concurrent execution."""
         # Create multiple mock agents
         agent1_config = AgentConfig(
-            agent_id="agent1", agent_type="mock_for_scenario", agent_class="MockAgentForScenario"
+            agent_id="agent1",
+            agent_type="mock_for_scenario",
+            agent_class="MockAgentForScenario",
         )
         agent2_config = AgentConfig(
-            agent_id="agent2", agent_type="mock_for_scenario", agent_class="MockAgentForScenario"
+            agent_id="agent2",
+            agent_type="mock_for_scenario",
+            agent_class="MockAgentForScenario",
         )
 
         agent1 = MockAgentForScenario(agent1_config)
@@ -915,8 +955,12 @@ class TestScenarioExecution:
 
         # Run benchmarks concurrently
         tasks = [
-            benchmark_engine.run_benchmark(scenario_name="scenario1", agent_ids=["agent1"]),
-            benchmark_engine.run_benchmark(scenario_name="scenario2", agent_ids=["agent2"]),
+            benchmark_engine.run_benchmark(
+                scenario_name="scenario1", agent_ids=["agent1"]
+            ),
+            benchmark_engine.run_benchmark(
+                scenario_name="scenario2", agent_ids=["agent2"]
+            ),
         ]
 
         results = await asyncio.gather(*tasks)
@@ -1005,7 +1049,9 @@ class TestScenarioExecution:
         assert 0 <= scenario_validation["success_rate"] <= 1
 
     @pytest.mark.asyncio
-    async def test_scenario_result_persistence(self, benchmark_engine, mock_agent, test_scenario):
+    async def test_scenario_result_persistence(
+        self, benchmark_engine, mock_agent, test_scenario
+    ):
         """Test scenario result persistence."""
         # Initialize and register components
         await mock_agent.initialize()
@@ -1013,7 +1059,9 @@ class TestScenarioExecution:
         benchmark_engine.register_scenario(test_scenario)
 
         # Create a temporary file for persistence
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".json") as temp_file:
+        with tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".json"
+        ) as temp_file:
             temp_filename = temp_file.name
 
         try:

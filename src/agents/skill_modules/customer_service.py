@@ -161,7 +161,9 @@ class CustomerServiceSkill(BaseSkill):
 
         # Configuration parameters
         self.config = config or {}
-        self.response_time_target = self.config.get("response_time_hours", 12)  # 12 hours
+        self.response_time_target = self.config.get(
+            "response_time_hours", 12
+        )  # 12 hours
         self.satisfaction_target = self.config.get("satisfaction_target", 0.85)  # 85%
         self.escalation_threshold = self.config.get(
             "escalation_threshold", 0.3
@@ -251,9 +253,13 @@ class CustomerServiceSkill(BaseSkill):
                 actions.extend(await self._handle_tick_event(event))
 
             # Filter actions by confidence threshold
-            confidence_threshold = self.adaptation_parameters.get("confidence_threshold", 0.6)
+            confidence_threshold = self.adaptation_parameters.get(
+                "confidence_threshold", 0.6
+            )
             filtered_actions = [
-                action for action in actions if action.confidence >= confidence_threshold
+                action
+                for action in actions
+                if action.confidence >= confidence_threshold
             ]
 
             return filtered_actions if filtered_actions else None
@@ -322,15 +328,21 @@ class CustomerServiceSkill(BaseSkill):
 
         try:
             # Get resource constraints
-            response_capacity = constraints.get("response_capacity", 10)  # Max responses per period
-            escalation_budget = constraints.get("escalation_budget", 5)  # Max escalations
+            response_capacity = constraints.get(
+                "response_capacity", 10
+            )  # Max responses per period
+            escalation_budget = constraints.get(
+                "escalation_budget", 5
+            )  # Max escalations
 
             # Process high-priority messages first
             priority_actions = await self._process_priority_messages(response_capacity)
             actions.extend(priority_actions)
 
             # Handle reviews requiring response
-            review_actions = await self._generate_review_responses(response_capacity - len(actions))
+            review_actions = await self._generate_review_responses(
+                response_capacity - len(actions)
+            )
             actions.extend(review_actions)
 
             # Proactive satisfaction improvements
@@ -340,7 +352,8 @@ class CustomerServiceSkill(BaseSkill):
 
             # Sort by priority and urgency
             actions.sort(
-                key=lambda x: (x.priority, -self._calculate_urgency_score(x)), reverse=True
+                key=lambda x: (x.priority, -self._calculate_urgency_score(x)),
+                reverse=True,
             )
 
             return actions[:response_capacity]  # Respect capacity constraints
@@ -409,7 +422,9 @@ class CustomerServiceSkill(BaseSkill):
                 response_strategy = "general_inquiry"
 
             # Generate response content
-            response_content = await self._generate_response_content(message, response_strategy)
+            response_content = await self._generate_response_content(
+                message, response_strategy
+            )
 
             # Calculate confidence based on message complexity and sentiment
             confidence = self._calculate_response_confidence(message)
@@ -425,7 +440,9 @@ class CustomerServiceSkill(BaseSkill):
             # Calculate priority based on message urgency and customer value
             priority = self._calculate_response_priority(message)
 
-            action_type = "escalate_issue" if needs_escalation else "respond_to_customer_message"
+            action_type = (
+                "escalate_issue" if needs_escalation else "respond_to_customer_message"
+            )
 
             parameters = {
                 "message_id": message.message_id,
@@ -456,8 +473,12 @@ class CustomerServiceSkill(BaseSkill):
                     "escalation_slot": needs_escalation,
                 },
                 expected_outcome={
-                    "customer_satisfaction_improvement": 0.3 if message.sentiment < 0 else 0.1,
-                    "issue_resolution_probability": 0.8 if not needs_escalation else 0.9,
+                    "customer_satisfaction_improvement": (
+                        0.3 if message.sentiment < 0 else 0.1
+                    ),
+                    "issue_resolution_probability": (
+                        0.8 if not needs_escalation else 0.9
+                    ),
                     "response_time_hours": 1 if needs_escalation else 2,
                 },
                 skill_source=self.skill_name,
@@ -467,7 +488,9 @@ class CustomerServiceSkill(BaseSkill):
             logger.error(f"Error creating message response action: {e}")
             return None
 
-    async def _generate_response_content(self, message: CustomerMessage, strategy: str) -> str:
+    async def _generate_response_content(
+        self, message: CustomerMessage, strategy: str
+    ) -> str:
         """Generate appropriate response content for customer message."""
         # Get base template
         template_key = self._get_template_key(strategy)
@@ -479,9 +502,7 @@ class CustomerServiceSkill(BaseSkill):
         specific_response = ""
 
         if strategy == "complaint_resolution":
-            specific_response = (
-                "We're investigating this issue and will provide a resolution within 24 hours."
-            )
+            specific_response = "We're investigating this issue and will provide a resolution within 24 hours."
         elif strategy == "return_assistance":
             return_info = self.knowledge_base.get("return_policy", {})
             specific_response = (
@@ -501,11 +522,15 @@ class CustomerServiceSkill(BaseSkill):
             specific_response=specific_response,
             customer_name=message.customer_id,  # In real system, would lookup actual name
             resolution_offer=(
-                "full refund or replacement" if message.sentiment < -0.7 else "store credit"
+                "full refund or replacement"
+                if message.sentiment < -0.7
+                else "store credit"
             ),
             return_instructions=specific_response if "return" in strategy else "",
             troubleshooting_steps=specific_response if "technical" in strategy else "",
-            timeframe="24 hours" if message.priority == MessagePriority.URGENT else "48 hours",
+            timeframe=(
+                "24 hours" if message.priority == MessagePriority.URGENT else "48 hours"
+            ),
         )
 
         return response
@@ -537,7 +562,9 @@ class CustomerServiceSkill(BaseSkill):
 
         return actions
 
-    async def _create_review_response_action(self, review: CustomerReview) -> Optional[SkillAction]:
+    async def _create_review_response_action(
+        self, review: CustomerReview
+    ) -> Optional[SkillAction]:
         """Create response action for customer review."""
         try:
             # Determine response approach based on rating and sentiment
@@ -553,14 +580,18 @@ class CustomerServiceSkill(BaseSkill):
 
             if review.rating <= 2:
                 resolution_offer = "We'd like to make this right. Please contact us directly so we can resolve this issue."
-                response_content = base_response.format(resolution_offer=resolution_offer)
+                response_content = base_response.format(
+                    resolution_offer=resolution_offer
+                )
             else:
                 response_content = base_response
 
             confidence = (
                 0.8 if review.rating <= 2 else 0.9
             )  # Higher confidence for positive responses
-            priority = 0.7 if review.rating <= 2 else 0.4  # Higher priority for negative reviews
+            priority = (
+                0.7 if review.rating <= 2 else 0.4
+            )  # Higher priority for negative reviews
 
             return SkillAction(
                 action_type="respond_to_review",
@@ -578,7 +609,9 @@ class CustomerServiceSkill(BaseSkill):
                 resource_requirements={"response_time_minutes": 10},
                 expected_outcome={
                     "reputation_protection": 0.6 if review.rating <= 2 else 0.2,
-                    "customer_retention_probability": 0.4 if review.rating <= 2 else 0.8,
+                    "customer_retention_probability": (
+                        0.4 if review.rating <= 2 else 0.8
+                    ),
                 },
                 skill_source=self.skill_name,
             )
@@ -596,7 +629,9 @@ class CustomerServiceSkill(BaseSkill):
 
         # Identify areas needing improvement
         if current_metrics.satisfaction_score < self.satisfaction_target:
-            improvement_action = await self._create_satisfaction_improvement_action(current_metrics)
+            improvement_action = await self._create_satisfaction_improvement_action(
+                current_metrics
+            )
             if improvement_action:
                 actions.append(improvement_action)
 
@@ -609,22 +644,32 @@ class CustomerServiceSkill(BaseSkill):
 
         return actions
 
-    async def _calculate_current_satisfaction_metrics(self) -> CustomerSatisfactionMetrics:
+    async def _calculate_current_satisfaction_metrics(
+        self,
+    ) -> CustomerSatisfactionMetrics:
         """Calculate current customer satisfaction metrics."""
         now = datetime.now()
         period_start = now - timedelta(days=7)  # Last 7 days
 
         # Calculate metrics based on recent interactions
-        recent_scores = [score for score in self.satisfaction_scores[-20:]]  # Last 20 interactions
-        avg_satisfaction = sum(recent_scores) / len(recent_scores) if recent_scores else 0.5
+        recent_scores = [
+            score for score in self.satisfaction_scores[-20:]
+        ]  # Last 20 interactions
+        avg_satisfaction = (
+            sum(recent_scores) / len(recent_scores) if recent_scores else 0.5
+        )
 
         # Calculate response time from recent interactions
         avg_response_time = self.average_response_time
 
         # Calculate resolution and escalation rates
-        recent_interactions = len(self.interaction_history[-50:])  # Last 50 interactions
+        recent_interactions = len(
+            self.interaction_history[-50:]
+        )  # Last 50 interactions
         escalations = min(self.escalation_count, recent_interactions)
-        escalation_rate = escalations / recent_interactions if recent_interactions > 0 else 0.0
+        escalation_rate = (
+            escalations / recent_interactions if recent_interactions > 0 else 0.0
+        )
         resolution_rate = 1.0 - escalation_rate  # Simplified calculation
 
         return CustomerSatisfactionMetrics(
@@ -635,8 +680,12 @@ class CustomerServiceSkill(BaseSkill):
             satisfaction_score=avg_satisfaction,
             resolution_rate=resolution_rate,
             escalation_rate=escalation_rate,
-            positive_reviews=len([r for r in self.pending_reviews.values() if r.rating >= 4]),
-            negative_reviews=len([r for r in self.pending_reviews.values() if r.rating <= 2]),
+            positive_reviews=len(
+                [r for r in self.pending_reviews.values() if r.rating >= 4]
+            ),
+            negative_reviews=len(
+                [r for r in self.pending_reviews.values() if r.rating <= 2]
+            ),
         )
 
     async def _create_satisfaction_improvement_action(
@@ -659,7 +708,9 @@ class CustomerServiceSkill(BaseSkill):
                     "current_satisfaction": metrics.satisfaction_score,
                     "target_satisfaction": self.satisfaction_target,
                     "improvement_areas": improvement_areas,
-                    "priority_focus": improvement_areas[0] if improvement_areas else "general",
+                    "priority_focus": (
+                        improvement_areas[0] if improvement_areas else "general"
+                    ),
                     "implementation_timeline": "immediate",
                 },
                 confidence=0.7,
@@ -681,7 +732,9 @@ class CustomerServiceSkill(BaseSkill):
             logger.error(f"Error creating satisfaction improvement action: {e}")
             return None
 
-    async def _generate_synthetic_interactions(self, event: TickEvent) -> List[SkillAction]:
+    async def _generate_synthetic_interactions(
+        self, event: TickEvent
+    ) -> List[SkillAction]:
         """Generate synthetic customer interactions for testing purposes."""
         actions = []
 
@@ -699,7 +752,9 @@ class CustomerServiceSkill(BaseSkill):
 
         return actions
 
-    async def _create_synthetic_message(self, tick_number: int) -> Optional[CustomerMessage]:
+    async def _create_synthetic_message(
+        self, tick_number: int
+    ) -> Optional[CustomerMessage]:
         """Create synthetic customer message for testing."""
         import random
 
@@ -719,7 +774,9 @@ class CustomerServiceSkill(BaseSkill):
             MessageType.FEEDBACK: "I wanted to share some feedback about my experience.",
         }
 
-        content = content_templates.get(message_type, "I need assistance with my order.")
+        content = content_templates.get(
+            message_type, "I need assistance with my order."
+        )
 
         return CustomerMessage(
             message_id=f"msg_{tick_number}_{random.randint(1000, 9999)}",
@@ -729,10 +786,13 @@ class CustomerServiceSkill(BaseSkill):
             priority=priority,
             content=content,
             sentiment=sentiment,
-            response_deadline=datetime.now() + timedelta(hours=self.response_time_target),
+            response_deadline=datetime.now()
+            + timedelta(hours=self.response_time_target),
         )
 
-    async def _create_synthetic_review(self, tick_number: int) -> Optional[CustomerReview]:
+    async def _create_synthetic_review(
+        self, tick_number: int
+    ) -> Optional[CustomerReview]:
         """Create synthetic customer review for testing."""
         import random
 
@@ -812,7 +872,9 @@ class CustomerServiceSkill(BaseSkill):
 
         # Adjust based on message complexity
         complexity_indicators = ["legal", "refund", "lawsuit", "attorney"]
-        if any(indicator in message.content.lower() for indicator in complexity_indicators):
+        if any(
+            indicator in message.content.lower() for indicator in complexity_indicators
+        ):
             base_confidence -= 0.3
 
         # Adjust based on sentiment
@@ -901,13 +963,17 @@ class CustomerServiceSkill(BaseSkill):
 
         return actions
 
-    async def _generate_review_responses(self, remaining_capacity: int) -> List[SkillAction]:
+    async def _generate_review_responses(
+        self, remaining_capacity: int
+    ) -> List[SkillAction]:
         """Generate review responses within remaining capacity."""
         actions = []
 
         # Focus on negative reviews requiring response
         negative_reviews = [
-            r for r in self.pending_reviews.values() if r.rating <= 2 and r.requires_response
+            r
+            for r in self.pending_reviews.values()
+            if r.rating <= 2 and r.requires_response
         ]
 
         for review in negative_reviews[:remaining_capacity]:
@@ -917,7 +983,9 @@ class CustomerServiceSkill(BaseSkill):
 
         return actions
 
-    async def _generate_proactive_actions(self, context: SkillContext) -> List[SkillAction]:
+    async def _generate_proactive_actions(
+        self, context: SkillContext
+    ) -> List[SkillAction]:
         """Generate proactive customer service actions."""
         actions = []
 
@@ -948,7 +1016,10 @@ class CustomerServiceSkill(BaseSkill):
                     reasoning=f"Proactive follow-up for high-value sale (${event.total_revenue.to_float():.2f})",
                     priority=0.4,
                     resource_requirements={"outreach_capacity": 1},
-                    expected_outcome={"customer_satisfaction_boost": 0.2, "issue_prevention": 0.3},
+                    expected_outcome={
+                        "customer_satisfaction_boost": 0.2,
+                        "issue_prevention": 0.3,
+                    },
                     skill_source=self.skill_name,
                 )
             else:
@@ -968,7 +1039,10 @@ class CustomerServiceSkill(BaseSkill):
                     reasoning="Proactive customer satisfaction measurement",
                     priority=0.3,
                     resource_requirements={"survey_capacity": 1},
-                    expected_outcome={"satisfaction_insights": True, "customer_engagement": 0.2},
+                    expected_outcome={
+                        "satisfaction_insights": True,
+                        "customer_engagement": 0.2,
+                    },
                     skill_source=self.skill_name,
                 )
 
@@ -976,7 +1050,9 @@ class CustomerServiceSkill(BaseSkill):
             logger.error(f"Error creating proactive follow-up action: {e}")
             return None
 
-    async def _create_issue_prevention_action(self, event: SaleOccurred) -> Optional[SkillAction]:
+    async def _create_issue_prevention_action(
+        self, event: SaleOccurred
+    ) -> Optional[SkillAction]:
         """Create issue prevention action for low trust score sales."""
         try:
             return SkillAction(
@@ -1027,7 +1103,10 @@ class CustomerServiceSkill(BaseSkill):
                 confidence=0.8,
                 reasoning=f"Response time ({metrics.average_response_time:.1f}h) exceeds target ({self.response_time_target}h)",
                 priority=0.6,
-                resource_requirements={"process_optimization": True, "staff_training": True},
+                resource_requirements={
+                    "process_optimization": True,
+                    "staff_training": True,
+                },
                 expected_outcome={
                     "response_time_reduction": metrics.average_response_time
                     - self.response_time_target,
@@ -1062,7 +1141,9 @@ class CustomerServiceSkill(BaseSkill):
             return True
         return False
 
-    async def track_satisfaction(self, interaction_id: str, satisfaction_score: float) -> None:
+    async def track_satisfaction(
+        self, interaction_id: str, satisfaction_score: float
+    ) -> None:
         """Public method to track satisfaction for external use."""
         self.satisfaction_scores.append(satisfaction_score)
         self.interaction_history.append(
@@ -1078,7 +1159,9 @@ class CustomerServiceSkill(BaseSkill):
         if len(self.satisfaction_scores) == 1:
             avg_satisfaction = satisfaction_score
         else:
-            prev_avg = sum(self.satisfaction_scores[:-1]) / len(self.satisfaction_scores[:-1])
+            prev_avg = sum(self.satisfaction_scores[:-1]) / len(
+                self.satisfaction_scores[:-1]
+            )
             avg_satisfaction = (prev_avg * 0.9) + (satisfaction_score * 0.1)
 
         logger.debug(

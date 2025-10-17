@@ -14,6 +14,7 @@ import time
 from unittest.mock import patch
 
 import pytest
+from services.world_store import ProductState, WorldStore
 
 from agent_runners.agent_manager import AgentManager
 from benchmarking.config.pydantic_config import AgentConfig, LLMConfig, PydanticConfig
@@ -31,7 +32,6 @@ from constraints.token_counter import TokenCounter
 
 # Import the components to test
 from fba_bench_api.server.app_factory import lifespan
-from services.world_store import ProductState, WorldStore
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -55,7 +55,10 @@ class TestSystemIntegration:
         """
         return PydanticConfig(
             llm_config=LLMConfig(
-                model="gpt-3.5-turbo", temperature=0.7, max_tokens=1000, api_key="test-api-key"
+                model="gpt-3.5-turbo",
+                temperature=0.7,
+                max_tokens=1000,
+                api_key="test-api-key",
             ),
             agent_configs=[
                 AgentConfig(
@@ -89,7 +92,9 @@ class TestSystemIntegration:
         return WorldStore()
 
     @pytest.fixture
-    def agent_manager(self, world_store: WorldStore, test_config: PydanticConfig) -> AgentManager:
+    def agent_manager(
+        self, world_store: WorldStore, test_config: PydanticConfig
+    ) -> AgentManager:
         """
         Create a test AgentManager.
 
@@ -243,7 +248,9 @@ class TestSystemIntegration:
         """
         # Create a product state
         product_id = "test-product"
-        product_state = ProductState(product_id=product_id, price=10.0, inventory=100, quality=0.8)
+        product_state = ProductState(
+            product_id=product_id, price=10.0, inventory=100, quality=0.8
+        )
 
         # Set the product state
         world_store.set_product_state(product_id, product_state)
@@ -267,7 +274,9 @@ class TestSystemIntegration:
         """
         # Create a product state
         product_id = "test-product"
-        product_state = ProductState(product_id=product_id, price=10.0, inventory=100, quality=0.8)
+        product_state = ProductState(
+            product_id=product_id, price=10.0, inventory=100, quality=0.8
+        )
 
         # Set the product state
         world_store.set_product_state(product_id, product_state)
@@ -346,7 +355,9 @@ class TestSystemIntegration:
         # Create a context
         context = {
             "tick": 1,
-            "product_state": {"test-product": {"price": 10.0, "inventory": 100, "quality": 0.8}},
+            "product_state": {
+                "test-product": {"price": 10.0, "inventory": 100, "quality": 0.8}
+            },
             "market_state": {"demand": 50, "competitor_price": 12.0},
         }
 
@@ -393,14 +404,17 @@ class TestSystemIntegration:
             pricing_scenario: Test PricingScenario
         """
         # Mock the agent manager to avoid actual LLM calls
-        with patch.object(benchmark_engine.agent_manager, "decision_cycle") as mock_decision_cycle:
+        with patch.object(
+            benchmark_engine.agent_manager, "decision_cycle"
+        ) as mock_decision_cycle:
             mock_decision_cycle.return_value = [
                 {"agent_id": "test-agent", "action": "set_price", "price": 11.0}
             ]
 
             # Run the benchmark
             results = benchmark_engine.run_benchmark(
-                scenario=pricing_scenario, agent_configs=benchmark_engine.config.agent_configs
+                scenario=pricing_scenario,
+                agent_configs=benchmark_engine.config.agent_configs,
             )
 
             # Verify the results
@@ -513,7 +527,9 @@ class TestSystemIntegration:
         assert pricing_scenario.metrics.revenue >= 0
         assert len(pricing_scenario.context.history) > 0
 
-    def test_inventory_scenario_initialization(self, inventory_scenario: InventoryScenario):
+    def test_inventory_scenario_initialization(
+        self, inventory_scenario: InventoryScenario
+    ):
         """
         Test InventoryScenario initialization.
 
@@ -560,7 +576,9 @@ class TestSystemIntegration:
         assert inventory_scenario.metrics.costs >= 0
         assert len(inventory_scenario.context.history) > 0
 
-    def test_competitive_scenario_initialization(self, competitive_scenario: CompetitiveScenario):
+    def test_competitive_scenario_initialization(
+        self, competitive_scenario: CompetitiveScenario
+    ):
         """
         Test CompetitiveScenario initialization.
 
@@ -574,7 +592,9 @@ class TestSystemIntegration:
         assert competitive_scenario.is_complete is False
         assert competitive_scenario.is_success is False
 
-    def test_competitive_scenario_execution(self, competitive_scenario: CompetitiveScenario):
+    def test_competitive_scenario_execution(
+        self, competitive_scenario: CompetitiveScenario
+    ):
         """
         Test CompetitiveScenario execution.
 
@@ -649,10 +669,14 @@ class TestSystemIntegration:
         assert isinstance(competitive_scenario, CompetitiveScenario)
 
         # Test convenience methods
-        pricing_scenario = ScenarioFactory.create_pricing_scenario("convenience-pricing")
+        pricing_scenario = ScenarioFactory.create_pricing_scenario(
+            "convenience-pricing"
+        )
         assert isinstance(pricing_scenario, PricingScenario)
 
-        inventory_scenario = ScenarioFactory.create_inventory_scenario("convenience-inventory")
+        inventory_scenario = ScenarioFactory.create_inventory_scenario(
+            "convenience-inventory"
+        )
         assert isinstance(inventory_scenario, InventoryScenario)
 
         competitive_scenario = ScenarioFactory.create_competitive_scenario(
@@ -671,14 +695,17 @@ class TestSystemIntegration:
             pricing_scenario: Test PricingScenario
         """
         # Mock the agent manager to avoid actual LLM calls
-        with patch.object(benchmark_engine.agent_manager, "decision_cycle") as mock_decision_cycle:
+        with patch.object(
+            benchmark_engine.agent_manager, "decision_cycle"
+        ) as mock_decision_cycle:
             mock_decision_cycle.return_value = [
                 {"agent_id": "test-agent", "action": "set_price", "price": 11.0}
             ]
 
             # Run the benchmark
             results = benchmark_engine.run_benchmark(
-                scenario=pricing_scenario, agent_configs=benchmark_engine.config.agent_configs
+                scenario=pricing_scenario,
+                agent_configs=benchmark_engine.config.agent_configs,
             )
 
             # Verify the results

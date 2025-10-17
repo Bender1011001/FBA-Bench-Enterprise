@@ -225,7 +225,9 @@ class StatisticalAnalyzer:
         else:
             return "large"
 
-    def power_analysis(self, effect_size: float, sample_size: int, alpha: float = 0.05) -> float:
+    def power_analysis(
+        self, effect_size: float, sample_size: int, alpha: float = 0.05
+    ) -> float:
         """
         Calculate statistical power for a two-sample t-test.
 
@@ -240,13 +242,17 @@ class StatisticalAnalyzer:
         try:
             from statsmodels.stats.power import ttest_power
 
-            power = ttest_power(effect_size, sample_size, alpha, alternative="two-sided")
+            power = ttest_power(
+                effect_size, sample_size, alpha, alternative="two-sided"
+            )
             return max(0.0, min(1.0, power))
         except ImportError:
             # Fallback approximation if statsmodels not available
             return self._approximate_power(effect_size, sample_size, alpha)
 
-    def _approximate_power(self, effect_size: float, sample_size: int, alpha: float) -> float:
+    def _approximate_power(
+        self, effect_size: float, sample_size: int, alpha: float
+    ) -> float:
         """Approximate power calculation without statsmodels."""
         # Simple approximation based on normal distribution
         z_alpha = stats.norm.ppf(1 - alpha / 2)
@@ -271,13 +277,17 @@ class StatisticalAnalyzer:
         try:
             from statsmodels.stats.power import tt_solve_power
 
-            sample_size = tt_solve_power(effect_size=effect_size, power=power, alpha=alpha)
+            sample_size = tt_solve_power(
+                effect_size=effect_size, power=power, alpha=alpha
+            )
             return max(1, int(math.ceil(sample_size)))
         except ImportError:
             # Fallback approximation
             return self._approximate_sample_size(effect_size, power, alpha)
 
-    def _approximate_sample_size(self, effect_size: float, power: float, alpha: float) -> int:
+    def _approximate_sample_size(
+        self, effect_size: float, power: float, alpha: float
+    ) -> int:
         """Approximate sample size calculation."""
         z_alpha = stats.norm.ppf(1 - alpha / 2)
         z_beta = stats.norm.ppf(power)

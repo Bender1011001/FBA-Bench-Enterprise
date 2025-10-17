@@ -2,6 +2,7 @@
 # Ensure project root is on sys.path so imports like 'integration_tests' and 'financial_audit' resolve
 import sys
 from pathlib import Path
+
 _PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
@@ -12,8 +13,8 @@ This will help identify which files need to be copied from the pre-split reposit
 """
 
 import sys
-import traceback
 from pathlib import Path
+
 
 def test_import_with_fallback(module_path, fallback_module=None):
     """Test importing a module and capture any missing dependencies."""
@@ -129,7 +130,7 @@ def main():
         
         generate_copy_commands(missing_modules)
         
-        print(f"\n💡 After copying the missing files, run this script again to verify.")
+        print("\n💡 After copying the missing files, run this script again to verify.")
     else:
         print("\n✅ All imports successful!")
     

@@ -9,6 +9,9 @@ from datetime import datetime
 from unittest.mock import AsyncMock, Mock
 
 import pytest
+from fba_bench.core.types import SimulationState, ToolCall
+from models.product import Product
+from money import Money
 
 from agent_runners import (
     AgentManager,
@@ -20,9 +23,6 @@ from agent_runners import (
     create_agent_builder,
 )
 from event_bus import EventBus
-from fba_bench.core.types import SimulationState, ToolCall
-from models.product import Product
-from money import Money
 
 
 class MockAgentRunner(AgentRunner):
@@ -90,7 +90,9 @@ class TestAgentRunnerInterface:
         """Test ToolCall validation."""
         # Valid tool call
         tool_call = ToolCall(
-            tool_name="set_price", parameters={"asin": "B0TEST", "price": 19.99}, confidence=0.8
+            tool_name="set_price",
+            parameters={"asin": "B0TEST", "price": 19.99},
+            confidence=0.8,
         )
         assert tool_call.tool_name == "set_price"
         assert tool_call.confidence == 0.8
@@ -334,7 +336,9 @@ async def test_end_to_end_workflow(event_bus, sample_simulation_state):
     RunnerFactory.register_runner("mock", MockAgentRunner)
 
     # 3. Create agent using builder
-    config = create_agent_builder("mock", "e2e_agent").with_config(test_mode=True).build()
+    config = (
+        create_agent_builder("mock", "e2e_agent").with_config(test_mode=True).build()
+    )
 
     # 4. Register agent
     runner = await manager.register_agent("e2e_agent", "mock", config.to_dict())

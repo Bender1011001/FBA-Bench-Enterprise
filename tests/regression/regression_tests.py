@@ -24,15 +24,16 @@ from unittest.mock import Mock
 # Add project root to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+from memory_experiments.dual_memory_manager import DualMemoryManager
+from reproducibility.golden_master import GoldenMasterTester
+from reproducibility.llm_cache import LLMResponseCache
+from services.world_store import WorldStore
+
 from agents.hierarchical_planner import StrategicPlanner
 from agents.skill_coordinator import SkillCoordinator
 from event_bus import get_event_bus
 from events import BaseEvent, SaleOccurred, TickEvent
 from infrastructure.performance_monitor import PerformanceMonitor
-from memory_experiments.dual_memory_manager import DualMemoryManager
-from reproducibility.golden_master import GoldenMasterTester
-from reproducibility.llm_cache import LLMResponseCache
-from services.world_store import WorldStore
 
 logger = logging.getLogger(__name__)
 
@@ -143,7 +144,9 @@ class RegressionTestSuite:
                 json.dump(dummy_func_baseline.__dict__, f)
             logger.info("Generated dummy functional baseline.")
 
-    async def _run_mock_simulation(self, agent_id: str, duration_ticks: int) -> Dict[str, Any]:
+    async def _run_mock_simulation(
+        self, agent_id: str, duration_ticks: int
+    ) -> Dict[str, Any]:
         """Runs a mock simulation to generate a state for golden master."""
         event_bus = get_event_bus()
         memory_manager = DualMemoryManager(agent_id, Mock())
@@ -182,16 +185,23 @@ class RegressionTestSuite:
             plan_context = {"market_data": "some_data"}
             objectives = await strategic_planner.create_strategic_plan(plan_context, 10)
             if objectives:
-                sim_state["agent_actions"].append({"tick": tick, "action_count": len(objectives)})
+                sim_state["agent_actions"].append(
+                    {"tick": tick, "action_count": len(objectives)}
+                )
 
             sim_state["tick_history"].append(tick)
 
         # Generate a hash of the final state (simplified for mock)
         final_state_str = json.dumps(sim_state["metrics"], sort_keys=True) + json.dumps(
-            {"actions": len(sim_state["agent_actions"]), "ticks": len(sim_state["tick_history"])},
+            {
+                "actions": len(sim_state["agent_actions"]),
+                "ticks": len(sim_state["tick_history"]),
+            },
             sort_keys=True,
         )
-        sim_state["final_data_hash"] = hashlib.sha256(final_state_str.encode()).hexdigest()
+        sim_state["final_data_hash"] = hashlib.sha256(
+            final_state_str.encode()
+        ).hexdigest()
 
         return sim_state
 
@@ -219,13 +229,15 @@ class RegressionTestSuite:
 
             if not baseline_data:
                 # If no golden master exists, create one from a mock run
-                logger.warning("No golden master found. Creating a dummy baseline for this run.")
+                logger.warning(
+                    "No golden master found. Creating a dummy baseline for this run."
+                )
                 simulation_result = await self._run_mock_simulation(agent_id, 50)
                 golden_master.create_golden_master(simulation_result)
-                baseline_data = (
-                    simulation_result  # For the purpose of this test, this will be our "baseline"
+                baseline_data = simulation_result  # For the purpose of this test, this will be our "baseline"
+                logger.info(
+                    "Dummy golden master created. Re-run test to compare against it."
                 )
-                logger.info("Dummy golden master created. Re-run test to compare against it.")
 
             # Step 2: Run current simulation and capture snapshot
             current_simulation_result = await self._run_mock_simulation(agent_id, 50)
@@ -288,9 +300,13 @@ class RegressionTestSuite:
                 with open(self.baseline_perf_data_file) as f:
                     baseline_data = json.load(f)
                     baseline_perf = PerformanceBaseline(**baseline_data)
-                logger.info(f"Loaded performance baseline from {self.baseline_perf_data_file}")
+                logger.info(
+                    f"Loaded performance baseline from {self.baseline_perf_data_file}"
+                )
             else:
-                logger.warning("No performance baseline found. Creating a dummy for this run.")
+                logger.warning(
+                    "No performance baseline found. Creating a dummy for this run."
+                )
                 baseline_perf = PerformanceBaseline(
                     name="default_baseline",
                     average_response_time_ms=100.0,
@@ -308,7 +324,9 @@ class RegressionTestSuite:
             await performance_monitor.start()
             for i in range(100):
                 # Simulate a complex operation
-                await asyncio.sleep(0.01 + (i % 10) * 0.001)  # Simulate varying response times
+                await asyncio.sleep(
+                    0.01 + (i % 10) * 0.001
+                )  # Simulate varying response times
                 memory_usage_mb = 100 + (i % 400)  # Simulate memory fluctuations
                 cpu_usage_percent = 20 + (i % 30)  # Simulate CPU usage
 
@@ -382,7 +400,9 @@ class RegressionTestSuite:
             )
 
         except Exception as e:
-            logger.error(f"Performance stability regression test failed: {e}", exc_info=True)
+            logger.error(
+                f"Performance stability regression test failed: {e}", exc_info=True
+            )
             duration = time.time() - start_time
 
             return RegressionTestResult(
@@ -411,7 +431,9 @@ class RegressionTestSuite:
                 with open(self.baseline_func_data_file) as f:
                     baseline_data = json.load(f)
                     baseline_func = FunctionalBaseline(**baseline_data)
-                logger.info(f"Loaded functional baseline from {self.baseline_func_data_file}")
+                logger.info(
+                    f"Loaded functional baseline from {self.baseline_func_data_file}"
+                )
             else:
                 logger.warning("No functional baseline found. Skipping this test.")
                 # This should ideally not happen if _generate_dummy_baselines is called
@@ -437,8 +459,12 @@ class RegressionTestSuite:
             )
 
             # Calculate initial state hash
-            initial_state_str = json.dumps(world_store.get_current_state(), sort_keys=True)
-            current_initial_state_hash = hashlib.sha256(initial_state_str.encode()).hexdigest()
+            initial_state_str = json.dumps(
+                world_store.get_current_state(), sort_keys=True
+            )
+            current_initial_state_hash = hashlib.sha256(
+                initial_state_str.encode()
+            ).hexdigest()
 
             # Simulate core workflow (e.g., agent setting price, sales occurring)
             # Create agent with basic skills
@@ -464,7 +490,9 @@ class RegressionTestSuite:
             # Simulate some ticks
             for tick in range(20):
                 await event_bus.publish(
-                    TickEvent(event_id=f"tick_{tick}", timestamp=datetime.now(), tick=tick)
+                    TickEvent(
+                        event_id=f"tick_{tick}", timestamp=datetime.now(), tick=tick
+                    )
                 )
                 # Simulate sales events
                 if tick % 3 == 0:
@@ -485,15 +513,21 @@ class RegressionTestSuite:
             final_state_after_workflow = world_store.get_current_state()
             current_final_output_str = json.dumps(
                 final_state_after_workflow, sort_keys=True
-            ) + json.dumps(skill_coordinator.get_skill_performance_metrics(), sort_keys=True)
+            ) + json.dumps(
+                skill_coordinator.get_skill_performance_metrics(), sort_keys=True
+            )
             current_final_output_hash = hashlib.sha256(
                 current_final_output_str.encode()
             ).hexdigest()
 
             # Capture critical metrics
             current_metrics = {
-                "total_sales": final_state_after_workflow.get("metrics", {}).get("total_sales", 0),
-                "profit": final_state_after_workflow.get("metrics", {}).get("profit", 0),
+                "total_sales": final_state_after_workflow.get("metrics", {}).get(
+                    "total_sales", 0
+                ),
+                "profit": final_state_after_workflow.get("metrics", {}).get(
+                    "profit", 0
+                ),
             }
 
             regression_detected = False
@@ -524,7 +558,9 @@ class RegressionTestSuite:
                     details["metric_deviations"][metric] = {
                         "baseline": baseline_value,
                         "current": current_value,
-                        "deviation_percent": (abs(current_value - baseline_value) / baseline_value)
+                        "deviation_percent": (
+                            abs(current_value - baseline_value) / baseline_value
+                        )
                         * 100,
                     }
 
@@ -541,7 +577,9 @@ class RegressionTestSuite:
             )
 
         except Exception as e:
-            logger.error(f"Functional integrity regression test failed: {e}", exc_info=True)
+            logger.error(
+                f"Functional integrity regression test failed: {e}", exc_info=True
+            )
             duration = time.time() - start_time
 
             return RegressionTestResult(
@@ -571,7 +609,9 @@ class RegressionTestSuite:
             # Test 1: Memory Manager Consistency
             logger.info("Testing DualMemoryManager consistency")
             mem_config = type(
-                "MockMemoryConfig", (), {"short_term_capacity": 100, "long_term_capacity": 500}
+                "MockMemoryConfig",
+                (),
+                {"short_term_capacity": 100, "long_term_capacity": 500},
             )()  # Mock config
             memory_manager = DualMemoryManager(agent_id, mem_config)
 
@@ -587,7 +627,9 @@ class RegressionTestSuite:
                 )
 
             # Query memories and ensure expected count
-            retrieved_memories = await memory_manager.query_memories("Memory content", limit=100)
+            retrieved_memories = await memory_manager.query_memories(
+                "Memory content", limit=100
+            )
             if len(retrieved_memories) != 50:
                 regression_detected = True
                 details["memory_store_count_mismatch"] = True
@@ -599,14 +641,20 @@ class RegressionTestSuite:
             llm_cache = LLMResponseCache(cache_file=cache_file)
 
             # Add some dummy responses
-            llm_cache.cache_response("hash1", {"response": "foo"}, {"model": "test", "temp": 0})
-            llm_cache.cache_response("hash2", {"response": "bar"}, {"model": "test", "temp": 0})
+            llm_cache.cache_response(
+                "hash1", {"response": "foo"}, {"model": "test", "temp": 0}
+            )
+            llm_cache.cache_response(
+                "hash2", {"response": "bar"}, {"model": "test", "temp": 0}
+            )
 
             is_valid, errors = llm_cache.validate_cache_integrity()
             if not is_valid or errors:
                 regression_detected = True
                 details["llm_cache_integrity_issue"] = (
-                    errors if errors else "Cache invalid but no specific errors reported."
+                    errors
+                    if errors
+                    else "Cache invalid but no specific errors reported."
                 )
                 success = False
 
@@ -621,7 +669,10 @@ class RegressionTestSuite:
             )
             updated_state = world_store.get_current_state()
 
-            if "products" not in updated_state or updated_state["products"][0]["price"] != 105:
+            if (
+                "products" not in updated_state
+                or updated_state["products"][0]["price"] != 105
+            ):
                 regression_detected = True
                 details["world_store_update_failure"] = True
                 success = False
@@ -629,7 +680,8 @@ class RegressionTestSuite:
             details["data_consistency_checks"] = {
                 "memory_manager_consistent": success,  # Reflects success of test 1
                 "llm_cache_consistent": is_valid and not errors,
-                "world_store_consistent_update": "world_store_update_failure" not in details,
+                "world_store_consistent_update": "world_store_update_failure"
+                not in details,
             }
 
             duration = time.time() - start_time
@@ -682,7 +734,9 @@ class RegressionTestSuite:
             details = {}
 
             for config_path in config_paths:
-                file_path = Path(os.path.join(Path(__file__).parent.parent.parent, config_path))
+                file_path = Path(
+                    os.path.join(Path(__file__).parent.parent.parent, config_path)
+                )
                 config_name = file_path.stem
 
                 if not file_path.exists():
@@ -695,7 +749,9 @@ class RegressionTestSuite:
                     # For Python files, we can attempt to import and instantiate relevant config classes
                     if file_path.suffix == ".py":
                         module_name = file_path.stem
-                        spec = importlib.util.spec_from_file_location(module_name, file_path)
+                        spec = importlib.util.spec_from_file_location(
+                            module_name, file_path
+                        )
                         if spec and spec.loader:
                             module = importlib.util.module_from_spec(spec)
                             spec.loader.exec_module(module)
@@ -722,7 +778,9 @@ class RegressionTestSuite:
                                 details[f"{config_name}_load_success"] = True
                             elif module_name == "memory_config":
                                 MemoryConfig = module.MemoryConfig
-                                from memory_experiments.memory_config import ConsolidationAlgorithm
+                                from memory_experiments.memory_config import (
+                                    ConsolidationAlgorithm,
+                                )
 
                                 config_instance = MemoryConfig(
                                     consolidation_algorithm=ConsolidationAlgorithm.LLM_REFLECTION
@@ -752,16 +810,18 @@ class RegressionTestSuite:
                                 logger.warning(
                                     f"No specific validation logic for {config_path}, only import test."
                                 )
-                                details[
-                                    f"{config_name}_load_success"
-                                ] = True  # Successful import is a basic pass
+                                details[f"{config_name}_load_success"] = (
+                                    True  # Successful import is a basic pass
+                                )
                         else:
                             raise ImportError("Could not load module spec.")
                     elif file_path.suffix == ".yaml":
                         import yaml  # Ensure yaml is imported.
 
                         with open(file_path) as f:
-                            yaml.safe_load(f)  # Just loading as valid YAML is a first step
+                            yaml.safe_load(
+                                f
+                            )  # Just loading as valid YAML is a first step
                             details[f"{config_name}_load_success"] = True
                     elif file_path.suffix == ".json":
                         with open(file_path) as f:
@@ -769,11 +829,13 @@ class RegressionTestSuite:
                             details[f"{config_name}_load_success"] = True
 
                     else:
-                        details[
-                            f"{config_name}_load_success"
-                        ] = True  # No specific validation, assume success if readable
+                        details[f"{config_name}_load_success"] = (
+                            True  # No specific validation, assume success if readable
+                        )
                 except Exception as e:
-                    logger.error(f"Configuration validation failed for {config_path}: {e}")
+                    logger.error(
+                        f"Configuration validation failed for {config_path}: {e}"
+                    )
                     details[f"{config_name}_load_success"] = False
                     regression_detected = True
                     success = False
@@ -790,7 +852,9 @@ class RegressionTestSuite:
             )
 
         except Exception as e:
-            logger.error(f"Configuration validity regression test failed: {e}", exc_info=True)
+            logger.error(
+                f"Configuration validity regression test failed: {e}", exc_info=True
+            )
             duration = time.time() - start_time
 
             return RegressionTestResult(
@@ -827,8 +891,12 @@ class RegressionTestSuite:
                 openrouter_client = OpenRouterLLMClient(
                     api_key="sk-dummy", model="mistralai/mistral-7b-instruct"
                 )
-                contract_issues_openrouter = LLMContractValidator.validate(openrouter_client)
-                details["openrouter_client_contract_valid"] = not contract_issues_openrouter
+                contract_issues_openrouter = LLMContractValidator.validate(
+                    openrouter_client
+                )
+                details["openrouter_client_contract_valid"] = (
+                    not contract_issues_openrouter
+                )
                 if contract_issues_openrouter:
                     regression_detected = True
                     success = False
@@ -844,8 +912,12 @@ class RegressionTestSuite:
                 deterministic_client = DeterministicLLMClient(
                     responses={"test_prompt": "test_response"}
                 )
-                contract_issues_deterministic = LLMContractValidator.validate(deterministic_client)
-                details["deterministic_client_contract_valid"] = not contract_issues_deterministic
+                contract_issues_deterministic = LLMContractValidator.validate(
+                    deterministic_client
+                )
+                details["deterministic_client_contract_valid"] = (
+                    not contract_issues_deterministic
+                )
                 if contract_issues_deterministic:
                     regression_detected = True
                     success = False
@@ -867,7 +939,9 @@ class RegressionTestSuite:
 
             event_bus.subscribe(TickEvent, mock_listener)
 
-            test_event = TickEvent(event_id="contract_test_tick", timestamp=datetime.now(), tick=1)
+            test_event = TickEvent(
+                event_id="contract_test_tick", timestamp=datetime.now(), tick=1
+            )
             await event_bus.publish(test_event)
 
             if (
@@ -875,9 +949,13 @@ class RegressionTestSuite:
                 or mock_listener_received_events[0].event_id != test_event.event_id
             ):
                 regression_detected = True
-                details["event_bus_contract_violation"] = "Event not received or mismatched."
+                details["event_bus_contract_violation"] = (
+                    "Event not received or mismatched."
+                )
                 success = False
-            details["event_bus_contract_valid"] = "event_bus_contract_violation" not in details
+            details["event_bus_contract_valid"] = (
+                "event_bus_contract_violation" not in details
+            )
 
             # Test 3: Plugin Interface Contracts (dummy check for existence of key methods)
             logger.info("Testing Plugin Interface contracts")
@@ -932,8 +1010,12 @@ class RegressionTestSuite:
                     "cleanup",
                     "get_metadata",
                 ]
-                if issubclass(plugin_cls, ISkillPlugin):  # specific skill plugin methods
-                    required_methods.extend(["handle_event", "get_supported_event_types"])
+                if issubclass(
+                    plugin_cls, ISkillPlugin
+                ):  # specific skill plugin methods
+                    required_methods.extend(
+                        ["handle_event", "get_supported_event_types"]
+                    )
 
                 for method_name in required_methods:
                     if not hasattr(plugin_cls, method_name) or not callable(
@@ -944,13 +1026,15 @@ class RegressionTestSuite:
 
                 plugin_contract_checks[plugin_cls.name] = has_all_methods
                 if not has_all_methods and plugin_cls == MockInvalidSkillPlugin:
-                    details[
-                        "plugin_contract_violation_expected"
-                    ] = True  # This indicates the check works
+                    details["plugin_contract_violation_expected"] = (
+                        True  # This indicates the check works
+                    )
                 elif not has_all_methods:
                     regression_detected = True
                     success = False
-                    details[f"{plugin_cls.name}_contract_violation"] = "Missing required methods."
+                    details[f"{plugin_cls.name}_contract_violation"] = (
+                        "Missing required methods."
+                    )
 
             details["plugin_interface_contracts_checked"] = plugin_contract_checks
 
@@ -967,7 +1051,8 @@ class RegressionTestSuite:
 
         except ImportError as ie:  # Catch specific import errors for modules under test
             logger.error(
-                f"API contract validation test failed due to missing module: {ie}", exc_info=True
+                f"API contract validation test failed due to missing module: {ie}",
+                exc_info=True,
             )
             duration = time.time() - start_time
 
@@ -976,12 +1061,16 @@ class RegressionTestSuite:
                 test_type=RegressionTestType.API_CONTRACT_VALIDATION,
                 success=False,
                 regression_detected=True,
-                details={"message": f"Required module for API contract validation not found: {ie}"},
+                details={
+                    "message": f"Required module for API contract validation not found: {ie}"
+                },
                 duration_seconds=duration,
                 error_details=str(ie),
             )
         except Exception as e:
-            logger.error(f"API contract validation regression test failed: {e}", exc_info=True)
+            logger.error(
+                f"API contract validation regression test failed: {e}", exc_info=True
+            )
             duration = time.time() - start_time
 
             return RegressionTestResult(
@@ -1027,7 +1116,8 @@ class RegressionTestSuite:
 
             except Exception as e:
                 logger.error(
-                    f"Execution of test method {test_method.__name__} crashed: {e}", exc_info=True
+                    f"Execution of test method {test_method.__name__} crashed: {e}",
+                    exc_info=True,
                 )
                 results.append(
                     RegressionTestResult(
@@ -1086,7 +1176,8 @@ async def main():
     """Run regression testing suite."""
     # Configure logging
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     test_suite = RegressionTestSuite()

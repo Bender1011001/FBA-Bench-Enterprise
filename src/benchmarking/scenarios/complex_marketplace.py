@@ -55,8 +55,12 @@ class ComplexMarketplaceConfig(BaseModel):
     num_products: int = Field(
         20, ge=1, le=500, description="Number of unique products in the catalog"
     )
-    num_orders: int = Field(50, ge=1, le=5000, description="Number of orders to synthesize")
-    max_quantity: int = Field(5, ge=1, le=100, description="Maximum quantity per order line")
+    num_orders: int = Field(
+        50, ge=1, le=5000, description="Number of orders to synthesize"
+    )
+    max_quantity: int = Field(
+        5, ge=1, le=100, description="Maximum quantity per order line"
+    )
     price_variance: float = Field(
         0.1,
         ge=0.0,
@@ -272,7 +276,9 @@ async def run(
     for sku, req in total_requested_by_sku.items():
         total_allocated += min(req, allocated_by_sku.get(sku, 0))
 
-    fulfilled_rate = 1.0 if total_requested == 0 else (total_allocated / total_requested)
+    fulfilled_rate = (
+        1.0 if total_requested == 0 else (total_allocated / total_requested)
+    )
 
     result = {
         "accepted": int(len(accepted_orders)),
@@ -303,7 +309,9 @@ def postprocess(raw_output: Dict[str, Any]) -> Dict[str, Any]:
     if "revenue" in out:
         out["revenue"] = _safe_round(Decimal(str(out["revenue"])), 2)
     if "fulfilled_rate" in out:
-        fr = Decimal(str(out["fulfilled_rate"])).quantize(Decimal("0.0001"), rounding=ROUND_CTX)
+        fr = Decimal(str(out["fulfilled_rate"])).quantize(
+            Decimal("0.0001"), rounding=ROUND_CTX
+        )
         out["fulfilled_rate"] = float(fr)
     return out
 

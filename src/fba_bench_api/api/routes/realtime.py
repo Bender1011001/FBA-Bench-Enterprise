@@ -29,7 +29,15 @@ except ModuleNotFoundError:
             return "stub.jwt.token"
 
         @staticmethod
-        def decode(token, key, algorithms=None, options=None, audience=None, issuer=None, leeway=0):
+        def decode(
+            token,
+            key,
+            algorithms=None,
+            options=None,
+            audience=None,
+            issuer=None,
+            leeway=0,
+        ):
             return {"sub": "test", "aud": audience, "iss": issuer}
 
         @staticmethod
@@ -38,7 +46,14 @@ except ModuleNotFoundError:
 
     jwt = _JWT()
 
-from fastapi import APIRouter, Header, HTTPException, Query, WebSocket, WebSocketDisconnect
+from fastapi import (
+    APIRouter,
+    Header,
+    HTTPException,
+    Query,
+    WebSocket,
+    WebSocketDisconnect,
+)
 
 from fba_bench_api.core.redis_client import get_pubsub, get_redis
 from fba_bench_api.core.state import dashboard_service
@@ -176,14 +191,20 @@ def _map_dashboard_snapshot() -> dict:
             for a in agents_raw:
                 agents_list.append(
                     {
-                        "slug": str(a.get("slug", "agent")) if isinstance(a, dict) else "agent",
+                        "slug": (
+                            str(a.get("slug", "agent"))
+                            if isinstance(a, dict)
+                            else "agent"
+                        ),
                         "display_name": (
                             str(a.get("display_name", a.get("slug", "agent")))
                             if isinstance(a, dict)
                             else "agent"
                         ),
                         "state": (
-                            str(a.get("state", "unknown")) if isinstance(a, dict) else "unknown"
+                            str(a.get("state", "unknown"))
+                            if isinstance(a, dict)
+                            else "unknown"
                         ),
                     }
                 )
@@ -200,7 +221,11 @@ def _map_dashboard_snapshot() -> dict:
         return _default_snapshot()
 
 
-@router.get("/api/v1/simulation/snapshot", tags=["simulation"], response_model=SimulationSnapshot)
+@router.get(
+    "/api/v1/simulation/snapshot",
+    tags=["simulation"],
+    response_model=SimulationSnapshot,
+)
 async def get_simulation_snapshot():
     """
     Return a canonical simulation snapshot.
@@ -250,7 +275,9 @@ async def get_recent_events(
 
 @router.websocket("/ws/realtime")
 async def websocket_realtime(
-    websocket: WebSocket, origin: Optional[str] = Header(None), token: Optional[str] = Query(None)
+    websocket: WebSocket,
+    origin: Optional[str] = Header(None),
+    token: Optional[str] = Query(None),
 ):
     """
     Topic-based realtime WebSocket over Redis pub/sub.
@@ -308,9 +335,15 @@ async def websocket_realtime(
 
     async def _send_safe(payload: Dict[str, Any]) -> None:
         try:
-            logger.debug("Attempting to send WebSocket message: %s", payload.get("type", "unknown"))
+            logger.debug(
+                "Attempting to send WebSocket message: %s",
+                payload.get("type", "unknown"),
+            )
             await websocket.send_text(json.dumps(payload))
-            logger.debug("WebSocket message sent successfully: %s", payload.get("type", "unknown"))
+            logger.debug(
+                "WebSocket message sent successfully: %s",
+                payload.get("type", "unknown"),
+            )
         except Exception as exc:
             # Client likely disconnected or backpressure failure; trigger shutdown
             logger.warning(
@@ -333,7 +366,9 @@ async def websocket_realtime(
                     await asyncio.sleep(0.1)
                     continue
                 try:
-                    message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
+                    message = await pubsub.get_message(
+                        ignore_subscribe_messages=True, timeout=1.0
+                    )
                 except Exception as exc:
                     logger.error("Redis pubsub get_message error: %s", exc)
                     await _send_safe({"type": "error", "error": "redis_error"})
@@ -351,7 +386,9 @@ async def websocket_realtime(
                     data = json.loads(raw) if isinstance(raw, str) else raw
                 except Exception:
                     data = {"raw": raw}
-                await _send_safe({"type": "event", "topic": topic, "data": data, "ts": _now_iso()})
+                await _send_safe(
+                    {"type": "event", "topic": topic, "data": data, "ts": _now_iso()}
+                )
         except asyncio.CancelledError:
             pass
         except WebSocketDisconnect:
@@ -386,7 +423,9 @@ async def websocket_realtime(
                 }
             )
         except WebSocketDisconnect:
-            logger.info("Client disconnected during Redis warning send, closing connection")
+            logger.info(
+                "Client disconnected during Redis warning send, closing connection"
+            )
             return
 
     listener_task = None
@@ -403,7 +442,9 @@ async def websocket_realtime(
             }
         )
     except WebSocketDisconnect:
-        logger.info("Client disconnected during connection established send, closing connection")
+        logger.info(
+            "Client disconnected during connection established send, closing connection"
+        )
         return
 
     malformed_count = 0
@@ -448,7 +489,9 @@ async def websocket_realtime(
                     continue
                 if topic in subscribed_topics:
                     # idempotent
-                    await _send_safe({"type": "subscribed", "topic": topic, "ts": _now_iso()})
+                    await _send_safe(
+                        {"type": "subscribed", "topic": topic, "ts": _now_iso()}
+                    )
                     continue
                 try:
                     await pubsub.subscribe(topic)
@@ -456,7 +499,9 @@ async def websocket_realtime(
                     if listener_task is None:
                         listener_task = asyncio.create_task(_listener_loop())
                     logger.info("WS subscribed topic=%s (origin=%s)", topic, origin)
-                    await _send_safe({"type": "subscribed", "topic": topic, "ts": _now_iso()})
+                    await _send_safe(
+                        {"type": "subscribed", "topic": topic, "ts": _now_iso()}
+                    )
                 except Exception as exc:
                     logger.error("Subscribe failed topic=%s: %s", topic, exc)
                     await _send_safe({"type": "error", "error": "redis_error"})
@@ -471,13 +516,17 @@ async def websocket_realtime(
                     continue
                 if topic not in subscribed_topics:
                     # no-op
-                    await _send_safe({"type": "unsubscribed", "topic": topic, "ts": _now_iso()})
+                    await _send_safe(
+                        {"type": "unsubscribed", "topic": topic, "ts": _now_iso()}
+                    )
                     continue
                 try:
                     await pubsub.unsubscribe(topic)
                     subscribed_topics.discard(topic)
                     logger.info("WS unsubscribed topic=%s (origin=%s)", topic, origin)
-                    await _send_safe({"type": "unsubscribed", "topic": topic, "ts": _now_iso()})
+                    await _send_safe(
+                        {"type": "unsubscribed", "topic": topic, "ts": _now_iso()}
+                    )
                 except Exception as exc:
                     logger.error("Unsubscribe failed topic=%s: %s", topic, exc)
                     await _send_safe({"type": "error", "error": "redis_error"})
@@ -485,7 +534,9 @@ async def websocket_realtime(
 
             if mtype == "publish":
                 if not topic or data is None:
-                    await _send_safe({"type": "error", "error": "missing_topic_or_data"})
+                    await _send_safe(
+                        {"type": "error", "error": "missing_topic_or_data"}
+                    )
                     continue
                 if pubsub is None:
                     await _send_safe({"type": "error", "error": "redis_unavailable"})

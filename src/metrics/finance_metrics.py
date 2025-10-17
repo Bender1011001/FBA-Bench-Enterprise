@@ -6,9 +6,13 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Protocol
 
 import numpy as np
-
-from fba_events import BaseEvent, PurchaseOccurred, SaleOccurred  # Explicitly import event types
 from money import Money  # Assuming Money class is correctly implemented
+
+from fba_events import (
+    BaseEvent,
+    PurchaseOccurred,
+    SaleOccurred,
+)  # Explicitly import event types
 
 logger = logging.getLogger(__name__)
 
@@ -18,17 +22,13 @@ logger = logging.getLogger(__name__)
 class AbstractFinancialAuditService(Protocol):
     """Protocol for a financial audit service."""
 
-    def get_current_net_worth(self) -> Money:
-        ...
+    def get_current_net_worth(self) -> Money: ...
 
-    def get_current_cash_flow(self) -> Money:
-        ...  # Assuming this method exists
+    def get_current_cash_flow(self) -> Money: ...  # Assuming this method exists
 
-    def get_violations(self) -> List[Any]:
-        ...
+    def get_violations(self) -> List[Any]: ...
 
-    def get_status_summary(self) -> Dict[str, Any]:
-        ...
+    def get_status_summary(self) -> Dict[str, Any]: ...
 
 
 @dataclass
@@ -36,7 +36,9 @@ class FinanceMetricsConfig:
     """Configurable parameters for FinanceMetrics."""
 
     risk_free_rate: float = 0.01  # Annualized risk-free rate for Sharpe Ratio
-    sharpe_ratio_min_returns: int = 2  # Minimum returns needed for Sharpe Ratio calculation
+    sharpe_ratio_min_returns: int = (
+        2  # Minimum returns needed for Sharpe Ratio calculation
+    )
     cash_flow_stability_epsilon: float = 1e-9  # Small value to prevent division by zero
     resilience_recovery_threshold: float = 0.5  # Percentage recovery target
 
@@ -89,16 +91,16 @@ class FinanceMetrics:
             raise TypeError(
                 "financial_audit_service must implement AbstractFinancialAuditService protocol."
             )
-        self.financial_audit_service: Optional[
-            AbstractFinancialAuditService
-        ] = financial_audit_service
+        self.financial_audit_service: Optional[AbstractFinancialAuditService] = (
+            financial_audit_service
+        )
         self.config = config if config else FinanceMetricsConfig()
 
         self.net_worth_history: List[Money] = []  # Stores Money objects
         self.cash_flow_history: List[Money] = []  # Stores Money objects
-        self.shock_net_worth_snapshots: Dict[
-            str, ShockNetWorthSnapshot
-        ] = {}  # shock_id: ShockNetWorthSnapshot
+        self.shock_net_worth_snapshots: Dict[str, ShockNetWorthSnapshot] = (
+            {}
+        )  # shock_id: ShockNetWorthSnapshot
 
         # Unit-test compatibility: lightweight metric registry
         self._metrics: Dict[str, Any] = {}
@@ -150,7 +152,9 @@ class FinanceMetrics:
             logger.warning(
                 f"Financial audit service returned non-Money type for net worth: {type(current_net_worth)}"
             )
-            current_net_worth = Money.from_dollars(current_net_worth, "USD")  # Attempt conversion
+            current_net_worth = Money.from_dollars(
+                current_net_worth, "USD"
+            )  # Attempt conversion
 
         if shock_id not in self.shock_net_worth_snapshots:
             self.shock_net_worth_snapshots[shock_id] = ShockNetWorthSnapshot()
@@ -168,7 +172,9 @@ class FinanceMetrics:
                 f"Unknown shock phase '{phase}' for shock_id '{shock_id}'. Snapshot not recorded."
             )
 
-        logger.debug(f"Recorded shock snapshot for {shock_id} ({phase}): {current_net_worth}")
+        logger.debug(
+            f"Recorded shock snapshot for {shock_id} ({phase}): {current_net_worth}"
+        )
 
     def calculate_resilient_net_worth(self) -> float:
         """
@@ -233,7 +239,9 @@ class FinanceMetrics:
             if previous_nw != 0:
                 returns.append(float((current_nw - previous_nw) / previous_nw))
             else:
-                returns.append(0.0)  # Cannot calculate return from zero, treat as 0% for now
+                returns.append(
+                    0.0
+                )  # Cannot calculate return from zero, treat as 0% for now
 
         if len(returns) < self.config.sharpe_ratio_min_returns:
             logger.debug(
@@ -242,7 +250,9 @@ class FinanceMetrics:
             return 0.0  # Not enough data for meaningful ratio
 
         returns_np = np.array(returns)
-        excess_returns = returns_np - self.config.risk_free_rate  # Use configurable risk_free_rate
+        excess_returns = (
+            returns_np - self.config.risk_free_rate
+        )  # Use configurable risk_free_rate
 
         std_dev_excess_returns = np.std(excess_returns)
 
@@ -329,12 +339,16 @@ class FinanceMetrics:
         )  # Population std dev for whole history
 
         # Ensure float conversion for return type
-        if std_dev_cash_flow <= self.config.cash_flow_stability_epsilon:  # Use configurable epsilon
+        if (
+            std_dev_cash_flow <= self.config.cash_flow_stability_epsilon
+        ):  # Use configurable epsilon
             return float(
                 1.0 / self.config.cash_flow_stability_epsilon
             )  # Very high stability if near zero std dev
         else:
-            return float(1.0 / std_dev_cash_flow)  # Inverse of std dev for stability score
+            return float(
+                1.0 / std_dev_cash_flow
+            )  # Inverse of std dev for stability score
 
     def get_metrics_breakdown(self) -> Dict[str, Any]:
         """

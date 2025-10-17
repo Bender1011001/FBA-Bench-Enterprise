@@ -5,15 +5,15 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-
-from event_bus import AsyncioQueueBackend, EventBus
-from events import CompetitorPricesUpdated, CompetitorState, TickEvent
 from models.competitor import Competitor
 from models.product import Product
 from money import Money
 from services.competitor_manager import CompetitorManager
 from services.fee_calculation_service import FeeCalculationService
 from services.sales_service import SalesService
+
+from event_bus import AsyncioQueueBackend, EventBus
+from events import CompetitorPricesUpdated, CompetitorState, TickEvent
 
 
 @pytest.fixture
@@ -215,7 +215,10 @@ class TestCompetitorEventFlow:
         # Create competitor states
         competitor_states = [
             CompetitorState(
-                asin=comp.asin, price=comp.price, bsr=comp.bsr, sales_velocity=comp.sales_velocity
+                asin=comp.asin,
+                price=comp.price,
+                bsr=comp.bsr,
+                sales_velocity=comp.sales_velocity,
             )
             for comp in test_competitors
         ]
@@ -252,7 +255,12 @@ class TestCompetitorEventFlow:
 
     @pytest.mark.asyncio
     async def test_end_to_end_competitor_flow(
-        self, event_bus, competitor_manager, sales_service, test_competitors, test_product
+        self,
+        event_bus,
+        competitor_manager,
+        sales_service,
+        test_competitors,
+        test_product,
     ):
         """Test complete end-to-end competitor flow."""
         # Setup competitors
@@ -301,7 +309,9 @@ class TestCompetitorEventFlow:
         assert avg_price.cents > 0
 
         # Test competition factor calculation
-        competition_factor = sales_service._calculate_competition_factor(test_product.price)
+        competition_factor = sales_service._calculate_competition_factor(
+            test_product.price
+        )
         assert 0.5 <= competition_factor <= 1.5  # Should be within reasonable range
 
         # Test market summary

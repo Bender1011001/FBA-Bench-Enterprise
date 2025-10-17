@@ -67,15 +67,21 @@ class CustomerMessageReceived(BaseEvent):
 
         # Validate customer_id: Must be a non-empty string.
         if not self.customer_id:
-            raise ValueError("Customer ID cannot be empty for CustomerMessageReceived event.")
+            raise ValueError(
+                "Customer ID cannot be empty for CustomerMessageReceived event."
+            )
 
         # Validate message_type: Must be a non-empty string.
         if not self.message_type:
-            raise ValueError("Message type cannot be empty for CustomerMessageReceived event.")
+            raise ValueError(
+                "Message type cannot be empty for CustomerMessageReceived event."
+            )
 
         # Validate content: Must be a non-empty string.
         if not self.content:
-            raise ValueError("Message content cannot be empty for CustomerMessageReceived event.")
+            raise ValueError(
+                "Message content cannot be empty for CustomerMessageReceived event."
+            )
 
         # Validate sentiment_score: Must be within the range [-1.0, 1.0].
         if not -1.0 <= self.sentiment_score <= 1.0:
@@ -200,7 +206,9 @@ class NegativeReviewEvent(BaseEvent):
             "customer_id": self.customer_id,
             "asin": self.asin,
             "rating": self.rating,
-            "review_length": len(self.review_content),  # Summarize content by its length
+            "review_length": len(
+                self.review_content
+            ),  # Summarize content by its length
             "sentiment_score": round(self.sentiment_score, 3),
             "impact_score": round(self.impact_score, 3),
             "response_needed": self.response_needed,
@@ -293,11 +301,15 @@ class ComplaintEvent(BaseEvent):
             "customer_id": self.customer_id,
             "complaint_type": self.complaint_type,
             "severity": self.severity,
-            "description_length": len(self.description),  # Summarize description by its length
+            "description_length": len(
+                self.description
+            ),  # Summarize description by its length
             "related_asin": self.related_asin,
             "related_order_id": self.related_order_id,
             "resolution_deadline": (
-                self.resolution_deadline.isoformat() if self.resolution_deadline else None
+                self.resolution_deadline.isoformat()
+                if self.resolution_deadline
+                else None
             ),
             "escalation_level": self.escalation_level,
         }
@@ -334,7 +346,9 @@ class RespondToCustomerMessageCommand(BaseEvent):
 
         # Validate message_id: Must be a non-empty string.
         if not self.message_id:
-            raise ValueError("Message ID cannot be empty for RespondToCustomerMessageCommand.")
+            raise ValueError(
+                "Message ID cannot be empty for RespondToCustomerMessageCommand."
+            )
 
         # Validate response_content: Must be a non-empty string.
         if not self.response_content:
@@ -495,10 +509,18 @@ class CustomerDisputeEvent(BaseEvent):
 
         # Validate dispute amount
         if not isinstance(self.dispute_amount, Money):
-            raise ValueError("Dispute amount must be a Money instance for CustomerDisputeEvent.")
+            raise ValueError(
+                "Dispute amount must be a Money instance for CustomerDisputeEvent."
+            )
 
         # Validate status
-        valid_statuses = ["opened", "under_review", "pending_response", "resolved", "closed"]
+        valid_statuses = [
+            "opened",
+            "under_review",
+            "pending_response",
+            "resolved",
+            "closed",
+        ]
         if self.status not in valid_statuses:
             raise ValueError(
                 f"Status must be one of {valid_statuses}, got '{self.status}' for CustomerDisputeEvent."
@@ -569,7 +591,9 @@ class DisputeResolvedEvent(BaseEvent):
         if not self.dispute_id:
             raise ValueError("Dispute ID cannot be empty for DisputeResolvedEvent.")
         if not self.resolution_type:
-            raise ValueError("Resolution type cannot be empty for DisputeResolvedEvent.")
+            raise ValueError(
+                "Resolution type cannot be empty for DisputeResolvedEvent."
+            )
         if not self.reason:
             raise ValueError("Reason cannot be empty for DisputeResolvedEvent.")
         if not self.resolved_by:
@@ -577,10 +601,14 @@ class DisputeResolvedEvent(BaseEvent):
 
         # Validate financial impact
         if not isinstance(self.financial_impact, Money):
-            raise ValueError("Financial impact must be a Money instance for DisputeResolvedEvent.")
+            raise ValueError(
+                "Financial impact must be a Money instance for DisputeResolvedEvent."
+            )
 
         # Validate resolution amount if provided
-        if self.resolution_amount is not None and not isinstance(self.resolution_amount, Money):
+        if self.resolution_amount is not None and not isinstance(
+            self.resolution_amount, Money
+        ):
             raise ValueError(
                 "Resolution amount must be a Money instance or None for DisputeResolvedEvent."
             )
@@ -615,7 +643,9 @@ class DisputeResolvedEvent(BaseEvent):
             "timestamp": self.timestamp.isoformat(),
             "dispute_id": self.dispute_id,
             "resolution_type": self.resolution_type,
-            "resolution_amount": str(self.resolution_amount) if self.resolution_amount else None,
+            "resolution_amount": (
+                str(self.resolution_amount) if self.resolution_amount else None
+            ),
             "reason_length": len(self.reason),
             "resolved_by": self.resolved_by,
             "financial_impact": str(self.financial_impact),

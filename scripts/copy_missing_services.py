@@ -7,6 +7,7 @@ and create the financial_audit.py shim.
 import shutil
 from pathlib import Path
 
+
 def copy_services():
     """Copy service files from src/services to fba_bench_core/services."""
     src_services = Path("src/services")

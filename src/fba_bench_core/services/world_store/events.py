@@ -4,20 +4,19 @@ Handles incoming events like inventory updates and tick events for snapshots.
 """
 
 import logging
-from typing import Optional
-
 from datetime import datetime
-
-from fba_events.bus import EventBus
-from fba_events.inventory import InventoryUpdate
-from fba_events.time_events import TickEvent
-from fba_events import WorldStateSnapshotEvent
+from typing import Optional
 
 from money import Money
 
+from fba_events import WorldStateSnapshotEvent
+from fba_events.bus import EventBus
+from fba_events.inventory import InventoryUpdate
+from fba_events.time_events import TickEvent
+
 from .models import ProductState
-from .state import WorldStateManager
 from .persistence import PersistenceBackend
+from .state import WorldStateManager
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +78,7 @@ async def handle_tick_event_for_snapshot(
 ) -> int:
     """
     Handles TickEvents: trigger periodic state snapshots.
-    
+
     Note: Per-tick command clearing is handled in arbitration module.
     """
     # Periodically persist snapshots
@@ -104,7 +103,9 @@ async def save_state_snapshot(
     Publishes a WorldStateSnapshotEvent if successful.
     """
     if not storage_backend:
-        logger.warning("No storage backend configured for WorldStore, cannot save snapshot.")
+        logger.warning(
+            "No storage backend configured for WorldStore, cannot save snapshot."
+        )
         return None
 
     serializable_state = {

@@ -125,7 +125,9 @@ class BudgetExceeded(BaseEvent):
 
         # Validate severity: Must be "soft" or "hard_fail".
         if self.severity not in ["soft", "hard_fail"]:
-            raise ValueError(f"Severity must be 'soft' or 'hard_fail', but got {self.severity}.")
+            raise ValueError(
+                f"Severity must be 'soft' or 'hard_fail', but got {self.severity}."
+            )
 
     def to_summary_dict(self) -> Dict[str, Any]:
         """
@@ -184,7 +186,9 @@ class ConstraintViolation(BaseEvent):
 
         # Validate violation_details: Must be a dictionary.
         if not isinstance(self.violation_details, dict):
-            raise TypeError("Violation details must be a dictionary for ConstraintViolation.")
+            raise TypeError(
+                "Violation details must be a dictionary for ConstraintViolation."
+            )
 
     def to_summary_dict(self) -> Dict[str, Any]:
         """

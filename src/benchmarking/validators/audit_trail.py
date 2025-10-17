@@ -149,12 +149,16 @@ class AuditTrailManager:
     """
 
     # Start a trail; raise if already exists (per unit test expectations)
-    def start_trail(self, run_id: str, metadata: Optional[Dict[str, Any]] = None) -> AuditTrail:
+    def start_trail(
+        self, run_id: str, metadata: Optional[Dict[str, Any]] = None
+    ) -> AuditTrail:
         """Start a new audit trail; raise if an active trail already exists for run_id."""
         with self._lock:
             if run_id in self._active_trails:
                 raise ValueError("Audit trail already exists for run")
-            trail = AuditTrail(run_id=run_id, start_time=datetime.now(), metadata=metadata or {})
+            trail = AuditTrail(
+                run_id=run_id, start_time=datetime.now(), metadata=metadata or {}
+            )
             self._active_trails[run_id] = trail
             return trail
 
@@ -165,7 +169,9 @@ class AuditTrailManager:
         Args:
             storage_path: Path to store audit trails
         """
-        self.storage_path = Path(storage_path) if storage_path else Path.cwd() / "audit_trails"
+        self.storage_path = (
+            Path(storage_path) if storage_path else Path.cwd() / "audit_trails"
+        )
         self.storage_path.mkdir(parents=True, exist_ok=True)
 
         self._active_trails: Dict[str, AuditTrail] = {}
@@ -175,9 +181,13 @@ class AuditTrailManager:
         self._event_buffer: List[Dict[str, Any]] = []
         self._lock = threading.Lock()
 
-        logger.info(f"Initialized AuditTrailManager with storage at: {self.storage_path}")
+        logger.info(
+            f"Initialized AuditTrailManager with storage at: {self.storage_path}"
+        )
 
-    def create_trail(self, run_id: str, metadata: Optional[Dict[str, Any]] = None) -> AuditTrail:
+    def create_trail(
+        self, run_id: str, metadata: Optional[Dict[str, Any]] = None
+    ) -> AuditTrail:
         """
         Create a new audit trail.
 
@@ -193,7 +203,9 @@ class AuditTrailManager:
                 logger.warning(f"Audit trail already exists for run: {run_id}")
                 return self._active_trails[run_id]
 
-            trail = AuditTrail(run_id=run_id, start_time=datetime.now(), metadata=metadata or {})
+            trail = AuditTrail(
+                run_id=run_id, start_time=datetime.now(), metadata=metadata or {}
+            )
 
             self._active_trails[run_id] = trail
 
@@ -489,7 +501,9 @@ class AuditTrailManager:
             severity_counts[event.severity] = severity_counts.get(event.severity, 0) + 1
 
             # Count by component
-            component_counts[event.component] = component_counts.get(event.component, 0) + 1
+            component_counts[event.component] = (
+                component_counts.get(event.component, 0) + 1
+            )
 
         # Calculate duration
         duration = None
@@ -537,7 +551,9 @@ class AuditTrailManager:
         for event in trail.events:
             event_counts[event.event_type] = event_counts.get(event.event_type, 0) + 1
             severity_counts[event.severity] = severity_counts.get(event.severity, 0) + 1
-            component_counts[event.component] = component_counts.get(event.component, 0) + 1
+            component_counts[event.component] = (
+                component_counts.get(event.component, 0) + 1
+            )
 
         duration = None
         if trail.end_time:

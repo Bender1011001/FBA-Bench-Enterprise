@@ -14,14 +14,19 @@ from typing import List
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
-from event_bus import EventBus
-from events import AdversarialResponse, ComplianceTrapEvent, MarketManipulationEvent, PhishingEvent
 from money import Money
 from redteam.adversarial_event_injector import AdversarialEventInjector
 from redteam.exploit_registry import ExploitDefinition, ExploitRegistry
 from redteam.gauntlet_runner import GauntletConfig, GauntletResult, GauntletRunner
 from redteam.resistance_scorer import AdversaryResistanceScorer
+
+from event_bus import EventBus
+from events import (
+    AdversarialResponse,
+    ComplianceTrapEvent,
+    MarketManipulationEvent,
+    PhishingEvent,
+)
 
 
 class TestExploitRegistry:
@@ -171,7 +176,9 @@ class TestAdversarialEventInjector:
         """Set up test fixtures."""
         self.mock_event_bus = AsyncMock()
         self.mock_registry = MagicMock()
-        self.injector = AdversarialEventInjector(self.mock_event_bus, self.mock_registry)
+        self.injector = AdversarialEventInjector(
+            self.mock_event_bus, self.mock_registry
+        )
 
     @pytest.mark.asyncio
     async def test_phishing_event_injection(self):
@@ -281,7 +288,9 @@ class TestAdversaryResistanceScorer:
         """Set up test fixtures."""
         self.scorer = AdversaryResistanceScorer()
 
-    def create_test_responses(self, fell_for_exploits: List[bool]) -> List[AdversarialResponse]:
+    def create_test_responses(
+        self, fell_for_exploits: List[bool]
+    ) -> List[AdversarialResponse]:
         """Create test adversarial responses."""
         responses = []
 
@@ -407,7 +416,9 @@ class TestGauntletRunner:
         self.mock_injector = AsyncMock()
         self.mock_scorer = MagicMock()
 
-        self.runner = GauntletRunner(self.mock_registry, self.mock_injector, self.mock_scorer)
+        self.runner = GauntletRunner(
+            self.mock_registry, self.mock_injector, self.mock_scorer
+        )
 
     def create_mock_exploits(self) -> List[ExploitDefinition]:
         """Create mock exploit definitions."""
@@ -454,7 +465,10 @@ class TestGauntletRunner:
         selected = await self.runner._select_exploits(config)
 
         assert len(selected) <= config.num_exploits
-        assert all(config.min_difficulty <= e.difficulty <= config.max_difficulty for e in selected)
+        assert all(
+            config.min_difficulty <= e.difficulty <= config.max_difficulty
+            for e in selected
+        )
         assert all(e.category in config.categories for e in selected)
 
     @pytest.mark.asyncio
@@ -476,13 +490,17 @@ class TestGauntletRunner:
         # Mock dependencies
         self.mock_registry.get_all_exploits.return_value = self.create_mock_exploits()
         self.mock_injector.inject_phishing_event = AsyncMock(return_value="event_1")
-        self.mock_injector.inject_market_manipulation_event = AsyncMock(return_value="event_2")
+        self.mock_injector.inject_market_manipulation_event = AsyncMock(
+            return_value="event_2"
+        )
         self.mock_injector.get_responses_for_event = MagicMock(return_value=[])
         self.mock_scorer.calculate_ars.return_value = (85.0, MagicMock())
 
         # Set up CI environment
         with patch.dict("os.environ", {"CI": "true", "COMMIT_SHA": "abc123"}):
-            runner = GauntletRunner(self.mock_registry, self.mock_injector, self.mock_scorer)
+            runner = GauntletRunner(
+                self.mock_registry, self.mock_injector, self.mock_scorer
+            )
 
             result = await runner.run_ci_gauntlet(["test_agent"])
 
@@ -577,7 +595,9 @@ class TestAdversarialEvents:
     def test_adversarial_event_validation(self):
         """Test adversarial event validation."""
         # Invalid difficulty level
-        with pytest.raises(ValueError, match="Difficulty level must be between 1 and 5"):
+        with pytest.raises(
+            ValueError, match="Difficulty level must be between 1 and 5"
+        ):
             PhishingEvent(
                 event_id="test",
                 timestamp=datetime.now(),
@@ -591,7 +611,9 @@ class TestAdversarialEvents:
             )
 
         # Invalid email format
-        with pytest.raises(ValueError, match="Sender email must be a valid email format"):
+        with pytest.raises(
+            ValueError, match="Sender email must be a valid email format"
+        ):
             PhishingEvent(
                 event_id="test",
                 timestamp=datetime.now(),

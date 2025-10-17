@@ -17,6 +17,9 @@ import time
 
 import pytest
 
+# Adversarial testing imports
+from reproducibility.event_snapshots import EventSnapshot
+
 from agent_runners.configs.framework_configs import FrameworkConfig
 
 # Agent framework imports
@@ -35,9 +38,6 @@ from integration_tests import IntegrationTestConfig, IntegrationTestSuite, logge
 
 # Memory experiment imports
 from metrics.metric_suite import MetricSuite
-
-# Adversarial testing imports
-from reproducibility.event_snapshots import EventSnapshot
 
 # Services imports
 from simulation_orchestrator import SimulationConfig

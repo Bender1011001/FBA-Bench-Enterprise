@@ -1,5 +1,4 @@
 import pytest
-
 from services.trust_score_service import TrustScoreService
 
 

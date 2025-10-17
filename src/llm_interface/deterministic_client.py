@@ -161,8 +161,9 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, Optional, Tuple
 
-from llm_interface.contract import BaseLLMClient, LLMClientError
 from reproducibility.llm_cache import LLMResponseCache
+
+from llm_interface.contract import BaseLLMClient, LLMClientError
 
 logger = logging.getLogger(__name__)
 
@@ -238,9 +239,15 @@ class ValidationSchema:
             if response.get("choices"):
                 content = response["choices"][0].get("message", {}).get("content", "")
                 if len(content) < self.min_content_length:
-                    return False, f"Content too short: {len(content)} < {self.min_content_length}"
+                    return (
+                        False,
+                        f"Content too short: {len(content)} < {self.min_content_length}",
+                    )
                 if len(content) > self.max_content_length:
-                    return False, f"Content too long: {len(content)} > {self.max_content_length}"
+                    return (
+                        False,
+                        f"Content too long: {len(content)} > {self.max_content_length}",
+                    )
 
             return True, None
 
@@ -353,7 +360,9 @@ class DeterministicLLMClient(BaseLLMClient):
         logger.info(f"Response recording: {'enabled' if enabled else 'disabled'}")
 
     def validate_response_format(
-        self, response: Dict[str, Any], expected_schema: Optional[ValidationSchema] = None
+        self,
+        response: Dict[str, Any],
+        expected_schema: Optional[ValidationSchema] = None,
     ) -> Tuple[bool, Optional[str]]:
         """
         Validate response format against expected schema.
@@ -410,7 +419,9 @@ class DeterministicLLMClient(BaseLLMClient):
         }
         prompt_hash = self.cache.generate_prompt_hash(prompt, **cache_params)
 
-        logger.debug(f"LLM call for hash: {prompt_hash[:16]}... (mode: {self.mode.value})")
+        logger.debug(
+            f"LLM call for hash: {prompt_hash[:16]}... (mode: {self.mode.value})"
+        )
 
         # Try cache first if not in pure stochastic mode
         cached_response = None
@@ -460,12 +471,18 @@ class DeterministicLLMClient(BaseLLMClient):
 
                 # Try fallback with different temperature
                 if self.fallback_temperature != temperature:
-                    logger.warning(f"Response validation failed, trying fallback: {error}")
+                    logger.warning(
+                        f"Response validation failed, trying fallback: {error}"
+                    )
                     fallback_used = True
                     self._fallback_calls += 1
 
                     live_response = await self._make_live_call_with_retry(
-                        prompt, model_name, self.fallback_temperature, max_tokens, **kwargs
+                        prompt,
+                        model_name,
+                        self.fallback_temperature,
+                        max_tokens,
+                        **kwargs,
                     )
 
                     is_valid, error = self.validate_response_format(live_response)
@@ -516,7 +533,9 @@ class DeterministicLLMClient(BaseLLMClient):
         enhanced_response = dict(final_response)
         enhanced_response["_fba_metadata"] = response_metadata.to_dict()
 
-        logger.debug(f"LLM call completed in {response_time:.1f}ms (cache_hit: {cache_hit})")
+        logger.debug(
+            f"LLM call completed in {response_time:.1f}ms (cache_hit: {cache_hit})"
+        )
 
         return enhanced_response
 
@@ -546,7 +565,10 @@ class DeterministicLLMClient(BaseLLMClient):
                 logger.debug(f"Live LLM call attempt {attempt + 1}/{self.max_retries}")
 
                 response = await self.underlying_client.generate_response(
-                    prompt=prompt, temperature=temperature, max_tokens=max_tokens, **kwargs
+                    prompt=prompt,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    **kwargs,
                 )
 
                 return response
@@ -556,11 +578,14 @@ class DeterministicLLMClient(BaseLLMClient):
                 logger.warning(f"LLM call attempt {attempt + 1} failed: {e}")
 
                 if attempt < self.max_retries - 1:
-                    await asyncio.sleep(self.retry_delay * (2**attempt))  # Exponential backoff
+                    await asyncio.sleep(
+                        self.retry_delay * (2**attempt)
+                    )  # Exponential backoff
 
         # All retries failed
         raise LLMClientError(
-            f"All {self.max_retries} LLM call attempts failed", original_exception=last_exception
+            f"All {self.max_retries} LLM call attempts failed",
+            original_exception=last_exception,
         )
 
     async def generate_response(
@@ -650,7 +675,10 @@ class DeterministicLLMClient(BaseLLMClient):
             mode_consistent = True
             mode_errors = []
 
-            if self.mode == OperationMode.DETERMINISTIC and not self.cache._deterministic_mode:
+            if (
+                self.mode == OperationMode.DETERMINISTIC
+                and not self.cache._deterministic_mode
+            ):
                 mode_consistent = False
                 mode_errors.append("Client in deterministic mode but cache is not")
 

@@ -87,7 +87,9 @@ class MultiTurnToolUseConfig(BaseModel):
     Configuration schema (Pydantic v2) for Multi-Turn Tool Use Scenario.
     """
 
-    steps: int = Field(3, ge=1, le=3, description="Number of tool steps required (max 3)")
+    steps: int = Field(
+        3, ge=1, le=3, description="Number of tool steps required (max 3)"
+    )
     include_math: bool = Field(True, description="Include calculator step")
     include_extraction: bool = Field(True, description="Include field extraction step")
     include_transform: bool = Field(False, description="Include data transform step")
@@ -206,14 +208,17 @@ async def run(
             # Strict subset correctness: all expected key/value pairs must match exactly
             got_res = got.get("result", {})
             if isinstance(got_res, dict) and all(
-                str(got_res.get(k)) == str(exp["result"][k]) for k in exp["result"].keys()
+                str(got_res.get(k)) == str(exp["result"][k])
+                for k in exp["result"].keys()
             ):
                 correct += 1
         elif stype == "transform":
             got_res = got.get("result", {})
             ok = isinstance(got_res, dict)
             ok = ok and int(got_res.get("sum", -1)) == int(exp["result"]["sum"])
-            ok = ok and list(got_res.get("transformed", [])) == list(exp["result"]["transformed"])
+            ok = ok and list(got_res.get("transformed", [])) == list(
+                exp["result"]["transformed"]
+            )
             if ok:
                 correct += 1
 

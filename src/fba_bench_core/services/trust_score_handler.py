@@ -51,7 +51,8 @@ class TrustScoreEventHandler:
                     sale_result = data  # type: ignore[assignment]
             else:
                 logger.warning(
-                    "Received unsupported event type for trust score handler: %s", type(event)
+                    "Received unsupported event type for trust score handler: %s",
+                    type(event),
                 )
                 return
 
@@ -65,9 +66,13 @@ class TrustScoreEventHandler:
                     revenue = getattr(sale_result, attr)
                     break
             if revenue is None:
-                if hasattr(sale_result, "unit_price") and hasattr(sale_result, "quantity"):
+                if hasattr(sale_result, "unit_price") and hasattr(
+                    sale_result, "quantity"
+                ):
                     try:
-                        revenue = float(sale_result.unit_price) * int(sale_result.quantity)
+                        revenue = float(sale_result.unit_price) * int(
+                            sale_result.quantity
+                        )
                     except Exception:
                         revenue = 0.0
                 else:

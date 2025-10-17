@@ -26,14 +26,14 @@ import statistics
 from typing import Any, Dict, List
 
 import pytest
+from reproducibility.ci_integration import CIIntegration
+from reproducibility.event_snapshots import EventSnapshot
 
 from financial_audit import FinancialAuditService
 
 # Core imports
 from integration_tests import IntegrationTestConfig, IntegrationTestSuite, logger
 from metrics.metric_suite import MetricSuite
-from reproducibility.ci_integration import CIIntegration
-from reproducibility.event_snapshots import EventSnapshot
 
 # Services imports
 from simulation_orchestrator import SimulationConfig, SimulationOrchestrator

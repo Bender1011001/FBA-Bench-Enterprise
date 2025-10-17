@@ -60,7 +60,10 @@ async def get_redis() -> Redis:
                     # Ensure we don't retain a broken singleton
                     await close_redis()
                     logger.error(
-                        "Redis unavailable at %s after %d retries: %s", url, max_retries, exc
+                        "Redis unavailable at %s after %d retries: %s",
+                        url,
+                        max_retries,
+                        exc,
                     )
                     raise
                 # Exponential backoff with full jitter

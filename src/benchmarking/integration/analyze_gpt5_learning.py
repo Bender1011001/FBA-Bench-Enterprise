@@ -26,7 +26,9 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 
-def _find_latest_results(base_root: Path = Path("results/gpt5_learning_full")) -> Optional[Path]:
+def _find_latest_results(
+    base_root: Path = Path("results/gpt5_learning_full"),
+) -> Optional[Path]:
     if not base_root.exists():
         return None
     dirs = [p for p in base_root.iterdir() if p.is_dir()]
@@ -133,7 +135,9 @@ def _enhance_rows(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     return enhanced
 
 
-def _write_enhanced_csv(results_dir: Path, header: List[str], rows: List[Dict[str, Any]]) -> None:
+def _write_enhanced_csv(
+    results_dir: Path, header: List[str], rows: List[Dict[str, Any]]
+) -> None:
     out_path = results_dir / "metrics_enhanced.csv"
     # Merge existing header with normalized fields
     base = [
@@ -179,7 +183,9 @@ def analyze(results_dir: Path) -> Dict[str, Any]:
     start_profit = series_profit[0] if series_profit else 0.0
     end_profit = series_profit[-1] if series_profit else 0.0
     delta_profit = end_profit - start_profit
-    pct_profit = (delta_profit / start_profit * 100.0) if abs(start_profit) > 1e-9 else 0.0
+    pct_profit = (
+        (delta_profit / start_profit * 100.0) if abs(start_profit) > 1e-9 else 0.0
+    )
 
     # Compute basic stats
     mean_profit = statistics.mean(series_profit) if series_profit else 0.0
@@ -227,7 +233,9 @@ def analyze(results_dir: Path) -> Dict[str, Any]:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="Analyze GPT-5 Learning Benchmark results")
-    ap.add_argument("--results-dir", type=str, default=None, help="Path to a results directory")
+    ap.add_argument(
+        "--results-dir", type=str, default=None, help="Path to a results directory"
+    )
     args = ap.parse_args()
 
     if args.results_dir:
@@ -249,7 +257,9 @@ def main() -> int:
     print(f"Results Dir        : {report['results_dir']}")
     print(f"Episodes           : {report['episodes']}")
     print(f"Success Rate       : {report['success_rate']:.2%}")
-    print(f"Profit Start/End   : {report['profit']['start']:.2f} -> {report['profit']['end']:.2f}")
+    print(
+        f"Profit Start/End   : {report['profit']['start']:.2f} -> {report['profit']['end']:.2f}"
+    )
     print(
         f"Profit Δ / %       : {report['profit']['delta']:.2f} / {report['profit']['pct_change']:.2f}%"
     )

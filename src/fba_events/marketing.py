@@ -96,7 +96,9 @@ class MarketTrendEvent(BaseEvent):
             "trend_type": self.trend_type,
             "trend_direction": self.trend_direction,
             "magnitude": round(self.magnitude, 3),
-            "affected_products_count": len(self.affected_products),  # Summarize by count
+            "affected_products_count": len(
+                self.affected_products
+            ),  # Summarize by count
             "confidence_level": round(self.confidence_level, 3),
             "duration_estimate": self.duration_estimate,
             "market_data": self.market_data,  # Include full data as it's often small and important
@@ -138,7 +140,9 @@ class RunMarketingCampaignCommand(BaseEvent):
 
         # Validate campaign_type: Must be a non-empty string.
         if not self.campaign_type:
-            raise ValueError("Campaign type cannot be empty for RunMarketingCampaignCommand.")
+            raise ValueError(
+                "Campaign type cannot be empty for RunMarketingCampaignCommand."
+            )
 
         # Validate budget: Must be a Money object and positive.
         if not isinstance(self.budget, Money):

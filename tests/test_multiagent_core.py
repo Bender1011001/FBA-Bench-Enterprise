@@ -15,10 +15,11 @@ import pytest
 # Add current directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from event_bus import AsyncioQueueBackend, EventBus
-from events import ProductPriceUpdated, SetPriceCommand
 from money import Money
 from services.world_store import WorldStore
+
+from event_bus import AsyncioQueueBackend, EventBus
+from events import ProductPriceUpdated, SetPriceCommand
 
 
 class SimpleAgent:
@@ -36,7 +37,9 @@ class SimpleAgent:
     async def handle_price_update(self, event: ProductPriceUpdated):
         """Handle price update events."""
         self.price_updates_received.append(event)
-        print(f"   🤖 Agent {self.agent_id} received price update: {event.asin} = {event.new_price}")
+        print(
+            f"   🤖 Agent {self.agent_id} received price update: {event.asin} = {event.new_price}"
+        )
 
     async def send_price_command(
         self, asin: str, new_price: Money, reason: str = "Agent pricing decision"
@@ -93,7 +96,9 @@ async def test_multiagent_core():
         print("🧪 Test 1: Basic Command-Arbitration-Event Loop")
 
         new_price = Money(2200)  # $22.00
-        command1 = await agent1.send_price_command(test_asin, new_price, "Price increase test")
+        command1 = await agent1.send_price_command(
+            test_asin, new_price, "Price increase test"
+        )
 
         # Wait for event processing
         await asyncio.sleep(0.2)
@@ -126,7 +131,9 @@ async def test_multiagent_core():
         print("🧪 Test 2: Command Rejection")
 
         invalid_price = Money(50)  # $0.50 - below minimum
-        command2 = await agent2.send_price_command(test_asin, invalid_price, "Invalid price test")
+        command2 = await agent2.send_price_command(
+            test_asin, invalid_price, "Invalid price test"
+        )
 
         await asyncio.sleep(0.2)
 
@@ -162,14 +169,19 @@ async def test_multiagent_core():
         competition_stats = world_store.get_statistics()
 
         print(f"   🌍 Final price after competition: {competition_price}")
-        print(f"   📊 Total commands processed: {competition_stats['commands_processed']}")
+        print(
+            f"   📊 Total commands processed: {competition_stats['commands_processed']}"
+        )
 
         # At least one command should have been processed
         test3_success = (
-            competition_price in [price_a, price_b] and competition_stats["commands_processed"] >= 2
+            competition_price in [price_a, price_b]
+            and competition_stats["commands_processed"] >= 2
         )
 
-        print(f"   {'✅ PASS' if test3_success else '❌ FAIL'}: Multiple agent competition")
+        print(
+            f"   {'✅ PASS' if test3_success else '❌ FAIL'}: Multiple agent competition"
+        )
         print()
 
         # Summary

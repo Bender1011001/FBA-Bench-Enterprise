@@ -110,13 +110,14 @@ class BenchmarkError(Exception):
 
 
 # Provide strict Pydantic v2 models and enums expected by unit tests
-from datetime import datetime as _dt
-from datetime import timezone as _timezone
+from datetime import datetime as _dt, timezone as _timezone
 from enum import Enum as _Enum
 
-from pydantic import BaseModel as _PydBaseModel  # v2
-from pydantic import ConfigDict as _ConfigDict
-from pydantic import Field as _Field
+from pydantic import (
+    BaseModel as _PydBaseModel,  # v2
+    ConfigDict as _ConfigDict,
+    Field as _Field,
+)
 
 # Expose a test-friendly BenchmarkConfig shim while preserving file-backed config
 
@@ -163,7 +164,9 @@ class BenchmarkConfig:
             "tick_interval",
             "metrics_collection_interval",
         }
-        self.extra: Dict[str, Any] = {k: v for k, v in kwargs.items() if k not in handled}
+        self.extra: Dict[str, Any] = {
+            k: v for k, v in kwargs.items() if k not in handled
+        }
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -282,7 +285,13 @@ except Exception:
     pass
 
 try:
-    from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
+    from pydantic import (
+        BaseModel,
+        Field,
+        ValidationInfo,
+        field_validator,
+        model_validator,
+    )
 except Exception:  # pragma: no cover
     # pydantic is a dependency in pyproject; this guard avoids import-time crash in exotic envs
     raise
@@ -309,11 +318,15 @@ with contextlib.suppress(Exception):
 
 
 class RunnerSpec(BaseModel):
-    key: str = Field(..., description="Runner registry key (e.g., 'diy','crewai','langchain').")
+    key: str = Field(
+        ..., description="Runner registry key (e.g., 'diy','crewai','langchain')."
+    )
     config: Dict[str, Any] = Field(default_factory=dict)
 
     model_config = {
-        "json_schema_extra": {"examples": [{"key": "diy", "config": {"agent_id": "baseline-1"}}]}
+        "json_schema_extra": {
+            "examples": [{"key": "diy", "config": {"agent_id": "baseline-1"}}]
+        }
     }
 
 
@@ -357,7 +370,10 @@ class EngineConfig(BaseModel):
     @classmethod
     def _bypass_empty_for_new_api(cls, values: Dict[str, Any]) -> Dict[str, Any]:
         if isinstance(values, dict):
-            if any(k in values for k in ("benchmark_id", "max_workers", "output_path", "timeout")):
+            if any(
+                k in values
+                for k in ("benchmark_id", "max_workers", "output_path", "timeout")
+            ):
                 # Only set when not explicitly provided
                 values.setdefault("allow_empty", True)
         return values
@@ -388,14 +404,19 @@ class EngineConfig(BaseModel):
             return list(v)
         return v
 
-    parallelism: int = Field(default=1, ge=1, description="Maximum concurrent run tasks")
-    retries: int = Field(default=0, ge=0, description="Retry attempts for failed/error runs")
+    parallelism: int = Field(
+        default=1, ge=1, description="Maximum concurrent run tasks"
+    )
+    retries: int = Field(
+        default=0, ge=0, description="Retry attempts for failed/error runs"
+    )
     observation_topic_prefix: str = Field(default="benchmark")
     enable_pubsub: bool = Field(
         default=False, description="Enable Redis pub/sub for engine observations"
     )
     validators_mode: str = Field(
-        default="hybrid", description="Validator resolution mode: 'function_only' or 'hybrid'"
+        default="hybrid",
+        description="Validator resolution mode: 'function_only' or 'hybrid'",
     )
     metrics_aggregation: str = Field(
         default="extended",
@@ -425,9 +446,13 @@ class EngineConfig(BaseModel):
 
         if not allow_flag:
             if not self.scenarios:
-                raise ValueError("EngineConfig.scenarios must contain at least one scenario")
+                raise ValueError(
+                    "EngineConfig.scenarios must contain at least one scenario"
+                )
             if not self.runners:
-                raise ValueError("EngineConfig.runners must contain at least one runner")
+                raise ValueError(
+                    "EngineConfig.runners must contain at least one runner"
+                )
         return self
 
     model_config = {
@@ -506,7 +531,11 @@ class ScenarioReport(BaseModel):
                 {
                     "scenario_key": "example_scenario",
                     "runs": [],
-                    "aggregates": {"pass_count": 1, "fail_count": 0, "duration_ms": {"avg": 120}},
+                    "aggregates": {
+                        "pass_count": 1,
+                        "fail_count": 0,
+                        "duration_ms": {"avg": 120},
+                    },
                 }
             ]
         }
@@ -528,7 +557,12 @@ class EngineReport(BaseModel):
                     "finished_at": 1723948125.223,
                     "config_digest": "abc123...",
                     "scenario_reports": [],
-                    "totals": {"runs": 4, "success": 4, "failed": 0, "duration_ms": {"sum": 480}},
+                    "totals": {
+                        "runs": 4,
+                        "success": 4,
+                        "failed": 0,
+                        "duration_ms": {"sum": 480},
+                    },
                 }
             ]
         }
@@ -556,7 +590,9 @@ class Engine:
         self._redis_available: bool = "get_redis" in globals()
         self._redis_enabled: bool = getattr(self.config, "enable_pubsub", False)
         if self._redis_enabled and not self._redis_available:
-            raise RuntimeError("EngineConfig.enable_pubsub=True but Redis client is unavailable")
+            raise RuntimeError(
+                "EngineConfig.enable_pubsub=True but Redis client is unavailable"
+            )
         # One-shot warning for legacy validator fallback
         self._warned_legacy_validators: bool = False
 
@@ -625,7 +661,10 @@ class Engine:
             except Exception as e:
                 logger.error(f"_apply_validators failed: {e}")
                 validations = [
-                    {"validator": "engine_apply_validators", "error": _short_error(str(e))}
+                    {
+                        "validator": "engine_apply_validators",
+                        "error": _short_error(str(e)),
+                    }
                 ]
             if validations:
                 aggregates.setdefault("validations", validations)
@@ -712,7 +751,9 @@ class Engine:
             try:
                 coro = _execute_scenario(scenario_target, runner, payload)
                 if scenario_spec.timeout_seconds:
-                    output = await asyncio.wait_for(coro, timeout=scenario_spec.timeout_seconds)
+                    output = await asyncio.wait_for(
+                        coro, timeout=scenario_spec.timeout_seconds
+                    )
                 else:
                     output = await coro
                 duration_ms = max(1, int((_time.perf_counter() - t0) * 1000))
@@ -734,7 +775,9 @@ class Engine:
                     "scenario_key": scenario_spec.key,
                     **(scenario_spec.params or {}),
                 }
-                metrics_out = await self._apply_metrics(run_for_metrics, metrics_context)
+                metrics_out = await self._apply_metrics(
+                    run_for_metrics, metrics_context
+                )
                 return RunResult(
                     scenario_key=scenario_spec.key,
                     runner_key=runner_spec.key,
@@ -796,7 +839,9 @@ class Engine:
         """
         # Local import to avoid import cycles at module import time
         try:
-            from ..metrics.registry import get_metric as _get_fn_metric  # function-style registry
+            from ..metrics.registry import (
+                get_metric as _get_fn_metric,
+            )  # function-style registry
         except Exception:
             _get_fn_metric = None  # soft-fail; we still attempt legacy
 
@@ -841,7 +886,9 @@ class Engine:
                 )
                 # For legacy metrics, they typically expect "output" structure; provide both for compatibility
                 if "output" not in payload and isinstance(run_with_partial, dict):
-                    payload = {"output": run_with_partial.get("output", run_with_partial)}
+                    payload = {
+                        "output": run_with_partial.get("output", run_with_partial)
+                    }
                 val = metric.calculate(payload)
                 result[mkey] = val
             except Exception as e:
@@ -867,7 +914,9 @@ class Engine:
         """
         # Local import to avoid import cycles
         try:
-            from ..validators.registry import get_validator as _get_fn_validator  # function-style
+            from ..validators.registry import (
+                get_validator as _get_fn_validator,
+            )  # function-style
         except Exception:
             _get_fn_validator = None
 
@@ -902,7 +951,11 @@ class Engine:
                 # Fallback: legacy class-based validator (respect configuration mode)
                 if getattr(self.config, "validators_mode", "hybrid") == "function_only":
                     results.append(
-                        {"name": vkey, "validator": vkey, "error": "validator_not_found"}
+                        {
+                            "name": vkey,
+                            "validator": vkey,
+                            "error": "validator_not_found",
+                        }
                     )
                     continue
                 if not getattr(self, "_warned_legacy_validators", False):
@@ -915,14 +968,20 @@ class Engine:
                 validator = self._validators_registry.create_validator(vkey)
                 if validator is None:
                     results.append(
-                        {"name": vkey, "validator": vkey, "error": "validator_not_found"}
+                        {
+                            "name": vkey,
+                            "validator": vkey,
+                            "error": "validator_not_found",
+                        }
                     )
                     continue
                 # legacy .validate(...) may expect various shapes; pass scenario_report
                 legacy_out = validator.validate(scenario_report)
                 try:
                     normalized = (
-                        legacy_out.to_dict() if hasattr(legacy_out, "to_dict") else dict(legacy_out)
+                        legacy_out.to_dict()
+                        if hasattr(legacy_out, "to_dict")
+                        else dict(legacy_out)
                     )
                 except Exception:
                     normalized = {"result": str(legacy_out)}
@@ -937,16 +996,21 @@ class Engine:
                         }
                     )
                 else:
-                    results.append({"name": vkey, "validator": vkey, "result": normalized})
+                    results.append(
+                        {"name": vkey, "validator": vkey, "result": normalized}
+                    )
             except Exception as e:
                 logger.error(f"Validator '{vkey}' failed: {e}")
-                results.append({"name": vkey, "validator": vkey, "error": _short_error(str(e))})
+                results.append(
+                    {"name": vkey, "validator": vkey, "error": _short_error(str(e))}
+                )
         return results
 
     async def _publish_event(self, topic: str, event: Dict[str, Any]) -> None:
         # Only publish when explicitly enabled and client import is available
         if not (
-            getattr(self, "_redis_enabled", False) and getattr(self, "_redis_available", False)
+            getattr(self, "_redis_enabled", False)
+            and getattr(self, "_redis_available", False)
         ):
             return
         try:
@@ -987,14 +1051,18 @@ def _resolve_scenario(key: str) -> Any:
 
     # Dotted import fallback: "path.to.module:callable_or_Class"
     if ":" not in key:
-        raise ValueError(f"Scenario '{key}' not found in registry and not a dotted path")
+        raise ValueError(
+            f"Scenario '{key}' not found in registry and not a dotted path"
+        )
     mod_name, attr = key.split(":", 1)
     module = importlib.import_module(mod_name)
     target = getattr(module, attr)
     return target
 
 
-async def _execute_scenario(target: Any, runner: Any, payload: Dict[str, Any]) -> Dict[str, Any]:
+async def _execute_scenario(
+    target: Any, runner: Any, payload: Dict[str, Any]
+) -> Dict[str, Any]:
     """
     Execute the resolved scenario target uniformly.
     If target is a class with optional generate_input(params, seed) and async run(runner, payload).
@@ -1168,7 +1236,11 @@ def summarize_scenario(report: ScenarioReport) -> Dict[str, Any]:
     list_numeric: Dict[str, List[float]] = {}
 
     def _is_number(x: Any) -> bool:
-        return isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(float(x))
+        return (
+            isinstance(x, (int, float))
+            and not isinstance(x, bool)
+            and math.isfinite(float(x))
+        )
 
     for r in report.runs:
         for k, v in (r.metrics or {}).items():
@@ -1182,7 +1254,9 @@ def summarize_scenario(report: ScenarioReport) -> Dict[str, Any]:
             if isinstance(v, dict):
                 for sub_k, sub_v in v.items():
                     if _is_number(sub_v):
-                        dict_numeric.setdefault(k, {}).setdefault(sub_k, []).append(float(sub_v))
+                        dict_numeric.setdefault(k, {}).setdefault(sub_k, []).append(
+                            float(sub_v)
+                        )
                     else:
                         sval = (
                             json.dumps(sub_v, sort_keys=True)
@@ -1203,15 +1277,21 @@ def summarize_scenario(report: ScenarioReport) -> Dict[str, Any]:
                     categorical_counts.setdefault(k, {})
                     categorical_counts[k][sval] = categorical_counts[k].get(sval, 0) + 1
                 continue
-            sval = json.dumps(v, sort_keys=True) if isinstance(v, (dict, list)) else str(v)
+            sval = (
+                json.dumps(v, sort_keys=True) if isinstance(v, (dict, list)) else str(v)
+            )
             categorical_counts.setdefault(k, {})
             categorical_counts[k][sval] = categorical_counts[k].get(sval, 0) + 1
 
-    mean_numeric = {k: (mean(vals) if vals else 0.0) for k, vals in numeric_means.items()}
+    mean_numeric = {
+        k: (mean(vals) if vals else 0.0) for k, vals in numeric_means.items()
+    }
     mean_dict_numeric: Dict[str, Dict[str, float]] = {}
     for k, sub in dict_numeric.items():
         mean_dict_numeric[k] = {sk: (mean(sv) if sv else 0.0) for sk, sv in sub.items()}
-    mean_list_numeric = {k: (mean(vals) if vals else 0.0) for k, vals in list_numeric.items()}
+    mean_list_numeric = {
+        k: (mean(vals) if vals else 0.0) for k, vals in list_numeric.items()
+    }
 
     top_categorical: Dict[str, List[Dict[str, Any]]] = {}
     for k, counts in categorical_counts.items():
@@ -1222,7 +1302,11 @@ def summarize_scenario(report: ScenarioReport) -> Dict[str, Any]:
     for k, cnts in bool_counts.items():
         total = cnts["true"] + cnts["false"]
         true_rate = (cnts["true"] / total) if total else 0.0
-        bool_summary[k] = {"true": cnts["true"], "false": cnts["false"], "true_rate": true_rate}
+        bool_summary[k] = {
+            "true": cnts["true"],
+            "false": cnts["false"],
+            "true_rate": true_rate,
+        }
 
     aggregates = {
         "pass_count": success,
@@ -1243,11 +1327,20 @@ def summarize_scenario(report: ScenarioReport) -> Dict[str, Any]:
 
 def compute_totals(scenario_reports: List[ScenarioReport]) -> Dict[str, Any]:
     total_runs = sum(len(sr.runs) for sr in scenario_reports)
-    success = sum(1 for sr in scenario_reports for r in sr.runs if r.status == "success")
-    failed = sum(1 for sr in scenario_reports for r in sr.runs if r.status in ("failed", "error"))
-    timeouts = sum(1 for sr in scenario_reports for r in sr.runs if r.status == "timeout")
+    success = sum(
+        1 for sr in scenario_reports for r in sr.runs if r.status == "success"
+    )
+    failed = sum(
+        1 for sr in scenario_reports for r in sr.runs if r.status in ("failed", "error")
+    )
+    timeouts = sum(
+        1 for sr in scenario_reports for r in sr.runs if r.status == "timeout"
+    )
     durations = [
-        r.duration_ms for sr in scenario_reports for r in sr.runs if r.duration_ms is not None
+        r.duration_ms
+        for sr in scenario_reports
+        for r in sr.runs
+        if r.duration_ms is not None
     ]
     dur_stats = {
         "count": len(durations),
@@ -1268,7 +1361,9 @@ def compute_totals(scenario_reports: List[ScenarioReport]) -> Dict[str, Any]:
                     and math.isfinite(float(v))
                 ):
                     metric_values.setdefault(k, []).append(float(v))
-    metric_means = {k: (mean(vals) if vals else 0.0) for k, vals in metric_values.items()}
+    metric_means = {
+        k: (mean(vals) if vals else 0.0) for k, vals in metric_values.items()
+    }
 
     return {
         "runs": total_runs,
@@ -1317,11 +1412,13 @@ import json as _json
 from dataclasses import field
 from enum import Enum
 from pathlib import Path as _Path
-from typing import Any as _Any
-from typing import Dict as _Dict
-from typing import List as _List
-from typing import Optional as _Optional
-from typing import Tuple as _Tuple
+from typing import (
+    Any as _Any,
+    Dict as _Dict,
+    List as _List,
+    Optional as _Optional,
+    Tuple as _Tuple,
+)
 
 # Reuse registries imported at module scope when available
 try:
@@ -1447,7 +1544,9 @@ class BenchmarkResult:
             self.results = dict(kwargs.get("results", {}))
             # Derive compat fields
             self.benchmark_id = str(kwargs.get("benchmark_id", self.scenario_name))
-            self.status = BenchmarkStatus.COMPLETED if self.success else BenchmarkStatus.FAILED
+            self.status = (
+                BenchmarkStatus.COMPLETED if self.success else BenchmarkStatus.FAILED
+            )
             self.overall_score = float(kwargs.get("overall_score", 0.0))
             self.config = dict(kwargs.get("config", {}))
             self.metadata = dict(kwargs.get("metadata", {}))
@@ -1501,7 +1600,9 @@ class BenchmarkResult:
             # Compat fields
             "benchmark_id": self.benchmark_id,
             "status": (
-                self.status.value if isinstance(self.status, BenchmarkStatus) else str(self.status)
+                self.status.value
+                if isinstance(self.status, BenchmarkStatus)
+                else str(self.status)
             ),
             "overall_score": self.overall_score,
             "config": self.config,
@@ -1559,7 +1660,8 @@ class BenchmarkEngine:
             if integration_manager is None and (
                 isinstance(config_or_manager, _BM)
                 or hasattr(config_or_manager, "name")
-                or getattr(config_or_manager, "__class__", None).__name__ == "EngineConfig"
+                or getattr(config_or_manager, "__class__", None).__name__
+                == "EngineConfig"
                 or (
                     hasattr(config_or_manager, "scenarios")
                     and hasattr(config_or_manager, "runners")
@@ -1641,7 +1743,9 @@ class BenchmarkEngine:
         """Register an agent instance keyed by its configured id (integration test helper)."""
         cfg = getattr(agent, "config", None)
         agent_id = (
-            getattr(cfg, "agent_id", None) if cfg is not None else getattr(agent, "agent_id", None)
+            getattr(cfg, "agent_id", None)
+            if cfg is not None
+            else getattr(agent, "agent_id", None)
         )
         agent_id = agent_id or getattr(agent, "id", "agent")
         self.agents[str(agent_id)] = agent
@@ -1649,7 +1753,11 @@ class BenchmarkEngine:
     def register_metric(self, metric: _Any) -> None:
         """Register a metric instance keyed by its config.name (integration test helper)."""
         cfg = getattr(metric, "config", None)
-        name = getattr(cfg, "name", None) if cfg is not None else getattr(metric, "name", None)
+        name = (
+            getattr(cfg, "name", None)
+            if cfg is not None
+            else getattr(metric, "name", None)
+        )
         name = name or type(metric).__name__
         self.metrics[str(name)] = metric
 
@@ -1686,7 +1794,10 @@ class BenchmarkEngine:
             errors.append(f"config_manager: {e}")
         # integration_manager
         try:
-            if hasattr(self, "integration_manager") and self.integration_manager is not None:
+            if (
+                hasattr(self, "integration_manager")
+                and self.integration_manager is not None
+            ):
                 if hasattr(self.integration_manager, "initialize"):
                     await _maybe_await(self.integration_manager.initialize())
                 else:
@@ -1695,10 +1806,14 @@ class BenchmarkEngine:
             errors.append(f"integration_manager: {e}")
         if errors:
             self._initialized = False
-            raise BenchmarkError(f"Failed to initialize benchmark engine: {'; '.join(errors)}")
+            raise BenchmarkError(
+                f"Failed to initialize benchmark engine: {'; '.join(errors)}"
+            )
         self._initialized = True
 
-    def _validate_configuration(self, cfg: _Dict[str, _Any]) -> _Tuple[bool, _List[str]]:
+    def _validate_configuration(
+        self, cfg: _Dict[str, _Any]
+    ) -> _Tuple[bool, _List[str]]:
         """
         Validate configuration using the provided config_manager when available.
         Falls back to minimal structural checks for unit tests.
@@ -1757,9 +1872,9 @@ class BenchmarkEngine:
             start = _time.time()
             # Resolve scenario name
             try:
-                scn_name = getattr(getattr(scenario, "config", None), "name", None) or getattr(
-                    scenario, "name", "scenario"
-                )
+                scn_name = getattr(
+                    getattr(scenario, "config", None), "name", None
+                ) or getattr(scenario, "name", "scenario")
                 scn_name = str(scn_name)
             except Exception:
                 scn_name = "scenario"
@@ -1779,7 +1894,9 @@ class BenchmarkEngine:
             # Compose result
             duration = max(0.001, _time.time() - start)
             # Normalize agents into list of dicts with agent_id and a basic metrics block
-            agent_entries = [{"agent_id": _aid, "metrics": {"actions": 1}} for _aid in agent_ids]
+            agent_entries = [
+                {"agent_id": _aid, "metrics": {"actions": 1}} for _aid in agent_ids
+            ]
             return {
                 "scenario": {"name": scn_name, "is_complete": True},
                 "agents": agent_entries,
@@ -1924,7 +2041,9 @@ class BenchmarkEngine:
             for tick in range(1, max(1, duration_ticks) + 1):
                 self.current_tick = tick
                 try:
-                    await scenario.update_tick(tick, {"tick": tick, "scenario": scenario_name})
+                    await scenario.update_tick(
+                        tick, {"tick": tick, "scenario": scenario_name}
+                    )
                 except Exception as e:
                     # Non-fatal for integration simulation
                     errors.append(f"update_tick_failed:{tick}:{e}")
@@ -1966,7 +2085,9 @@ class BenchmarkEngine:
             try:
                 if bool(getattr(self.config, "correlation_analysis", False)):
                     numeric_vals = {
-                        k: v.get("value", 0.0) for k, v in results.items() if isinstance(v, dict)
+                        k: v.get("value", 0.0)
+                        for k, v in results.items()
+                        if isinstance(v, dict)
                     }
                     results["correlation_analysis"] = {
                         "metrics": list(numeric_vals.keys()),
@@ -1982,7 +2103,9 @@ class BenchmarkEngine:
                 # Simple aggregated metrics summary (mean of numeric values)
                 import statistics as _stats
 
-                vals = [v.get("value", 0.0) for v in results.values() if isinstance(v, dict)]
+                vals = [
+                    v.get("value", 0.0) for v in results.values() if isinstance(v, dict)
+                ]
                 if vals:
                     ts2 = _dt.now(_timezone.utc).isoformat()
                     results["aggregated_metrics"] = {
@@ -2008,7 +2131,9 @@ class BenchmarkEngine:
                     vouts: _List[_Dict[str, _Any]] = []
                     for vname in list(getattr(self, "validators", {}).keys()):
                         # Minimal, successful validation entries
-                        vouts.append({"name": vname, "type": "validation", "result": True})
+                        vouts.append(
+                            {"name": vname, "type": "validation", "result": True}
+                        )
                     results["validation_results"] = vouts
             except Exception:
                 pass
@@ -2069,7 +2194,9 @@ class BenchmarkEngine:
             raise BenchmarkError("; ".join(errors) or "Invalid configuration")
 
         benchmark_id = str(
-            (config or {}).get("benchmark_id") or (config or {}).get("name") or "benchmark"
+            (config or {}).get("benchmark_id")
+            or (config or {}).get("name")
+            or "benchmark"
         )
         # Prevent concurrent run for the same benchmark id when already running
         existing = self.active_runs.get(benchmark_id)
@@ -2086,14 +2213,20 @@ class BenchmarkEngine:
         retry_on_failure = bool(exec_cfg.get("retry_on_failure", True))
         max_retries = int(exec_cfg.get("max_retries", 3))
         per_run_timeout = exec_cfg.get("timeout", None)
-        per_run_timeout = float(per_run_timeout) if per_run_timeout not in (None, 0, "0") else None
+        per_run_timeout = (
+            float(per_run_timeout) if per_run_timeout not in (None, 0, "0") else None
+        )
         max_duration = exec_cfg.get("max_duration", 0)
-        max_duration = float(max_duration) if max_duration not in (None, 0, "0") else 0.0
+        max_duration = (
+            float(max_duration) if max_duration not in (None, 0, "0") else 0.0
+        )
 
         parallel = bool(env_cfg.get("parallel_execution", False))
         max_workers = max(1, int(env_cfg.get("max_workers", 1)))
 
-        scenarios = [s for s in ((config or {}).get("scenarios") or []) if s.get("enabled", True)]
+        scenarios = [
+            s for s in ((config or {}).get("scenarios") or []) if s.get("enabled", True)
+        ]
         agents = (config or {}).get("agents") or []
         # Agent selection policy:
         # - Default: first agent (maintain back-compat)
@@ -2111,7 +2244,9 @@ class BenchmarkEngine:
             while True:
                 attempts += 1
                 try:
-                    coro = self._execute_scenario(sconf, agent_cfg_param, config or {}, idx + 1)
+                    coro = self._execute_scenario(
+                        sconf, agent_cfg_param, config or {}, idx + 1
+                    )
                     if per_run_timeout:
                         result = await _asyncio.wait_for(coro, timeout=per_run_timeout)
                     else:
@@ -2125,7 +2260,9 @@ class BenchmarkEngine:
                         continue
                     # Provide failure result shape
                     return {
-                        "scenario_id": sconf.get("id") or sconf.get("name") or "scenario",
+                        "scenario_id": sconf.get("id")
+                        or sconf.get("name")
+                        or "scenario",
                         "status": "failed",
                         "error": str(e),
                         "metrics": {"score": 0.0},
@@ -2153,7 +2290,8 @@ class BenchmarkEngine:
                     # Check overall max duration
                     if (
                         max_duration
-                        and (_dt.now(_timezone.utc) - start_ts).total_seconds() > max_duration
+                        and (_dt.now(_timezone.utc) - start_ts).total_seconds()
+                        > max_duration
                     ):
                         run.status = BenchmarkStatus.TIMEOUT
                         break
@@ -2177,7 +2315,8 @@ class BenchmarkEngine:
                         run.add_run_result(result)
                         if (
                             max_duration
-                            and (_dt.now(_timezone.utc) - start_ts).total_seconds() > max_duration
+                            and (_dt.now(_timezone.utc) - start_ts).total_seconds()
+                            > max_duration
                         ):
                             run.status = BenchmarkStatus.TIMEOUT
                             break
@@ -2206,7 +2345,9 @@ class BenchmarkEngine:
         # Determine final status (if not set by TIMEOUT)
         if run.status != BenchmarkStatus.TIMEOUT:
             has_success = any((r.get("status") == "completed") for r in run.run_results)
-            has_failure = any((r.get("status") in ("failed", "timeout")) for r in run.run_results)
+            has_failure = any(
+                (r.get("status") in ("failed", "timeout")) for r in run.run_results
+            )
             if has_success and not has_failure:
                 run.status = BenchmarkStatus.COMPLETED
             elif has_success and has_failure:
@@ -2241,7 +2382,9 @@ class BenchmarkEngine:
         Execute a single scenario. Loads scenario/agent from registries, runs, and collects metrics.
         Converts exceptions/timeouts to structured results.
         """
-        scenario_id = scenario_config.get("id") or scenario_config.get("name") or "scenario"
+        scenario_id = (
+            scenario_config.get("id") or scenario_config.get("name") or "scenario"
+        )
         t0 = _dt.now(_timezone.utc)
         try:
             scenario = await self._load_scenario(scenario_config)
@@ -2252,17 +2395,25 @@ class BenchmarkEngine:
 
             # Collect metrics using internal pipeline
             metrics = await self._collect_metrics(
-                {"events": output.get("events", []) if isinstance(output, dict) else []},
+                {
+                    "events": (
+                        output.get("events", []) if isinstance(output, dict) else []
+                    )
+                },
                 {"agent_data": output if isinstance(output, dict) else {}},
                 {"scenario_data": scenario_config},
             )
 
             # Prefer scenario-provided execution_time when available; otherwise fall back to measured duration.
             measured = (_dt.now(_timezone.utc) - t0).total_seconds()
-            provided = (output.get("execution_time") if isinstance(output, dict) else None) or 0.0
+            provided = (
+                output.get("execution_time") if isinstance(output, dict) else None
+            ) or 0.0
             duration = provided if provided > 0 else measured
             if duration <= 0.0:
-                duration = 1e-06  # ensure positive non-zero duration for downstream assertions
+                duration = (
+                    1e-06  # ensure positive non-zero duration for downstream assertions
+                )
 
             # Derive status from scenario output when available; default to 'completed'
             out_status = "completed"
@@ -2281,7 +2432,8 @@ class BenchmarkEngine:
                 or agent_config.get("framework"),
                 "run_number": run_number,
                 "metrics": metrics.get(
-                    "aggregated", {"score": metrics.get("cognitive", {}).get("score", 0.0)}
+                    "aggregated",
+                    {"score": metrics.get("cognitive", {}).get("score", 0.0)},
                 ),
                 "execution_time": duration,
                 "status": out_status,
@@ -2307,11 +2459,15 @@ class BenchmarkEngine:
     async def _load_scenario(self, scenario_config: _Dict[str, _Any]) -> _Any:
         """Resolve a scenario from registry; supports both get_scenario(name) and get(key)."""
         # Use the imported registry (patchable by tests) or fallback to _scenario_registry
-        registry = scenario_registry if scenario_registry is not None else _scenario_registry
+        registry = (
+            scenario_registry if scenario_registry is not None else _scenario_registry
+        )
         if registry is None:
             raise BenchmarkError("Scenario registry unavailable")
         key = (
-            scenario_config.get("type") or scenario_config.get("id") or scenario_config.get("name")
+            scenario_config.get("type")
+            or scenario_config.get("id")
+            or scenario_config.get("name")
         )
         try:
             getter = getattr(registry, "get_scenario", None)
@@ -2347,7 +2503,11 @@ class BenchmarkEngine:
         if registry is None or not hasattr(registry, "get_agent"):
             return _stub_agent()
 
-        key = agent_config.get("framework") or agent_config.get("type") or agent_config.get("id")
+        key = (
+            agent_config.get("framework")
+            or agent_config.get("type")
+            or agent_config.get("id")
+        )
         agent = registry.get_agent(key)  # type: ignore[attr-defined]
         if agent is None:
             # If tests explicitly patched the registry to control behavior, respect None => error
@@ -2398,7 +2558,9 @@ class BenchmarkEngine:
                 except Exception:
                     continue
             if durations:
-                kpis["average_agent_run_duration_seconds"] = sum(durations) / len(durations)
+                kpis["average_agent_run_duration_seconds"] = sum(durations) / len(
+                    durations
+                )
 
             # Count runs that reported errors
             error_count = 0
@@ -2438,9 +2600,15 @@ class BenchmarkEngine:
     ) -> _Dict[str, _Any]:
         """Aggregate cognitive/business/technical metrics; robust to registry failures."""
         try:
-            cognitive = await self._calculate_cognitive_metrics(events, agent_data, scenario_data)
-            business = await self._calculate_business_metrics(events, agent_data, scenario_data)
-            technical = await self._calculate_technical_metrics(events, agent_data, scenario_data)
+            cognitive = await self._calculate_cognitive_metrics(
+                events, agent_data, scenario_data
+            )
+            business = await self._calculate_business_metrics(
+                events, agent_data, scenario_data
+            )
+            technical = await self._calculate_technical_metrics(
+                events, agent_data, scenario_data
+            )
 
             # Simple aggregate: if 'score' keys present, average them
             scores: _List[float] = []
@@ -2469,7 +2637,11 @@ class BenchmarkEngine:
             for name, metric in (metrics or {}).items():
                 try:
                     results[name] = metric.calculate(
-                        {"events": events, "agent_data": agent_data, "scenario_data": scenario_data}
+                        {
+                            "events": events,
+                            "agent_data": agent_data,
+                            "scenario_data": scenario_data,
+                        }
                     )
                 except Exception:
                     continue
@@ -2485,7 +2657,11 @@ class BenchmarkEngine:
             for name, metric in (metrics or {}).items():
                 try:
                     results[name] = metric.calculate(
-                        {"events": events, "agent_data": agent_data, "scenario_data": scenario_data}
+                        {
+                            "events": events,
+                            "agent_data": agent_data,
+                            "scenario_data": scenario_data,
+                        }
                     )
                 except Exception:
                     continue
@@ -2501,7 +2677,11 @@ class BenchmarkEngine:
             for name, metric in (metrics or {}).items():
                 try:
                     results[name] = metric.calculate(
-                        {"events": events, "agent_data": agent_data, "scenario_data": scenario_data}
+                        {
+                            "events": events,
+                            "agent_data": agent_data,
+                            "scenario_data": scenario_data,
+                        }
                     )
                 except Exception:
                     continue
@@ -2509,7 +2689,9 @@ class BenchmarkEngine:
 
     # ---------------------- Aggregation and Reporting ----------------------
 
-    def _aggregate_results(self, run_results: _List[_Dict[str, _Any]]) -> _Dict[str, _Any]:
+    def _aggregate_results(
+        self, run_results: _List[_Dict[str, _Any]]
+    ) -> _Dict[str, _Any]:
         """Compute overall score, average execution time, and success rate.
 
         Scoring rule per unit tests:
@@ -2517,7 +2699,11 @@ class BenchmarkEngine:
           counting missing scores as 0.0. This ensures partial results reduce the mean.
         """
         if not run_results:
-            return {"overall_score": 0.0, "average_execution_time": 0.0, "success_rate": 0.0}
+            return {
+                "overall_score": 0.0,
+                "average_execution_time": 0.0,
+                "success_rate": 0.0,
+            }
 
         scores_sum: float = 0.0
         times: _List[float] = []
@@ -2585,7 +2771,9 @@ class BenchmarkEngine:
         result = BenchmarkResult(
             benchmark_id=bid,
             status=last.status,
-            overall_score=self._aggregate_results(run_results).get("overall_score", 0.0),
+            overall_score=self._aggregate_results(run_results).get(
+                "overall_score", 0.0
+            ),
             start_time=getattr(last, "start_time", _dt.now(_timezone.utc)),
             end_time=getattr(last, "end_time", None) or _dt.now(_timezone.utc),
             config=cfg,
@@ -2649,7 +2837,9 @@ class BenchmarkEngine:
         for r in self.completed_runs:
             res.append(
                 {
-                    "benchmark_id": getattr(r, "benchmark_id", getattr(r, "run_id", "benchmark")),
+                    "benchmark_id": getattr(
+                        r, "benchmark_id", getattr(r, "run_id", "benchmark")
+                    ),
                     "status": r.status,
                     "start_time": getattr(r, "start_time", None),
                     "end_time": getattr(r, "end_time", None),
@@ -2703,7 +2893,9 @@ class BenchmarkEngine:
 
     # ---------------------- Validation helpers ----------------------
 
-    def _validate_configuration(self, config: _Dict[str, _Any]) -> _Tuple[bool, _List[str]]:
+    def _validate_configuration(
+        self, config: _Dict[str, _Any]
+    ) -> _Tuple[bool, _List[str]]:
         errs: _List[str] = []
         # Delegate to config_manager when available
         try:

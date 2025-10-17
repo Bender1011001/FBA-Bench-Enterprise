@@ -167,7 +167,14 @@ def setup_logging(
             root_logger.warning(f"Failed to attach file handler: {e}")
 
     # Quiet excessively chatty libraries but keep warnings/errors
-    for noisy in ("uvicorn.access", "urllib3", "httpx", "watchfiles", "asyncio", "botocore"):
+    for noisy in (
+        "uvicorn.access",
+        "urllib3",
+        "httpx",
+        "watchfiles",
+        "asyncio",
+        "botocore",
+    ):
         logging.getLogger(noisy).setLevel(max(resolved_level, logging.WARNING))
 
     # Align uvicorn loggers with our root formatter
@@ -189,7 +196,9 @@ try:
     from starlette.middleware.base import BaseHTTPMiddleware
     from starlette.requests import Request
     from starlette.responses import Response
-except Exception:  # pragma: no cover - Starlette present with FastAPI; guard for import-time use
+except (
+    Exception
+):  # pragma: no cover - Starlette present with FastAPI; guard for import-time use
     BaseHTTPMiddleware = object  # type: ignore
     Request = object  # type: ignore
     Response = object  # type: ignore

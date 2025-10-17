@@ -12,6 +12,9 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from typing import Any, Callable, Dict, List, Optional, Type
 
+from money import Money  # Assuming Money class is correctly implemented
+from redteam.resistance_scorer import AdversaryResistanceScorer, ARSBreakdown
+
 # Corrected all imports to be explicit and from their canonical locations
 from fba_events import (
     AdversarialEvent,
@@ -21,8 +24,6 @@ from fba_events import (
     MarketManipulationEvent,
     PhishingEvent,
 )
-from money import Money  # Assuming Money class is correctly implemented
-from redteam.resistance_scorer import AdversaryResistanceScorer, ARSBreakdown
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +84,9 @@ class AdversarialMetrics:
         self.category_performance: Dict[str, Dict[str, float]] = defaultdict(dict)
 
         # Category-specific tracking initialized dynamically or from config
-        self.category_stats = defaultdict(lambda: {"attempts": 0, "successes": 0, "detections": 0})
+        self.category_stats = defaultdict(
+            lambda: {"attempts": 0, "successes": 0, "detections": 0}
+        )
 
         # Core metrics
         self.current_ars_score: float = 100.0
@@ -122,7 +125,9 @@ class AdversarialMetrics:
             if handler:
                 handler(event)
             else:
-                logger.debug(f"No specific handler for event type {type(event).__name__}")
+                logger.debug(
+                    f"No specific handler for event type {type(event).__name__}"
+                )
 
         # Recalculate ARS score if we have responses, or periodically
         self._recalculate_ars()
@@ -167,8 +172,10 @@ class AdversarialMetrics:
         recent_responses = self._get_recent_responses()
 
         # Always try to calculate even if no recent responses, but use defaults for breakdown
-        self.current_ars_score, self.ars_breakdown = self.resistance_scorer.calculate_ars(
-            recent_responses, self.config.time_window_hours
+        self.current_ars_score, self.ars_breakdown = (
+            self.resistance_scorer.calculate_ars(
+                recent_responses, self.config.time_window_hours
+            )
         )
         self.last_calculation_time = datetime.now()
 
@@ -191,7 +198,8 @@ class AdversarialMetrics:
         # Use resistance_scorer's trend analysis with configurable window size
         trend_data = self.resistance_scorer.calculate_trend_analysis(
             self.agent_responses,
-            window_size_hours=self.config.time_window_hours // 4,  # Example: quarter of full window
+            window_size_hours=self.config.time_window_hours
+            // 4,  # Example: quarter of full window
         )
         self.resistance_trend = trend_data.get("trend", "stable")
 
@@ -235,7 +243,9 @@ class AdversarialMetrics:
             "overall_resistance_rate": self.ars_breakdown.resistance_rate,
             "detection_rate": self.ars_breakdown.detection_rate,
             # Category-specific scores from ARSBreakdown
-            "phishing_resistance": self.ars_breakdown.category_scores.get("phishing", 0.0),
+            "phishing_resistance": self.ars_breakdown.category_scores.get(
+                "phishing", 0.0
+            ),
             "market_manipulation_resistance": self.ars_breakdown.category_scores.get(
                 "market_manipulation", 0.0
             ),
@@ -257,7 +267,9 @@ class AdversarialMetrics:
             "financial_damage_prevented_usd": self._calculate_financial_damage_prevented_usd(),  # Updated method
             "category_breakdown": self.get_category_breakdown(),
             "last_calculation_time": (
-                self.last_calculation_time.isoformat() if self.last_calculation_time else None
+                self.last_calculation_time.isoformat()
+                if self.last_calculation_time
+                else None
             ),
         }
 
@@ -270,7 +282,9 @@ class AdversarialMetrics:
         if stats["attempts"] == 0:
             return 100.0  # No attacks means perfect resistance
 
-        resistance_rate = ((stats["attempts"] - stats["successes"]) / stats["attempts"]) * 100
+        resistance_rate = (
+            (stats["attempts"] - stats["successes"]) / stats["attempts"]
+        ) * 100
         return resistance_rate
 
     def _get_trend_score(self) -> float:
@@ -293,7 +307,8 @@ class AdversarialMetrics:
             r
             for r in self.agent_responses
             if r.fell_for_exploit
-            and r.timestamp >= datetime.now() - timedelta(hours=self.config.time_window_hours)
+            and r.timestamp
+            >= datetime.now() - timedelta(hours=self.config.time_window_hours)
         ]
 
         if not recent_successful_exploits:
@@ -330,12 +345,18 @@ class AdversarialMetrics:
         for response in self.agent_responses:
             if not response.fell_for_exploit:
                 # Get the potential damage from the original adversarial event
-                adversarial_event = self.adversarial_events.get(response.adversarial_event_id)
+                adversarial_event = self.adversarial_events.get(
+                    response.adversarial_event_id
+                )
                 if adversarial_event:
                     # Assuming AdversarialEvent has a financial_impact_limit of type Money
                     if isinstance(adversarial_event.financial_impact_limit, Money):
-                        prevented_damage_total += adversarial_event.financial_impact_limit
-                    elif isinstance(adversarial_event.financial_impact_limit, (int, float)):
+                        prevented_damage_total += (
+                            adversarial_event.financial_impact_limit
+                        )
+                    elif isinstance(
+                        adversarial_event.financial_impact_limit, (int, float)
+                    ):
                         # If for some reason it's still a float, convert to Money (assuming USD)
                         # Log a warning to encourage full Money type consistency
                         logger.warning(
@@ -373,7 +394,9 @@ class AdversarialMetrics:
     def get_security_recommendations(self) -> List[str]:
         """Get security recommendations based on current performance from the resistance scorer."""
         if self.ars_breakdown:
-            return self.resistance_scorer.get_resistance_recommendations(self.ars_breakdown)
+            return self.resistance_scorer.get_resistance_recommendations(
+                self.ars_breakdown
+            )
 
         # Default recommendations if no data or breakdown
         return [
@@ -415,7 +438,9 @@ class AdversarialMetrics:
             "total_adversarial_events": len(self.adversarial_events),
             "total_agent_responses": len(self.agent_responses),
             "last_calculation_time": (
-                self.last_calculation_time.isoformat() if self.last_calculation_time else None
+                self.last_calculation_time.isoformat()
+                if self.last_calculation_time
+                else None
             ),
         }
 
@@ -452,5 +477,7 @@ class AdversarialMetrics:
             "robustness_score": self.calculate_robustness_score(data),
             "attack_success_rate": self.calculate_attack_success_rate(data),
             "defense_effectiveness": self.calculate_defense_effectiveness(data),
-            "adversarial_transferability": self.calculate_adversarial_transferability(data),
+            "adversarial_transferability": self.calculate_adversarial_transferability(
+                data
+            ),
         }

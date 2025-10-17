@@ -12,13 +12,6 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 import pytest
-
-from llm_interface.contract import BaseLLMClient
-from llm_interface.deterministic_client import (
-    DeterministicLLMClient,
-    OperationMode,
-    ValidationSchema,
-)
 from reproducibility.event_snapshots import EventSnapshot
 from reproducibility.golden_master import GoldenMasterTester, ToleranceConfig
 
@@ -36,6 +29,13 @@ from reproducibility.simulation_modes import (
     SimulationMode,
     SimulationModeController,
     get_mode_controller,
+)
+
+from llm_interface.contract import BaseLLMClient
+from llm_interface.deterministic_client import (
+    DeterministicLLMClient,
+    OperationMode,
+    ValidationSchema,
 )
 
 
@@ -233,7 +233,9 @@ class TestDeterministicLLMClient:
     @pytest.mark.asyncio
     async def test_response_validation(self, deterministic_client):
         """Test response format validation."""
-        schema = ValidationSchema(required_fields=["choices"], field_types={"choices": list})
+        schema = ValidationSchema(
+            required_fields=["choices"], field_types={"choices": list}
+        )
 
         deterministic_client.set_validation_schema(schema)
 
@@ -372,15 +374,29 @@ class TestGoldenMaster:
         """Create sample simulation data for testing."""
         return {
             "events": [
-                {"timestamp": "2024-01-01T00:00:00Z", "type": "start", "data": {"tick": 0}},
-                {"timestamp": "2024-01-01T00:01:00Z", "type": "action", "data": {"price": 1000}},
-                {"timestamp": "2024-01-01T00:02:00Z", "type": "end", "data": {"tick": 2}},
+                {
+                    "timestamp": "2024-01-01T00:00:00Z",
+                    "type": "start",
+                    "data": {"tick": 0},
+                },
+                {
+                    "timestamp": "2024-01-01T00:01:00Z",
+                    "type": "action",
+                    "data": {"price": 1000},
+                },
+                {
+                    "timestamp": "2024-01-01T00:02:00Z",
+                    "type": "end",
+                    "data": {"tick": 2},
+                },
             ],
             "final_state": {"revenue": 5000, "profit": 1000, "inventory": 100},
             "metadata": {"simulation_duration": 120, "agent_count": 3},
         }
 
-    def test_golden_master_recording(self, golden_master_tester, sample_simulation_data):
+    def test_golden_master_recording(
+        self, golden_master_tester, sample_simulation_data
+    ):
         """Test recording a golden master baseline."""
         label = "test_baseline_v1"
 
@@ -391,7 +407,9 @@ class TestGoldenMaster:
         assert success
         assert label in golden_master_tester.list_golden_masters()
 
-    def test_golden_master_comparison(self, golden_master_tester, sample_simulation_data):
+    def test_golden_master_comparison(
+        self, golden_master_tester, sample_simulation_data
+    ):
         """Test comparing runs against golden master."""
         label = "comparison_test"
 
@@ -399,7 +417,9 @@ class TestGoldenMaster:
         golden_master_tester.record_golden_master(sample_simulation_data, label)
 
         # Compare identical data (should pass)
-        result = golden_master_tester.compare_against_golden(sample_simulation_data, label)
+        result = golden_master_tester.compare_against_golden(
+            sample_simulation_data, label
+        )
         assert result.is_identical
         assert result.is_within_tolerance
         assert len(result.critical_differences) == 0
@@ -412,7 +432,9 @@ class TestGoldenMaster:
         assert not result2.is_identical
         assert len(result2.differences) > 0
 
-    def test_tolerance_configuration(self, golden_master_tester, sample_simulation_data):
+    def test_tolerance_configuration(
+        self, golden_master_tester, sample_simulation_data
+    ):
         """Test tolerance configuration for comparisons."""
         label = "tolerance_test"
         golden_master_tester.record_golden_master(sample_simulation_data, label)
@@ -435,7 +457,9 @@ class TestGoldenMaster:
         )
         assert result2.is_within_tolerance
 
-    def test_reproducibility_report_generation(self, golden_master_tester, sample_simulation_data):
+    def test_reproducibility_report_generation(
+        self, golden_master_tester, sample_simulation_data
+    ):
         """Test comprehensive reproducibility report generation."""
         # Create multiple comparison results
         comparison_results = []
@@ -443,10 +467,14 @@ class TestGoldenMaster:
         for i in range(3):
             label = f"test_run_{i}"
             golden_master_tester.record_golden_master(sample_simulation_data, label)
-            result = golden_master_tester.compare_against_golden(sample_simulation_data, label)
+            result = golden_master_tester.compare_against_golden(
+                sample_simulation_data, label
+            )
             comparison_results.append(result)
 
-        report = golden_master_tester.generate_reproducibility_report(comparison_results)
+        report = golden_master_tester.generate_reproducibility_report(
+            comparison_results
+        )
 
         assert "summary" in report
         assert "statistics" in report
@@ -617,13 +645,21 @@ class TestEventSnapshots:
     def sample_events(self):
         """Create sample events for testing."""
         return [
-            {"timestamp": "2024-01-01T00:00:00Z", "event_type": "start", "data": {"tick": 0}},
+            {
+                "timestamp": "2024-01-01T00:00:00Z",
+                "event_type": "start",
+                "data": {"tick": 0},
+            },
             {
                 "timestamp": "2024-01-01T00:01:00Z",
                 "event_type": "action",
                 "data": {"action": "price_change"},
             },
-            {"timestamp": "2024-01-01T00:02:00Z", "event_type": "end", "data": {"tick": 2}},
+            {
+                "timestamp": "2024-01-01T00:02:00Z",
+                "event_type": "end",
+                "data": {"tick": 2},
+            },
         ]
 
     def test_llm_interaction_logging(self):
@@ -658,7 +694,9 @@ class TestEventSnapshots:
 
         # Create enhanced snapshot
         EventSnapshot.clear_llm_interactions()
-        EventSnapshot.log_llm_interaction("hash1", "model1", 0.0, True, "resp1", True, True, 100.0)
+        EventSnapshot.log_llm_interaction(
+            "hash1", "model1", 0.0, True, "resp1", True, True, 100.0
+        )
 
         # Change to temp artifacts directory
         original_artifacts_dir = EventSnapshot.ARTIFACTS_DIR
@@ -689,8 +727,12 @@ class TestEventSnapshots:
 
         try:
             # Create two identical snapshots
-            snapshot1_path = EventSnapshot.dump_events_with_metadata(sample_events, "sha1", "run1")
-            snapshot2_path = EventSnapshot.dump_events_with_metadata(sample_events, "sha2", "run2")
+            snapshot1_path = EventSnapshot.dump_events_with_metadata(
+                sample_events, "sha1", "run1"
+            )
+            snapshot2_path = EventSnapshot.dump_events_with_metadata(
+                sample_events, "sha2", "run2"
+            )
 
             # Validate reproducibility
             validation_result = EventSnapshot.validate_snapshot_reproducibility(
@@ -743,12 +785,16 @@ class TestIntegration:
 
         # 5. Record as golden master
         golden_master = GoldenMasterTester(storage_dir=temp_test_dir)
-        success = golden_master.record_golden_master(simulation_data, "integration_test_baseline")
+        success = golden_master.record_golden_master(
+            simulation_data, "integration_test_baseline"
+        )
         assert success
 
         # 6. Simulate second run with same setup
         # (In real test, this would be actual simulation)
-        result = golden_master.compare_against_golden(simulation_data, "integration_test_baseline")
+        result = golden_master.compare_against_golden(
+            simulation_data, "integration_test_baseline"
+        )
 
         assert result.is_identical
         assert result.is_within_tolerance

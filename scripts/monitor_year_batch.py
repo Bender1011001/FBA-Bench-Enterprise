@@ -4,10 +4,11 @@ Live monitor for year-like batch runs in artifacts/year_runs/<latest_timestamp>.
 Prints progress updates to terminal every 10 seconds.
 """
 import os
+import re
 import time
 from datetime import datetime
 from pathlib import Path
-import re
+
 
 def find_latest_run_dir():
     """Find the newest artifacts/year_runs/<timestamp> directory."""
@@ -24,7 +25,7 @@ def tail_file(file_path, lines=10):
     """Read the last N lines of a file."""
     if not file_path.exists():
         return []
-    with open(file_path, 'r', encoding='utf-8') as f:
+    with open(file_path, encoding='utf-8') as f:
         f.seek(0, os.SEEK_END)
         pos = f.tell()
         lines_list = []
@@ -39,7 +40,7 @@ def count_openrouter_successes(log_path):
     """Count 'OpenRouter call ok' lines in log."""
     if not log_path.exists():
         return 0
-    with open(log_path, 'r', encoding='utf-8') as f:
+    with open(log_path, encoding='utf-8') as f:
         content = f.read()
     return len(re.findall(r'OpenRouter call ok', content))
 
@@ -48,7 +49,7 @@ def extract_token_usage(log_path):
     if not log_path.exists():
         return 0
     total = 0
-    with open(log_path, 'r', encoding='utf-8') as f:
+    with open(log_path, encoding='utf-8') as f:
         for line in f:
             match = re.search(r'total_tokens=(\d+)', line)
             if match:
@@ -70,7 +71,7 @@ def main():
 
         # Print current summary content
         if summary_path.exists():
-            with open(summary_path, 'r', encoding='utf-8') as f:
+            with open(summary_path, encoding='utf-8') as f:
                 current_summary = f.read()
             if current_summary != last_summary:
                 print(f"\n{datetime.now().strftime('%H:%M:%S')}: Summary updated:")

@@ -56,7 +56,10 @@ async def tracing_status() -> Dict[str, Any]:
 
         provider = trace.get_tracer_provider()
         # Heuristic: non-default provider and has active processors/exporters
-        if provider is not None and provider.__class__.__name__ != "ProxyTracerProvider":
+        if (
+            provider is not None
+            and provider.__class__.__name__ != "ProxyTracerProvider"
+        ):
             # Some providers expose _active_span_processor or similar
             proc = getattr(provider, "active_span_processor", None) or getattr(
                 provider, "_active_span_processor", None

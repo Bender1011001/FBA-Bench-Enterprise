@@ -104,7 +104,11 @@ def test_config():
             "confidence_level": 0.95,
             "reproducibility_check": True,
         },
-        "metadata": {"author": "Test Author", "created": "2025-01-01T00:00:00Z", "tags": ["test"]},
+        "metadata": {
+            "author": "Test Author",
+            "created": "2025-01-01T00:00:00Z",
+            "tags": ["test"],
+        },
     }
 
 
@@ -191,7 +195,9 @@ class TestBenchmarkEngine:
             assert result.end_time is not None
 
     @pytest.mark.asyncio
-    async def test_run_benchmark_invalid_config(self, engine, config_manager, test_config):
+    async def test_run_benchmark_invalid_config(
+        self, engine, config_manager, test_config
+    ):
         """Test benchmark execution with invalid configuration."""
         # Mock config manager validation with errors
         config_manager.validate_config.return_value = (False, ["Invalid config"])
@@ -248,7 +254,9 @@ class TestBenchmarkEngine:
             mock_load_agent.return_value = mock_agent
 
             # Execute scenario
-            result = await engine._execute_scenario(scenario_config, agent_config, test_config, 1)
+            result = await engine._execute_scenario(
+                scenario_config, agent_config, test_config, 1
+            )
 
             # Verify result
             assert result["scenario_id"] == "test_scenario"
@@ -413,9 +421,14 @@ class TestBenchmarkEngine:
 
     @pytest.mark.parametrize(
         "max_age_days,expected_count",
-        [(30, 1), (3650, 2)],  # Only recent run should remain  # Both runs should remain (10 years)
+        [
+            (30, 1),
+            (3650, 2),
+        ],  # Only recent run should remain  # Both runs should remain (10 years)
     )
-    def test_cleanup_completed_runs(self, engine, test_config, max_age_days, expected_count):
+    def test_cleanup_completed_runs(
+        self, engine, test_config, max_age_days, expected_count
+    ):
         """Test cleanup of completed runs with different age thresholds."""
         # Create old completed run
         old_run = engine._create_benchmark_run(test_config)
@@ -439,7 +452,9 @@ class TestBenchmarkEngine:
             assert engine.completed_runs[0].benchmark_id == "recent_benchmark"
 
     @pytest.mark.asyncio
-    async def test_run_benchmark_with_timeout(self, engine, config_manager, test_config):
+    async def test_run_benchmark_with_timeout(
+        self, engine, config_manager, test_config
+    ):
         """Test benchmark execution with timeout."""
         # Mock dependencies
         config_manager.validate_config.return_value = (True, [])
@@ -464,7 +479,9 @@ class TestBenchmarkEngine:
 
             # Run benchmark and expect timeout
             with pytest.raises(asyncio.TimeoutError):
-                await asyncio.wait_for(engine.run_benchmark(timeout_config), timeout=0.5)
+                await asyncio.wait_for(
+                    engine.run_benchmark(timeout_config), timeout=0.5
+                )
 
 
 class TestBenchmarkResult:
@@ -625,10 +642,14 @@ class TestBenchmarkEngineExtended:
     @pytest.mark.asyncio
     async def test_initialize_with_exception(self, engine, config_manager):
         """Test BenchmarkEngine initialization with exception."""
-        config_manager.initialize.side_effect = Exception("Config initialization failed")
+        config_manager.initialize.side_effect = Exception(
+            "Config initialization failed"
+        )
 
         # Initialize engine and expect exception
-        with pytest.raises(BenchmarkError, match="Failed to initialize benchmark engine"):
+        with pytest.raises(
+            BenchmarkError, match="Failed to initialize benchmark engine"
+        ):
             await engine.initialize()
 
         assert engine._initialized is False
@@ -672,7 +693,9 @@ class TestBenchmarkEngineExtended:
             assert mock_execute.call_count == 2
 
     @pytest.mark.asyncio
-    async def test_run_benchmark_max_retries_exceeded(self, engine, config_manager, test_config):
+    async def test_run_benchmark_max_retries_exceeded(
+        self, engine, config_manager, test_config
+    ):
         """Test benchmark execution when max retries exceeded."""
         # Mock dependencies
         config_manager.validate_config.return_value = (True, [])
@@ -693,7 +716,9 @@ class TestBenchmarkEngineExtended:
             assert mock_execute.call_count == 4  # Initial + 3 retries
 
     @pytest.mark.asyncio
-    async def test_run_benchmark_with_retry_disabled(self, engine, config_manager, test_config):
+    async def test_run_benchmark_with_retry_disabled(
+        self, engine, config_manager, test_config
+    ):
         """Test benchmark execution with retry disabled."""
         # Mock dependencies
         config_manager.validate_config.return_value = (True, [])
@@ -718,7 +743,9 @@ class TestBenchmarkEngineExtended:
             assert mock_execute.call_count == 1
 
     @pytest.mark.asyncio
-    async def test_run_benchmark_with_max_duration(self, engine, config_manager, test_config):
+    async def test_run_benchmark_with_max_duration(
+        self, engine, config_manager, test_config
+    ):
         """Test benchmark execution with max duration."""
         # Mock dependencies
         config_manager.validate_config.return_value = (True, [])
@@ -750,7 +777,9 @@ class TestBenchmarkEngineExtended:
             assert result.status == BenchmarkStatus.TIMEOUT
 
     @pytest.mark.asyncio
-    async def test_run_benchmark_parallel_execution(self, engine, config_manager, test_config):
+    async def test_run_benchmark_parallel_execution(
+        self, engine, config_manager, test_config
+    ):
         """Test benchmark execution with parallel execution enabled."""
         # Mock dependencies
         config_manager.validate_config.return_value = (True, [])
@@ -849,7 +878,9 @@ class TestBenchmarkEngineExtended:
         )
 
         # Mock config manager to raise exception
-        engine.config_manager.get_output_path.side_effect = Exception("Failed to get output path")
+        engine.config_manager.get_output_path.side_effect = Exception(
+            "Failed to get output path"
+        )
 
         # Save results and expect exception
         with pytest.raises(BenchmarkError, match="Failed to save benchmark results"):
@@ -930,10 +961,14 @@ class TestBenchmarkEngineExtended:
         with patch("benchmarking.core.engine.metrics_registry") as mock_registry:
             mock_metric = Mock()
             mock_metric.calculate.return_value = {"score": 0.85}
-            mock_registry.get_metrics_by_category.return_value = {"decision": mock_metric}
+            mock_registry.get_metrics_by_category.return_value = {
+                "decision": mock_metric
+            }
 
             # Calculate metrics
-            metrics = await engine._calculate_cognitive_metrics(events, agent_data, scenario_data)
+            metrics = await engine._calculate_cognitive_metrics(
+                events, agent_data, scenario_data
+            )
 
             # Verify metrics
             assert "decision" in metrics
@@ -952,10 +987,14 @@ class TestBenchmarkEngineExtended:
         with patch("benchmarking.core.engine.metrics_registry") as mock_registry:
             mock_metric = Mock()
             mock_metric.calculate.return_value = {"roi": 0.15}
-            mock_registry.get_metrics_by_category.return_value = {"financial": mock_metric}
+            mock_registry.get_metrics_by_category.return_value = {
+                "financial": mock_metric
+            }
 
             # Calculate metrics
-            metrics = await engine._calculate_business_metrics(events, agent_data, scenario_data)
+            metrics = await engine._calculate_business_metrics(
+                events, agent_data, scenario_data
+            )
 
             # Verify metrics
             assert "financial" in metrics
@@ -974,10 +1013,14 @@ class TestBenchmarkEngineExtended:
         with patch("benchmarking.core.engine.metrics_registry") as mock_registry:
             mock_metric = Mock()
             mock_metric.calculate.return_value = {"latency": 100}
-            mock_registry.get_metrics_by_category.return_value = {"performance": mock_metric}
+            mock_registry.get_metrics_by_category.return_value = {
+                "performance": mock_metric
+            }
 
             # Calculate metrics
-            metrics = await engine._calculate_technical_metrics(events, agent_data, scenario_data)
+            metrics = await engine._calculate_technical_metrics(
+                events, agent_data, scenario_data
+            )
 
             # Verify metrics
             assert "performance" in metrics

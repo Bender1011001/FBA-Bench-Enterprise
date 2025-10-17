@@ -77,13 +77,14 @@ def check_code_quality():
     # This would typically integrate with code quality tools like SonarQube
     # For now, we'll just check that the code can be imported without syntax errors
     try:
+        import observability
+
         import agents
         import benchmarking
         import infrastructure
         import learning
         import llm_interface
         import metrics
-        import observability
         import plugins
         import scenarios
 

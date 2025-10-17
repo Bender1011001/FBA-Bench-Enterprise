@@ -156,7 +156,9 @@ class AdversarialEvent(BaseEvent):
             "deception_vector": self.deception_vector,
             "time_window": self.time_window,
             "financial_impact_limit": (
-                str(self.financial_impact_limit) if self.financial_impact_limit else None
+                str(self.financial_impact_limit)
+                if self.financial_impact_limit
+                else None
             ),
         }
 
@@ -355,7 +357,9 @@ class AdversarialResponse(BaseEvent):
             raise ValueError("Exploit difficulty must be between 1 and 5")
 
         # Validate financial damage if provided (accept Money-like)
-        if self.financial_damage is not None and not isinstance(self.financial_damage, Money):
+        if self.financial_damage is not None and not isinstance(
+            self.financial_damage, Money
+        ):
             cents_attr = getattr(self.financial_damage, "cents", None)
             if isinstance(cents_attr, int):
                 # Accept duck-typed Money-like with .cents
@@ -370,7 +374,9 @@ class AdversarialResponse(BaseEvent):
 
         # Logic validation: can't both fall for exploit and detect it
         if self.fell_for_exploit and self.detected_attack:
-            raise ValueError("Agent cannot both fall for exploit and detect it simultaneously")
+            raise ValueError(
+                "Agent cannot both fall for exploit and detect it simultaneously"
+            )
 
     def to_summary_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for logging/debugging."""
@@ -384,6 +390,8 @@ class AdversarialResponse(BaseEvent):
             "reported_attack": self.reported_attack,
             "protective_action_taken": self.protective_action_taken,
             "response_time_seconds": round(self.response_time_seconds, 2),
-            "financial_damage": str(self.financial_damage) if self.financial_damage else None,
+            "financial_damage": (
+                str(self.financial_damage) if self.financial_damage else None
+            ),
             "exploit_difficulty": self.exploit_difficulty,
         }

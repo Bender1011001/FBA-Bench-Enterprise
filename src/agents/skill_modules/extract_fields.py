@@ -82,7 +82,9 @@ def _parse_json_like_blocks(text: str) -> Dict[str, str]:
 
 
 class ExtractFieldsInput(SkillInputModel):
-    text: str = Field(..., description="Source text to extract fields from", min_length=1)
+    text: str = Field(
+        ..., description="Source text to extract fields from", min_length=1
+    )
     fields: List[str] = Field(
         ...,
         description="List of field names to extract. Matching is case-insensitive.",
@@ -93,7 +95,10 @@ class ExtractFieldsInput(SkillInputModel):
     model_config = ConfigDict(
         json_schema_extra={
             "examples": [
-                {"text": "Name: Jane Doe\nDate: 2025-07-04", "fields": ["name", "date"]},
+                {
+                    "text": "Name: Jane Doe\nDate: 2025-07-04",
+                    "fields": ["name", "date"],
+                },
             ]
         }
     )
@@ -119,7 +124,9 @@ class ExtractFieldsSkill(Skill):
     """
 
     name = "extract_fields"
-    description = "Extract key fields from plain text using simple patterns and JSON-like hints."
+    description = (
+        "Extract key fields from plain text using simple patterns and JSON-like hints."
+    )
     input_model = ExtractFieldsInput
     output_model = ExtractFieldsOutput
 
@@ -131,7 +138,9 @@ class ExtractFieldsSkill(Skill):
 
         text = data.text
         target_fields = [
-            _normalize_field_name(f) for f in data.fields if isinstance(f, str) and f.strip()
+            _normalize_field_name(f)
+            for f in data.fields
+            if isinstance(f, str) and f.strip()
         ]
         if not target_fields:
             raise SkillExecutionError("No valid fields provided")

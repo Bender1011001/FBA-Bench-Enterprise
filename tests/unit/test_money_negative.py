@@ -1,7 +1,6 @@
 from decimal import Decimal
 
 import pytest
-
 from fba_bench.money import MAX_MONEY_CENTS, Money
 
 

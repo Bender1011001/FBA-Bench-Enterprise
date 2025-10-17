@@ -1,15 +1,11 @@
 """Unit tests for the billing checkout session endpoint."""
 
-import os
 from unittest.mock import MagicMock, patch
 
 import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
-
 from api.models import User
-from api.security.jwt import get_current_user
 from api.server import app  # Import the main app for testing
+from fastapi.testclient import TestClient
 
 
 @pytest.fixture
@@ -28,8 +24,10 @@ def mock_user():
 @pytest.fixture
 def mock_get_current_user(monkeypatch: pytest.MonkeyPatch, mock_user: User):
     """Mock get_current_user to return a user."""
+
     def mock_dependency():
         return mock_user
+
     monkeypatch.setattr("api.routers.billing.get_current_user", mock_dependency)
 
 
@@ -38,7 +36,9 @@ def mock_stripe_success(monkeypatch: pytest.MonkeyPatch):
     """Mock Stripe Session.create to return a successful session."""
     mock_session = MagicMock()
     mock_session.url = "https://stripe.test/session"
-    monkeypatch.setattr("stripe.checkout.Session.create", MagicMock(return_value=mock_session))
+    monkeypatch.setattr(
+        "stripe.checkout.Session.create", MagicMock(return_value=mock_session)
+    )
     return mock_session
 
 
@@ -63,7 +63,7 @@ def test_checkout_success_returns_url(
     response = client.post(
         "/billing/checkout-session",
         json={},
-        headers={"Authorization": "Bearer fake_token"}  # Mocked by fixture
+        headers={"Authorization": "Bearer fake_token"},  # Mocked by fixture
     )
 
     assert response.status_code == 200
@@ -100,7 +100,7 @@ def test_checkout_custom_body_overrides_defaults(
             "success_url": "http://custom/success",
             "cancel_url": "http://custom/cancel",
         },
-        headers={"Authorization": "Bearer fake_token"}
+        headers={"Authorization": "Bearer fake_token"},
     )
 
     assert response.status_code == 200
@@ -128,7 +128,7 @@ def test_checkout_400_when_no_price_configured(
     response = client.post(
         "/billing/checkout-session",
         json={},
-        headers={"Authorization": "Bearer fake_token"}
+        headers={"Authorization": "Bearer fake_token"},
     )
 
     assert response.status_code == 400
@@ -147,7 +147,7 @@ def test_checkout_503_when_secret_missing(
     response = client.post(
         "/billing/checkout-session",
         json={},
-        headers={"Authorization": "Bearer fake_token"}
+        headers={"Authorization": "Bearer fake_token"},
     )
 
     assert response.status_code == 503
@@ -170,7 +170,7 @@ def test_checkout_handles_stripe_exception(
         response = client.post(
             "/billing/checkout-session",
             json={},
-            headers={"Authorization": "Bearer fake_token"}
+            headers={"Authorization": "Bearer fake_token"},
         )
 
     assert response.status_code == 500

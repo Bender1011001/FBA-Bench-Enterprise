@@ -42,7 +42,9 @@ async def demo_framework_abstraction():
     all_frameworks = ["diy", "crewai", "langchain"]
 
     for framework in all_frameworks:
-        status = "✅ Available" if framework in available_frameworks else "❌ Not installed"
+        status = (
+            "✅ Available" if framework in available_frameworks else "❌ Not installed"
+        )
         print(f"  {framework.upper()}: {status}")
 
     # Create agents with different frameworks
@@ -52,7 +54,9 @@ async def demo_framework_abstraction():
     print("\n🔧 Creating DIY Agent...")
     try:
         diy_config = DIYConfig.advanced_agent("diy_agent_1", "B0EXAMPLE01")
-        diy_runner = await agent_manager.register_agent("diy_agent_1", "diy", diy_config.to_dict())
+        diy_runner = await agent_manager.register_agent(
+            "diy_agent_1", "diy", diy_config.to_dict()
+        )
         agents_created.append("diy_agent_1")
         print("  ✅ DIY agent created successfully")
     except Exception as e:
@@ -77,7 +81,9 @@ async def demo_framework_abstraction():
     if check_framework_availability("langchain"):
         print("\n🔗 Creating LangChain Agent...")
         try:
-            langchain_config = LangChainConfig.reasoning_agent("langchain_agent_1", "fake_api_key")
+            langchain_config = LangChainConfig.reasoning_agent(
+                "langchain_agent_1", "fake_api_key"
+            )
             langchain_runner = await agent_manager.register_agent(
                 "langchain_agent_1", "langchain", langchain_config.to_dict()
             )
@@ -93,7 +99,9 @@ async def demo_framework_abstraction():
 
     if agents_created:
         # Create a sample tick event
-        tick_event = TickEvent(event_id="demo_tick_1", timestamp=datetime.utcnow(), tick_number=1)
+        tick_event = TickEvent(
+            event_id="demo_tick_1", timestamp=datetime.utcnow(), tick_number=1
+        )
 
         print("  📤 Publishing tick event to all agents...")
 
@@ -126,7 +134,9 @@ async def demo_framework_abstraction():
             .build()
         )
         print("  ✅ Agent created using builder pattern")
-        print(f"  📋 Config: {builder_agent.agent_id}, framework: {builder_agent.framework}")
+        print(
+            f"  📋 Config: {builder_agent.agent_id}, framework: {builder_agent.framework}"
+        )
     except Exception as e:
         print(f"  ❌ Builder pattern failed: {e}")
 

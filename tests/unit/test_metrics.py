@@ -38,7 +38,9 @@ class TestAdversarialMetrics(unittest.TestCase):
             "perturbation_magnitudes": [0.1, 0.2, 0.3],
         }
 
-        robustness_score = self.adversarial_metrics.calculate_robustness_score(test_data)
+        robustness_score = self.adversarial_metrics.calculate_robustness_score(
+            test_data
+        )
 
         self.assertIsNotNone(robustness_score)
         self.assertGreaterEqual(robustness_score, 0.0)
@@ -56,7 +58,9 @@ class TestAdversarialMetrics(unittest.TestCase):
             "target_classes": ["class1", "class2", "class3"],
         }
 
-        attack_success_rate = self.adversarial_metrics.calculate_attack_success_rate(test_data)
+        attack_success_rate = self.adversarial_metrics.calculate_attack_success_rate(
+            test_data
+        )
 
         self.assertIsNotNone(attack_success_rate)
         self.assertGreaterEqual(attack_success_rate, 0.0)
@@ -69,11 +73,17 @@ class TestAdversarialMetrics(unittest.TestCase):
         test_data = {
             "attacks_without_defense": {"success_rate": 0.8},
             "attacks_with_defense": {"success_rate": 0.2},
-            "defense_types": ["adversarial_training", "feature_squeezing", "gradient_masking"],
+            "defense_types": [
+                "adversarial_training",
+                "feature_squeezing",
+                "gradient_masking",
+            ],
             "performance_overhead": 0.1,
         }
 
-        defense_effectiveness = self.adversarial_metrics.calculate_defense_effectiveness(test_data)
+        defense_effectiveness = (
+            self.adversarial_metrics.calculate_defense_effectiveness(test_data)
+        )
 
         self.assertIsNotNone(defense_effectiveness)
         self.assertGreaterEqual(defense_effectiveness, 0.0)
@@ -91,7 +101,9 @@ class TestAdversarialMetrics(unittest.TestCase):
             "model_pairs": [("model1", "model2"), ("model1", "model3")],
         }
 
-        transferability = self.adversarial_metrics.calculate_adversarial_transferability(test_data)
+        transferability = (
+            self.adversarial_metrics.calculate_adversarial_transferability(test_data)
+        )
 
         self.assertIsNotNone(transferability)
         self.assertGreaterEqual(transferability, 0.0)
@@ -113,7 +125,11 @@ class TestAdversarialMetrics(unittest.TestCase):
             "target_classes": ["class1", "class2", "class3"],
             "attacks_without_defense": {"success_rate": 0.8},
             "attacks_with_defense": {"success_rate": 0.2},
-            "defense_types": ["adversarial_training", "feature_squeezing", "gradient_masking"],
+            "defense_types": [
+                "adversarial_training",
+                "feature_squeezing",
+                "gradient_masking",
+            ],
             "performance_overhead": 0.1,
             "source_model_success_rate": 0.9,
             "target_model_success_rate": 0.6,
@@ -386,7 +402,11 @@ class TestFinanceMetrics(unittest.TestCase):
     def test_calculate_break_even_point(self):
         """Test calculating break-even point."""
         # Mock test data
-        test_data = {"fixed_costs": 1000.0, "price_per_unit": 10.0, "variable_cost_per_unit": 6.0}
+        test_data = {
+            "fixed_costs": 1000.0,
+            "price_per_unit": 10.0,
+            "variable_cost_per_unit": 6.0,
+        }
 
         break_even = self.finance_metrics.calculate_break_even_point(test_data)
 
@@ -590,7 +610,9 @@ class TestOperationsMetrics(unittest.TestCase):
         # Mock test data
         test_data = {"availability": 0.9, "performance": 0.8, "quality": 0.95}
 
-        oee = self.operations_metrics.calculate_overall_equipment_effectiveness(test_data)
+        oee = self.operations_metrics.calculate_overall_equipment_effectiveness(
+            test_data
+        )
 
         self.assertIsNotNone(oee)
         self.assertEqual(oee, 0.684)  # 0.9 * 0.8 * 0.95
@@ -642,7 +664,9 @@ class TestStressMetrics(unittest.TestCase):
             "concurrent_users": 1000,
         }
 
-        throughput = self.stress_metrics.calculate_system_throughput_under_stress(test_data)
+        throughput = self.stress_metrics.calculate_system_throughput_under_stress(
+            test_data
+        )
 
         self.assertIsNotNone(throughput)
         self.assertEqual(throughput, 16.67)  # 5000 / 300 (approximately)
@@ -650,7 +674,10 @@ class TestStressMetrics(unittest.TestCase):
     def test_calculate_response_time_degradation(self):
         """Test calculating response time degradation."""
         # Mock test data
-        test_data = {"normal_response_time": 100, "stress_response_time": 500}  # ms  # ms
+        test_data = {
+            "normal_response_time": 100,
+            "stress_response_time": 500,
+        }  # ms  # ms
 
         degradation = self.stress_metrics.calculate_response_time_degradation(test_data)
 

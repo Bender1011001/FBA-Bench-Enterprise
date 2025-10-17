@@ -2,11 +2,13 @@
 Stub router for templates.
 """
 
-from fastapi import APIRouter
 import logging
+
+from fastapi import APIRouter
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
 
 @router.get("/templates")
 async def get_templates():

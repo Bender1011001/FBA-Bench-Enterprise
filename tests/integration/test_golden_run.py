@@ -5,15 +5,15 @@ from decimal import Decimal
 from typing import Any, Dict
 
 import pytest
-
-from events import CompetitorPricesUpdated, CompetitorState, SaleOccurred
-from fba_events.bus import InMemoryEventBus as EventBus
-from financial_audit import FinancialAuditService
 from money import Money
 from services.bsr_engine_v3 import BsrEngineV3Service
 from services.dashboard_api_service import FeeMetricsAggregatorService
 from services.double_entry_ledger_service import DoubleEntryLedgerService
 from services.fee_calculation_service import FeeCalculationService
+
+from events import CompetitorPricesUpdated, CompetitorState, SaleOccurred
+from fba_events.bus import InMemoryEventBus as EventBus
+from financial_audit import FinancialAuditService
 
 
 class ProductStub:
@@ -32,7 +32,9 @@ class ProductStub:
     ):
         self.product_id = product_id
         self.category = category
-        self.weight_oz = int(weight_oz) if not isinstance(weight_oz, Decimal) else weight_oz
+        self.weight_oz = (
+            int(weight_oz) if not isinstance(weight_oz, Decimal) else weight_oz
+        )
         self.dimensions_inches = (
             dimensions_inches
             if dimensions_inches is not None
@@ -134,7 +136,9 @@ async def test_golden_run(tmp_path):
         units_demanded = int(s["units_demanded"])
 
         # Compute comprehensive fees deterministically
-        breakdown = fee_calc.calculate_comprehensive_fees(product, sale_price, additional_context)
+        breakdown = fee_calc.calculate_comprehensive_fees(
+            product, sale_price, additional_context
+        )
         # Map fee types to Money amounts
         fee_breakdown: Dict[str, Money] = {
             f.fee_type.value: f.calculated_amount for f in breakdown.individual_fees
@@ -183,7 +187,9 @@ async def test_golden_run(tmp_path):
         "total_assets": str(fin_pos.get("total_assets")),
         "total_liabilities": str(fin_pos.get("total_liabilities")),
         "total_equity": str(fin_pos.get("total_equity")),
-        "accounting_identity_valid": bool(fin_pos.get("accounting_identity_valid", True)),
+        "accounting_identity_valid": bool(
+            fin_pos.get("accounting_identity_valid", True)
+        ),
         "identity_difference": str(fin_pos.get("identity_difference")),
         "timestamp": (
             fin_pos.get("timestamp").isoformat()
@@ -237,7 +243,9 @@ async def test_golden_run(tmp_path):
 
     # 5) Assertions
     assert audit_stats["processed_transactions"] == 3
-    assert isinstance(audit_stats["current_position"]["accounting_identity_valid"], bool)
+    assert isinstance(
+        audit_stats["current_position"]["accounting_identity_valid"], bool
+    )
     # Prefer true identity validity, but only assert type and non-empty identity_difference string shape
     assert audit_stats["current_position"]["identity_difference"].startswith("$")
 

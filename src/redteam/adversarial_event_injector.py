@@ -34,7 +34,10 @@ class AdversarialEventInjector:
     """
 
     def __init__(
-        self, event_bus: EventBus, world_store_or_registry, config: Optional[Dict[str, Any]] = None
+        self,
+        event_bus: EventBus,
+        world_store_or_registry,
+        config: Optional[Dict[str, Any]] = None,
     ):
         self.event_bus = event_bus
         # Support either a registry object or a store (tests pass a registry-like mock)
@@ -50,7 +53,9 @@ class AdversarialEventInjector:
 
         # Tracking
         self.active_exploits: Dict[str, Any] = {}
-        self._responses_by_event: DefaultDict[str, List[AdversarialResponse]] = defaultdict(list)
+        self._responses_by_event: DefaultDict[str, List[AdversarialResponse]] = (
+            defaultdict(list)
+        )
         self._total_injected: int = 0
         self._type_counts: DefaultDict[str, int] = defaultdict(int)
 
@@ -208,7 +213,9 @@ class AdversarialEventInjector:
         self._responses_by_event[adversarial_event_id].append(response)
         return response_id
 
-    def get_responses_for_event(self, adversarial_event_id: str) -> List[AdversarialResponse]:
+    def get_responses_for_event(
+        self, adversarial_event_id: str
+    ) -> List[AdversarialResponse]:
         """
         Return recorded responses for a given adversarial event id.
         """

@@ -7,12 +7,15 @@ from pathlib import Path
 from typing import Dict, Optional, Tuple, TypedDict
 
 # Reuse CLI logic safely (functions have no CLI side-effects on import)
-from fba_bench.cli import check_docker_available as cli_check_docker_available
-from fba_bench.cli import check_port_open as cli_check_port_open
-from fba_bench.cli import docker_cmd_base as cli_docker_cmd_base
-from fba_bench.cli import find_compose_file as cli_find_compose_file  # type: ignore
-from fba_bench.cli import locate_repo_root as cli_locate_repo_root
-from fba_bench.cli import start_docker_compose as cli_start_docker_compose
+from fba_bench.cli import (
+    check_docker_available as cli_check_docker_available,
+    check_port_open as cli_check_port_open,
+    docker_cmd_base as cli_docker_cmd_base,
+    find_compose_file as cli_find_compose_file,  # type: ignore
+    locate_repo_root as cli_locate_repo_root,
+    start_docker_compose as cli_start_docker_compose,
+)
+
 from fba_bench_core.config import get_settings  # runtime env awareness
 
 logger = logging.getLogger("fba_bench_api.stack")
@@ -97,7 +100,9 @@ def _env_compose_override_path() -> Optional[Path]:
     return None
 
 
-def resolve_compose_file(user_path: Optional[str]) -> Tuple[Optional[Path], Optional[str]]:
+def resolve_compose_file(
+    user_path: Optional[str],
+) -> Tuple[Optional[Path], Optional[str]]:
     """
     Resolve and validate the docker-compose.clearml.yml path with path whitelisting.
 
@@ -170,7 +175,10 @@ def stop_docker_compose(compose_file: Path) -> Tuple[bool, Optional[str]]:
     # Validate 'version' and fallback if needed
     try:
         version_proc = subprocess.run(
-            base + ["version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+            base + ["version"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
         )
         if version_proc.returncode != 0 and base == ["docker", "compose"]:
             # Fall back to docker-compose if docker compose v2 is not available
@@ -187,7 +195,10 @@ def stop_docker_compose(compose_file: Path) -> Tuple[bool, Optional[str]]:
         if proc.returncode != 0:
             return False, f"Failed to stop ClearML stack (exit code {proc.returncode})."
     except FileNotFoundError:
-        return False, "Docker Compose command not found. Ensure Docker is installed and on PATH."
+        return (
+            False,
+            "Docker Compose command not found. Ensure Docker is installed and on PATH.",
+        )
     except Exception as e:
         return False, f"Error stopping Docker Compose: {e}"
 
@@ -224,7 +235,9 @@ def start_stack(
 
     # Enforce detached mode (API cannot safely run foreground)
     if not detach:
-        logger.info("detach=false was requested, but API enforces detached mode for safety.")
+        logger.info(
+            "detach=false was requested, but API enforces detached mode for safety."
+        )
     logger.info("Using compose file: %s", compose_file)
     logger.info("Docker command variant: %s", docker_variant())
 
@@ -237,7 +250,12 @@ def start_stack(
             docker_variant(),
         )
 
-    return True, compose_file, "ClearML stack is starting in detached mode.", docker_variant()
+    return (
+        True,
+        compose_file,
+        "ClearML stack is starting in detached mode.",
+        docker_variant(),
+    )
 
 
 def stop_stack(compose_path: Optional[str]) -> Tuple[bool, Optional[Path], str, str]:
@@ -258,7 +276,12 @@ def stop_stack(compose_path: Optional[str]) -> Tuple[bool, Optional[Path], str, 
 
     stopped, serr = stop_docker_compose(compose_file)
     if not stopped:
-        return False, compose_file, serr or "Failed to stop ClearML stack.", docker_variant()
+        return (
+            False,
+            compose_file,
+            serr or "Failed to stop ClearML stack.",
+            docker_variant(),
+        )
 
     return True, compose_file, "ClearML stack stopped.", docker_variant()
 
@@ -278,7 +301,9 @@ def ports_status() -> Tuple[PortsReport, bool]:
         "api": {"port": ports["api"], "open": bool(api_open)},
         "file": {"port": ports["file"], "open": bool(file_open)},
     }
-    running_all = report["web"]["open"] and report["api"]["open"] and report["file"]["open"]
+    running_all = (
+        report["web"]["open"] and report["api"]["open"] and report["file"]["open"]
+    )
     return report, bool(running_all)
 
 

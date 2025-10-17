@@ -1,22 +1,20 @@
 """Event handling for the double-entry ledger service."""
 
 import logging
-from datetime import datetime
 from typing import Any, Dict, Optional
+
+from money import Money
 
 from fba_events.bus import EventBus
 from fba_events.sales import SaleOccurred
-from money import Money
 
 from .core import LedgerCore
 from .models import (
-    AccountType,
     LedgerEntry,
     Transaction,
     TransactionType,
 )
 from .statements import StatementsGenerator
-
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +68,9 @@ class EventsHandler:
         """Stop the event handler and post any remaining unposted transactions."""
         # Post any remaining unposted transactions
         if self.ledger_core.unposted_transactions:
-            logger.info(f"Posting {len(self.ledger_core.unposted_transactions)} unposted transactions")
+            logger.info(
+                f"Posting {len(self.ledger_core.unposted_transactions)} unposted transactions"
+            )
             await self.ledger_core.post_all_unposted_transactions()
 
         logger.info("EventsHandler stopped")
@@ -96,7 +96,9 @@ class EventsHandler:
                     "total_fees": event.total_fees,
                     "total_profit": event.total_profit,
                     "cost_basis": event.cost_basis,
-                    "fee_breakdown": {k: str(v) for k, v in (event.fee_breakdown or {}).items()},
+                    "fee_breakdown": {
+                        k: str(v) for k, v in (event.fee_breakdown or {}).items()
+                    },
                 },
             )
 
@@ -137,7 +139,9 @@ class EventsHandler:
                     for fee_type, amount in event.fee_breakdown.items():
                         if amount.cents == 0:
                             continue
-                        expense_account = fee_account_map.get(fee_type.lower(), "other_expenses")
+                        expense_account = fee_account_map.get(
+                            fee_type.lower(), "other_expenses"
+                        )
                         transaction.debits.append(
                             LedgerEntry(
                                 entry_id=f"fee_{fee_type}_{event.event_id}",
@@ -277,8 +281,12 @@ class EventsHandler:
             # Add to unposted transactions (note: not posted immediately, per original)
             self.ledger_core.unposted_transactions.append(transaction)
 
-            logger.debug(f"Created inventory adjustment transaction {transaction.transaction_id}")
+            logger.debug(
+                f"Created inventory adjustment transaction {transaction.transaction_id}"
+            )
 
         except Exception as e:
-            logger.error(f"Error handling InventoryAdjusted event {event.event_id}: {e}")
+            logger.error(
+                f"Error handling InventoryAdjusted event {event.event_id}: {e}"
+            )
             raise

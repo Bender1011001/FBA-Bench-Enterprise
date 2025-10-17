@@ -1,4 +1,3 @@
-
 import pytest
 
 """
@@ -158,7 +157,11 @@ class RealisticAgent(BaseAgentRunner):
     def _generate_inventory_rules(self) -> List[Dict[str, Any]]:
         """Generate inventory management rules for e-commerce domain."""
         return [
-            {"condition": "inventory_count < 10", "action": "reorder_product", "priority": "high"},
+            {
+                "condition": "inventory_count < 10",
+                "action": "reorder_product",
+                "priority": "high",
+            },
             {
                 "condition": "inventory_count < 20 and popularity_score > 0.8",
                 "action": "reorder_product",
@@ -182,7 +185,9 @@ class RealisticAgent(BaseAgentRunner):
                 "name": f"Condition {i}",
                 "symptoms": [f"Symptom {j}" for j in range(np.random.randint(2, 6))],
                 "severity": np.random.choice(severity_levels),
-                "treatment_options": [f"Treatment {j}" for j in range(np.random.randint(1, 4))],
+                "treatment_options": [
+                    f"Treatment {j}" for j in range(np.random.randint(1, 4))
+                ],
                 "prevalence": np.random.uniform(0.01, 0.5),
             }
             conditions.append(condition)
@@ -197,9 +202,13 @@ class RealisticAgent(BaseAgentRunner):
             treatment = {
                 "id": f"treatment_{i}",
                 "name": f"Treatment {i}",
-                "type": np.random.choice(["medication", "therapy", "surgery", "lifestyle_change"]),
+                "type": np.random.choice(
+                    ["medication", "therapy", "surgery", "lifestyle_change"]
+                ),
                 "effectiveness": np.random.uniform(0.3, 0.95),
-                "side_effects": [f"Side effect {j}" for j in range(np.random.randint(0, 3))],
+                "side_effects": [
+                    f"Side effect {j}" for j in range(np.random.randint(0, 3))
+                ],
                 "cost": np.random.uniform(100, 10000),
             }
             treatments.append(treatment)
@@ -228,7 +237,12 @@ class RealisticAgent(BaseAgentRunner):
         return [
             {"name": "blood_test", "accuracy": 0.95, "time_required": 1, "cost": 100},
             {"name": "imaging_scan", "accuracy": 0.9, "time_required": 24, "cost": 500},
-            {"name": "physical_examination", "accuracy": 0.7, "time_required": 0.5, "cost": 50},
+            {
+                "name": "physical_examination",
+                "accuracy": 0.7,
+                "time_required": 0.5,
+                "cost": 50,
+            },
         ]
 
     def _generate_market_data(self) -> Dict[str, Any]:
@@ -304,7 +318,11 @@ class RealisticAgent(BaseAgentRunner):
             },
             {
                 "name": "stress_testing",
-                "scenarios": ["market_crash", "interest_rate_shock", "liquidity_crisis"],
+                "scenarios": [
+                    "market_crash",
+                    "interest_rate_shock",
+                    "liquidity_crisis",
+                ],
                 "severity_levels": ["moderate", "severe", "extreme"],
             },
         ]
@@ -315,12 +333,20 @@ class RealisticAgent(BaseAgentRunner):
             {
                 "name": "basel_iii",
                 "focus": "banking_regulation",
-                "requirements": ["capital_adequacy", "liquidity_coverage", "leverage_ratio"],
+                "requirements": [
+                    "capital_adequacy",
+                    "liquidity_coverage",
+                    "leverage_ratio",
+                ],
             },
             {
                 "name": "dodd_frank",
                 "focus": "financial_reform",
-                "requirements": ["volcker_rule", "derivatives_regulation", "consumer_protection"],
+                "requirements": [
+                    "volcker_rule",
+                    "derivatives_regulation",
+                    "consumer_protection",
+                ],
             },
             {
                 "name": "mifid_ii",
@@ -340,9 +366,13 @@ class RealisticAgent(BaseAgentRunner):
                 "name": f"Case {i}",
                 "legal_area": np.random.choice(legal_areas),
                 "year": np.random.randint(1950, 2023),
-                "court": np.random.choice(["Supreme Court", "Court of Appeals", "District Court"]),
+                "court": np.random.choice(
+                    ["Supreme Court", "Court of Appeals", "District Court"]
+                ),
                 "precedent_value": np.random.uniform(0, 1),
-                "key_principles": [f"Principle {j}" for j in range(np.random.randint(1, 4))],
+                "key_principles": [
+                    f"Principle {j}" for j in range(np.random.randint(1, 4))
+                ],
             }
             cases.append(case)
 
@@ -448,7 +478,13 @@ class RealisticAgent(BaseAgentRunner):
         return [
             {
                 "name": "experimental_method",
-                "steps": ["hypothesis", "experiment", "observation", "analysis", "conclusion"],
+                "steps": [
+                    "hypothesis",
+                    "experiment",
+                    "observation",
+                    "analysis",
+                    "conclusion",
+                ],
                 "reliability": 0.9,
                 "validity": 0.85,
             },
@@ -460,7 +496,12 @@ class RealisticAgent(BaseAgentRunner):
             },
             {
                 "name": "computational_method",
-                "steps": ["model_development", "simulation", "validation", "prediction"],
+                "steps": [
+                    "model_development",
+                    "simulation",
+                    "validation",
+                    "prediction",
+                ],
                 "reliability": 0.8,
                 "validity": 0.75,
             },
@@ -480,7 +521,11 @@ class RealisticAgent(BaseAgentRunner):
             },
             {
                 "name": "qualitative_analysis",
-                "methods": ["content_analysis", "thematic_analysis", "discourse_analysis"],
+                "methods": [
+                    "content_analysis",
+                    "thematic_analysis",
+                    "discourse_analysis",
+                ],
                 "applicability": "qualitative_data",
             },
             {
@@ -532,7 +577,11 @@ class RealisticAgent(BaseAgentRunner):
             },
             {
                 "name": "reproducibility",
-                "requirements": ["data_availability", "code_availability", "detailed_methods"],
+                "requirements": [
+                    "data_availability",
+                    "code_availability",
+                    "detailed_methods",
+                ],
                 "purpose": "verification",
             },
         ]
@@ -554,7 +603,12 @@ class RealisticAgent(BaseAgentRunner):
                 "implement_decision",
                 "review_outcomes",
             ],
-            "communication": ["active_listening", "clear_expression", "feedback", "adaptation"],
+            "communication": [
+                "active_listening",
+                "clear_expression",
+                "feedback",
+                "adaptation",
+            ],
         }
 
     def _generate_problem_solving_strategies(self) -> List[Dict[str, Any]]:
@@ -572,7 +626,11 @@ class RealisticAgent(BaseAgentRunner):
             },
             {
                 "name": "analogy",
-                "steps": ["identify_similar_problem", "apply_solution", "adapt_as_needed"],
+                "steps": [
+                    "identify_similar_problem",
+                    "apply_solution",
+                    "adapt_as_needed",
+                ],
                 "applicability": "familiar_problems",
             },
         ]
@@ -584,7 +642,9 @@ class RealisticAgent(BaseAgentRunner):
         # Extract relevant information from input
         content = input_data.get("content", "")
         context = input_data.get("context", {})
-        domain = input_data.get("domain", self.config.parameters.get("domain", "general"))
+        domain = input_data.get(
+            "domain", self.config.parameters.get("domain", "general")
+        )
 
         # Process the input based on domain
         if domain == "ecommerce":
@@ -629,14 +689,18 @@ class RealisticAgent(BaseAgentRunner):
         if "product" in content.lower():
             # Product-related query
             products = self.knowledge_base.get("products", [])
-            relevant_products = [p for p in products if p["name"].lower() in content.lower()]
+            relevant_products = [
+                p for p in products if p["name"].lower() in content.lower()
+            ]
 
             if relevant_products:
                 response = {
                     "type": "product_information",
                     "products": relevant_products[:3],  # Return top 3 matches
                     "recommendations": (
-                        self._generate_product_recommendations(relevant_products[0]["id"])
+                        self._generate_product_recommendations(
+                            relevant_products[0]["id"]
+                        )
                         if relevant_products
                         else []
                     ),
@@ -645,9 +709,9 @@ class RealisticAgent(BaseAgentRunner):
                 response = {
                     "type": "product_information",
                     "message": "No specific products found. Here are some popular options:",
-                    "products": sorted(products, key=lambda x: x["popularity_score"], reverse=True)[
-                        :3
-                    ],
+                    "products": sorted(
+                        products, key=lambda x: x["popularity_score"], reverse=True
+                    )[:3],
                 }
         elif "customer" in content.lower():
             # Customer-related query
@@ -770,7 +834,9 @@ class RealisticAgent(BaseAgentRunner):
 
         return response
 
-    async def _process_legal_input(self, content: str, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _process_legal_input(
+        self, content: str, context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Process legal domain input."""
         # Simulate legal processing
         if "case" in content.lower() or "law" in content.lower():
@@ -845,7 +911,9 @@ class RealisticAgent(BaseAgentRunner):
 
         return response
 
-    async def _process_general_input(self, content: str, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _process_general_input(
+        self, content: str, context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Process general domain input."""
         # Simulate general processing
         response = {
@@ -858,7 +926,9 @@ class RealisticAgent(BaseAgentRunner):
 
         return response
 
-    def _generate_product_recommendations(self, product_id: str) -> List[Dict[str, Any]]:
+    def _generate_product_recommendations(
+        self, product_id: str
+    ) -> List[Dict[str, Any]]:
         """Generate product recommendations based on product ID."""
         products = self.knowledge_base.get("products", [])
         product = next((p for p in products if p["id"] == product_id), None)
@@ -868,7 +938,9 @@ class RealisticAgent(BaseAgentRunner):
 
         # Find products in the same category
         same_category_products = [
-            p for p in products if p["category"] == product["category"] and p["id"] != product_id
+            p
+            for p in products
+            if p["category"] == product["category"] and p["id"] != product_id
         ]
 
         # Sort by popularity and return top 2
@@ -895,9 +967,9 @@ class RealisticAgent(BaseAgentRunner):
                 preference_counts[preference] = preference_counts.get(preference, 0) + 1
 
         # Find most popular preferences
-        popular_preferences = sorted(preference_counts.items(), key=lambda x: x[1], reverse=True)[
-            :3
-        ]
+        popular_preferences = sorted(
+            preference_counts.items(), key=lambda x: x[1], reverse=True
+        )[:3]
 
         return {
             "average_loyalty_score": avg_loyalty,
@@ -922,8 +994,12 @@ class RealisticAgent(BaseAgentRunner):
 
         # Calculate average metrics
         if stocks:
-            avg_volatility = sum(sector["volatility"] for sector in stocks.values()) / len(stocks)
-            avg_return = sum(sector["avg_return"] for sector in stocks.values()) / len(stocks)
+            avg_volatility = sum(
+                sector["volatility"] for sector in stocks.values()
+            ) / len(stocks)
+            avg_return = sum(sector["avg_return"] for sector in stocks.values()) / len(
+                stocks
+            )
         else:
             avg_volatility = 0
             avg_return = 0
@@ -940,15 +1016,27 @@ class RealisticAgent(BaseAgentRunner):
         return {
             "market_outlook": "Moderate growth expected with increased volatility",
             "risk_factors": ["Inflation", "Interest rates", "Geopolitical events"],
-            "opportunities": ["Technology sector", "Renewable energy", "Emerging markets"],
+            "opportunities": [
+                "Technology sector",
+                "Renewable energy",
+                "Emerging markets",
+            ],
         }
 
     def _generate_healthcare_insights(self) -> Dict[str, Any]:
         """Generate healthcare insights."""
         return {
-            "trends": ["Telemedicine", "Personalized medicine", "AI-assisted diagnostics"],
+            "trends": [
+                "Telemedicine",
+                "Personalized medicine",
+                "AI-assisted diagnostics",
+            ],
             "challenges": ["Aging population", "Rising costs", "Access to care"],
-            "opportunities": ["Preventive care", "Digital health", "Precision medicine"],
+            "opportunities": [
+                "Preventive care",
+                "Digital health",
+                "Precision medicine",
+            ],
         }
 
     def _generate_legal_insights(self) -> Dict[str, Any]:
@@ -970,9 +1058,21 @@ class RealisticAgent(BaseAgentRunner):
     def _generate_scientific_insights(self) -> Dict[str, Any]:
         """Generate scientific insights."""
         return {
-            "trends": ["Interdisciplinary research", "Open science", "Big data analytics"],
-            "challenges": ["Reproducibility crisis", "Funding constraints", "Publication pressure"],
-            "opportunities": ["Collaborative platforms", "Preprint servers", "Citizen science"],
+            "trends": [
+                "Interdisciplinary research",
+                "Open science",
+                "Big data analytics",
+            ],
+            "challenges": [
+                "Reproducibility crisis",
+                "Funding constraints",
+                "Publication pressure",
+            ],
+            "opportunities": [
+                "Collaborative platforms",
+                "Preprint servers",
+                "Citizen science",
+            ],
         }
 
     async def execute_action(self, action: Dict[str, Any]) -> Dict[str, Any]:
@@ -1028,7 +1128,9 @@ class RealisticAgent(BaseAgentRunner):
         # Perform analysis based on type
         if analysis_type == "statistical":
             # Statistical analysis
-            if isinstance(data, list) and all(isinstance(x, (int, float)) for x in data):
+            if isinstance(data, list) and all(
+                isinstance(x, (int, float)) for x in data
+            ):
                 result = {
                     "status": "completed",
                     "analysis_type": "statistical",
@@ -1039,7 +1141,10 @@ class RealisticAgent(BaseAgentRunner):
                     "max": np.max(data),
                 }
             else:
-                result = {"status": "failed", "error": "Invalid data type for statistical analysis"}
+                result = {
+                    "status": "failed",
+                    "error": "Invalid data type for statistical analysis",
+                }
         elif analysis_type == "pattern_recognition":
             # Pattern recognition
             result = {
@@ -1066,7 +1171,10 @@ class RealisticAgent(BaseAgentRunner):
         criteria = params.get("criteria", {})
 
         if not options:
-            return {"status": "failed", "error": "No options provided for decision making"}
+            return {
+                "status": "failed",
+                "error": "No options provided for decision making",
+            }
 
         # Apply decision-making model
         confidence_threshold = self.decision_making_model["confidence_threshold"]
@@ -1117,7 +1225,10 @@ class RealisticAgent(BaseAgentRunner):
             report = {
                 "title": "Performance Report",
                 "sections": [
-                    {"title": "Overview", "content": "Performance overview and summary"},
+                    {
+                        "title": "Overview",
+                        "content": "Performance overview and summary",
+                    },
                     {
                         "title": "Metrics",
                         "content": f"Performance metrics: {self.performance_metrics}",
@@ -1134,14 +1245,20 @@ class RealisticAgent(BaseAgentRunner):
                 "sections": [
                     {"title": "Data Overview", "content": f"Data overview: {data}"},
                     {"title": "Findings", "content": "Analysis findings and insights"},
-                    {"title": "Conclusions", "content": "Analysis conclusions and implications"},
+                    {
+                        "title": "Conclusions",
+                        "content": "Analysis conclusions and implications",
+                    },
                 ],
             }
         else:
             report = {
                 "title": "General Report",
                 "sections": [
-                    {"title": "Introduction", "content": "Report introduction and purpose"},
+                    {
+                        "title": "Introduction",
+                        "content": "Report introduction and purpose",
+                    },
                     {"title": "Content", "content": "Report content and details"},
                     {"title": "Summary", "content": "Report summary and key points"},
                 ],
@@ -1149,7 +1266,9 @@ class RealisticAgent(BaseAgentRunner):
 
         return {"status": "completed", "report": report}
 
-    async def _execute_learn_from_experience(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_learn_from_experience(
+        self, params: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Execute learning from experience action."""
         # Simulate learning
         experience = params.get("experience", {})
@@ -1216,7 +1335,9 @@ class RealisticAgent(BaseAgentRunner):
         """Update performance metrics based on interaction."""
         # Simulate metric updates
         interaction_type = interaction.get("type", "unknown")
-        duration = interaction.get("processing_time", 0) or interaction.get("execution_time", 0)
+        duration = interaction.get("processing_time", 0) or interaction.get(
+            "execution_time", 0
+        )
 
         if interaction_type == "input_processing":
             self.performance_metrics["task_completion_rate"] = min(
@@ -1274,7 +1395,8 @@ class RealisticAgent(BaseAgentRunner):
 
         avg_duration = (
             sum(
-                interaction.get("processing_time", 0) or interaction.get("execution_time", 0)
+                interaction.get("processing_time", 0)
+                or interaction.get("execution_time", 0)
                 for interaction in self.interaction_history
             )
             / total_interactions
@@ -1283,14 +1405,24 @@ class RealisticAgent(BaseAgentRunner):
         )
 
         resource_summary = {
-            "avg_cpu": np.mean(self.resource_usage["cpu"]) if self.resource_usage["cpu"] else 0,
-            "avg_memory": np.mean(self.resource_usage["memory"]) if self.resource_usage["memory"] else 0,
+            "avg_cpu": (
+                np.mean(self.resource_usage["cpu"]) if self.resource_usage["cpu"] else 0
+            ),
+            "avg_memory": (
+                np.mean(self.resource_usage["memory"])
+                if self.resource_usage["memory"]
+                else 0
+            ),
             "total_network": sum(self.resource_usage["network"]),
         }
 
         return {
             "total_interactions": total_interactions,
-            "success_rate": successful_interactions / total_interactions if total_interactions > 0 else 0,
+            "success_rate": (
+                successful_interactions / total_interactions
+                if total_interactions > 0
+                else 0
+            ),
             "avg_duration_seconds": avg_duration,
             "current_metrics": self.performance_metrics,
             "resource_usage": resource_summary,
@@ -1318,9 +1450,13 @@ class RealisticAgent(BaseAgentRunner):
         # Generate domain-specific insights
         domain_insights = {}
         if self.config.parameters.get("domain") == "ecommerce":
-            domain_insights = self._generate_ecommerce_test_insights(performance_summary)
+            domain_insights = self._generate_ecommerce_test_insights(
+                performance_summary
+            )
         elif self.config.parameters.get("domain") == "healthcare":
-            domain_insights = self._generate_healthcare_test_insights(performance_summary)
+            domain_insights = self._generate_healthcare_test_insights(
+                performance_summary
+            )
         # Add more domain-specific insights as needed
 
         report = {
@@ -1335,11 +1471,20 @@ class RealisticAgent(BaseAgentRunner):
 
         return report
 
-    def _generate_ecommerce_test_insights(self, performance: Dict[str, Any]) -> Dict[str, Any]:
+    def _generate_ecommerce_test_insights(
+        self, performance: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Generate e-commerce specific test insights."""
         return {
-            "product_processing_efficiency": performance["current_metrics"].get("efficiency_score", 0),
-            "customer_interaction_quality": performance["current_metrics"].get("accuracy_score", 0),
+            "product_processing_efficiency": performance["current_metrics"].get(
+                "efficiency_score", 0
+            ),
+            "customer_interaction_quality": performance["current_metrics"].get(
+                "accuracy_score", 0
+            ),
             "recommendation_accuracy": np.random.uniform(0.7, 0.95),  # Simulated
             "inventory_management_performance": np.random.uniform(0.6, 0.9),
-            "sales_pattern_recognition": performance["current
+            "sales_pattern_recognition": performance["current_metrics"].get(
+                "sales_pattern_recognition", 0
+            ),
+        }

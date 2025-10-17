@@ -90,7 +90,9 @@ class MetricsConfig:
         return cls(
             enabled_metrics=data.get("enabled_metrics", cls.enabled_metrics),
             collection_interval=data.get("collection_interval", 10),
-            statistical_significance_threshold=data.get("statistical_significance_threshold", 0.95),
+            statistical_significance_threshold=data.get(
+                "statistical_significance_threshold", 0.95
+            ),
             confidence_interval=data.get("confidence_interval", 0.95),
         )
 
@@ -170,7 +172,10 @@ class BenchmarkConfig:
         return cls(
             name=data["name"],
             description=data["description"],
-            agents=[AgentConfig.from_dict(agent_data) for agent_data in data.get("agents", [])],
+            agents=[
+                AgentConfig.from_dict(agent_data)
+                for agent_data in data.get("agents", [])
+            ],
             scenarios=[
                 ScenarioConfig.from_dict(scenario_data)
                 for scenario_data in data.get("scenarios", [])
@@ -240,7 +245,9 @@ class BenchmarkConfig:
                 scenario_names.add(scenario.name)
 
             if scenario.duration_ticks <= 0:
-                errors.append(f"Duration ticks must be positive for scenario {scenario.name}")
+                errors.append(
+                    f"Duration ticks must be positive for scenario {scenario.name}"
+                )
 
         # Validate execution configuration
         if self.execution.num_runs <= 0:

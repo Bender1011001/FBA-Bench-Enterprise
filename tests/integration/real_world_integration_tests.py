@@ -22,18 +22,27 @@ from typing import Any, Dict, List, Optional
 # Add project root to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+from memory_experiments.dual_memory_manager import DualMemoryManager
+from memory_experiments.memory_config import MemoryConfig
+
 from agents.hierarchical_planner import StrategicPlanner
 from agents.skill_coordinator import SkillCoordinator
 from event_bus import get_event_bus
 from events import TickEvent
 from integration.consistency_checker import ConsistencyChecker
-from integration.gradual_rollout import GradualRolloutManager, RolloutCriteria, RolloutPhase
+from integration.gradual_rollout import (
+    GradualRolloutManager,
+    RolloutCriteria,
+    RolloutPhase,
+)
 from integration.real_world_adapter import RealWorldAdapter, SafetyLevel
 from integration.risk_manager import RiskManager, RiskProfile
 from integration.safety_validator import RiskLevel, SafetyConstraint, SafetyValidator
-from integration.sandbox_environment import IsolationLevel, SandboxConfig, SandboxEnvironment
-from memory_experiments.dual_memory_manager import DualMemoryManager
-from memory_experiments.memory_config import MemoryConfig
+from integration.sandbox_environment import (
+    IsolationLevel,
+    SandboxConfig,
+    SandboxEnvironment,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -106,7 +115,9 @@ class MockRealWorldAPI:
         self.rate_limit_count = 0
         self.api_calls = []
 
-    async def set_price(self, asin: str, price: Decimal, marketplace: str = "US") -> Dict[str, Any]:
+    async def set_price(
+        self, asin: str, price: Decimal, marketplace: str = "US"
+    ) -> Dict[str, Any]:
         """Mock set price API call."""
         self.call_count += 1
         self.api_calls.append(
@@ -313,17 +324,23 @@ class RealWorldIntegrationTestSuite:
                     }
 
                 except Exception as e:
-                    logger.error(f"Consistency test case {test_case.test_name} failed: {e}")
+                    logger.error(
+                        f"Consistency test case {test_case.test_name} failed: {e}"
+                    )
                     consistency_results[test_case.test_name] = {
                         "consistency_score": 0.0,
                         "meets_threshold": False,
                     }
 
             # Calculate overall consistency metrics
-            consistency_scores = [r["consistency_score"] for r in consistency_results.values()]
+            consistency_scores = [
+                r["consistency_score"] for r in consistency_results.values()
+            ]
             consistency_metrics = {
                 "average_consistency": (
-                    sum(consistency_scores) / len(consistency_scores) if consistency_scores else 0
+                    sum(consistency_scores) / len(consistency_scores)
+                    if consistency_scores
+                    else 0
                 ),
                 "consistency_variance": (
                     self._calculate_variance(consistency_scores)
@@ -348,10 +365,14 @@ class RealWorldIntegrationTestSuite:
 
                 # Verify state consistency after import
                 if import_success:
-                    post_import_consistency = await consistency_checker.verify_state_consistency(
-                        simulation_env, sandbox_env
+                    post_import_consistency = (
+                        await consistency_checker.verify_state_consistency(
+                            simulation_env, sandbox_env
+                        )
                     )
-                    consistency_metrics["state_synchronization"] = post_import_consistency
+                    consistency_metrics["state_synchronization"] = (
+                        post_import_consistency
+                    )
                 else:
                     consistency_metrics["state_synchronization"] = 0.0
 
@@ -365,9 +386,15 @@ class RealWorldIntegrationTestSuite:
             try:
                 # Test same API calls in both environments
                 test_api_calls = [
-                    {"method": "set_price", "params": {"asin": "TEST-001", "price": 1999}},
+                    {
+                        "method": "set_price",
+                        "params": {"asin": "TEST-001", "price": 1999},
+                    },
                     {"method": "get_inventory", "params": {"asin": "TEST-001"}},
-                    {"method": "place_order", "params": {"asin": "TEST-002", "quantity": 5}},
+                    {
+                        "method": "place_order",
+                        "params": {"asin": "TEST-002", "quantity": 5},
+                    },
                 ]
 
                 api_consistency_results = []
@@ -380,8 +407,10 @@ class RealWorldIntegrationTestSuite:
                     )
 
                     # Compare responses (structure and key fields should match)
-                    response_consistency = await consistency_checker.compare_api_responses(
-                        sim_response, sandbox_response
+                    response_consistency = (
+                        await consistency_checker.compare_api_responses(
+                            sim_response, sandbox_response
+                        )
                     )
                     api_consistency_results.append(response_consistency)
 
@@ -398,9 +427,13 @@ class RealWorldIntegrationTestSuite:
             # Success criteria
             overall_consistency = consistency_metrics["average_consistency"] > 0.85
             state_sync_success = consistency_metrics["state_synchronization"] > 0.9
-            api_consistency_success = consistency_metrics["api_response_consistency"] > 0.8
+            api_consistency_success = (
+                consistency_metrics["api_response_consistency"] > 0.8
+            )
 
-            success = overall_consistency and state_sync_success and api_consistency_success
+            success = (
+                overall_consistency and state_sync_success and api_consistency_success
+            )
 
             duration = time.time() - start_time
 
@@ -418,7 +451,9 @@ class RealWorldIntegrationTestSuite:
             )
 
         except Exception as e:
-            logger.error(f"Simulation-to-sandbox consistency test failed: {e}", exc_info=True)
+            logger.error(
+                f"Simulation-to-sandbox consistency test failed: {e}", exc_info=True
+            )
             duration = time.time() - start_time
 
             return RealWorldTestResult(
@@ -521,7 +556,9 @@ class RealWorldIntegrationTestSuite:
                 ),
                 SafetyTestScenario(
                     scenario_name="negative_pricing",
-                    agent_actions=[{"action": "set_price", "asin": "TEST-003", "new_price": -10}],
+                    agent_actions=[
+                        {"action": "set_price", "asin": "TEST-003", "new_price": -10}
+                    ],
                     expected_constraints=["negative_price_block"],
                     risk_level=RiskLevel.CRITICAL,
                     should_be_blocked=True,
@@ -547,7 +584,9 @@ class RealWorldIntegrationTestSuite:
                 try:
                     for action in scenario.agent_actions:
                         # Test safety validation
-                        validation_result = await safety_validator.validate_action(action)
+                        validation_result = await safety_validator.validate_action(
+                            action
+                        )
 
                         # Check if action was correctly blocked/allowed
                         was_blocked = (
@@ -574,14 +613,18 @@ class RealWorldIntegrationTestSuite:
                             )
 
                 except Exception as e:
-                    logger.error(f"Safety test scenario {scenario.scenario_name} failed: {e}")
+                    logger.error(
+                        f"Safety test scenario {scenario.scenario_name} failed: {e}"
+                    )
                     safety_test_results[scenario.scenario_name] = {
                         "correct_decision": False,
                         "was_blocked": False,
                         "should_be_blocked": scenario.should_be_blocked,
                         "violations_detected": [],
                     }
-                    safety_violations.append(f"Safety test {scenario.scenario_name} crashed: {e!s}")
+                    safety_violations.append(
+                        f"Safety test {scenario.scenario_name} crashed: {e!s}"
+                    )
 
             # Test 3: Risk Assessment Integration
             logger.info("Testing risk assessment integration")
@@ -601,22 +644,32 @@ class RealWorldIntegrationTestSuite:
 
                 # Test risk monitoring
                 test_actions = [
-                    {"action": "set_price", "asin": "RISK-001", "price_change_percent": 0.08},
+                    {
+                        "action": "set_price",
+                        "asin": "RISK-001",
+                        "price_change_percent": 0.08,
+                    },
                     {"action": "place_order", "asin": "RISK-002", "order_value": 25000},
                 ]
 
                 risk_assessments = []
                 for action in test_actions:
-                    risk_score = await risk_manager.assess_action_risk(action, risk_profile)
+                    risk_score = await risk_manager.assess_action_risk(
+                        action, risk_profile
+                    )
                     risk_assessments.append(risk_score)
 
                 risk_assessment = {
                     "risk_profile_created": True,
                     "risk_assessments_completed": len(risk_assessments),
                     "average_risk_score": (
-                        sum(risk_assessments) / len(risk_assessments) if risk_assessments else 0
+                        sum(risk_assessments) / len(risk_assessments)
+                        if risk_assessments
+                        else 0
                     ),
-                    "high_risk_actions": sum(1 for score in risk_assessments if score > 0.7),
+                    "high_risk_actions": sum(
+                        1 for score in risk_assessments if score > 0.7
+                    ),
                 }
 
             except Exception as e:
@@ -644,7 +697,9 @@ class RealWorldIntegrationTestSuite:
                         "new_price": -100,  # Always dangerous
                     }
 
-                    validation_result = await safety_validator.validate_action(dangerous_action)
+                    validation_result = await safety_validator.validate_action(
+                        dangerous_action
+                    )
                     if (
                         not validation_result.is_safe
                         if hasattr(validation_result, "is_safe")
@@ -653,10 +708,12 @@ class RealWorldIntegrationTestSuite:
                         violation_count += 1
 
                 # Check if circuit breaker triggered
-                circuit_breaker_status = await safety_validator.get_circuit_breaker_status()
+                circuit_breaker_status = (
+                    await safety_validator.get_circuit_breaker_status()
+                )
                 circuit_breaker_tests["violations_detected"] = violation_count
-                circuit_breaker_tests["circuit_breaker_triggered"] = circuit_breaker_status.get(
-                    "triggered", False
+                circuit_breaker_tests["circuit_breaker_triggered"] = (
+                    circuit_breaker_status.get("triggered", False)
                 )
 
                 # Test emergency stop
@@ -665,7 +722,9 @@ class RealWorldIntegrationTestSuite:
                 )
                 circuit_breaker_tests["emergency_stop_works"] = emergency_stop_result
 
-                api_integration_results["circuit_breaker"] = all(circuit_breaker_tests.values())
+                api_integration_results["circuit_breaker"] = all(
+                    circuit_breaker_tests.values()
+                )
 
             except Exception as e:
                 logger.error(f"Circuit breaker test failed: {e}")
@@ -673,7 +732,11 @@ class RealWorldIntegrationTestSuite:
 
             # Success criteria
             safety_decision_accuracy = (
-                sum(1 for result in safety_test_results.values() if result["correct_decision"])
+                sum(
+                    1
+                    for result in safety_test_results.values()
+                    if result["correct_decision"]
+                )
                 / len(safety_test_results)
                 if safety_test_results
                 else 0
@@ -686,7 +749,8 @@ class RealWorldIntegrationTestSuite:
 
             safety_success = (
                 safety_decision_accuracy > 0.9
-                and len(safety_violations) <= 2  # Allow some minor violations for testing
+                and len(safety_violations)
+                <= 2  # Allow some minor violations for testing
                 and risk_integration_success
             )
 
@@ -751,7 +815,9 @@ class RealWorldIntegrationTestSuite:
                     traffic_percentage=0.05,  # 5% traffic
                     duration_hours=24,
                     success_criteria=RolloutCriteria(
-                        min_success_rate=0.95, max_error_rate=0.01, max_response_time_ms=500
+                        min_success_rate=0.95,
+                        max_error_rate=0.01,
+                        max_response_time_ms=500,
                     ),
                 ),
                 RolloutPhase(
@@ -759,7 +825,9 @@ class RealWorldIntegrationTestSuite:
                     traffic_percentage=0.25,  # 25% traffic
                     duration_hours=48,
                     success_criteria=RolloutCriteria(
-                        min_success_rate=0.97, max_error_rate=0.005, max_response_time_ms=400
+                        min_success_rate=0.97,
+                        max_error_rate=0.005,
+                        max_response_time_ms=400,
                     ),
                 ),
                 RolloutPhase(
@@ -767,7 +835,9 @@ class RealWorldIntegrationTestSuite:
                     traffic_percentage=1.0,  # 100% traffic
                     duration_hours=0,  # Permanent
                     success_criteria=RolloutCriteria(
-                        min_success_rate=0.98, max_error_rate=0.002, max_response_time_ms=300
+                        min_success_rate=0.98,
+                        max_error_rate=0.002,
+                        max_response_time_ms=300,
                     ),
                 ),
             ]
@@ -782,16 +852,22 @@ class RealWorldIntegrationTestSuite:
                     phase_init = await rollout_manager.initialize_phase(phase)
 
                     # Simulate traffic routing
-                    traffic_routing_success = await rollout_manager.configure_traffic_routing(
-                        phase.traffic_percentage
+                    traffic_routing_success = (
+                        await rollout_manager.configure_traffic_routing(
+                            phase.traffic_percentage
+                        )
                     )
 
                     # Simulate monitoring data
                     monitoring_data = {
                         "success_rate": 0.96
-                        + (phase.traffic_percentage * 0.02),  # Higher success with more traffic
+                        + (
+                            phase.traffic_percentage * 0.02
+                        ),  # Higher success with more traffic
                         "error_rate": 0.01
-                        - (phase.traffic_percentage * 0.008),  # Lower errors with more traffic
+                        - (
+                            phase.traffic_percentage * 0.008
+                        ),  # Lower errors with more traffic
                         "response_time_ms": 400
                         - (phase.traffic_percentage * 100),  # Faster with more traffic
                     }
@@ -809,7 +885,9 @@ class RealWorldIntegrationTestSuite:
                     }
 
                 except Exception as e:
-                    logger.error(f"Rollout phase validation failed for {phase.phase_name}: {e}")
+                    logger.error(
+                        f"Rollout phase validation failed for {phase.phase_name}: {e}"
+                    )
                     phase_validation_results[phase.phase_name] = {
                         "phase_initialized": False,
                         "traffic_routing_configured": False,
@@ -839,7 +917,8 @@ class RealWorldIntegrationTestSuite:
                 # Test rollback execution
                 if rollback_triggered:
                     rollback_success = await rollout_manager.execute_rollback(
-                        target_phase="previous_stable", reason="Performance criteria not met"
+                        target_phase="previous_stable",
+                        reason="Performance criteria not met",
                     )
                 else:
                     rollback_success = False
@@ -862,13 +941,22 @@ class RealWorldIntegrationTestSuite:
             try:
                 # Test feature flag configuration
                 feature_flags = {
-                    "enable_new_pricing_algorithm": {"enabled": True, "rollout_percentage": 50},
-                    "enable_advanced_inventory": {"enabled": False, "rollout_percentage": 0},
-                    "enable_market_prediction": {"enabled": True, "rollout_percentage": 100},
+                    "enable_new_pricing_algorithm": {
+                        "enabled": True,
+                        "rollout_percentage": 50,
+                    },
+                    "enable_advanced_inventory": {
+                        "enabled": False,
+                        "rollout_percentage": 0,
+                    },
+                    "enable_market_prediction": {
+                        "enabled": True,
+                        "rollout_percentage": 100,
+                    },
                 }
 
-                flag_configuration_success = await rollout_manager.configure_feature_flags(
-                    feature_flags
+                flag_configuration_success = (
+                    await rollout_manager.configure_feature_flags(feature_flags)
                 )
 
                 # Test feature flag evaluation
@@ -899,7 +987,12 @@ class RealWorldIntegrationTestSuite:
             try:
                 # Test monitoring setup
                 monitoring_setup = await rollout_manager.setup_rollout_monitoring(
-                    metrics=["success_rate", "error_rate", "response_time", "throughput"],
+                    metrics=[
+                        "success_rate",
+                        "error_rate",
+                        "response_time",
+                        "throughput",
+                    ],
                     alert_thresholds={
                         "success_rate": 0.95,
                         "error_rate": 0.01,
@@ -914,11 +1007,15 @@ class RealWorldIntegrationTestSuite:
                     "response_time_ms": 350,  # Within threshold
                 }
 
-                alerts_generated = await rollout_manager.check_and_generate_alerts(test_alert_data)
+                alerts_generated = await rollout_manager.check_and_generate_alerts(
+                    test_alert_data
+                )
 
                 api_integration_results["monitoring_integration"] = {
                     "monitoring_setup": monitoring_setup,
-                    "alerts_generated": len(alerts_generated) if alerts_generated else 0,
+                    "alerts_generated": (
+                        len(alerts_generated) if alerts_generated else 0
+                    ),
                     "expected_alerts": 2,  # success_rate and error_rate should trigger
                 }
 
@@ -946,7 +1043,9 @@ class RealWorldIntegrationTestSuite:
                 and rollout_validation["feature_flags"]["evaluations_completed"] > 0
             )
 
-            rollout_success = phase_validation_success and rollback_success and feature_flag_success
+            rollout_success = (
+                phase_validation_success and rollback_success and feature_flag_success
+            )
 
             duration = time.time() - start_time
 
@@ -1002,7 +1101,9 @@ class RealWorldIntegrationTestSuite:
         # Run simulation
         for tick in range(duration_ticks):
             # Generate tick event
-            tick_event = TickEvent(event_id=f"tick_{tick}", timestamp=datetime.now(), tick=tick)
+            tick_event = TickEvent(
+                event_id=f"tick_{tick}", timestamp=datetime.now(), tick=tick
+            )
 
             # Process through skill coordinator
             actions = await skill_coordinator.dispatch_event(tick_event)
@@ -1059,7 +1160,9 @@ class RealWorldIntegrationTestSuite:
                 if result.success:
                     logger.info(f"✅ {result.test_name} passed")
                 else:
-                    logger.error(f"❌ {result.test_name} failed: {result.error_details}")
+                    logger.error(
+                        f"❌ {result.test_name} failed: {result.error_details}"
+                    )
 
             except Exception as e:
                 logger.error(f"Test {test_method.__name__} crashed: {e}", exc_info=True)
@@ -1093,7 +1196,9 @@ class RealWorldIntegrationTestSuite:
 
         for result in results:
             if result.consistency_metrics:
-                consistency_scores.append(result.consistency_metrics.get("average_consistency", 0))
+                consistency_scores.append(
+                    result.consistency_metrics.get("average_consistency", 0)
+                )
 
             if result.safety_violations is not None:
                 safety_scores.append(1.0 if len(result.safety_violations) == 0 else 0.5)
@@ -1102,12 +1207,15 @@ class RealWorldIntegrationTestSuite:
                 rollout_success = sum(
                     1
                     for validation in result.rollout_validation.values()
-                    if isinstance(validation, dict) and validation.get("phase_initialized", False)
+                    if isinstance(validation, dict)
+                    and validation.get("phase_initialized", False)
                 ) / max(1, len(result.rollout_validation))
                 rollout_scores.append(rollout_success)
 
         avg_consistency = (
-            sum(consistency_scores) / len(consistency_scores) if consistency_scores else 0
+            sum(consistency_scores) / len(consistency_scores)
+            if consistency_scores
+            else 0
         )
         avg_safety = sum(safety_scores) / len(safety_scores) if safety_scores else 0
         avg_rollout = sum(rollout_scores) / len(rollout_scores) if rollout_scores else 0
@@ -1121,7 +1229,9 @@ class RealWorldIntegrationTestSuite:
             "consistency_score": avg_consistency,
             "safety_score": avg_safety,
             "rollout_readiness_score": avg_rollout,
-            "real_world_ready": failed_tests == 0 and avg_consistency > 0.85 and avg_safety > 0.8,
+            "real_world_ready": failed_tests == 0
+            and avg_consistency > 0.85
+            and avg_safety > 0.8,
             "test_results": [result.__dict__ for result in results],
         }
 
@@ -1145,7 +1255,8 @@ async def main():
     """Run real-world integration testing suite."""
     # Configure logging
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     test_suite = RealWorldIntegrationTestSuite()

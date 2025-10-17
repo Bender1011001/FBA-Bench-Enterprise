@@ -10,7 +10,7 @@ import os
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Optional
+
 
 # Assuming a simple Budget class for completeness (replace with actual if defined elsewhere)
 class Budget:
@@ -25,6 +25,7 @@ class Budget:
 
 # Global logger (replace with proper logging setup)
 import logging
+
 logger = logging.getLogger(__name__)
 
 

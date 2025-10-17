@@ -31,7 +31,11 @@ class TestPluginFramework(unittest.TestCase):
             "name": "agent",
             "description": "Agent plugins",
             "base_class": "BaseAgentPlugin",
-            "interface": {"initialize": "method", "execute": "method", "cleanup": "method"},
+            "interface": {
+                "initialize": "method",
+                "execute": "method",
+                "cleanup": "method",
+            },
         }
 
         type_id = self.plugin_framework.register_plugin_type(plugin_type)
@@ -43,7 +47,8 @@ class TestPluginFramework(unittest.TestCase):
             self.plugin_framework._plugin_types[type_id]["description"], "Agent plugins"
         )
         self.assertEqual(
-            self.plugin_framework._plugin_types[type_id]["base_class"], "BaseAgentPlugin"
+            self.plugin_framework._plugin_types[type_id]["base_class"],
+            "BaseAgentPlugin",
         )
 
     def test_register_plugin(self):
@@ -53,7 +58,11 @@ class TestPluginFramework(unittest.TestCase):
             "name": "agent",
             "description": "Agent plugins",
             "base_class": "BaseAgentPlugin",
-            "interface": {"initialize": "method", "execute": "method", "cleanup": "method"},
+            "interface": {
+                "initialize": "method",
+                "execute": "method",
+                "cleanup": "method",
+            },
         }
 
         type_id = self.plugin_framework.register_plugin_type(plugin_type)
@@ -74,7 +83,9 @@ class TestPluginFramework(unittest.TestCase):
 
         self.assertIsNotNone(plugin_id)
         self.assertIn(plugin_id, self.plugin_framework._plugins)
-        self.assertEqual(self.plugin_framework._plugins[plugin_id]["name"], "Test Agent Plugin")
+        self.assertEqual(
+            self.plugin_framework._plugins[plugin_id]["name"], "Test Agent Plugin"
+        )
         self.assertEqual(self.plugin_framework._plugins[plugin_id]["type"], type_id)
 
     def test_unregister_plugin(self):
@@ -84,7 +95,11 @@ class TestPluginFramework(unittest.TestCase):
             "name": "agent",
             "description": "Agent plugins",
             "base_class": "BaseAgentPlugin",
-            "interface": {"initialize": "method", "execute": "method", "cleanup": "method"},
+            "interface": {
+                "initialize": "method",
+                "execute": "method",
+                "cleanup": "method",
+            },
         }
 
         type_id = self.plugin_framework.register_plugin_type(plugin_type)
@@ -115,7 +130,11 @@ class TestPluginFramework(unittest.TestCase):
             "name": "agent",
             "description": "Agent plugins",
             "base_class": "BaseAgentPlugin",
-            "interface": {"initialize": "method", "execute": "method", "cleanup": "method"},
+            "interface": {
+                "initialize": "method",
+                "execute": "method",
+                "cleanup": "method",
+            },
         }
 
         type_id = self.plugin_framework.register_plugin_type(plugin_type)
@@ -152,7 +171,11 @@ class TestPluginFramework(unittest.TestCase):
             "name": "agent",
             "description": "Agent plugins",
             "base_class": "BaseAgentPlugin",
-            "interface": {"initialize": "method", "execute": "method", "cleanup": "method"},
+            "interface": {
+                "initialize": "method",
+                "execute": "method",
+                "cleanup": "method",
+            },
         }
 
         type_id = self.plugin_framework.register_plugin_type(plugin_type)
@@ -188,7 +211,11 @@ class TestPluginFramework(unittest.TestCase):
             "name": "agent",
             "description": "Agent plugins",
             "base_class": "BaseAgentPlugin",
-            "interface": {"initialize": "method", "execute": "method", "cleanup": "method"},
+            "interface": {
+                "initialize": "method",
+                "execute": "method",
+                "cleanup": "method",
+            },
         }
 
         type_id = self.plugin_framework.register_plugin_type(plugin_type)
@@ -221,14 +248,22 @@ class TestPluginFramework(unittest.TestCase):
             "name": "agent",
             "description": "Agent plugins",
             "base_class": "BaseAgentPlugin",
-            "interface": {"initialize": "method", "execute": "method", "cleanup": "method"},
+            "interface": {
+                "initialize": "method",
+                "execute": "method",
+                "cleanup": "method",
+            },
         }
 
         scenario_type = {
             "name": "scenario",
             "description": "Scenario plugins",
             "base_class": "BaseScenarioPlugin",
-            "interface": {"initialize": "method", "execute": "method", "cleanup": "method"},
+            "interface": {
+                "initialize": "method",
+                "execute": "method",
+                "cleanup": "method",
+            },
         }
 
         agent_type_id = self.plugin_framework.register_plugin_type(agent_type)
@@ -276,7 +311,11 @@ class TestPluginFramework(unittest.TestCase):
             "name": "agent",
             "description": "Agent plugins",
             "base_class": "BaseAgentPlugin",
-            "interface": {"initialize": "method", "execute": "method", "cleanup": "method"},
+            "interface": {
+                "initialize": "method",
+                "execute": "method",
+                "cleanup": "method",
+            },
         }
 
         type_id = self.plugin_framework.register_plugin_type(plugin_type)
@@ -321,7 +360,10 @@ class TestPluginFramework(unittest.TestCase):
 
         # Update dependencies with actual plugin IDs
         self.plugin_framework._plugins[plugin2_id]["dependencies"] = [plugin1_id]
-        self.plugin_framework._plugins[plugin3_id]["dependencies"] = [plugin1_id, plugin2_id]
+        self.plugin_framework._plugins[plugin3_id]["dependencies"] = [
+            plugin1_id,
+            plugin2_id,
+        ]
 
         # Resolve dependencies
         resolved_order = self.plugin_framework.resolve_plugin_dependencies(
@@ -331,7 +373,9 @@ class TestPluginFramework(unittest.TestCase):
         self.assertEqual(len(resolved_order), 3)
         self.assertEqual(resolved_order[0], plugin1_id)  # Plugin 1 has no dependencies
         self.assertEqual(resolved_order[1], plugin2_id)  # Plugin 2 depends on Plugin 1
-        self.assertEqual(resolved_order[2], plugin3_id)  # Plugin 3 depends on Plugin 1 and Plugin 2
+        self.assertEqual(
+            resolved_order[2], plugin3_id
+        )  # Plugin 3 depends on Plugin 1 and Plugin 2
 
     def test_execute_plugin(self):
         """Test executing a plugin."""
@@ -340,7 +384,11 @@ class TestPluginFramework(unittest.TestCase):
             "name": "agent",
             "description": "Agent plugins",
             "base_class": "BaseAgentPlugin",
-            "interface": {"initialize": "method", "execute": "method", "cleanup": "method"},
+            "interface": {
+                "initialize": "method",
+                "execute": "method",
+                "cleanup": "method",
+            },
         }
 
         type_id = self.plugin_framework.register_plugin_type(plugin_type)
@@ -377,7 +425,11 @@ class TestPluginFramework(unittest.TestCase):
             "name": "agent",
             "description": "Agent plugins",
             "base_class": "BaseAgentPlugin",
-            "interface": {"initialize": "method", "execute": "method", "cleanup": "method"},
+            "interface": {
+                "initialize": "method",
+                "execute": "method",
+                "cleanup": "method",
+            },
         }
 
         type_id = self.plugin_framework.register_plugin_type(plugin_type)

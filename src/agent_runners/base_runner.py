@@ -37,7 +37,10 @@ class AgentRunnerError(Exception):
     """Base exception for agent runner errors."""
 
     def __init__(
-        self, message: str, agent_id: Optional[str] = None, framework: Optional[str] = None
+        self,
+        message: str,
+        agent_id: Optional[str] = None,
+        framework: Optional[str] = None,
     ):
         self.agent_id = agent_id
         self.framework = framework
@@ -473,7 +476,9 @@ class AgentRunner:
             self._trigger_callbacks("on_status_change", self.status)
             logger.info(f"Agent runner {self.agent_id} paused")
         else:
-            logger.warning(f"Cannot pause agent runner {self.agent_id} in status {self.status}")
+            logger.warning(
+                f"Cannot pause agent runner {self.agent_id} in status {self.status}"
+            )
 
     def resume(self) -> None:
         """
@@ -486,7 +491,9 @@ class AgentRunner:
             self._trigger_callbacks("on_status_change", self.status)
             logger.info(f"Agent runner {self.agent_id} resumed")
         else:
-            logger.warning(f"Cannot resume agent runner {self.agent_id} in status {self.status}")
+            logger.warning(
+                f"Cannot resume agent runner {self.agent_id} in status {self.status}"
+            )
 
     def cleanup(self) -> None:
         """
@@ -566,7 +573,9 @@ class AgentRunner:
             "status": self.status.value,
             "created_at": self.created_at.isoformat(),
             "started_at": self.started_at.isoformat() if self.started_at else None,
-            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+            "completed_at": (
+                self.completed_at.isoformat() if self.completed_at else None
+            ),
             "last_activity_at": self.last_activity_at.isoformat(),
             "error_message": self.error_message,
             "metrics": self.metrics,
@@ -576,7 +585,9 @@ class AgentRunner:
 
     def __str__(self) -> str:
         """String representation of the agent runner."""
-        return f"{self.__class__.__name__}(id={self.agent_id}, status={self.status.value})"
+        return (
+            f"{self.__class__.__name__}(id={self.agent_id}, status={self.status.value})"
+        )
 
     def __repr__(self) -> str:
         """Detailed string representation of the agent runner."""

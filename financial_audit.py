@@ -5,6 +5,7 @@ This provides a minimal implementation to satisfy imports.
 
 from __future__ import annotations
 
+
 class FinancialAuditService:
     """Minimal financial audit service implementation."""
     

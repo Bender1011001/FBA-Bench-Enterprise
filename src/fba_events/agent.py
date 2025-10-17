@@ -72,7 +72,9 @@ class AgentDecisionEvent(BaseEvent):
 
         # Validate simulation_time: Must be a datetime object.
         if not isinstance(self.simulation_time, datetime):
-            raise TypeError("Simulation time must be a datetime object for AgentDecisionEvent.")
+            raise TypeError(
+                "Simulation time must be a datetime object for AgentDecisionEvent."
+            )
 
         # Validate reasoning: Must be a non-empty string.
         if not self.reasoning:
@@ -82,7 +84,9 @@ class AgentDecisionEvent(BaseEvent):
         if not isinstance(self.llm_usage, dict):
             raise TypeError("LLM usage must be a dictionary for AgentDecisionEvent.")
         if not isinstance(self.prompt_metadata, dict):
-            raise TypeError("Prompt metadata must be a dictionary for AgentDecisionEvent.")
+            raise TypeError(
+                "Prompt metadata must be a dictionary for AgentDecisionEvent."
+            )
 
     def to_summary_dict(self) -> Dict[str, Any]:
         """
@@ -102,9 +106,17 @@ class AgentDecisionEvent(BaseEvent):
             ),  # Provide count instead of full list for summary
             "simulation_time": self.simulation_time.isoformat(),
             "reasoning_summary": (
-                self.reasoning[:200] + "..." if len(self.reasoning) > 200 else self.reasoning
+                self.reasoning[:200] + "..."
+                if len(self.reasoning) > 200
+                else self.reasoning
             ),  # Truncate long reasoning
-            "llm_total_tokens": self.llm_usage.get("total_tokens", 0),  # Sum tokens for summary
-            "llm_cost_usd": self.llm_usage.get("total_cost_usd", 0.0),  # Sum cost for summary
-            "prompt_model": self.prompt_metadata.get("model", "N/A"),  #  Add model info for context
+            "llm_total_tokens": self.llm_usage.get(
+                "total_tokens", 0
+            ),  # Sum tokens for summary
+            "llm_cost_usd": self.llm_usage.get(
+                "total_cost_usd", 0.0
+            ),  # Sum cost for summary
+            "prompt_model": self.prompt_metadata.get(
+                "model", "N/A"
+            ),  #  Add model info for context
         }

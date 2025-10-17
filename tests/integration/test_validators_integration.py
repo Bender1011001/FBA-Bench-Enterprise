@@ -14,7 +14,9 @@ async def test_validators_integration_with_engine(monkeypatch):
     class DummyRunner:
         agent_id = "dummy"
 
-    monkeypatch.setattr(runner_registry, "create_runner", lambda key, cfg: DummyRunner())
+    monkeypatch.setattr(
+        runner_registry, "create_runner", lambda key, cfg: DummyRunner()
+    )
 
     # Patch scenario execution to deterministic outputs and inject one slow run for outlier detection
     async def fake_execute_scenario(target, runner, payload):
@@ -40,7 +42,11 @@ async def test_validators_integration_with_engine(monkeypatch):
         ],
         runners=[RunnerSpec(key="diy", config={"agent_id": "test-agent"})],
         metrics=[],
-        validators=["structural_consistency", "reproducibility_metadata", "outlier_detection"],
+        validators=[
+            "structural_consistency",
+            "reproducibility_metadata",
+            "outlier_detection",
+        ],
         parallelism=1,
         retries=0,
     )
@@ -76,7 +82,9 @@ async def test_validators_integration_with_engine(monkeypatch):
     outdet = vmap["outlier_detection"]
     # there should be at least one issue with id "duration_outlier" or summary contains non-empty outliers
     ids = [i.get("id") for i in outdet.get("issues", [])]
-    summary_outliers = (outdet.get("summary") or {}).get("details", {}).get("outliers", [])
+    summary_outliers = (
+        (outdet.get("summary") or {}).get("details", {}).get("outliers", [])
+    )
     assert ("duration_outlier" in ids) or (
         isinstance(summary_outliers, list) and len(summary_outliers) >= 1
     )

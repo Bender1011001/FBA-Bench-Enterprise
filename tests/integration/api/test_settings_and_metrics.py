@@ -1,8 +1,7 @@
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from fba_bench_api.main import app
-from fba_bench_api.main import create_app as _create_app
+from fba_bench_api.main import app, create_app as _create_app
 
 
 @pytest.mark.asyncio

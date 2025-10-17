@@ -132,7 +132,9 @@ class ProductPriceUpdated(BaseEvent):
 
         # Validate ASIN: Must be a non-empty string.
         if not self.asin or not isinstance(self.asin, str):
-            raise ValueError("ASIN must be a non-empty string for ProductPriceUpdated event.")
+            raise ValueError(
+                "ASIN must be a non-empty string for ProductPriceUpdated event."
+            )
 
         # Validate/normalize Money-like values for new and previous prices.
         for field_name in ("new_price", "previous_price"):
@@ -150,7 +152,9 @@ class ProductPriceUpdated(BaseEvent):
         if getattr(self.new_price, "cents", 0) <= 0:
             raise ValueError(f"New price must be positive, but got {self.new_price}.")
         if getattr(self.previous_price, "cents", 0) <= 0:
-            raise ValueError(f"Previous price must be positive, but got {self.previous_price}.")
+            raise ValueError(
+                f"Previous price must be positive, but got {self.previous_price}."
+            )
 
     def get_price_change_percentage(self) -> float:
         """
@@ -162,7 +166,8 @@ class ProductPriceUpdated(BaseEvent):
         if self.previous_price.cents == 0:
             return 0.0
         return (
-            (self.new_price.cents - self.previous_price.cents) / self.previous_price.cents
+            (self.new_price.cents - self.previous_price.cents)
+            / self.previous_price.cents
         ) * 100
 
     def to_summary_dict(self) -> Dict[str, Any]:

@@ -32,8 +32,12 @@ from pydantic import BaseModel, Field, field_validator
 
 class PriceDecision(BaseModel):
     asin: str = Field(..., description="The product ASIN.")
-    new_price: float = Field(..., gt=0.0, description="The recommended new price in USD.")
-    reasoning: str = Field(..., min_length=1, description="The justification for this price.")
+    new_price: float = Field(
+        ..., gt=0.0, description="The recommended new price in USD."
+    )
+    reasoning: str = Field(
+        ..., min_length=1, description="The justification for this price."
+    )
 
     @field_validator("asin")
     @classmethod
@@ -108,7 +112,9 @@ class ToolCall(BaseModel):
 
     tool_name: str = Field(..., description="Name of the tool to invoke.")
     arguments: Dict[str, Any] = Field(..., description="Arguments for the tool.")
-    id: Optional[str] = Field(default=None, description="Optional correlation identifier.")
+    id: Optional[str] = Field(
+        default=None, description="Optional correlation identifier."
+    )
 
 
 class AgentResponse(BaseModel):
@@ -132,7 +138,9 @@ class AgentResponse(BaseModel):
     """
 
     content: str = Field(..., description="Primary content or summary.")
-    citations: Optional[list[str]] = Field(default=None, description="Optional reference links.")
+    citations: Optional[list[str]] = Field(
+        default=None, description="Optional reference links."
+    )
     tool_calls: Optional[list[ToolCall]] = Field(
         default=None, description="Optional list of tool calls to execute."
     )

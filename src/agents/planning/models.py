@@ -3,7 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
+
 
 class PlanPriority(Enum):
     """Priority levels for strategic and tactical plans."""
@@ -42,14 +43,18 @@ class StrategicObjective:
     objective_id: str
     title: str
     description: str
-    target_metrics: Dict[str, float]  # e.g., {"profit_margin": 0.25, "market_share": 0.15}
+    target_metrics: Dict[
+        str, float
+    ]  # e.g., {"profit_margin": 0.25, "market_share": 0.15}
     timeframe_days: int
     priority: PlanPriority
     status: PlanStatus
     created_at: datetime
     target_completion: datetime
     progress_indicators: Dict[str, float] = field(default_factory=dict)
-    dependencies: List[str] = field(default_factory=list)  # Other objective IDs this depends on
+    dependencies: List[str] = field(
+        default_factory=list
+    )  # Other objective IDs this depends on
 
     def calculate_progress(self, current_metrics: Dict[str, float]) -> float:
         """Calculate overall progress towards objective completion."""
@@ -96,7 +101,9 @@ class TacticalAction:
         default_factory=list
     )  # Other action IDs that must complete first
 
-    def is_ready_for_execution(self, current_time: datetime, completed_actions: List[str]) -> bool:
+    def is_ready_for_execution(
+        self, current_time: datetime, completed_actions: List[str]
+    ) -> bool:
         """Check if action is ready for execution."""
         if self.status != PlanStatus.ACTIVE:
             return False

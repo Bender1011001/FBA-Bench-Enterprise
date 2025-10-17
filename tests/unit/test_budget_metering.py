@@ -27,7 +27,9 @@ async def test_warning_threshold_tokens_per_tick():
 
     agent = "agent-a"
     # 30 + 25 = 55 tokens, crosses 50% threshold
-    res = await enforcer.meter_api_call(agent, "research", tokens_prompt=30, tokens_completion=25)
+    res = await enforcer.meter_api_call(
+        agent, "research", tokens_prompt=30, tokens_completion=25
+    )
     assert res["exceeded"] is False
 
     # Allow event loop to process published events
@@ -56,7 +58,9 @@ async def test_hard_exceed_total_tokens_per_tick():
     await enforcer.start(bus)
 
     agent = "agent-b"
-    res = await enforcer.meter_api_call(agent, "planner", tokens_prompt=61, tokens_completion=0)
+    res = await enforcer.meter_api_call(
+        agent, "planner", tokens_prompt=61, tokens_completion=0
+    )
     assert res["exceeded"] is True
     assert res["severity"] == "hard_fail"
     assert res["limit"] == 60

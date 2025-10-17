@@ -4,9 +4,6 @@ import asyncio
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
-from fba_bench_core.event_bus import EventBus
-from fba_events.pricing import ProductPriceUpdated, SetPriceCommand
-from fba_events import WorldStateSnapshotEvent
 from money import Money
 from services.toolbox_schemas import (
     LaunchProductRequest,
@@ -16,6 +13,10 @@ from services.toolbox_schemas import (
     SetPriceRequest,
     SetPriceResponse,
 )
+
+from fba_bench_core.event_bus import EventBus
+from fba_events import WorldStateSnapshotEvent
+from fba_events.pricing import ProductPriceUpdated, SetPriceCommand
 
 # mypy: ignore-errors
 
@@ -54,7 +55,9 @@ class ToolboxAPIService:
         if self._is_running:
             return
         self._event_bus = event_bus
-        await self._event_bus.subscribe(WorldStateSnapshotEvent, self._on_world_snapshot)
+        await self._event_bus.subscribe(
+            WorldStateSnapshotEvent, self._on_world_snapshot
+        )
         await self._event_bus.subscribe(ProductPriceUpdated, self._on_price_updated)
         self._is_running = True
 
@@ -95,7 +98,9 @@ class ToolboxAPIService:
                 if not isinstance(pdata, dict):
                     continue
                 price_cents = pdata.get("price_cents")
-                price = Money(int(price_cents)) if isinstance(price_cents, int) else None
+                price = (
+                    Money(int(price_cents)) if isinstance(price_cents, int) else None
+                )
                 inventory = pdata.get("inventory")
                 bsr = pdata.get("bsr")
                 conversion_rate = pdata.get("conversion_rate")
@@ -105,7 +110,9 @@ class ToolboxAPIService:
                 record = {
                     "price": price if isinstance(price, Money) else prev.get("price"),
                     "inventory": (
-                        int(inventory) if isinstance(inventory, int) else prev.get("inventory")
+                        int(inventory)
+                        if isinstance(inventory, int)
+                        else prev.get("inventory")
                     ),
                     "bsr": int(bsr) if isinstance(bsr, int) else prev.get("bsr"),
                     "conversion_rate": (

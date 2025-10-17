@@ -2,14 +2,17 @@ from datetime import datetime, timedelta
 from types import SimpleNamespace
 
 import pytest
+from money import Money
 
 import config.model_config as mc
 from agent_runners.diy_runner import DynamicPricingStrategy
 from agents.advanced_agent import AdvancedAgent
 from agents.hierarchical_planner import PlanType, StrategicPlanner
-from agents.skill_modules.financial_analyst import FinancialAnalystSkill, FinancialForecast
+from agents.skill_modules.financial_analyst import (
+    FinancialAnalystSkill,
+    FinancialForecast,
+)
 from config.model_config import get_model_params
-from money import Money
 
 
 def _reset_params_cache():
@@ -76,11 +79,18 @@ def test_advanced_agent_uses_central_params(tmp_path, monkeypatch):
     mp_adv = get_model_params().advanced_agent
 
     # Create a mock DIYRunner instance for testing its methods separately
-    mock_diy_runner = agent_runners.diy_runner.DIYRunner(agent_id="test_agent", config={})
+    mock_diy_runner = agent_runners.diy_runner.DIYRunner(
+        agent_id="test_agent", config={}
+    )
     mock_diy_runner._do_initialize()  # Initialize its internal config and strategy
 
     # Test cases for _calculate_confidence
-    product_data = {"cost": 100, "current_price": 120, "sales_rank": 500, "inventory": 50}
+    product_data = {
+        "cost": 100,
+        "current_price": 120,
+        "sales_rank": 500,
+        "inventory": 50,
+    }
     market_data = {"market_demand": 1.5, "competitor_prices": [110, 125, 130]}
 
     # Expect high confidence with good data
@@ -140,7 +150,9 @@ def test_advanced_agent_uses_central_params(tmp_path, monkeypatch):
     reasoning_sparse = mock_diy_runner._generate_reasoning(
         product_sparse, market_sparse, new_price_sparse
     )
-    assert "Cost: $0.00, Margin: 0.0%" in reasoning_sparse  # Test default margin when cost is 0
+    assert (
+        "Cost: $0.00, Margin: 0.0%" in reasoning_sparse
+    )  # Test default margin when cost is 0
     assert "Low market demand." in reasoning_sparse  # Default market demand logic
     assert "Priced above competitors" not in reasoning_sparse  # No competitors
 
@@ -222,7 +234,9 @@ async def test_financial_analyst_skill_params(tmp_path, monkeypatch):
 
     # Test _calculate_burn_rate
     now = datetime.now()
-    for i in range(fa_p.burn_rate_history_window + 2):  # Enough history plus a bit extra
+    for i in range(
+        fa_p.burn_rate_history_window + 2
+    ):  # Enough history plus a bit extra
         skill.expense_history.append(
             {
                 "timestamp": now - timedelta(days=i),
@@ -241,7 +255,9 @@ async def test_financial_analyst_skill_params(tmp_path, monkeypatch):
     profit_margin = skill._calculate_profit_margin()  # Should be 0.5
     cash_runway = skill._calculate_cash_runway()  # Depends on burn_rate
 
-    health_score = skill._calculate_financial_health_score(profit_margin, cash_runway, burn_rate)
+    health_score = skill._calculate_financial_health_score(
+        profit_margin, cash_runway, burn_rate
+    )
     # Expected score calculation:
     # margin_score = min(0.5, max(0.0, 0.5 * (0.5 / 0.2))) = min(0.5, 1.25) = 0.5
     # runway_score = min(0.3, runway_days(approx 600 days from current_cash/burn_rate) / 60 * 0.3) = 0.3
@@ -250,9 +266,15 @@ async def test_financial_analyst_skill_params(tmp_path, monkeypatch):
     assert 0.9 <= health_score <= 1.0  # Approximate check
 
     # Test _create_budget_reallocation_action
-    skill.budget_allocations[mc.ExpenseCategory.INVENTORY].utilization_rate = 0.5  # Underutilized
-    skill.budget_allocations[mc.ExpenseCategory.INVENTORY].remaining_amount = Money(200000)
-    skill.budget_allocations[mc.ExpenseCategory.MARKETING].utilization_rate = 0.95  # Overutilized
+    skill.budget_allocations[mc.ExpenseCategory.INVENTORY].utilization_rate = (
+        0.5  # Underutilized
+    )
+    skill.budget_allocations[mc.ExpenseCategory.INVENTORY].remaining_amount = Money(
+        200000
+    )
+    skill.budget_allocations[mc.ExpenseCategory.MARKETING].utilization_rate = (
+        0.95  # Overutilized
+    )
     financial_state = {"cash_position": "warning"}
     realloc_action = await skill._create_budget_reallocation_action(financial_state)
     assert realloc_action is not None
@@ -264,13 +286,17 @@ async def test_financial_analyst_skill_params(tmp_path, monkeypatch):
     cost_reduction_actions = await skill._generate_cost_reduction_actions({})
     assert len(cost_reduction_actions) == 1
     assert (
-        pytest.approx(cost_reduction_actions[0].parameters["reduction_target"], rel=0, abs=1e-9)
+        pytest.approx(
+            cost_reduction_actions[0].parameters["reduction_target"], rel=0, abs=1e-9
+        )
         == fa_p.default_cost_reduction_target
     )
     expected_savings = skill.total_expenses.cents * fa_p.default_cost_reduction_target
     assert (
         pytest.approx(
-            cost_reduction_actions[0].expected_outcome["monthly_savings"], rel=0, abs=1e-9
+            cost_reduction_actions[0].expected_outcome["monthly_savings"],
+            rel=0,
+            abs=1e-9,
         )
         == expected_savings
     )
@@ -282,13 +308,17 @@ async def test_financial_analyst_skill_params(tmp_path, monkeypatch):
     )  # Empty context/constraints
     assert len(investment_actions) == 1
     assert investment_actions[0].parameters["investment_amount"] == min(
-        fa_p.max_investment_cents, (skill.current_cash.cents - fa_p.min_cash_reserve_cents) // 2
+        fa_p.max_investment_cents,
+        (skill.current_cash.cents - fa_p.min_cash_reserve_cents) // 2,
     )
     assert (
         pytest.approx(investment_actions[0].parameters["expected_roi"], rel=0, abs=1e-9)
         == fa_p.default_expected_roi
     )
-    assert investment_actions[0].parameters["risk_level"] == fa_p.default_investment_risk_level
+    assert (
+        investment_actions[0].parameters["risk_level"]
+        == fa_p.default_investment_risk_level
+    )
 
     # Test _analyze_profitability
     sale_low_margin = SimpleNamespace(
@@ -300,7 +330,10 @@ async def test_financial_analyst_skill_params(tmp_path, monkeypatch):
     )
     profit_action = await skill._analyze_profitability(sale_low_margin)
     assert profit_action is not None
-    assert pytest.approx(profit_action.parameters["profit_margin"], rel=0, abs=1e-9) == 0.04
+    assert (
+        pytest.approx(profit_action.parameters["profit_margin"], rel=0, abs=1e-9)
+        == 0.04
+    )
     assert (
         pytest.approx(profit_action.parameters["profit_margin"], rel=0, abs=1e-9)
         < fa_p.low_profit_margin_threshold
@@ -316,7 +349,9 @@ async def test_financial_analyst_skill_params(tmp_path, monkeypatch):
     )
     fee_action = await skill._analyze_fee_impact(sale_high_fees)
     assert fee_action is not None
-    assert pytest.approx(fee_action.parameters["fee_percentage"], rel=0, abs=1e-9) == 0.35
+    assert (
+        pytest.approx(fee_action.parameters["fee_percentage"], rel=0, abs=1e-9) == 0.35
+    )
     assert (
         pytest.approx(fee_action.parameters["fee_percentage"], rel=0, abs=1e-9)
         > fa_p.high_fee_percentage_threshold
@@ -396,14 +431,18 @@ async def test_planner_strategy_and_cleanup(monkeypatch):
     # After creation, should not create new immediately
     planner_skill.strategy_created_at = datetime.now()
     planner_skill.current_strategy_type = PlanType.OPTIMIZATION
-    assert not planner_skill._should_create_new_strategy(datetime.now(), PlanType.OPTIMIZATION)
+    assert not planner_skill._should_create_new_strategy(
+        datetime.now(), PlanType.OPTIMIZATION
+    )
 
     # Should create new after refresh days
     old_time = datetime.now() - timedelta(
         days=planner_skill._planner_params.strategy_refresh_days + 1
     )
     planner_skill.strategy_created_at = old_time
-    assert planner_skill._should_create_new_strategy(datetime.now(), PlanType.OPTIMIZATION)
+    assert planner_skill._should_create_new_strategy(
+        datetime.now(), PlanType.OPTIMIZATION
+    )
 
     # Test _archive_completed_objectives and _cleanup_old_actions logic (requires more direct manipulation)
     # Create some dummy objectives and actions for testing cleanup

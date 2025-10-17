@@ -129,7 +129,9 @@ class ExperimentResults:
         result_dict = asdict(self)
         # Convert internal dataclass objects to dicts for serialization
         result_dict["config"] = asdict(self.config)
-        result_dict["config"]["memory_configs"] = [asdict(mc) for mc in self.config.memory_configs]
+        result_dict["config"]["memory_configs"] = [
+            asdict(mc) for mc in self.config.memory_configs
+        ]
         result_dict["config"]["baseline_config"] = asdict(self.config.baseline_config)
         result_dict["individual_runs"] = [run.to_dict() for run in self.individual_runs]
 
@@ -205,13 +207,19 @@ class ExperimentRunner:
             for memory_config in config.memory_configs:
                 for trial in range(config.sample_size_per_condition):
                     run_id = f"{config.experiment_id}_{memory_config.memory_mode.value}_{trial:03d}"
-                    tasks.append(self._run_single_trial(run_id, config, memory_config, output_dir))
+                    tasks.append(
+                        self._run_single_trial(
+                            run_id, config, memory_config, output_dir
+                        )
+                    )
 
             # Also add baseline configuration tasks
             for trial in range(config.sample_size_per_condition):
                 run_id = f"{config.experiment_id}_{config.baseline_config.memory_mode.value}_baseline_{trial:03d}"
                 tasks.append(
-                    self._run_single_trial(run_id, config, config.baseline_config, output_dir)
+                    self._run_single_trial(
+                        run_id, config, config.baseline_config, output_dir
+                    )
                 )
 
             # Run tasks in parallel, limiting concurrency
@@ -265,7 +273,9 @@ class ExperimentRunner:
         agent_id = f"memory_test_agent_{run_id}"
 
         # Agent factory is guaranteed to be set due to initial check in run_experiment
-        agent: BaseAgent = self.agent_factory(agent_id, memory_config)  # Explicit type hint
+        agent: BaseAgent = self.agent_factory(
+            agent_id, memory_config
+        )  # Explicit type hint
 
         # Initialize memory enforcer
         memory_enforcer = MemoryEnforcer(memory_config, agent_id, self.event_bus)
@@ -278,7 +288,9 @@ class ExperimentRunner:
         end_time = datetime.now()
 
         # Calculate metrics using the injected metrics_calculator
-        performance_metrics = await self.metrics_calculator(simulation_results, memory_enforcer)
+        performance_metrics = await self.metrics_calculator(
+            simulation_results, memory_enforcer
+        )
 
         # Create run result
         run_result = ExperimentRun(
@@ -290,8 +302,12 @@ class ExperimentRunner:
             end_time=end_time,
             total_ticks=simulation_results.get("total_ticks", 0),
             overall_score=performance_metrics.get("overall_score", 0.0),
-            memory_dependent_score=performance_metrics.get("memory_dependent_score", 0.0),
-            memory_independent_score=performance_metrics.get("memory_independent_score", 0.0),
+            memory_dependent_score=performance_metrics.get(
+                "memory_dependent_score", 0.0
+            ),
+            memory_independent_score=performance_metrics.get(
+                "memory_independent_score", 0.0
+            ),
             memory_retrievals=performance_metrics.get("memory_retrievals", 0),
             memory_promotions=performance_metrics.get("memory_promotions", 0),
             reflection_count=performance_metrics.get("reflection_count", 0),
@@ -403,9 +419,15 @@ class ExperimentRunner:
             ),
             "events_logged_count": simulation_results.get("events_logged_count", 0),
             # Memory statistics
-            "total_retrievals": memory_stats.get("memory_usage", {}).get("total_retrievals", 0),
-            "total_promotions": memory_stats.get("reflection", {}).get("total_promotions", 0),
-            "total_reflections": memory_stats.get("reflection", {}).get("total_reflections", 0),
+            "total_retrievals": memory_stats.get("memory_usage", {}).get(
+                "total_retrievals", 0
+            ),
+            "total_promotions": memory_stats.get("reflection", {}).get(
+                "total_promotions", 0
+            ),
+            "total_reflections": memory_stats.get("reflection", {}).get(
+                "total_reflections", 0
+            ),
             "avg_memory_tokens": memory_stats.get("memory_usage", {}).get(
                 "current_memory_tokens", 0.0
             ),
@@ -422,7 +444,9 @@ class ExperimentRunner:
         # The actual MetricSuite would process `combined_data`
         # For now, this is a placeholder if MetricSuite isn't fully integrated yet
         try:
-            calculated_metrics = await self.metrics_calculator(combined_data, memory_enforcer)
+            calculated_metrics = await self.metrics_calculator(
+                combined_data, memory_enforcer
+            )
             return calculated_metrics
         except Exception as e:
             logger.error(
@@ -443,7 +467,9 @@ class ExperimentRunner:
                     "strategic_coherence": random.uniform(0.5, 0.95),
                 },
                 "memory_efficiency": combined_data.get("memory_efficiency", 0.0),
-                "consolidation_quality": combined_data.get("consolidation_quality", 0.0),
+                "consolidation_quality": combined_data.get(
+                    "consolidation_quality", 0.0
+                ),
             }
 
     async def _analyze_results(
@@ -483,7 +509,9 @@ class ExperimentRunner:
                     p_value = self.statistical_analyzer.ttest_independent(
                         baseline_scores, config_scores
                     )
-                    effect_size = self.statistical_analyzer.cohens_d(baseline_scores, config_scores)
+                    effect_size = self.statistical_analyzer.cohens_d(
+                        baseline_scores, config_scores
+                    )
                     ci = self.statistical_analyzer.confidence_interval(
                         config_scores, config.confidence_level
                     )
@@ -497,7 +525,9 @@ class ExperimentRunner:
                     )
 
         # Determine memory impact and optimal configuration
-        memory_impact_score = self._calculate_memory_impact(config_groups, baseline_name)
+        memory_impact_score = self._calculate_memory_impact(
+            config_groups, baseline_name
+        )
         reasoning_vs_recall = self._analyze_reasoning_vs_recall(config_groups)
         optimal_memory_mode = self._find_optimal_memory_mode(config_groups)
 
@@ -541,7 +571,9 @@ class ExperimentRunner:
 
         return statistics.mean(memory_improvements) if memory_improvements else 0.0
 
-    def _analyze_reasoning_vs_recall(self, config_groups: Dict[str, List[ExperimentRun]]) -> str:
+    def _analyze_reasoning_vs_recall(
+        self, config_groups: Dict[str, List[ExperimentRun]]
+    ) -> str:
         """Analyze whether reasoning or memory recall is more important."""
 
         reasoning_scores = []
@@ -567,7 +599,9 @@ class ExperimentRunner:
         else:
             return "memory_dominant"
 
-    def _find_optimal_memory_mode(self, config_groups: Dict[str, List[ExperimentRun]]) -> str:
+    def _find_optimal_memory_mode(
+        self, config_groups: Dict[str, List[ExperimentRun]]
+    ) -> str:
         """Find the memory configuration with best performance."""
 
         config_averages = {}
@@ -596,20 +630,28 @@ class ExperimentRunner:
         return {
             "total_runs": len(all_runs),
             "configurations_tested": len(config_groups),
-            "avg_overall_score": statistics.mean(overall_scores) if overall_scores else 0.0,
+            "avg_overall_score": (
+                statistics.mean(overall_scores) if overall_scores else 0.0
+            ),
             "std_dev_overall_score": (
                 statistics.stdev(overall_scores) if len(overall_scores) > 1 else 0.0
             ),
             "min_overall_score": min(overall_scores) if overall_scores else 0.0,
             "max_overall_score": max(overall_scores) if overall_scores else 0.0,
             "avg_memory_retrievals": (
-                statistics.mean([run.memory_retrievals for run in all_runs]) if all_runs else 0.0
+                statistics.mean([run.memory_retrievals for run in all_runs])
+                if all_runs
+                else 0.0
             ),
             "avg_reflection_count": (
-                statistics.mean([run.reflection_count for run in all_runs]) if all_runs else 0.0
+                statistics.mean([run.reflection_count for run in all_runs])
+                if all_runs
+                else 0.0
             ),
             "score_variance": (
-                self.statistical_analyzer.variance(overall_scores) if overall_scores else 0.0
+                self.statistical_analyzer.variance(overall_scores)
+                if overall_scores
+                else 0.0
             ),
         }
 
@@ -622,11 +664,15 @@ class ExperimentRunner:
         """Generate research conclusions from the experiment."""
 
         significant_results = [
-            comparison for comparison, p_value in statistical_significance.items() if p_value < 0.05
+            comparison
+            for comparison, p_value in statistical_significance.items()
+            if p_value < 0.05
         ]
 
         large_effects = [
-            comparison for comparison, effect_size in effect_sizes.items() if abs(effect_size) > 0.5
+            comparison
+            for comparison, effect_size in effect_sizes.items()
+            if abs(effect_size) > 0.5
         ]
 
         conclusions = {
@@ -666,7 +712,9 @@ class ExperimentRunner:
 
         return conclusions
 
-    async def _save_experiment_results(self, results: ExperimentResults, output_dir: Path):
+    async def _save_experiment_results(
+        self, results: ExperimentResults, output_dir: Path
+    ):
         """Save comprehensive experiment results."""
 
         # Save main results as JSON
@@ -682,7 +730,10 @@ class ExperimentRunner:
         logger.info(f"Experiment results saved to {output_dir}")
 
     async def _save_run_details(
-        self, run_result: ExperimentRun, simulation_results: Dict[str, Any], output_dir: Path
+        self,
+        run_result: ExperimentRun,
+        simulation_results: Dict[str, Any],
+        output_dir: Path,
     ):
         """Save detailed information for a single run."""
 
@@ -699,7 +750,9 @@ class ExperimentRunner:
         with open(sim_file, "w") as f:
             json.dump(simulation_results, f, indent=2, default=str)
 
-    async def _generate_summary_report(self, results: ExperimentResults, output_dir: Path):
+    async def _generate_summary_report(
+        self, results: ExperimentResults, output_dir: Path
+    ):
         """Generate a human-readable summary report."""
 
         report_file = output_dir / "summary_report.md"
@@ -745,11 +798,15 @@ class ExperimentRunner:
         """Get current experiment status."""
         return {
             "current_experiment": (
-                self.current_experiment.experiment_id if self.current_experiment else None
+                self.current_experiment.experiment_id
+                if self.current_experiment
+                else None
             ),
             "active_runs": len(self.active_runs),
             "completed_experiments": len(self.completed_experiments),
             "last_experiment_results": (
-                self.completed_experiments[-1].to_dict() if self.completed_experiments else None
+                self.completed_experiments[-1].to_dict()
+                if self.completed_experiments
+                else None
             ),
         }

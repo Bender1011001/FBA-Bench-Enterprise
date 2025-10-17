@@ -8,7 +8,11 @@ from benchmarking.validators import (
     schema_adherence,  # noqa: F401
     structural_consistency,  # noqa: F401 (auto-registers)
 )
-from benchmarking.validators.registry import get_validator, list_validators, register_validator
+from benchmarking.validators.registry import (
+    get_validator,
+    list_validators,
+    register_validator,
+)
 
 
 def test_registry_register_and_get_and_list():
@@ -217,7 +221,10 @@ def test_fairness_balance_detects_imbalance():
     assert any(i["id"] == "fairness_imbalance" for i in out["issues"])
 
     # increase threshold to avoid error
-    out2 = fn(report, {"group": "runner_key", "metric_path": "metrics.accuracy", "threshold": 0.5})
+    out2 = fn(
+        report,
+        {"group": "runner_key", "metric_path": "metrics.accuracy", "threshold": 0.5},
+    )
     assert any(i["id"] == "fairness_within_threshold" for i in out2["issues"])
 
 

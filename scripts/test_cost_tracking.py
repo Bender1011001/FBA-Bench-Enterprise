@@ -1,9 +1,10 @@
 import asyncio
 from decimal import Decimal
 
+from services.cost_tracking_service import CostTrackingService
+
 from fba_events.bus import InMemoryEventBus as EventBus
 from llm_interface.generic_openai_client import GenericOpenAIClient
-from services.cost_tracking_service import CostTrackingService
 from simulation_orchestrator import SimulationConfig, SimulationOrchestrator
 
 

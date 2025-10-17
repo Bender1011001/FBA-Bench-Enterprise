@@ -7,9 +7,9 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 
 import numpy as np
+from money import Money
 
 from fba_bench_core.models.product import Product
-from money import Money
 
 
 class CustomerEventType(Enum):
@@ -326,7 +326,9 @@ class CustomerEventService:
         )
 
         # Generate metadata
-        metadata = self._generate_event_metadata(event_type, profile, product, market_conditions)
+        metadata = self._generate_event_metadata(
+            event_type, profile, product, market_conditions
+        )
 
         # Calculate confidence based on market conditions
         confidence = self._calculate_event_confidence(event_type, market_conditions)
@@ -383,7 +385,9 @@ class CustomerEventService:
 
         elif event_type in [CustomerEventType.VIEW, CustomerEventType.CART_ADD]:
             # These events have potential future value
-            conversion_probability = 0.05 if event_type == CustomerEventType.VIEW else 0.20
+            conversion_probability = (
+                0.05 if event_type == CustomerEventType.VIEW else 0.20
+            )
             potential_value = market_conditions.get("our_price", product.current_price)
             return potential_value * conversion_probability
 
@@ -408,8 +412,12 @@ class CustomerEventService:
         if event_type == CustomerEventType.PURCHASE:
             metadata.update(
                 {
-                    "payment_method": random.choice(["credit_card", "debit_card", "gift_card"]),
-                    "shipping_speed": random.choice(["standard", "expedited", "overnight"]),
+                    "payment_method": random.choice(
+                        ["credit_card", "debit_card", "gift_card"]
+                    ),
+                    "shipping_speed": random.choice(
+                        ["standard", "expedited", "overnight"]
+                    ),
                     "is_repeat_customer": random.random() < 0.6,
                 }
             )
@@ -418,7 +426,9 @@ class CustomerEventService:
             # Generate review rating based on quality sensitivity
             base_rating = 3.5
             quality_adjustment = (profile.quality_sensitivity - 0.5) * 2  # -1 to 1
-            rating = max(1, min(5, base_rating + quality_adjustment + random.uniform(-0.5, 0.5)))
+            rating = max(
+                1, min(5, base_rating + quality_adjustment + random.uniform(-0.5, 0.5))
+            )
 
             metadata.update(
                 {
@@ -483,7 +493,9 @@ class CustomerEventService:
         confidence = base_confidence * volatility_adjustment * trust_adjustment
         return max(0.1, min(1.0, confidence))
 
-    def get_customer_profile(self, customer_id: str) -> Optional[CustomerBehaviorProfile]:
+    def get_customer_profile(
+        self, customer_id: str
+    ) -> Optional[CustomerBehaviorProfile]:
         """Get customer behavior profile."""
         return self.customer_profiles.get(customer_id)
 
@@ -499,7 +511,9 @@ class CustomerEventService:
             if event.event_type == event_type and event.timestamp >= cutoff_time
         ]
 
-    def get_customer_events(self, customer_id: str, hours_back: int = 24) -> List[CustomerEvent]:
+    def get_customer_events(
+        self, customer_id: str, hours_back: int = 24
+    ) -> List[CustomerEvent]:
         """Get all events for a specific customer."""
         cutoff_time = datetime.now() - timedelta(hours=hours_back)
 
@@ -509,7 +523,9 @@ class CustomerEventService:
             if event.customer_id == customer_id and event.timestamp >= cutoff_time
         ]
 
-    def get_product_events(self, product_id: str, hours_back: int = 24) -> List[CustomerEvent]:
+    def get_product_events(
+        self, product_id: str, hours_back: int = 24
+    ) -> List[CustomerEvent]:
         """Get all events for a specific product."""
         cutoff_time = datetime.now() - timedelta(hours=hours_back)
 
@@ -519,7 +535,9 @@ class CustomerEventService:
             if event.product_id == product_id and event.timestamp >= cutoff_time
         ]
 
-    def calculate_conversion_metrics(self, product_id: str, hours_back: int = 24) -> Dict:
+    def calculate_conversion_metrics(
+        self, product_id: str, hours_back: int = 24
+    ) -> Dict:
         """Calculate conversion metrics for a product."""
         product_events = self.get_product_events(product_id, hours_back)
 
@@ -625,5 +643,7 @@ class CustomerEventService:
             "total_revenue": total_revenue,
             "event_type_distribution": event_type_dist,
             "segment_distribution": segment_dist,
-            "average_order_value": (total_revenue / max(1, event_type_dist.get("purchase", 1))),
+            "average_order_value": (
+                total_revenue / max(1, event_type_dist.get("purchase", 1))
+            ),
         }

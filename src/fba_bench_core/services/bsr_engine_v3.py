@@ -61,8 +61,12 @@ class BsrEngineV3Service:
         )
         self.min_samples_to_index: int = int(cfg.get("min_samples_to_index", 3))
         self.index_floor: Decimal = _to_decimal(cfg.get("index_floor", Decimal("0.01")))
-        self.index_ceiling: Decimal = _to_decimal(cfg.get("index_ceiling", Decimal("100.0")))
-        self.smoothing_eps: Decimal = _to_decimal(cfg.get("smoothing_eps", Decimal("1e-9")))
+        self.index_ceiling: Decimal = _to_decimal(
+            cfg.get("index_ceiling", Decimal("100.0"))
+        )
+        self.smoothing_eps: Decimal = _to_decimal(
+            cfg.get("smoothing_eps", Decimal("1e-9"))
+        )
 
         # Internal state
         # Per-asin product metrics
@@ -85,7 +89,9 @@ class BsrEngineV3Service:
             return
         self._event_bus = event_bus
         # Subscribe using event classes for type safety
-        await self._event_bus.subscribe(CompetitorPricesUpdated, self._on_competitor_prices_updated)
+        await self._event_bus.subscribe(
+            CompetitorPricesUpdated, self._on_competitor_prices_updated
+        )
         await self._event_bus.subscribe(SaleOccurred, self._on_sale_occurred)
         self._is_running = True
 
@@ -95,7 +101,9 @@ class BsrEngineV3Service:
         self._event_bus = None
 
     # Reputation provider integration
-    def set_reputation_provider(self, provider: Optional[Callable[[str], float]]) -> None:
+    def set_reputation_provider(
+        self, provider: Optional[Callable[[str], float]]
+    ) -> None:
         """
         Set a function that returns a reputation score in [0,1] for a given ASIN.
         If None is provided, reputation will default to neutral 0.7.
@@ -104,7 +112,9 @@ class BsrEngineV3Service:
 
     # ========== Event Handlers ==========
 
-    async def _on_competitor_prices_updated(self, event: CompetitorPricesUpdated) -> None:
+    async def _on_competitor_prices_updated(
+        self, event: CompetitorPricesUpdated
+    ) -> None:
         """Update market EMAs from snapshot of competitor states."""
         if not event.competitors:
             # No competitors - keep previous EMAs unchanged
@@ -112,7 +122,9 @@ class BsrEngineV3Service:
 
         velocities = [_to_decimal(c.sales_velocity) for c in event.competitors]
         # Average competitor velocity
-        avg_velocity: Decimal = sum(velocities, Decimal("0")) / _to_decimal(len(velocities))
+        avg_velocity: Decimal = sum(velocities, Decimal("0")) / _to_decimal(
+            len(velocities)
+        )
 
         # Conversion proxy: v/(v+1) ensures in (0,1) and bounded when conversion unknown
         # Use Decimal guard for division
@@ -122,7 +134,9 @@ class BsrEngineV3Service:
             denom = v + one
             # denom >= 1 always; no zero division
             conv_terms.append((v / denom) if denom != Decimal("0") else Decimal("0"))
-        avg_conversion: Decimal = sum(conv_terms, Decimal("0")) / _to_decimal(len(conv_terms))
+        avg_conversion: Decimal = sum(conv_terms, Decimal("0")) / _to_decimal(
+            len(conv_terms)
+        )
 
         # EMA updates
         self.market_ema_velocity = _ema(
@@ -155,7 +169,9 @@ class BsrEngineV3Service:
         # Conversion input x is units_sold / units_demanded if demanded > 0
         if units_demanded > Decimal("0"):
             conv_x = units_sold / units_demanded
-            m["ema_conversion"] = _ema(m["ema_conversion"], conv_x, self.ema_alpha_conversion)
+            m["ema_conversion"] = _ema(
+                m["ema_conversion"], conv_x, self.ema_alpha_conversion
+            )
 
         m["updates"] = int(m.get("updates", 0)) + 1
 
@@ -188,15 +204,27 @@ class BsrEngineV3Service:
         """
         pm = self.product_metrics.get(asin)
         if not pm or pm.get("updates", 0) < self.min_samples_to_index:
-            return {"velocity_index": None, "conversion_index": None, "composite_index": None}
+            return {
+                "velocity_index": None,
+                "conversion_index": None,
+                "composite_index": None,
+            }
 
         if self.market_ema_velocity is None or self.market_ema_conversion is None:
-            return {"velocity_index": None, "conversion_index": None, "composite_index": None}
+            return {
+                "velocity_index": None,
+                "conversion_index": None,
+                "composite_index": None,
+            }
 
         p_v = pm.get("ema_velocity")
         p_c = pm.get("ema_conversion")
         if p_v is None or p_c is None:
-            return {"velocity_index": None, "conversion_index": None, "composite_index": None}
+            return {
+                "velocity_index": None,
+                "conversion_index": None,
+                "composite_index": None,
+            }
 
         # Guarded denominators and eps in numerator
         denom_v = max(self.market_ema_velocity, self.index_floor)
@@ -221,7 +249,9 @@ class BsrEngineV3Service:
                 rep_val = self._reputation_provider(asin)
                 rep_score = _to_decimal(rep_val)
                 rep_factor = _clamp(
-                    Decimal("0.4") + (rep_score * Decimal("0.7")), Decimal("0.4"), Decimal("1.1")
+                    Decimal("0.4") + (rep_score * Decimal("0.7")),
+                    Decimal("0.4"),
+                    Decimal("1.1"),
                 )
                 composite_index = _clamp(
                     composite_index * rep_factor, self.index_floor, self.index_ceiling

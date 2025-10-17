@@ -2,10 +2,10 @@ import asyncio
 from datetime import datetime, timezone
 
 import pytest
+from money import Money
 
 from event_bus import AsyncioQueueBackend, EventBus
 from events import WorldStateSnapshotEvent
-from money import Money
 from src.fba_bench_core.services.toolbox_api_service import ToolboxAPIService
 from src.fba_bench_core.services.toolbox_schemas import (
     LaunchProductRequest,
@@ -63,7 +63,9 @@ def toolbox_service(event_bus: EventBus):
 
 
 @pytest.mark.asyncio
-async def test_observe_returns_found_false_when_no_cache(toolbox_service: ToolboxAPIService):
+async def test_observe_returns_found_false_when_no_cache(
+    toolbox_service: ToolboxAPIService,
+):
     asin = "B00TEST01"
     resp = toolbox_service.observe(ObserveRequest(asin=asin))
     assert resp.asin == asin
@@ -129,7 +131,10 @@ async def test_set_price_publishes_setpricecommand(
     await asyncio.sleep(0.02)
 
     req = SetPriceRequest(
-        agent_id="agent-1", asin=asin, new_price=Money.from_dollars("12.99"), reason="unit-test"
+        agent_id="agent-1",
+        asin=asin,
+        new_price=Money.from_dollars("12.99"),
+        reason="unit-test",
     )
     rsp = toolbox_service.set_price(req)
     assert rsp.accepted is True
@@ -140,7 +145,8 @@ async def test_set_price_publishes_setpricecommand(
 
     recorded = event_bus.get_recorded_events()
     assert any(
-        e.get("event_type") == "SetPriceCommand" and e.get("data", {}).get("asin") == asin
+        e.get("event_type") == "SetPriceCommand"
+        and e.get("data", {}).get("asin") == asin
         for e in recorded
     )
 

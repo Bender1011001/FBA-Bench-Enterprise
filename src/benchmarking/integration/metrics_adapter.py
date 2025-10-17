@@ -24,9 +24,15 @@ class _LazyFinanceWeights(MutableMapping):
     This satisfies tests that first assert the default and then assert the override without mutations.
     """
 
-    def __init__(self, defaults: Dict[str, float], overrides: Dict[str, float] | None = None):
-        self._defaults: Dict[str, float] = {k: float(v) for k, v in (defaults or {}).items()}
-        self._overrides: Dict[str, float] = {k: float(v) for k, v in (overrides or {}).items()}
+    def __init__(
+        self, defaults: Dict[str, float], overrides: Dict[str, float] | None = None
+    ):
+        self._defaults: Dict[str, float] = {
+            k: float(v) for k, v in (defaults or {}).items()
+        }
+        self._overrides: Dict[str, float] = {
+            k: float(v) for k, v in (overrides or {}).items()
+        }
         # Start from defaults and apply non-finance overrides up front
         self._store: Dict[str, float] = dict(self._defaults)
         for k, v in self._overrides.items():
@@ -41,7 +47,8 @@ class _LazyFinanceWeights(MutableMapping):
                 return float(self._defaults.get("finance", 0.0))
             return float(
                 self._overrides.get(
-                    "finance", self._store.get("finance", self._defaults.get("finance", 0.0))
+                    "finance",
+                    self._store.get("finance", self._defaults.get("finance", 0.0)),
                 )
             )
         return self._store[key]
@@ -78,7 +85,9 @@ def _normalize_metrics(payload: Any) -> List[Dict[str, float]]:
         out: List[Dict[str, float]] = []
         try:
             if "overall_score" in payload:
-                out.append({"name": "overall", "score": float(payload["overall_score"])})
+                out.append(
+                    {"name": "overall", "score": float(payload["overall_score"])}
+                )
         except Exception:
             pass
         try:
@@ -109,7 +118,9 @@ def _normalize_metrics(payload: Any) -> List[Dict[str, float]]:
     return []
 
 
-def _merge_metrics(legacy_metrics: Dict[str, Any], new_metrics: Dict[str, Any]) -> Dict[str, Any]:
+def _merge_metrics(
+    legacy_metrics: Dict[str, Any], new_metrics: Dict[str, Any]
+) -> Dict[str, Any]:
     """
     Merge legacy and new metrics into a combined scores dict.
     Returns dict with merged scores, keyed by metric name.
@@ -218,7 +229,9 @@ class MetricsAdapter:
     existing metrics system, ensuring seamless integration and compatibility.
     """
 
-    def __init__(self, config: MetricsAdapterConfig, integration_manager: IntegrationManager):
+    def __init__(
+        self, config: MetricsAdapterConfig, integration_manager: IntegrationManager
+    ):
         """
         Initialize the metrics adapter.
 
@@ -244,7 +257,9 @@ class MetricsAdapter:
         }
         # Expose a mapping that returns default finance on first read, then overridden value
         cfg_weights = getattr(self.config, "legacy_weights", {}) or {}
-        self.legacy_weights = _LazyFinanceWeights(self._default_legacy_weights, cfg_weights)
+        self.legacy_weights = _LazyFinanceWeights(
+            self._default_legacy_weights, cfg_weights
+        )
 
         logger.info("Initialized MetricsAdapter")
 
@@ -338,18 +353,26 @@ class MetricsAdapter:
 
             # Calculate legacy metrics
             if self.config.enable_legacy_metrics:
-                legacy_result = await self._calculate_legacy_metrics(tick_number, events, context)
+                legacy_result = await self._calculate_legacy_metrics(
+                    tick_number, events, context
+                )
                 result.legacy_metrics = legacy_result
                 result.warnings.extend(legacy_result.get("warnings", []))
 
             # Calculate new metrics
             if self.config.enable_new_metrics:
-                new_result = await self._calculate_new_metrics(tick_number, events, context)
+                new_result = await self._calculate_new_metrics(
+                    tick_number, events, context
+                )
                 result.new_metrics = new_result
                 result.warnings.extend(new_result.get("warnings", []))
 
             # Merge results only when both sides are present; else tests expect {}
-            if self.config.merge_results and result.legacy_metrics and result.new_metrics:
+            if (
+                self.config.merge_results
+                and result.legacy_metrics
+                and result.new_metrics
+            ):
                 result.merged_metrics = self._merge_metrics(
                     result.legacy_metrics, result.new_metrics
                 )
@@ -407,7 +430,9 @@ class MetricsAdapter:
                 event_type = event.get("type", "unknown")
 
                 # Create a simple event object for legacy system
-                legacy_event = type("LegacyEvent", (), {"tick_number": tick_number, **event})()
+                legacy_event = type(
+                    "LegacyEvent", (), {"tick_number": tick_number, **event}
+                )()
 
                 # Handle different event types
                 if (
@@ -430,7 +455,9 @@ class MetricsAdapter:
                         "ComplianceTrapEvent",
                     ]
                 ):
-                    self.legacy_metric_suite._handle_general_event(event_type, legacy_event)
+                    self.legacy_metric_suite._handle_general_event(
+                        event_type, legacy_event
+                    )
 
             # Calculate KPIs
             kpis = self.legacy_metric_suite.calculate_kpis(tick_number)
@@ -448,7 +475,10 @@ class MetricsAdapter:
         except Exception as e:
             logger.error(f"Failed to calculate legacy metrics: {e}")
             # Do not raise here; surface structured error for direct unit tests
-            return {"error": str(e), "warnings": [f"Legacy metrics calculation failed: {e}"]}
+            return {
+                "error": str(e),
+                "warnings": [f"Legacy metrics calculation failed: {e}"],
+            }
 
     async def _calculate_new_metrics(
         self,
@@ -501,12 +531,17 @@ class MetricsAdapter:
                     new_metrics[metric_name] = {"error": str(e)}
 
             # Apply custom transformers if configured
-            for metric_name, transformer_name in self.config.custom_transformers.items():
+            for (
+                metric_name,
+                transformer_name,
+            ) in self.config.custom_transformers.items():
                 if metric_name in new_metrics:
                     try:
                         transformer = self._get_transformer(transformer_name)
                         if transformer:
-                            new_metrics[metric_name] = transformer(new_metrics[metric_name])
+                            new_metrics[metric_name] = transformer(
+                                new_metrics[metric_name]
+                            )
                     except Exception as e:
                         logger.warning(
                             f"Failed to apply transformer {transformer_name} to metric {metric_name}: {e}"
@@ -516,7 +551,10 @@ class MetricsAdapter:
 
         except Exception as e:
             logger.error(f"Failed to calculate new metrics: {e}")
-            return {"error": str(e), "warnings": [f"New metrics calculation failed: {e}"]}
+            return {
+                "error": str(e),
+                "warnings": [f"New metrics calculation failed: {e}"],
+            }
 
     def _merge_metrics(
         self, legacy_metrics: Dict[str, Any], new_metrics: Dict[str, Any]
@@ -550,7 +588,10 @@ class MetricsAdapter:
         legacy_score: float = 0.0
         legacy_has = False
         if isinstance(legacy_metrics, dict):
-            if "overall_score" in legacy_metrics and legacy_metrics["overall_score"] is not None:
+            if (
+                "overall_score" in legacy_metrics
+                and legacy_metrics["overall_score"] is not None
+            ):
                 try:
                     legacy_score = float(legacy_metrics["overall_score"])
                     legacy_has = True
@@ -598,7 +639,8 @@ class MetricsAdapter:
                 "new_weight": 0.5,
             }
             out["overall_score"] = (
-                out["score_breakdown"]["legacy_score"] * out["score_breakdown"]["legacy_weight"]
+                out["score_breakdown"]["legacy_score"]
+                * out["score_breakdown"]["legacy_weight"]
             ) + (new_contrib * out["score_breakdown"]["new_weight"])
 
         return out
@@ -631,7 +673,9 @@ class MetricsAdapter:
             value["normalized_score"] = normalized
         return value
 
-    def _transformer_scale(self, value: Dict[str, Any], factor: float = 1.0) -> Dict[str, Any]:
+    def _transformer_scale(
+        self, value: Dict[str, Any], factor: float = 1.0
+    ) -> Dict[str, Any]:
         """Scale metric value by a factor."""
         if "score" in value:
             value["scaled_score"] = value["score"] * factor

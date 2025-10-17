@@ -6,10 +6,10 @@ from typing import Any, Dict
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from fba_bench.core.logging import get_request_id
 from starlette import status
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from fba_bench.core.logging import get_request_id
 from fba_bench_api.api.errors import AppError
 
 logger = logging.getLogger(__name__)
@@ -159,7 +159,10 @@ def add_exception_handlers(app: FastAPI) -> None:
         # Log with stack trace for unhandled exceptions
         logger.exception(
             "Unhandled error",
-            extra={"request_id": get_request_id() or "-", "path": str(request.url.path)},
+            extra={
+                "request_id": get_request_id() or "-",
+                "path": str(request.url.path),
+            },
         )
         return _problem_detail(
             request,

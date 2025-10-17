@@ -166,7 +166,9 @@ class LossEvent(BaseEvent):
                 f"Amount must be a Money type, but got {type(self.amount)} for LossEvent."
             )
         if self.amount.cents <= 0:
-            raise ValueError(f"Loss amount must be positive, but got {self.amount} for LossEvent.")
+            raise ValueError(
+                f"Loss amount must be positive, but got {self.amount} for LossEvent."
+            )
 
         # Validate cause: Must be a non-empty string.
         if not self.cause:
@@ -196,8 +198,12 @@ class LossEvent(BaseEvent):
             "amount": str(self.amount),
             "cause": self.cause,
             "affected_area": self.affected_area,
-            "recovery_plan_provided": bool(self.recovery_plan),  # Indicate if a plan is present
-            "prevention_measures_count": len(self.prevention_measures),  # Count for summary
+            "recovery_plan_provided": bool(
+                self.recovery_plan
+            ),  # Indicate if a plan is present
+            "prevention_measures_count": len(
+                self.prevention_measures
+            ),  # Count for summary
             "severity": self.severity,
             "insurance_claim": self.insurance_claim,
         }

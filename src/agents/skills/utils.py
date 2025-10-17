@@ -2,16 +2,14 @@
 Utility functions for skill coordination.
 """
 
-from typing import Any, Dict, List, Tuple
-
 from datetime import datetime
+from typing import Any, Dict, List, Tuple
 
 from money import Money
 
-from ..skill_modules.base_skill import SkillAction
-
 from fba_events.base import BaseEvent
 
+from ..skill_modules.base_skill import SkillAction
 from .models import CoordinatorTuning
 
 
@@ -107,7 +105,8 @@ def log_coordination_decision(
                 for action in coordinated_actions
             ),
             "tokens": sum(
-                action.resource_requirements.get("tokens", 0) for action in coordinated_actions
+                action.resource_requirements.get("tokens", 0)
+                for action in coordinated_actions
             ),
         },
     }

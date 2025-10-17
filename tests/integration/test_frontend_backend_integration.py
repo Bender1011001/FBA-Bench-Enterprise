@@ -54,7 +54,9 @@ class MockBackendAPI:
         @self.app.get("/api/scenarios")
         async def get_scenarios():
             if not self.benchmark_engine:
-                raise HTTPException(status_code=500, detail="Benchmark engine not initialized")
+                raise HTTPException(
+                    status_code=500, detail="Benchmark engine not initialized"
+                )
 
             scenarios = []
             for name, scenario in self.benchmark_engine.scenarios.items():
@@ -73,7 +75,9 @@ class MockBackendAPI:
         @self.app.get("/api/scenarios/{scenario_name}")
         async def get_scenario(scenario_name: str):
             if not self.benchmark_engine:
-                raise HTTPException(status_code=500, detail="Benchmark engine not initialized")
+                raise HTTPException(
+                    status_code=500, detail="Benchmark engine not initialized"
+                )
 
             if scenario_name not in self.benchmark_engine.scenarios:
                 raise HTTPException(status_code=404, detail="Scenario not found")
@@ -91,7 +95,9 @@ class MockBackendAPI:
         @self.app.post("/api/benchmarks/run")
         async def run_benchmark(request: Dict[str, Any]):
             if not self.benchmark_engine:
-                raise HTTPException(status_code=500, detail="Benchmark engine not initialized")
+                raise HTTPException(
+                    status_code=500, detail="Benchmark engine not initialized"
+                )
 
             scenario_name = request.get("scenario_name")
             agent_ids = request.get("agent_ids", [])
@@ -105,7 +111,9 @@ class MockBackendAPI:
 
             # Run the benchmark
             result = await self.benchmark_engine.run_benchmark(
-                scenario_name=scenario_name, agent_ids=agent_ids, metric_names=metric_names
+                scenario_name=scenario_name,
+                agent_ids=agent_ids,
+                metric_names=metric_names,
             )
 
             # Convert to JSON-serializable format
@@ -113,7 +121,9 @@ class MockBackendAPI:
                 "scenario_name": result.scenario_name,
                 "agent_ids": result.agent_ids,
                 "metric_names": result.metric_names,
-                "start_time": result.start_time.isoformat() if result.start_time else None,
+                "start_time": (
+                    result.start_time.isoformat() if result.start_time else None
+                ),
                 "end_time": result.end_time.isoformat() if result.end_time else None,
                 "duration_seconds": result.duration_seconds,
                 "success": result.success,
@@ -138,7 +148,10 @@ class MockBackendAPI:
                 "duration_seconds": 10.5,
                 "success": True,
                 "results": {
-                    "test_metric": {"value": 85.0, "timestamp": datetime.now().isoformat()}
+                    "test_metric": {
+                        "value": 85.0,
+                        "timestamp": datetime.now().isoformat(),
+                    }
                 },
             }
 
@@ -188,7 +201,9 @@ class MockBackendAPI:
             except WebSocketDisconnect:
                 self.active_connections.remove(websocket)
 
-    async def process_websocket_message(self, message: Dict[str, Any]) -> Dict[str, Any]:
+    async def process_websocket_message(
+        self, message: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Process a WebSocket message and return a response."""
         message_type = message.get("type")
 
@@ -289,7 +304,9 @@ class MockAgentForIntegration(BaseAgentRunner):
             "responses_count": len(self.responses),
             "actions_count": len(self.actions_taken),
             "avg_response_time": (
-                np.mean([r["processing_time"] for r in self.responses]) if self.responses else 0
+                np.mean([r["processing_time"] for r in self.responses])
+                if self.responses
+                else 0
             ),
             "success_rate": (
                 len([a for a in self.actions_taken if a["status"] == "completed"])
@@ -460,7 +477,9 @@ class TestFrontendBackendIntegration:
         assert "timestamp" in data
 
     @pytest.mark.asyncio
-    async def test_backend_api_get_scenarios(self, test_client, benchmark_engine, test_scenario):
+    async def test_backend_api_get_scenarios(
+        self, test_client, benchmark_engine, test_scenario
+    ):
         """Test backend API get scenarios endpoint."""
         # Register the scenario
         benchmark_engine.register_scenario(test_scenario)
@@ -485,7 +504,9 @@ class TestFrontendBackendIntegration:
             assert "enabled" in scenario
 
     @pytest.mark.asyncio
-    async def test_backend_api_get_scenario(self, test_client, benchmark_engine, test_scenario):
+    async def test_backend_api_get_scenario(
+        self, test_client, benchmark_engine, test_scenario
+    ):
         """Test backend API get specific scenario endpoint."""
         # Register the scenario
         benchmark_engine.register_scenario(test_scenario)
@@ -610,7 +631,10 @@ class TestFrontendBackendIntegration:
 
             assert len(scenarios) == 1
             assert scenarios[0]["name"] == "test_scenario_for_integration"
-            assert scenarios[0]["description"] == "Test scenario for frontend-backend integration"
+            assert (
+                scenarios[0]["description"]
+                == "Test scenario for frontend-backend integration"
+            )
             assert scenarios[0]["domain"] == "test"
             assert scenarios[0]["duration_ticks"] == 20
             assert scenarios[0]["enabled"] is True
@@ -642,7 +666,10 @@ class TestFrontendBackendIntegration:
             scenario = await api_service.get_scenario("test_scenario_for_integration")
 
             assert scenario["name"] == "test_scenario_for_integration"
-            assert scenario["description"] == "Test scenario for frontend-backend integration"
+            assert (
+                scenario["description"]
+                == "Test scenario for frontend-backend integration"
+            )
             assert scenario["domain"] == "test"
             assert scenario["duration_ticks"] == 20
             assert scenario["parameters"] == {"test_data": {"key": "value"}}
@@ -650,7 +677,13 @@ class TestFrontendBackendIntegration:
 
     @pytest.mark.asyncio
     async def test_frontend_api_service_run_benchmark(
-        self, api_service, test_client, benchmark_engine, mock_agent, test_scenario, test_metric
+        self,
+        api_service,
+        test_client,
+        benchmark_engine,
+        mock_agent,
+        test_scenario,
+        test_metric,
     ):
         """Test frontend API service run benchmark method."""
         # Initialize and register components
@@ -698,7 +731,9 @@ class TestFrontendBackendIntegration:
             assert "test_metric_for_integration" in result["results"]
 
     @pytest.mark.asyncio
-    async def test_frontend_api_service_get_benchmark_result(self, api_service, test_client):
+    async def test_frontend_api_service_get_benchmark_result(
+        self, api_service, test_client
+    ):
         """Test frontend API service get benchmark result method."""
         benchmark_id = "test_benchmark_id"
 
@@ -719,7 +754,10 @@ class TestFrontendBackendIntegration:
                     "duration_seconds": 10.5,
                     "success": True,
                     "results": {
-                        "test_metric": {"value": 85.0, "timestamp": datetime.now().isoformat()}
+                        "test_metric": {
+                            "value": 85.0,
+                            "timestamp": datetime.now().isoformat(),
+                        }
                     },
                 },
             ),
@@ -823,7 +861,10 @@ class TestFrontendBackendIntegration:
             response = await websocket_service.subscribe("test_benchmark_id")
 
             # Verify subscription message was sent
-            expected_message = {"type": "subscribe", "benchmark_id": "test_benchmark_id"}
+            expected_message = {
+                "type": "subscribe",
+                "benchmark_id": "test_benchmark_id",
+            }
             mock_websocket.send.assert_called_with(json.dumps(expected_message))
 
             # Verify subscription response
@@ -858,7 +899,10 @@ class TestFrontendBackendIntegration:
             response = await websocket_service.get_status("test_benchmark_id")
 
             # Verify status message was sent
-            expected_message = {"type": "get_status", "benchmark_id": "test_benchmark_id"}
+            expected_message = {
+                "type": "get_status",
+                "benchmark_id": "test_benchmark_id",
+            }
             mock_websocket.send.assert_called_with(json.dumps(expected_message))
 
             # Verify status response
@@ -937,7 +981,9 @@ class TestFrontendBackendIntegration:
 
             # Listen for updates
             updates = []
-            async for update in websocket_service.listen_for_updates("test_benchmark_id"):
+            async for update in websocket_service.listen_for_updates(
+                "test_benchmark_id"
+            ):
                 updates.append(update)
 
                 # Stop after 3 updates
@@ -1054,13 +1100,17 @@ class TestFrontendBackendIntegration:
     ):
         """Test error handling in frontend-backend communication."""
         # Test API service error handling
-        with patch.object(api_service, "get", side_effect=Exception("Connection error")):
+        with patch.object(
+            api_service, "get", side_effect=Exception("Connection error")
+        ):
             with pytest.raises(Exception) as excinfo:
                 await api_service.get_scenarios()
             assert "Connection error" in str(excinfo.value)
 
         # Test WebSocket service error handling
-        with patch("websockets.connect", side_effect=Exception("WebSocket connection error")):
+        with patch(
+            "websockets.connect", side_effect=Exception("WebSocket connection error")
+        ):
             with pytest.raises(Exception) as excinfo:
                 await websocket_service.connect()
             assert "WebSocket connection error" in str(excinfo.value)

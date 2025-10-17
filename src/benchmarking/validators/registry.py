@@ -19,7 +19,9 @@ logger = logging.getLogger(__name__)
 # Function-style registry (preferred by Engine)
 # ------------------------------------------------------------------------------
 
-_FN_REGISTRY: Dict[str, Callable[[Dict[str, Any], Optional[Dict[str, Any]]], Dict[str, Any]]] = {}
+_FN_REGISTRY: Dict[
+    str, Callable[[Dict[str, Any], Optional[Dict[str, Any]]], Dict[str, Any]]
+] = {}
 
 
 def register_validator(
@@ -40,7 +42,9 @@ def register_validator(
     logger.debug(f"Registered function-style validator '{key}'")
 
 
-def get_validator(key: str) -> Callable[[Dict[str, Any], Optional[Dict[str, Any]]], Dict[str, Any]]:
+def get_validator(
+    key: str,
+) -> Callable[[Dict[str, Any], Optional[Dict[str, Any]]], Dict[str, Any]]:
     """
     Lookup a function-style validator by key. Raises KeyError if not found.
     """
@@ -258,7 +262,9 @@ class ValidatorRegistry:
         """
         return list(self._tags.keys())
 
-    def get_validators_by_category(self, category: str) -> Dict[str, ValidatorRegistration]:
+    def get_validators_by_category(
+        self, category: str
+    ) -> Dict[str, ValidatorRegistration]:
         """
         Get all validators in a specific category.
 
@@ -291,7 +297,9 @@ class ValidatorRegistry:
             return {}
 
         return {
-            name: self._validators[name] for name in self._tags[tag] if name in self._validators
+            name: self._validators[name]
+            for name in self._tags[tag]
+            if name in self._validators
         }
 
     def get_enabled_validators(self) -> Dict[str, ValidatorRegistration]:
@@ -394,7 +402,9 @@ class ValidatorRegistry:
 
         return suite
 
-    def validate_validator_config(self, name: str, config: ValidatorConfig) -> List[str]:
+    def validate_validator_config(
+        self, name: str, config: ValidatorConfig
+    ) -> List[str]:
         """
         Validate a validator configuration.
 
@@ -436,7 +446,8 @@ class ValidatorRegistry:
             "enabled_validators": enabled_count,
             "disabled_validators": disabled_count,
             "categories": {
-                category: len(validators) for category, validators in self._categories.items()
+                category: len(validators)
+                for category, validators in self._categories.items()
             },
             "tags": {tag: len(validators) for tag, validators in self._tags.items()},
         }

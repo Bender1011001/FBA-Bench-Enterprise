@@ -7,10 +7,10 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 
 import yaml
+from services.world_store import get_world_store
 
 from instrumentation.clearml_tracking import ClearMLTracker
 from scenarios.scenario_framework import ScenarioConfig
-from services.world_store import get_world_store
 
 
 class ScenarioType(str, Enum):
@@ -43,7 +43,9 @@ class ScenarioOutcome(str, Enum):
 
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 
 class ScenarioEngine:
@@ -69,7 +71,9 @@ class ScenarioEngine:
             self.current_scenario = ScenarioConfig(data)
             # Optional validation if available
             try:
-                validator = getattr(self.current_scenario, "validate_scenario_consistency", None)
+                validator = getattr(
+                    self.current_scenario, "validate_scenario_consistency", None
+                )
                 if callable(validator):
                     if not validator():
                         raise ValueError(
@@ -140,7 +144,9 @@ class ScenarioEngine:
                         )
             else:
                 # Single category path
-                product_catalog = config.define_product_catalog(raw_categories, complexity)
+                product_catalog = config.define_product_catalog(
+                    raw_categories, complexity
+                )
         except Exception as e:
             logging.warning(
                 f"Falling back to YAML-defined product_catalog due to error in define_product_catalog: {e}"
@@ -175,14 +181,18 @@ class ScenarioEngine:
             )
 
         for agent_name, agent_instance in self.agents.items():
-            logging.info(f"Configuring constraints for {agent_name}: {agent_constraints}")
+            logging.info(
+                f"Configuring constraints for {agent_name}: {agent_constraints}"
+            )
             # agent_instance.apply_constraints(agent_constraints)
 
         logging.info(
             f"Scenario environment for '{config.config_data['scenario_name']}' initialized."
         )
 
-    def inject_scenario_events(self, current_tick: int, event_schedule: List[Dict[str, Any]]):
+    def inject_scenario_events(
+        self, current_tick: int, event_schedule: List[Dict[str, Any]]
+    ):
         """
         Triggers planned scenario-specific events at the appropriate simulation ticks.
         """
@@ -197,7 +207,9 @@ class ScenarioEngine:
         # Clean up triggered events if they are one-time
         # event_schedule[:] = [e for e in event_schedule if not e.get('triggered')]
 
-    def track_scenario_progress(self, agents: Any, objectives: Dict[str, Any]) -> Dict[str, Any]:
+    def track_scenario_progress(
+        self, agents: Any, objectives: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Monitors scenario completion status and agent performance against objectives.
         This method would be called periodically during the simulation loop.
@@ -209,7 +221,9 @@ class ScenarioEngine:
         # progress_metrics['profit_objective_met'] = current_profit >= objectives.get('profit_target', 0)
 
         # Simulate some progress for demonstration
-        progress_metrics["simulation_tick"] = 0  # This would be provided by simulation loop
+        progress_metrics["simulation_tick"] = (
+            0  # This would be provided by simulation loop
+        )
         progress_metrics["objectives_met_count"] = 0
         progress_metrics["total_objectives"] = len(objectives)
 
@@ -257,26 +271,36 @@ class ScenarioEngine:
                         f"Objective '{obj_name}' failed: {actual_value} < {target_value}"
                     )
                 else:
-                    logging.info(f"Objective '{obj_name}' met: {actual_value} >= {target_value}")
-            elif obj_name.endswith("_max"):  # For max thresholds like debt ratio, churn rate
+                    logging.info(
+                        f"Objective '{obj_name}' met: {actual_value} >= {target_value}"
+                    )
+            elif obj_name.endswith(
+                "_max"
+            ):  # For max thresholds like debt ratio, churn rate
                 if actual_value is None or actual_value > target_value:
                     all_objectives_met = False
                     logging.warning(
                         f"Objective '{obj_name}' failed: {actual_value} > {target_value}"
                     )
                 else:
-                    logging.info(f"Objective '{obj_name}' met: {actual_value} <= {target_value}")
+                    logging.info(
+                        f"Objective '{obj_name}' met: {actual_value} <= {target_value}"
+                    )
             elif obj_name.startswith("survival_until_end"):
                 if not actual_value:  # Assuming True for survival
                     all_objectives_met = False
-                    logging.warning(f"Objective '{obj_name}' failed: Agent did not survive.")
+                    logging.warning(
+                        f"Objective '{obj_name}' failed: Agent did not survive."
+                    )
                 else:
                     logging.info(f"Objective '{obj_name}' met: Agent survived.")
             # Add more specific objective types as needed
 
         if all_objectives_met:
             analysis_results["success_status"] = "success"
-            logging.info(f"Scenario '{analysis_results['scenario_name']}' completed successfully!")
+            logging.info(
+                f"Scenario '{analysis_results['scenario_name']}' completed successfully!"
+            )
         else:
             logging.warning(
                 f"Scenario '{analysis_results['scenario_name']}' failed to meet all objectives."
@@ -295,7 +319,9 @@ class ScenarioEngine:
 
             enabled = bool(bonus_policy.get("enabled", False))
             bonus_score = 0.0
-            composite_score = 1.0 if analysis_results["success_status"] == "success" else 0.0
+            composite_score = (
+                1.0 if analysis_results["success_status"] == "success" else 0.0
+            )
 
             if enabled:
                 # Determine min target using new or legacy key
@@ -338,11 +364,15 @@ class ScenarioEngine:
                     try:
                         import math  # local import to avoid global dependency if unused
 
-                        bonus_score *= math.exp(-lambda_param * max(0.0, volatility_or_drawdown))
+                        bonus_score *= math.exp(
+                            -lambda_param * max(0.0, volatility_or_drawdown)
+                        )
                     except Exception:
                         pass
 
-                pass_flag = 1.0 if analysis_results["success_status"] == "success" else 0.0
+                pass_flag = (
+                    1.0 if analysis_results["success_status"] == "success" else 0.0
+                )
                 composite_score = pass_flag + (weight * bonus_score)
 
             analysis_results["bonus_score"] = bonus_score
@@ -350,7 +380,9 @@ class ScenarioEngine:
         except Exception as e:
             logging.error(f"Bonus/composite score computation failed: {e}")
 
-        logging.info(f"Scenario analysis complete: {analysis_results['success_status']}")
+        logging.info(
+            f"Scenario analysis complete: {analysis_results['success_status']}"
+        )
         return analysis_results
 
     async def run_simulation(
@@ -368,19 +400,33 @@ class ScenarioEngine:
 
         # Initialize ClearML tracker (no-op if ClearML not installed)
         try:
-            scenario_name = scenario_config.config_data.get("scenario_name", str(scenario_file))
+            scenario_name = scenario_config.config_data.get(
+                "scenario_name", str(scenario_file)
+            )
             self.tracker = ClearMLTracker(
-                project_name="FBA-Bench", task_name=scenario_name, tags=["simulation", "scenario"]
+                project_name="FBA-Bench",
+                task_name=scenario_name,
+                tags=["simulation", "scenario"],
             )
             # Connect structured configuration
             self.tracker.connect(
                 {
                     "scenario_name": scenario_name,
                     "scenario_type": scenario_config.config_data.get("scenario_type"),
-                    "difficulty_tier": scenario_config.config_data.get("difficulty_tier"),
-                    "expected_duration": scenario_config.config_data.get("expected_duration"),
-                    "success_criteria": scenario_config.config_data.get("success_criteria"),
-                    "agents": list(self.agents.keys()) if isinstance(self.agents, dict) else [],
+                    "difficulty_tier": scenario_config.config_data.get(
+                        "difficulty_tier"
+                    ),
+                    "expected_duration": scenario_config.config_data.get(
+                        "expected_duration"
+                    ),
+                    "success_criteria": scenario_config.config_data.get(
+                        "success_criteria"
+                    ),
+                    "agents": (
+                        list(self.agents.keys())
+                        if isinstance(self.agents, dict)
+                        else []
+                    ),
                 }
             )
 
@@ -396,7 +442,9 @@ class ScenarioEngine:
                 if flag and hasattr(self.tracker, "execute_remotely"):
                     queue = os.getenv("CLEARML_QUEUE", "default")
                     # This will exit the local process; agent re-runs the script with the same code/args
-                    self.tracker.execute_remotely(queue_name=queue, clone=False, exit_process=True)
+                    self.tracker.execute_remotely(
+                        queue_name=queue, clone=False, exit_process=True
+                    )
             except Exception:
                 # Never fail the simulation if remote scheduling misbehaves
                 pass
@@ -444,7 +492,9 @@ class ScenarioEngine:
         # Slightly exceed target to avoid rounding edge cases (5% headroom)
         per_tick_profit_gain = 0.0
         if deterministic_profit_shaping and _profit_min_target > 0:
-            per_tick_profit_gain = (_profit_min_target / float(max(1, total_ticks))) * 1.05
+            per_tick_profit_gain = (
+                _profit_min_target / float(max(1, total_ticks))
+            ) * 1.05
 
         event_schedule = scenario_config.config_data.get("external_events", [])
         for tick in range(1, total_ticks + 1):
@@ -478,9 +528,14 @@ class ScenarioEngine:
 
             # Report metrics to ClearML (if enabled)
             try:
-                self.tracker.log_scalar("Profit", "USD", sim_metrics["profit"], iteration=tick)
                 self.tracker.log_scalar(
-                    "MarketShare", "ratio", sim_metrics.get("market_share", 0.0), iteration=tick
+                    "Profit", "USD", sim_metrics["profit"], iteration=tick
+                )
+                self.tracker.log_scalar(
+                    "MarketShare",
+                    "ratio",
+                    sim_metrics.get("market_share", 0.0),
+                    iteration=tick,
                 )
                 self.tracker.log_scalar(
                     "OnTimeDeliveryRate",
@@ -511,7 +566,8 @@ class ScenarioEngine:
             "market_share_asia": sim_metrics["market_share"] * 0.8,
             "compliance_check_pass": 1.0,
             "joint_profit_target": sim_metrics["profit"] * 2,
-            "shared_inventory_optimization_rate": sim_metrics["on_time_delivery_rate"] + 0.1,
+            "shared_inventory_optimization_rate": sim_metrics["on_time_delivery_rate"]
+            + 0.1,
             "conflict_resolution_success_rate": 0.85,
             "partnership_duration": total_ticks,
             "cost_of_goods_saved_percent": 0.12,
@@ -556,7 +612,9 @@ class ScenarioEngine:
                     # Fallback to sim profit if available
                     sim_profit = (
                         float(final_state.get("platform_profit_target", 0.0)) / 5.0
-                        if isinstance(final_state.get("platform_profit_target"), (int, float))
+                        if isinstance(
+                            final_state.get("platform_profit_target"), (int, float)
+                        )
                         else 0.0
                     )
                     metrics["total_profit"] = float(sim_profit)

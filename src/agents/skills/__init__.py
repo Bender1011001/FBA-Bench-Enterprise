@@ -9,28 +9,27 @@ concurrent execution of multiple skills with performance tracking.
 import asyncio
 import logging
 from collections import defaultdict
+from datetime import datetime
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from datetime import datetime
+from money import Money
 
 from fba_bench_core.event_bus import EventBus
 from fba_events.base import BaseEvent
-from money import Money
 
+from ..skill_modules.base_skill import BaseSkill, SkillAction
+from .conflicts import ConflictResolver
+from .dispatch import DispatchManager
+from .metrics import MetricsTracker
 from .models import (
     CoordinationStrategy,
-    SkillSubscription,
-    ResourceAllocation,
     CoordinatorTuning,
+    ResourceAllocation,
     SkillPerformanceMetrics,
+    SkillSubscription,
 )
-from .dispatch import DispatchManager
 from .resources import ResourceManager
-from .metrics import MetricsTracker
-from .conflicts import ConflictResolver
 from .utils import get_max_concurrent_events, log_coordination_decision
-from ..skill_modules.base_skill import BaseSkill, SkillAction
-
 
 logger = logging.getLogger(__name__)
 
@@ -72,8 +71,12 @@ class SkillCoordinator:
             if self.coordinator_tuning.max_concurrent_events_default is not None
             else self.config.get("max_concurrent_skills", 3)
         )
-        self.conflict_resolution_timeout = self.config.get("conflict_resolution_timeout", 5.0)
-        self.performance_tracking_enabled = self.config.get("performance_tracking_enabled", True)
+        self.conflict_resolution_timeout = self.config.get(
+            "conflict_resolution_timeout", 5.0
+        )
+        self.performance_tracking_enabled = self.config.get(
+            "performance_tracking_enabled", True
+        )
 
         # Skill management
         self.skill_subscriptions: Dict[str, SkillSubscription] = {}
@@ -159,7 +162,9 @@ class SkillCoordinator:
                 event_types=set(event_types),
                 priority_multiplier=priority_multiplier,
                 filters=filters or {},
-                max_concurrent_events=get_max_concurrent_events(skill_name, self.config, self.coordinator_tuning),
+                max_concurrent_events=get_max_concurrent_events(
+                    skill_name, self.config, self.coordinator_tuning
+                ),
             )
 
             self.skill_subscriptions[skill_name] = subscription
@@ -170,7 +175,9 @@ class SkillCoordinator:
                     self.event_skill_mapping[event_type].append(skill_name)
 
             # Initialize performance metrics
-            self.skill_metrics[skill_name] = SkillPerformanceMetrics(skill_name=skill_name)
+            self.skill_metrics[skill_name] = SkillPerformanceMetrics(
+                skill_name=skill_name
+            )
 
             # Subscribe skill to event bus
             await skill.subscribe_to_events(event_types)
@@ -215,16 +222,24 @@ class SkillCoordinator:
                     all_actions.append(action)
 
             # Coordinate and resolve conflicts
-            coordinated_actions = await self.conflict_resolver.coordinate_actions(all_actions)
+            coordinated_actions = await self.conflict_resolver.coordinate_actions(
+                all_actions
+            )
 
             # Update performance metrics
             if self.performance_tracking_enabled:
-                await self.metrics_tracker.update_performance_metrics(event, skill_actions)
+                await self.metrics_tracker.update_performance_metrics(
+                    event, skill_actions
+                )
 
             # Log coordination decision
             log_coordination_decision(
-                event, skill_actions, coordinated_actions, self.coordination_history,
-                self.coordination_strategy.value, self.resource_allocation
+                event,
+                skill_actions,
+                coordinated_actions,
+                self.coordination_history,
+                self.coordination_strategy.value,
+                self.resource_allocation,
             )
 
             return coordinated_actions
@@ -233,7 +248,9 @@ class SkillCoordinator:
             logger.error(f"Error dispatching event {event_type}: {e}")
             return []
 
-    async def coordinate_actions(self, skill_actions: List[SkillAction]) -> List[SkillAction]:
+    async def coordinate_actions(
+        self, skill_actions: List[SkillAction]
+    ) -> List[SkillAction]:
         """
         Public method to coordinate pre-generated skill actions.
 
@@ -258,7 +275,9 @@ class SkillCoordinator:
         """Get coordination statistics and analytics."""
         return self.metrics_tracker.get_coordination_statistics()
 
-    async def update_resource_allocation(self, budget_delta: int = 0, token_delta: int = 0) -> bool:
+    async def update_resource_allocation(
+        self, budget_delta: int = 0, token_delta: int = 0
+    ) -> bool:
         """
         Update resource allocation for the coordinator.
 
@@ -269,7 +288,9 @@ class SkillCoordinator:
         Returns:
             True if update successful, False if insufficient resources
         """
-        return await self.resource_manager.update_resource_allocation(budget_delta, token_delta)
+        return await self.resource_manager.update_resource_allocation(
+            budget_delta, token_delta
+        )
 
     async def shutdown(self):
         """Shutdown the coordinator and clean up resources."""

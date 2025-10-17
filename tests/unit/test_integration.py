@@ -118,7 +118,8 @@ class TestIntegrationConfig:
     def test_integration_config_to_dict(self):
         """Test converting integration configuration to dictionary."""
         config = IntegrationConfig(
-            enable_agent_runners=False, custom_integrations={"custom1": {"type": "test"}}
+            enable_agent_runners=False,
+            custom_integrations={"custom1": {"type": "test"}},
         )
 
         result = config.to_dict()
@@ -290,7 +291,9 @@ class TestIntegrationManager:
         assert "memory_systems" in integration_manager.status
 
     @pytest.mark.asyncio
-    async def test_integration_manager_initialize_already_initialized(self, integration_manager):
+    async def test_integration_manager_initialize_already_initialized(
+        self, integration_manager
+    ):
         """Test integration manager initialization when already initialized."""
         integration_manager._initialized = True
 
@@ -300,10 +303,14 @@ class TestIntegrationManager:
         assert integration_manager._initialized is True
 
     @pytest.mark.asyncio
-    async def test_integration_manager_initialize_agent_runners_success(self, integration_manager):
+    async def test_integration_manager_initialize_agent_runners_success(
+        self, integration_manager
+    ):
         """Test successful agent runners integration initialization."""
         with patch("benchmarking.integration.manager.AGENT_RUNNERS_AVAILABLE", True):
-            with patch("benchmarking.integration.manager.RunnerFactory") as mock_factory:
+            with patch(
+                "benchmarking.integration.manager.RunnerFactory"
+            ) as mock_factory:
                 mock_factory.list_runners.return_value = ["diy", "crewai"]
 
                 await integration_manager._initialize_agent_runners_integration()
@@ -333,17 +340,23 @@ class TestIntegrationManager:
     ):
         """Test agent runners integration initialization with exception."""
         with patch("benchmarking.integration.manager.AGENT_RUNNERS_AVAILABLE", True):
-            with patch("benchmarking.integration.manager.RunnerFactory") as mock_factory:
+            with patch(
+                "benchmarking.integration.manager.RunnerFactory"
+            ) as mock_factory:
                 mock_factory.list_runners.side_effect = Exception("Test error")
 
                 await integration_manager._initialize_agent_runners_integration()
 
                 status = integration_manager.status["agent_runners"]
-                assert status.available is True  # Module is available, but initialization failed
+                assert (
+                    status.available is True
+                )  # Module is available, but initialization failed
                 assert "Failed to initialize agent runners: Test error" in status.issues
 
     @pytest.mark.asyncio
-    async def test_integration_manager_initialize_legacy_metrics_success(self, integration_manager):
+    async def test_integration_manager_initialize_legacy_metrics_success(
+        self, integration_manager
+    ):
         """Test successful legacy metrics integration initialization."""
         with patch("benchmarking.integration.manager.METRICS_AVAILABLE", True):
             with patch("benchmarking.integration.manager.MetricSuite") as mock_suite:
@@ -372,10 +385,14 @@ class TestIntegrationManager:
             assert "metrics module not available" in status.issues
 
     @pytest.mark.asyncio
-    async def test_integration_manager_initialize_infrastructure_success(self, integration_manager):
+    async def test_integration_manager_initialize_infrastructure_success(
+        self, integration_manager
+    ):
         """Test successful infrastructure integration initialization."""
         with patch("benchmarking.integration.manager.INFRASTRUCTURE_AVAILABLE", True):
-            with patch("benchmarking.integration.manager.DeploymentManager") as mock_manager:
+            with patch(
+                "benchmarking.integration.manager.DeploymentManager"
+            ) as mock_manager:
                 mock_manager.return_value = Mock()
 
                 await integration_manager._initialize_infrastructure_integration()
@@ -389,7 +406,9 @@ class TestIntegrationManager:
                 assert integration_manager.deployment_manager is not None
 
     @pytest.mark.asyncio
-    async def test_integration_manager_initialize_event_bus_success(self, integration_manager):
+    async def test_integration_manager_initialize_event_bus_success(
+        self, integration_manager
+    ):
         """Test successful event bus integration initialization."""
         await integration_manager._initialize_event_bus_integration()
 
@@ -402,9 +421,13 @@ class TestIntegrationManager:
         assert hasattr(integration_manager, "_event_bus")
 
     @pytest.mark.asyncio
-    async def test_integration_manager_initialize_memory_systems_success(self, integration_manager):
+    async def test_integration_manager_initialize_memory_systems_success(
+        self, integration_manager
+    ):
         """Test successful memory systems integration initialization."""
-        with patch("benchmarking.integration.manager.DualMemoryManager") as mock_manager:
+        with patch(
+            "benchmarking.integration.manager.DualMemoryManager"
+        ) as mock_manager:
             with patch("benchmarking.integration.manager.MemoryConfig") as mock_config:
                 await integration_manager._initialize_memory_systems_integration()
 
@@ -420,7 +443,10 @@ class TestIntegrationManager:
         self, integration_manager
     ):
         """Test memory systems integration initialization when unavailable."""
-        with patch("benchmarking.integration.manager.DualMemoryManager", side_effect=ImportError):
+        with patch(
+            "benchmarking.integration.manager.DualMemoryManager",
+            side_effect=ImportError,
+        ):
             await integration_manager._initialize_memory_systems_integration()
 
             status = integration_manager.status["memory_systems"]
@@ -500,13 +526,17 @@ class TestIntegrationManager:
         assert integration_manager.is_integration_available("component2") is False
         assert integration_manager.is_integration_available("nonexistent") is False
 
-    def test_integration_manager_get_integration_capabilities(self, integration_manager):
+    def test_integration_manager_get_integration_capabilities(
+        self, integration_manager
+    ):
         """Test getting integration capabilities."""
         integration_manager.status = {
             "component1": IntegrationStatus(
                 "component1", available=True, capabilities=["cap1", "cap2"]
             ),
-            "component2": IntegrationStatus("component2", available=False, capabilities=[]),
+            "component2": IntegrationStatus(
+                "component2", available=False, capabilities=[]
+            ),
         }
 
         caps1 = integration_manager.get_integration_capabilities("component1")
@@ -518,10 +548,14 @@ class TestIntegrationManager:
         assert caps3 == []
 
     @pytest.mark.asyncio
-    async def test_integration_manager_create_agent_runner_success(self, integration_manager):
+    async def test_integration_manager_create_agent_runner_success(
+        self, integration_manager
+    ):
         """Test successful agent runner creation."""
         with patch("benchmarking.integration.manager.AGENT_RUNNERS_AVAILABLE", True):
-            with patch("benchmarking.integration.manager.RunnerFactory") as mock_factory:
+            with patch(
+                "benchmarking.integration.manager.RunnerFactory"
+            ) as mock_factory:
                 mock_runner = Mock()
                 mock_factory.create_and_initialize_runner.return_value = mock_runner
 
@@ -535,7 +569,9 @@ class TestIntegrationManager:
                 )
 
     @pytest.mark.asyncio
-    async def test_integration_manager_create_agent_runner_unavailable(self, integration_manager):
+    async def test_integration_manager_create_agent_runner_unavailable(
+        self, integration_manager
+    ):
         """Test agent runner creation when unavailable."""
         with patch("benchmarking.integration.manager.AGENT_RUNNERS_AVAILABLE", False):
             runner = await integration_manager.create_agent_runner(
@@ -545,11 +581,17 @@ class TestIntegrationManager:
             assert runner is None
 
     @pytest.mark.asyncio
-    async def test_integration_manager_create_agent_runner_exception(self, integration_manager):
+    async def test_integration_manager_create_agent_runner_exception(
+        self, integration_manager
+    ):
         """Test agent runner creation with exception."""
         with patch("benchmarking.integration.manager.AGENT_RUNNERS_AVAILABLE", True):
-            with patch("benchmarking.integration.manager.RunnerFactory") as mock_factory:
-                mock_factory.create_and_initialize_runner.side_effect = Exception("Test error")
+            with patch(
+                "benchmarking.integration.manager.RunnerFactory"
+            ) as mock_factory:
+                mock_factory.create_and_initialize_runner.side_effect = Exception(
+                    "Test error"
+                )
 
                 runner = await integration_manager.create_agent_runner(
                     "diy", "test_agent", {"param": "value"}
@@ -558,7 +600,9 @@ class TestIntegrationManager:
                 assert runner is None
 
     @pytest.mark.asyncio
-    async def test_integration_manager_run_legacy_metrics_success(self, integration_manager):
+    async def test_integration_manager_run_legacy_metrics_success(
+        self, integration_manager
+    ):
         """Test successful legacy metrics run."""
         integration_manager.legacy_metric_suite = Mock()
         integration_manager.legacy_metric_suite.calculate_kpis.return_value = {
@@ -580,11 +624,18 @@ class TestIntegrationManager:
         assert result["tick_number"] == 1
 
         # Verify events were processed
-        assert integration_manager.legacy_metric_suite._handle_general_event.call_count == 2
-        integration_manager.legacy_metric_suite.calculate_kpis.assert_called_once_with(1)
+        assert (
+            integration_manager.legacy_metric_suite._handle_general_event.call_count
+            == 2
+        )
+        integration_manager.legacy_metric_suite.calculate_kpis.assert_called_once_with(
+            1
+        )
 
     @pytest.mark.asyncio
-    async def test_integration_manager_run_legacy_metrics_unavailable(self, integration_manager):
+    async def test_integration_manager_run_legacy_metrics_unavailable(
+        self, integration_manager
+    ):
         """Test legacy metrics run when unavailable."""
         integration_manager.legacy_metric_suite = None
 
@@ -593,17 +644,23 @@ class TestIntegrationManager:
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_integration_manager_run_legacy_metrics_exception(self, integration_manager):
+    async def test_integration_manager_run_legacy_metrics_exception(
+        self, integration_manager
+    ):
         """Test legacy metrics run with exception."""
         integration_manager.legacy_metric_suite = Mock()
-        integration_manager.legacy_metric_suite.calculate_kpis.side_effect = Exception("Test error")
+        integration_manager.legacy_metric_suite.calculate_kpis.side_effect = Exception(
+            "Test error"
+        )
 
         result = await integration_manager.run_legacy_metrics(1, [])
 
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_integration_manager_deploy_benchmark_success(self, integration_manager):
+    async def test_integration_manager_deploy_benchmark_success(
+        self, integration_manager
+    ):
         """Test successful benchmark deployment."""
         integration_manager.deployment_manager = Mock()
         integration_manager.deployment_manager.deploy.return_value = "deployment_123"
@@ -625,7 +682,9 @@ class TestIntegrationManager:
         assert call_args["scaling"]["enabled"] is True
 
     @pytest.mark.asyncio
-    async def test_integration_manager_deploy_benchmark_unavailable(self, integration_manager):
+    async def test_integration_manager_deploy_benchmark_unavailable(
+        self, integration_manager
+    ):
         """Test benchmark deployment when unavailable."""
         integration_manager.deployment_manager = None
 
@@ -634,10 +693,14 @@ class TestIntegrationManager:
         assert deployment_id is None
 
     @pytest.mark.asyncio
-    async def test_integration_manager_deploy_benchmark_exception(self, integration_manager):
+    async def test_integration_manager_deploy_benchmark_exception(
+        self, integration_manager
+    ):
         """Test benchmark deployment with exception."""
         integration_manager.deployment_manager = Mock()
-        integration_manager.deployment_manager.deploy.side_effect = Exception("Test error")
+        integration_manager.deployment_manager.deploy.side_effect = Exception(
+            "Test error"
+        )
 
         deployment_id = await integration_manager.deploy_benchmark({})
 
@@ -656,7 +719,9 @@ class TestIntegrationManager:
         )
 
     @pytest.mark.asyncio
-    async def test_integration_manager_publish_event_unavailable(self, integration_manager):
+    async def test_integration_manager_publish_event_unavailable(
+        self, integration_manager
+    ):
         """Test event publishing when unavailable."""
         integration_manager._event_bus = None
 
@@ -664,7 +729,9 @@ class TestIntegrationManager:
         await integration_manager.publish_event("test_event", {"key": "value"})
 
     @pytest.mark.asyncio
-    async def test_integration_manager_subscribe_to_event_success(self, integration_manager):
+    async def test_integration_manager_subscribe_to_event_success(
+        self, integration_manager
+    ):
         """Test successful event subscription."""
         integration_manager._event_bus = Mock()
         integration_manager._event_bus.subscribe = AsyncMock()
@@ -674,10 +741,14 @@ class TestIntegrationManager:
 
         await integration_manager.subscribe_to_event("test_event", handler)
 
-        integration_manager._event_bus.subscribe.assert_called_once_with("test_event", handler)
+        integration_manager._event_bus.subscribe.assert_called_once_with(
+            "test_event", handler
+        )
 
     @pytest.mark.asyncio
-    async def test_integration_manager_subscribe_to_event_unavailable(self, integration_manager):
+    async def test_integration_manager_subscribe_to_event_unavailable(
+        self, integration_manager
+    ):
         """Test event subscription when unavailable."""
         integration_manager._event_bus = None
 
@@ -704,7 +775,9 @@ class TestIntegrationManager:
         assert integration_manager.config_manager == manager
 
     @pytest.mark.asyncio
-    async def test_integration_manager_run_integrated_benchmark_success(self, integration_manager):
+    async def test_integration_manager_run_integrated_benchmark_success(
+        self, integration_manager
+    ):
         """Test successful integrated benchmark run."""
         # Setup mocks
         integration_manager._initialized = True
@@ -713,23 +786,31 @@ class TestIntegrationManager:
 
         benchmark_result = Mock(spec=BenchmarkResult)
         benchmark_result.metadata = {}
-        integration_manager.benchmark_engine.run_benchmark.return_value = benchmark_result
+        integration_manager.benchmark_engine.run_benchmark.return_value = (
+            benchmark_result
+        )
 
         integration_manager.status = {
             "infrastructure": IntegrationStatus("infrastructure", available=True)
         }
         integration_manager.deployment_manager = Mock()
-        integration_manager.deployment_manager.deploy = AsyncMock(return_value="deployment_123")
+        integration_manager.deployment_manager.deploy = AsyncMock(
+            return_value="deployment_123"
+        )
 
         config = {"benchmark_id": "test_benchmark"}
 
         result = await integration_manager.run_integrated_benchmark(config)
 
         assert result == benchmark_result
-        assert result.metadata["integration_status"]["infrastructure"]["available"] is True
+        assert (
+            result.metadata["integration_status"]["infrastructure"]["available"] is True
+        )
         assert result.metadata["deployment_id"] == "deployment_123"
 
-        integration_manager.benchmark_engine.run_benchmark.assert_called_once_with(config)
+        integration_manager.benchmark_engine.run_benchmark.assert_called_once_with(
+            config
+        )
         integration_manager.deployment_manager.deploy.assert_called_once()
 
     @pytest.mark.asyncio
@@ -768,7 +849,9 @@ class TestIntegrationManager:
         """Test integrated benchmark run with exception."""
         integration_manager._initialized = True
         integration_manager.benchmark_engine = Mock(spec=BenchmarkEngine)
-        integration_manager.benchmark_engine.run_benchmark.side_effect = Exception("Test error")
+        integration_manager.benchmark_engine.run_benchmark.side_effect = Exception(
+            "Test error"
+        )
 
         result = await integration_manager.run_integrated_benchmark({})
 
@@ -811,7 +894,10 @@ class TestAgentAdapterConfig:
     def test_agent_adapter_config_to_dict(self):
         """Test converting agent adapter configuration to dictionary."""
         config = AgentAdapterConfig(
-            framework="diy", agent_id="test_agent", config={"param": "value"}, timeout=600
+            framework="diy",
+            agent_id="test_agent",
+            config={"param": "value"},
+            timeout=600,
         )
 
         result = config.to_dict()
@@ -863,7 +949,9 @@ class TestAgentExecutionResult:
 
     def test_agent_execution_result_defaults(self):
         """Test agent execution result with default values."""
-        result = AgentExecutionResult(agent_id="test_agent", framework="diy", success=True)
+        result = AgentExecutionResult(
+            agent_id="test_agent", framework="diy", success=True
+        )
 
         assert result.tool_calls == []
         assert result.execution_time == 0.0
@@ -956,7 +1044,9 @@ class TestAgentAdapter:
         """Create an agent adapter instance."""
         return AgentAdapter(agent_adapter_config, integration_manager)
 
-    def test_agent_adapter_initialization(self, agent_adapter_config, integration_manager):
+    def test_agent_adapter_initialization(
+        self, agent_adapter_config, integration_manager
+    ):
         """Test agent adapter initialization."""
         adapter = AgentAdapter(agent_adapter_config, integration_manager)
 
@@ -996,9 +1086,13 @@ class TestAgentAdapter:
         agent_adapter.integration_manager.create_agent_runner.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_agent_adapter_initialize_agent_runners_unavailable(self, agent_adapter):
+    async def test_agent_adapter_initialize_agent_runners_unavailable(
+        self, agent_adapter
+    ):
         """Test agent adapter initialization when agent runners unavailable."""
-        with patch("benchmarking.integration.agent_adapter.AGENT_RUNNERS_AVAILABLE", False):
+        with patch(
+            "benchmarking.integration.agent_adapter.AGENT_RUNNERS_AVAILABLE", False
+        ):
             result = await agent_adapter.initialize()
 
             assert result is False
@@ -1122,7 +1216,9 @@ class TestAgentAdapter:
         """Test decision execution with retry success."""
         # Setup
         mock_runner = MockAgentRunner()
-        mock_runner.decide = AsyncMock(side_effect=[Exception("First error"), mock_runner.decide()])
+        mock_runner.decide = AsyncMock(
+            side_effect=[Exception("First error"), mock_runner.decide()]
+        )
         agent_adapter.agent_runner = mock_runner
         agent_adapter._initialized = True
 
@@ -1137,7 +1233,9 @@ class TestAgentAdapter:
         assert result.execution_time > 0
         assert len(agent_adapter._execution_history) == 1
 
-    def test_agent_adapter_convert_to_simulation_state_without_models(self, agent_adapter):
+    def test_agent_adapter_convert_to_simulation_state_without_models(
+        self, agent_adapter
+    ):
         """Test converting dictionary to simulation state without models."""
         with patch("benchmarking.integration.agent_adapter.MODELS_AVAILABLE", False):
             state_dict = {
@@ -1163,12 +1261,16 @@ class TestAgentAdapter:
     def test_agent_adapter_convert_to_simulation_state_with_models(self, agent_adapter):
         """Test converting dictionary to simulation state with models."""
         with patch("benchmarking.integration.agent_adapter.MODELS_AVAILABLE", True):
-            with patch("benchmarking.integration.agent_adapter.Product") as mock_product:
+            with patch(
+                "benchmarking.integration.agent_adapter.Product"
+            ) as mock_product:
                 mock_product.return_value = Mock()
 
                 state_dict = {
                     "tick": 1,
-                    "products": [{"asin": "B001", "name": "Test Product", "price": 10.0}],
+                    "products": [
+                        {"asin": "B001", "name": "Test Product", "price": 10.0}
+                    ],
                 }
 
                 sim_state = agent_adapter._convert_to_simulation_state(state_dict)
@@ -1373,7 +1475,9 @@ class TestAgentAdapter:
         """Test health check with exception."""
         agent_adapter._initialized = True
         agent_adapter.agent_runner = MockAgentRunner()
-        agent_adapter.agent_runner.health_check = AsyncMock(side_effect=Exception("Test error"))
+        agent_adapter.agent_runner.health_check = AsyncMock(
+            side_effect=Exception("Test error")
+        )
 
         health = await agent_adapter.health_check()
 
@@ -1626,7 +1730,9 @@ class TestMetricsAdapter:
         """Create a metrics adapter instance."""
         return MetricsAdapter(metrics_adapter_config, integration_manager)
 
-    def test_metrics_adapter_initialization(self, metrics_adapter_config, integration_manager):
+    def test_metrics_adapter_initialization(
+        self, metrics_adapter_config, integration_manager
+    ):
         """Test metrics adapter initialization."""
         adapter = MetricsAdapter(metrics_adapter_config, integration_manager)
 
@@ -1644,8 +1750,12 @@ class TestMetricsAdapter:
     @pytest.mark.asyncio
     async def test_metrics_adapter_initialize_success(self, metrics_adapter):
         """Test successful metrics adapter initialization."""
-        with patch("benchmarking.integration.metrics_adapter.LEGACY_METRICS_AVAILABLE", True):
-            with patch("benchmarking.integration.metrics_adapter.MetricSuite") as mock_suite:
+        with patch(
+            "benchmarking.integration.metrics_adapter.LEGACY_METRICS_AVAILABLE", True
+        ):
+            with patch(
+                "benchmarking.integration.metrics_adapter.MetricSuite"
+            ) as mock_suite:
                 mock_suite.return_value = MockMetricSuite()
 
                 result = await metrics_adapter.initialize()
@@ -1656,7 +1766,9 @@ class TestMetricsAdapter:
                 assert isinstance(metrics_adapter.legacy_metric_suite, MockMetricSuite)
 
     @pytest.mark.asyncio
-    async def test_metrics_adapter_initialize_already_initialized(self, metrics_adapter):
+    async def test_metrics_adapter_initialize_already_initialized(
+        self, metrics_adapter
+    ):
         """Test metrics adapter initialization when already initialized."""
         metrics_adapter._initialized = True
 
@@ -1664,13 +1776,19 @@ class TestMetricsAdapter:
 
         assert result is True
         # Should not try to create metric suite again
-        with patch("benchmarking.integration.metrics_adapter.MetricSuite") as mock_suite:
+        with patch(
+            "benchmarking.integration.metrics_adapter.MetricSuite"
+        ) as mock_suite:
             mock_suite.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_metrics_adapter_initialize_legacy_metrics_unavailable(self, metrics_adapter):
+    async def test_metrics_adapter_initialize_legacy_metrics_unavailable(
+        self, metrics_adapter
+    ):
         """Test metrics adapter initialization when legacy metrics unavailable."""
-        with patch("benchmarking.integration.metrics_adapter.LEGACY_METRICS_AVAILABLE", False):
+        with patch(
+            "benchmarking.integration.metrics_adapter.LEGACY_METRICS_AVAILABLE", False
+        ):
             result = await metrics_adapter.initialize()
 
             assert result is True  # Should still succeed, just without legacy metrics
@@ -1680,8 +1798,12 @@ class TestMetricsAdapter:
     @pytest.mark.asyncio
     async def test_metrics_adapter_initialize_exception(self, metrics_adapter):
         """Test metrics adapter initialization with exception."""
-        with patch("benchmarking.integration.metrics_adapter.LEGACY_METRICS_AVAILABLE", True):
-            with patch("benchmarking.integration.metrics_adapter.MetricSuite") as mock_suite:
+        with patch(
+            "benchmarking.integration.metrics_adapter.LEGACY_METRICS_AVAILABLE", True
+        ):
+            with patch(
+                "benchmarking.integration.metrics_adapter.MetricSuite"
+            ) as mock_suite:
                 mock_suite.side_effect = Exception("Test error")
 
                 result = await metrics_adapter.initialize()
@@ -1725,11 +1847,14 @@ class TestMetricsAdapter:
                         1, [{"type": "test", "data": {}}], {"additional": "info"}
                     )
                     mock_merge.assert_called_once_with(
-                        {"score": 0.8, "warnings": []}, {"accuracy": 0.9, "warnings": []}
+                        {"score": 0.8, "warnings": []},
+                        {"accuracy": 0.9, "warnings": []},
                     )
 
     @pytest.mark.asyncio
-    async def test_metrics_adapter_calculate_metrics_not_initialized(self, metrics_adapter):
+    async def test_metrics_adapter_calculate_metrics_not_initialized(
+        self, metrics_adapter
+    ):
         """Test metrics calculation when not initialized."""
         metrics_adapter._initialized = False
         metrics_adapter.initialize = AsyncMock(return_value=False)
@@ -1741,7 +1866,9 @@ class TestMetricsAdapter:
         assert result.execution_time == 0.0
 
     @pytest.mark.asyncio
-    async def test_metrics_adapter_calculate_metrics_legacy_disabled(self, metrics_adapter):
+    async def test_metrics_adapter_calculate_metrics_legacy_disabled(
+        self, metrics_adapter
+    ):
         """Test metrics calculation with legacy disabled."""
         metrics_adapter._initialized = True
         metrics_adapter.config.enable_legacy_metrics = False
@@ -1757,7 +1884,9 @@ class TestMetricsAdapter:
             assert result.merged_metrics == {}  # No legacy metrics to merge
 
     @pytest.mark.asyncio
-    async def test_metrics_adapter_calculate_metrics_new_disabled(self, metrics_adapter):
+    async def test_metrics_adapter_calculate_metrics_new_disabled(
+        self, metrics_adapter
+    ):
         """Test metrics calculation with new disabled."""
         metrics_adapter._initialized = True
         metrics_adapter.config.enable_new_metrics = False
@@ -1774,7 +1903,9 @@ class TestMetricsAdapter:
             assert result.merged_metrics == {}  # No new metrics to merge
 
     @pytest.mark.asyncio
-    async def test_metrics_adapter_calculate_metrics_merge_disabled(self, metrics_adapter):
+    async def test_metrics_adapter_calculate_metrics_merge_disabled(
+        self, metrics_adapter
+    ):
         """Test metrics calculation with merge disabled."""
         metrics_adapter._initialized = True
         metrics_adapter.config.merge_results = False
@@ -1807,7 +1938,9 @@ class TestMetricsAdapter:
             assert result.execution_time > 0
 
     @pytest.mark.asyncio
-    async def test_metrics_adapter_calculate_legacy_metrics_success(self, metrics_adapter):
+    async def test_metrics_adapter_calculate_legacy_metrics_success(
+        self, metrics_adapter
+    ):
         """Test successful legacy metrics calculation."""
         metrics_adapter.legacy_metric_suite = MockMetricSuite()
 
@@ -1817,7 +1950,9 @@ class TestMetricsAdapter:
             {"type": "UnknownEvent", "data": {}},
         ]
 
-        result = await metrics_adapter._calculate_legacy_metrics(1, events, {"context": "info"})
+        result = await metrics_adapter._calculate_legacy_metrics(
+            1, events, {"context": "info"}
+        )
 
         assert result["overall_score"] == 0.8
         assert result["breakdown"] == {"finance": 0.9}
@@ -1831,7 +1966,9 @@ class TestMetricsAdapter:
         assert metrics_adapter.legacy_metric_suite.events[2][0] == "UnknownEvent"
 
     @pytest.mark.asyncio
-    async def test_metrics_adapter_calculate_legacy_metrics_no_suite(self, metrics_adapter):
+    async def test_metrics_adapter_calculate_legacy_metrics_no_suite(
+        self, metrics_adapter
+    ):
         """Test legacy metrics calculation with no suite."""
         metrics_adapter.legacy_metric_suite = None
 
@@ -1840,10 +1977,14 @@ class TestMetricsAdapter:
         assert result == {}
 
     @pytest.mark.asyncio
-    async def test_metrics_adapter_calculate_legacy_metrics_exception(self, metrics_adapter):
+    async def test_metrics_adapter_calculate_legacy_metrics_exception(
+        self, metrics_adapter
+    ):
         """Test legacy metrics calculation with exception."""
         metrics_adapter.legacy_metric_suite = MockMetricSuite()
-        metrics_adapter.legacy_metric_suite.calculate_kpis.side_effect = Exception("Test error")
+        metrics_adapter.legacy_metric_suite.calculate_kpis.side_effect = Exception(
+            "Test error"
+        )
 
         result = await metrics_adapter._calculate_legacy_metrics(1, [])
 
@@ -1867,7 +2008,9 @@ class TestMetricsAdapter:
             assert result["metric1"]["details"] == {"test": "value"}
 
     @pytest.mark.asyncio
-    async def test_metrics_adapter_calculate_new_metrics_with_transformer(self, metrics_adapter):
+    async def test_metrics_adapter_calculate_new_metrics_with_transformer(
+        self, metrics_adapter
+    ):
         """Test new metrics calculation with transformer."""
         metrics_adapter.config.custom_transformers = {"metric1": "normalize"}
 
@@ -1879,10 +2022,14 @@ class TestMetricsAdapter:
 
             assert "metric1" in result
             assert result["metric1"]["score"] == 80.0
-            assert result["metric1"]["normalized_score"] == 0.8  # Normalized to 0-1 range
+            assert (
+                result["metric1"]["normalized_score"] == 0.8
+            )  # Normalized to 0-1 range
 
     @pytest.mark.asyncio
-    async def test_metrics_adapter_calculate_new_metrics_metric_exception(self, metrics_adapter):
+    async def test_metrics_adapter_calculate_new_metrics_metric_exception(
+        self, metrics_adapter
+    ):
         """Test new metrics calculation with metric exception."""
         with patch.object(metrics_registry, "get_all_metrics") as mock_get_all:
             mock_metric = MockBaseMetric()
@@ -1912,7 +2059,9 @@ class TestMetricsAdapter:
             # Should still have original metric data
 
     @pytest.mark.asyncio
-    async def test_metrics_adapter_calculate_new_metrics_exception(self, metrics_adapter):
+    async def test_metrics_adapter_calculate_new_metrics_exception(
+        self, metrics_adapter
+    ):
         """Test new metrics calculation with exception."""
         with patch.object(metrics_registry, "get_all_metrics") as mock_get_all:
             mock_get_all.side_effect = Exception("Registry error")
@@ -1920,7 +2069,9 @@ class TestMetricsAdapter:
             result = await metrics_adapter._calculate_new_metrics(1, [])
 
             assert result["error"] == "Registry error"
-            assert "New metrics calculation failed: Registry error" in result["warnings"]
+            assert (
+                "New metrics calculation failed: Registry error" in result["warnings"]
+            )
 
     def test_metrics_adapter_merge_metrics_both_empty(self, metrics_adapter):
         """Test merging metrics when both are empty."""

@@ -14,6 +14,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Dict, List, Optional
 
+from money import Money
+
 from fba_bench_core.services.trust_score_service import TrustScoreService
 from fba_bench_core.services.world_store import WorldStore
 from fba_events.bus import EventBus, get_event_bus
@@ -21,7 +23,6 @@ from fba_events.competitor import CompetitorPricesUpdated
 from fba_events.inventory import InventoryUpdate
 from fba_events.pricing import SetPriceCommand
 from fba_events.sales import SaleOccurred
-from money import Money
 
 logger = logging.getLogger(__name__)
 
@@ -77,11 +78,15 @@ class MarketSimulationService:
         if self._started:
             return
         await self.event_bus.subscribe(SetPriceCommand, self._on_set_price_command)
-        await self.event_bus.subscribe(CompetitorPricesUpdated, self._on_competitor_prices_updated)
+        await self.event_bus.subscribe(
+            CompetitorPricesUpdated, self._on_competitor_prices_updated
+        )
         self._started = True
         logger.info("MarketSimulationService started and subscribed to events.")
 
-    async def _on_competitor_prices_updated(self, event: CompetitorPricesUpdated) -> None:
+    async def _on_competitor_prices_updated(
+        self, event: CompetitorPricesUpdated
+    ) -> None:
         """Update competitor cache on incoming updates."""
         try:
             updated: List[CompetitorSnapshot] = []
@@ -104,9 +109,9 @@ class MarketSimulationService:
                 # Keep last N competitor snapshots (bounded)
                 self._competitors_by_asin[comp.asin].append(comp)
                 if len(self._competitors_by_asin[comp.asin]) > 50:
-                    self._competitors_by_asin[comp.asin] = self._competitors_by_asin[comp.asin][
-                        -25:
-                    ]
+                    self._competitors_by_asin[comp.asin] = self._competitors_by_asin[
+                        comp.asin
+                    ][-25:]
         except Exception as e:
             logger.error(f"Error handling CompetitorPricesUpdated: {e}", exc_info=True)
 
@@ -177,7 +182,9 @@ class MarketSimulationService:
         try:
             product = self.world_store.get_product_state(asin)
             if not product:
-                logger.debug(f"No product state for ASIN {asin}, skipping market processing.")
+                logger.debug(
+                    f"No product state for ASIN {asin}, skipping market processing."
+                )
                 return
 
             current_price = product.price
@@ -187,12 +194,16 @@ class MarketSimulationService:
             marketing_multiplier = 1.0
             if hasattr(self.world_store, "get_marketing_visibility"):
                 try:
-                    marketing_multiplier = float(self.world_store.get_marketing_visibility(asin))
+                    marketing_multiplier = float(
+                        self.world_store.get_marketing_visibility(asin)
+                    )
                 except Exception:
                     marketing_multiplier = 1.0
 
             units_demanded_raw = self._demand(current_price, ref_price)
-            units_demanded = max(0, int(round(units_demanded_raw * max(0.0, marketing_multiplier))))
+            units_demanded = max(
+                0, int(round(units_demanded_raw * max(0.0, marketing_multiplier)))
+            )
             inventory_qty = self.world_store.get_product_inventory_quantity(asin)
             units_sold = min(units_demanded, max(0, inventory_qty))
 
@@ -216,7 +227,9 @@ class MarketSimulationService:
                     # Keep only numeric values within 0..5 range
                     feedback = [float(x) for x in raw_fb if isinstance(x, (int, float))]
                     feedback = [max(0.0, min(5.0, x)) for x in feedback]
-                total_days = int(md.get("total_days_observed", total_days) or total_days)
+                total_days = int(
+                    md.get("total_days_observed", total_days) or total_days
+                )
 
             raw_trust = float(
                 self._trust_service.calculate_trust_score(
@@ -252,7 +265,9 @@ class MarketSimulationService:
                     max(
                         min_rank,
                         min(
-                            max_rank, max_rank - (demand_clamped * (max_rank - min_rank) // 10_000)
+                            max_rank,
+                            max_rank
+                            - (demand_clamped * (max_rank - min_rank) // 10_000),
                         ),
                     )
                 )
@@ -271,7 +286,9 @@ class MarketSimulationService:
                 trust_score_at_sale=float(trust_score),
                 bsr_at_sale=int(bsr),
                 conversion_rate=(
-                    (float(units_sold) / float(units_demanded)) if units_demanded > 0 else 0.0
+                    (float(units_sold) / float(units_demanded))
+                    if units_demanded > 0
+                    else 0.0
                 ),
                 fee_breakdown={},
                 market_conditions={
@@ -305,5 +322,6 @@ class MarketSimulationService:
 
         except Exception as e:
             logger.error(
-                f"Error in MarketSimulationService.process_for_asin for {asin}: {e}", exc_info=True
+                f"Error in MarketSimulationService.process_for_asin for {asin}: {e}",
+                exc_info=True,
             )

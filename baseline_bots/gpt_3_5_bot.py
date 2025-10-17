@@ -173,8 +173,9 @@ class GPT35Bot:
             from datetime import datetime as _dt
             from uuid import uuid4 as _uuid4
 
-            from events import SetPriceCommand  # type: ignore
             from money import Money  # type: ignore
+
+            from events import SetPriceCommand  # type: ignore
 
             converted: List[Any] = []
             for a in list(actions or []):

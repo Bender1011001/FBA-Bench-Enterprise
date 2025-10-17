@@ -5,12 +5,11 @@ Handles budget allocation, priority multipliers, and resource validation for age
 """
 
 import logging
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 from money import Money
 
-from .models import ResourceAllocationPlan, BusinessPriority
-
+from .models import BusinessPriority
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +42,9 @@ class ResourceManager:
         }
 
         for domain, percentage in default_allocations.items():
-            allocation = Money(int(self.controller.resource_plan.total_budget.cents * percentage))
+            allocation = Money(
+                int(self.controller.resource_plan.total_budget.cents * percentage)
+            )
             self.controller.resource_plan.allocations[domain] = allocation
 
         # Set priority multipliers based on current business priority
@@ -85,7 +86,9 @@ class ResourceManager:
                 "financial_operations": 1.0,
             }
 
-    async def allocate_resources(self, skill_requests: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def allocate_resources(
+        self, skill_requests: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """
         Allocate resources across skill requests based on strategic priorities.
 
@@ -125,7 +128,9 @@ class ResourceManager:
                         "purpose": purpose,
                         "approval_reason": "strategic_alignment",
                     }
-                    total_allocated = Money(total_allocated.cents + requested_amount.cents)
+                    total_allocated = Money(
+                        total_allocated.cents + requested_amount.cents
+                    )
                 else:
                     allocation_decisions["rejected_requests"].append(
                         {
@@ -172,7 +177,9 @@ class ResourceManager:
         # Factor in skill type and current business priority
         skill_name = request.get("skill_name", "")
         domain = self._skill_to_domain(skill_name)
-        priority_multiplier = self.controller.resource_plan.priority_multipliers.get(domain, 1.0)
+        priority_multiplier = self.controller.resource_plan.priority_multipliers.get(
+            domain, 1.0
+        )
 
         # Factor in expected ROI
         expected_roi = request.get("expected_roi", 1.0)
@@ -180,7 +187,12 @@ class ResourceManager:
 
         # Factor in urgency
         urgency = request.get("urgency", "medium")
-        urgency_multiplier = {"low": 0.8, "medium": 1.0, "high": 1.3, "critical": 1.5}.get(urgency, 1.0)
+        urgency_multiplier = {
+            "low": 0.8,
+            "medium": 1.0,
+            "high": 1.3,
+            "critical": 1.5,
+        }.get(urgency, 1.0)
 
         final_score = base_score * priority_multiplier * roi_score * urgency_multiplier
         return min(1.0, final_score)
@@ -215,13 +227,17 @@ class ResourceManager:
 
         # Check if skill is aligned with current strategic focus
         domain = self._skill_to_domain(skill_name)
-        priority_multiplier = self.controller.resource_plan.priority_multipliers.get(domain, 1.0)
+        priority_multiplier = self.controller.resource_plan.priority_multipliers.get(
+            domain, 1.0
+        )
 
         return priority_multiplier >= 1.0
 
     async def _reallocate_resources_for_priority(self):
         """Reallocate resources based on changed business priority."""
-        logger.info(f"Reallocating resources for priority: {self.controller.current_priority.value}")
+        logger.info(
+            f"Reallocating resources for priority: {self.controller.current_priority.value}"
+        )
 
         # Calculate new allocation percentages based on priority
         if self.controller.current_priority == BusinessPriority.SURVIVAL:
@@ -251,7 +267,11 @@ class ResourceManager:
 
         # Update allocations
         for domain, percentage in new_percentages.items():
-            allocation = Money(int(self.controller.resource_plan.total_budget.cents * percentage))
+            allocation = Money(
+                int(self.controller.resource_plan.total_budget.cents * percentage)
+            )
             self.controller.resource_plan.allocations[domain] = allocation
 
-        logger.info(f"Resource reallocation completed for {self.controller.current_priority.value} priority")
+        logger.info(
+            f"Resource reallocation completed for {self.controller.current_priority.value} priority"
+        )

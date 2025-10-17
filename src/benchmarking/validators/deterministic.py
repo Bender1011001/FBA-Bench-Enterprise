@@ -67,7 +67,9 @@ class DeterministicEnvironment:
         # Generate or use provided seed
         self._base_seed = seed if seed is not None else random.randint(0, 2**32 - 1)
 
-        logger.info(f"Initialized deterministic environment with seed: {self._base_seed}")
+        logger.info(
+            f"Initialized deterministic environment with seed: {self._base_seed}"
+        )
 
     @property
     def base_seed(self) -> int:
@@ -84,7 +86,9 @@ class DeterministicEnvironment:
         """Get the current environment state."""
         return self._current_state
 
-    def activate(self, additional_seeds: Optional[Dict[str, int]] = None) -> EnvironmentState:
+    def activate(
+        self, additional_seeds: Optional[Dict[str, int]] = None
+    ) -> EnvironmentState:
         """
         Activate the deterministic environment.
 
@@ -164,7 +168,9 @@ class DeterministicEnvironment:
             environment_variables=dict(os.environ),
         )
 
-    def _set_random_seeds(self, additional_seeds: Optional[Dict[str, int]] = None) -> None:
+    def _set_random_seeds(
+        self, additional_seeds: Optional[Dict[str, int]] = None
+    ) -> None:
         """Set random seeds for all random number generators."""
         additional_seeds = additional_seeds or {}
 
@@ -218,7 +224,9 @@ class DeterministicEnvironment:
         # Restore random seed
         random.seed(state.random_seed)
 
-    def generate_derived_seeds(self, count: int, base_seed: Optional[int] = None) -> List[int]:
+    def generate_derived_seeds(
+        self, count: int, base_seed: Optional[int] = None
+    ) -> List[int]:
         """
         Generate derived seeds for sub-components.
 
@@ -235,7 +243,9 @@ class DeterministicEnvironment:
         rng = random.Random(base)
         return [rng.randint(0, 2**32 - 1) for _ in range(count)]
 
-    def validate_reproducibility(self, state1: EnvironmentState, state2: EnvironmentState) -> bool:
+    def validate_reproducibility(
+        self, state1: EnvironmentState, state2: EnvironmentState
+    ) -> bool:
         """
         Validate if two environment states are equivalent for reproducibility.
 
@@ -277,7 +287,9 @@ class DeterministicEnvironment:
         # Add reproducibility information
         reproducible_config["_reproducibility"] = {
             "base_seed": self._base_seed,
-            "environment_state": self._current_state.__dict__ if self._current_state else None,
+            "environment_state": (
+                self._current_state.__dict__ if self._current_state else None
+            ),
             "timestamp": datetime.now().isoformat(),
         }
 
@@ -322,8 +334,12 @@ class DeterministicEnvironment:
         return {
             "base_seed": self._base_seed,
             "is_active": self._is_active,
-            "current_state": self._current_state.__dict__ if self._current_state else None,
-            "original_state": self._original_state.__dict__ if self._original_state else None,
+            "current_state": (
+                self._current_state.__dict__ if self._current_state else None
+            ),
+            "original_state": (
+                self._original_state.__dict__ if self._original_state else None
+            ),
             "python_version": os.sys.version,
             "platform": os.sys.platform,
             "environment_variables": dict(os.environ),
@@ -345,7 +361,9 @@ class DeterministicContext:
         Args:
             base_seed: Base seed for all contexts
         """
-        self._base_seed = base_seed if base_seed is not None else random.randint(0, 2**32 - 1)
+        self._base_seed = (
+            base_seed if base_seed is not None else random.randint(0, 2**32 - 1)
+        )
         self._context_stack = []
         self._environment = DeterministicEnvironment(self._base_seed)
 
@@ -374,7 +392,9 @@ class DeterministicContext:
             "name": context_name,
             "seed": seed,
             "parent_seed": (
-                self._context_stack[-1]["seed"] if self._context_stack else self._base_seed
+                self._context_stack[-1]["seed"]
+                if self._context_stack
+                else self._base_seed
             ),
         }
 
@@ -441,7 +461,9 @@ class DeterministicContext:
             Generated seed
         """
         # Use hash of context name and parent seed
-        parent_seed = self._context_stack[-1]["seed"] if self._context_stack else self._base_seed
+        parent_seed = (
+            self._context_stack[-1]["seed"] if self._context_stack else self._base_seed
+        )
 
         # Create deterministic seed from context name
         name_hash = hashlib.md5(f"{parent_seed}_{context_name}".encode()).hexdigest()

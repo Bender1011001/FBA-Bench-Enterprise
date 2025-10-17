@@ -1,10 +1,12 @@
-from fastapi import APIRouter, HTTPException
-from fastapi.responses import PlainTextResponse
 from pathlib import Path
+
+from fastapi import APIRouter
+from fastapi.responses import PlainTextResponse
 
 router = APIRouter()
 
 LOG_FILE_PATH = Path("medusa_experiments/logs/medusa_trainer.log")
+
 
 @router.get("/medusa/logs", response_class=PlainTextResponse)
 async def get_medusa_logs():

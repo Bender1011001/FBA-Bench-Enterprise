@@ -55,8 +55,12 @@ class ResearchSummarizationConfig(BaseModel):
     Configuration schema (Pydantic v2) for Research Summarization Scenario.
     """
 
-    num_docs: int = Field(5, ge=1, le=50, description="Number of abstracts to synthesize")
-    max_tokens: int = Field(200, ge=10, le=5000, description="Max tokens allowed for the summary")
+    num_docs: int = Field(
+        5, ge=1, le=50, description="Number of abstracts to synthesize"
+    )
+    max_tokens: int = Field(
+        200, ge=10, le=5000, description="Max tokens allowed for the summary"
+    )
     focus_keywords: Optional[List[str]] = Field(
         default=None,
         description="List of keywords the summary must address; case-insensitive matching",
@@ -208,14 +212,20 @@ async def run(
     hits = 0
     for kw in fk:
         # hit if keyword or its simple plural/singular appears
-        if kw in lowered or (kw.endswith("s") and kw[:-1] in lowered) or (kw + "s") in lowered:
+        if (
+            kw in lowered
+            or (kw.endswith("s") and kw[:-1] in lowered)
+            or (kw + "s") in lowered
+        ):
             hits += 1
 
     # Coverage score combines hits normalized and a brevity bonus (within constraint)
     coverage_score = 0.0
     if fk:
         coverage_score = hits / len(fk)
-    brevity_bonus = 1.0 if length_ok else max(0.0, 1.0 - (tokens - max_tokens) / max(max_tokens, 1))
+    brevity_bonus = (
+        1.0 if length_ok else max(0.0, 1.0 - (tokens - max_tokens) / max(max_tokens, 1))
+    )
     final_score = round(0.7 * coverage_score + 0.3 * brevity_bonus, 4)
 
     return {
@@ -246,4 +256,6 @@ class ResearchSummarizationScenarioAdapter:
         return await globals()["run"](input_payload, runner_callable, timeout_seconds)
 
 
-scenario_registry.register("research_summarization", ResearchSummarizationScenarioAdapter)
+scenario_registry.register(
+    "research_summarization", ResearchSummarizationScenarioAdapter
+)

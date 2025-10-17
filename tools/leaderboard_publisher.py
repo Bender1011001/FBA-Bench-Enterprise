@@ -8,7 +8,6 @@ Uses only Python standard library.
 import argparse
 import csv
 import datetime
-import glob
 import json
 import os
 import shutil
@@ -101,13 +100,13 @@ def load_existing_json(json_path: str) -> List[Dict[str, Any]]:
         print(f"No existing JSON at {json_path}, starting with empty list.")
         return []
     try:
-        with open(json_path, "r") as f:
+        with open(json_path) as f:
             data = json.load(f)
         if not isinstance(data, list):
             print(f"Warning: {json_path} is not a list, starting with empty list.")
             return []
         return data
-    except (json.JSONDecodeError, IOError) as e:
+    except (OSError, json.JSONDecodeError) as e:
         print(f"Error loading {json_path}: {e}. Starting with empty list.")
         return []
 
@@ -150,7 +149,7 @@ def write_json_atomic(json_path: str, data: List[Dict], backup: bool = False) ->
     except Exception as e:
         if os.path.exists(tmp.name):
             os.unlink(tmp.name)
-        raise IOError(f"Failed to write {json_path}: {e}")
+        raise OSError(f"Failed to write {json_path}: {e}")
 
 
 def write_csv(csv_path: str, records: List[Dict]) -> None:
@@ -197,7 +196,7 @@ def write_csv(csv_path: str, records: List[Dict]) -> None:
     except Exception as e:
         if os.path.exists(tmp.name):
             os.unlink(tmp.name)
-        raise IOError(f"Failed to write {csv_path}: {e}")
+        raise OSError(f"Failed to write {csv_path}: {e}")
 
 
 def ingest_tier(results_root: str, tier_dir: str, tier_label: str, run_id: str) -> List[Dict]:
@@ -214,7 +213,7 @@ def ingest_tier(results_root: str, tier_dir: str, tier_label: str, run_id: str) 
     summary_path = tier_path / "summary.json"
     if summary_path.exists():
         try:
-            with open(summary_path, "r") as f:
+            with open(summary_path) as f:
                 summary_data = json.load(f)
             if isinstance(summary_data, list):
                 for model_data in summary_data:
@@ -224,7 +223,7 @@ def ingest_tier(results_root: str, tier_dir: str, tier_label: str, run_id: str) 
                     records.append(normalize_record(model_slug, tier_label, success, metrics, timestamp, run_id))
                 print(f"Ingested {len(records)} records from {summary_path}")
                 return records
-        except (json.JSONDecodeError, KeyError, IOError) as e:
+        except (OSError, json.JSONDecodeError, KeyError) as e:
             print(f"Error parsing {summary_path}: {e}")
 
     # Fall back to per-model *.json files
@@ -240,14 +239,14 @@ def ingest_tier(results_root: str, tier_dir: str, tier_label: str, run_id: str) 
             model_slug = json_file.stem.replace("_", "/")  # Assume filename like deepseek-chat-v3.1_free -> deepseek/chat-v3.1:free (simplified)
             if ":" not in model_slug:
                 model_slug += ":free"  # Default variant if needed
-            with open(json_file, "r") as f:
+            with open(json_file) as f:
                 data = json.load(f)
             success = data.get("success", False)
             metrics = data.get("metrics", {}) or data.get("profit", 0) or {}
             if isinstance(metrics, (int, float)):
                 metrics = {"total_profit": metrics}
             records.append(normalize_record(model_slug, tier_label, success, metrics, timestamp, run_id))
-        except (json.JSONDecodeError, IOError, KeyError) as e:
+        except (OSError, json.JSONDecodeError, KeyError) as e:
             print(f"Error processing {json_file}: {e}")
             continue
 

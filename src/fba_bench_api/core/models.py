@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, model_validator, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class ExperimentStatus(str, Enum):
@@ -234,12 +234,15 @@ class ErrorResponse(BaseModel):
     details: Optional[Dict[str, Any]] = None
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+
 class BenchmarkRunRequest(BaseModel):
     """Request model for running a benchmark with specific agent and scenario."""
 
     agent_id: str = Field(..., description="ID of the agent to benchmark")
     scenario_id: str = Field(..., description="ID of the scenario to run")
-    params: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Optional run parameters")
+    params: Optional[Dict[str, Any]] = Field(
+        default_factory=dict, description="Optional run parameters"
+    )
 
     model_config = ConfigDict(extra="allow")
 
@@ -248,7 +251,8 @@ class RunMetrics(BaseModel):
     """Metrics for a benchmark run."""
 
     metrics: Dict[str, float] = Field(
-        default_factory=dict, description="Key-value pairs of metric names and values (e.g., {'profit': 5000.0, 'efficiency': 0.85})"
+        default_factory=dict,
+        description="Key-value pairs of metric names and values (e.g., {'profit': 5000.0, 'efficiency': 0.85})",
     )
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 

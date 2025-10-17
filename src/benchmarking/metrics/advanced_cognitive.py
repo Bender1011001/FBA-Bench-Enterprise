@@ -19,7 +19,9 @@ class ReasoningTrace:
     """Trace of a reasoning process."""
 
     steps: List[str]
-    logical_connections: List[Tuple[int, int, str]]  # (from_step, to_step, connection_type)
+    logical_connections: List[
+        Tuple[int, int, str]
+    ]  # (from_step, to_step, connection_type)
     confidence_scores: List[float]
     timestamp: datetime
 
@@ -300,7 +302,11 @@ class AdvancedCognitiveMetrics(BaseMetric):
         elif not isinstance(confidence_calibration, list):
             confidence_calibration = []
 
-        if not self_assessments and not reflection_episodes and not confidence_calibration:
+        if (
+            not self_assessments
+            and not reflection_episodes
+            and not confidence_calibration
+        ):
             return 0.0
 
         metacognition_scores: List[float] = []
@@ -321,7 +327,9 @@ class AdvancedCognitiveMetrics(BaseMetric):
                 score = self._evaluate_confidence_calibration(calibration)
                 metacognition_scores.append(score)
 
-        return statistics.mean(metacognition_scores) * 100 if metacognition_scores else 0.0
+        return (
+            statistics.mean(metacognition_scores) * 100 if metacognition_scores else 0.0
+        )
 
     def calculate_multistep_planning(self, data: Dict[str, Any]) -> float:
         """
@@ -376,7 +384,9 @@ class AdvancedCognitiveMetrics(BaseMetric):
                     retention_rate=assessment.get("retention_rate", 0.0),
                     retrieval_speed=assessment.get("retrieval_speed", 0.0),
                     memory_efficiency=assessment.get("memory_efficiency", 0.0),
-                    interference_resistance=assessment.get("interference_resistance", 0.0),
+                    interference_resistance=assessment.get(
+                        "interference_resistance", 0.0
+                    ),
                 )
 
             # Calculate weighted memory score
@@ -393,7 +403,8 @@ class AdvancedCognitiveMetrics(BaseMetric):
                 + assessment.retention_rate * weights["retention_rate"]
                 + assessment.retrieval_speed * weights["retrieval_speed"]
                 + assessment.memory_efficiency * weights["memory_efficiency"]
-                + assessment.interference_resistance * weights["interference_resistance"]
+                + assessment.interference_resistance
+                * weights["interference_resistance"]
             )
 
             memory_scores.append(memory_score)
@@ -534,7 +545,9 @@ class AdvancedCognitiveMetrics(BaseMetric):
                 pred_val = predicted_outcome[aspect]
                 act_val = actual_outcome[aspect]
 
-                if isinstance(pred_val, (int, float)) and isinstance(act_val, (int, float)):
+                if isinstance(pred_val, (int, float)) and isinstance(
+                    act_val, (int, float)
+                ):
                     # Numerical comparison
                     diff = abs(pred_val - act_val)
                     max_val = max(abs(pred_val), abs(act_val))
@@ -557,11 +570,15 @@ class AdvancedCognitiveMetrics(BaseMetric):
             return 0.0
 
         # Calculate pattern similarity
-        similarity = self._calculate_pattern_similarity(expected_pattern, recognized_pattern)
+        similarity = self._calculate_pattern_similarity(
+            expected_pattern, recognized_pattern
+        )
 
         return similarity
 
-    def _calculate_pattern_similarity(self, pattern1: List[Any], pattern2: List[Any]) -> float:
+    def _calculate_pattern_similarity(
+        self, pattern1: List[Any], pattern2: List[Any]
+    ) -> float:
         """Calculate similarity between two patterns."""
         if len(pattern1) != len(pattern2):
             # Handle different length patterns
@@ -650,7 +667,11 @@ class AdvancedCognitiveMetrics(BaseMetric):
         actionability = reflection.get("actionability", 0.0)
 
         # Calculate weighted reflection score
-        weights = {"reflection_depth": 0.4, "insight_quality": 0.4, "actionability": 0.2}
+        weights = {
+            "reflection_depth": 0.4,
+            "insight_quality": 0.4,
+            "actionability": 0.2,
+        }
 
         reflection_score = (
             reflection_depth * weights["reflection_depth"]
@@ -673,7 +694,9 @@ class AdvancedCognitiveMetrics(BaseMetric):
         for conf, acc in zip(confidence_levels, accuracy_levels):
             calibration_error += abs(conf - acc)
 
-        avg_error = calibration_error / len(confidence_levels) if confidence_levels else 0.0
+        avg_error = (
+            calibration_error / len(confidence_levels) if confidence_levels else 0.0
+        )
 
         # Convert error to calibration score
         calibration_score = max(0.0, 1.0 - avg_error)
@@ -688,7 +711,12 @@ class AdvancedCognitiveMetrics(BaseMetric):
         robustness = plan.get("robustness", 0.0)
 
         # Calculate weighted plan score
-        weights = {"completeness": 0.3, "feasibility": 0.3, "optimality": 0.2, "robustness": 0.2}
+        weights = {
+            "completeness": 0.3,
+            "feasibility": 0.3,
+            "optimality": 0.2,
+            "robustness": 0.2,
+        }
 
         plan_score = (
             completeness * weights["completeness"]
@@ -754,7 +782,11 @@ class AdvancedCognitiveMetrics(BaseMetric):
         resource_efficiency = task.get("resource_efficiency", 0.0)
 
         # Calculate weighted adaptation score
-        weights = {"adaptation_speed": 0.3, "adaptation_quality": 0.5, "resource_efficiency": 0.2}
+        weights = {
+            "adaptation_speed": 0.3,
+            "adaptation_quality": 0.5,
+            "resource_efficiency": 0.2,
+        }
 
         adaptation_score = (
             adaptation_speed * weights["adaptation_speed"]

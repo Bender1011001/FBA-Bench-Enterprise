@@ -16,7 +16,11 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from benchmarking.validators.audit_trail import AuditEvent, AuditTrail, AuditTrailManager
+from benchmarking.validators.audit_trail import (
+    AuditEvent,
+    AuditTrail,
+    AuditTrailManager,
+)
 from benchmarking.validators.deterministic import (
     DeterministicContext,
     DeterministicEnvironment,
@@ -55,11 +59,15 @@ class TestEnvironmentState:
     def test_hash_calculation(self):
         """Test hash calculation consistency."""
         state1 = EnvironmentState(
-            random_seed=42, python_hash_seed=123, environment_variables={"TEST_VAR": "test_value"}
+            random_seed=42,
+            python_hash_seed=123,
+            environment_variables={"TEST_VAR": "test_value"},
         )
 
         state2 = EnvironmentState(
-            random_seed=42, python_hash_seed=123, environment_variables={"TEST_VAR": "test_value"}
+            random_seed=42,
+            python_hash_seed=123,
+            environment_variables={"TEST_VAR": "test_value"},
         )
 
         # Same state should produce same hash
@@ -67,7 +75,9 @@ class TestEnvironmentState:
 
         # Different state should produce different hash
         state3 = EnvironmentState(
-            random_seed=43, python_hash_seed=123, environment_variables={"TEST_VAR": "test_value"}
+            random_seed=43,
+            python_hash_seed=123,
+            environment_variables={"TEST_VAR": "test_value"},
         )
 
         assert state1.state_hash != state3.state_hash
@@ -579,7 +589,9 @@ class TestStatisticalValidator:
         """Test two-sample t-test with insufficient data."""
         validator = StatisticalValidator()
 
-        with pytest.raises(ValueError, match="Both samples must contain at least 2 values"):
+        with pytest.raises(
+            ValueError, match="Both samples must contain at least 2 values"
+        ):
             validator.t_test_two_samples([1], [2, 3])
 
     def test_paired_t_test(self):
@@ -598,7 +610,9 @@ class TestStatisticalValidator:
         """Test paired t-test with different length samples."""
         validator = StatisticalValidator()
 
-        with pytest.raises(ValueError, match="Paired samples must have the same length"):
+        with pytest.raises(
+            ValueError, match="Paired samples must have the same length"
+        ):
             validator.paired_t_test([1, 2, 3], [1, 2])
 
     def test_anova_test(self):
@@ -629,7 +643,9 @@ class TestStatisticalValidator:
 
         assert isinstance(result, HypothesisTestResult)
         assert result.test_name == "Chi-square goodness-of-fit"
-        assert result.null_hypothesis == "Observed frequencies match expected frequencies"
+        assert (
+            result.null_hypothesis == "Observed frequencies match expected frequencies"
+        )
 
     def test_chi_square_test_different_lengths(self):
         """Test chi-square test with different length arrays."""
@@ -663,7 +679,9 @@ class TestStatisticalValidator:
         """Test correlation test with insufficient data."""
         validator = StatisticalValidator()
 
-        with pytest.raises(ValueError, match="Correlation test requires at least 3 observations"):
+        with pytest.raises(
+            ValueError, match="Correlation test requires at least 3 observations"
+        ):
             validator.correlation_test([1, 2], [2, 4])
 
     def test_correlation_test_unknown_method(self):
@@ -693,7 +711,9 @@ class TestStatisticalValidator:
         """Test normality test with insufficient data."""
         validator = StatisticalValidator()
 
-        with pytest.raises(ValueError, match="Normality test requires at least 3 observations"):
+        with pytest.raises(
+            ValueError, match="Normality test requires at least 3 observations"
+        ):
             validator.normality_test([1, 2])
 
     def test_normality_test_large_sample_shapiro(self):
@@ -737,7 +757,9 @@ class TestStatisticalValidator:
         """Test power analysis for ANOVA."""
         validator = StatisticalValidator()
 
-        result = validator.power_analysis(effect_size=0.3, alpha=0.05, power=0.8, test_type="anova")
+        result = validator.power_analysis(
+            effect_size=0.3, alpha=0.05, power=0.8, test_type="anova"
+        )
 
         assert result["test_type"] == "anova"
         assert result["effect_size"] == 0.3
@@ -760,7 +782,9 @@ class TestStatisticalValidator:
         validator = StatisticalValidator()
 
         with pytest.raises(ValueError, match="Unknown test type: unknown"):
-            validator.power_analysis(effect_size=0.5, alpha=0.05, power=0.8, test_type="unknown")
+            validator.power_analysis(
+                effect_size=0.5, alpha=0.05, power=0.8, test_type="unknown"
+            )
 
     def test_validate_results(self):
         """Test results validation."""
@@ -795,7 +819,10 @@ class TestStatisticalValidator:
 
         assert validation["overall_validity"] is False
         assert not validation["metrics"]["metric1"]["is_valid"]
-        assert "High variability detected" in validation["metrics"]["metric1"]["validity_issues"]
+        assert (
+            "High variability detected"
+            in validation["metrics"]["metric1"]["validity_issues"]
+        )
 
     def test_validate_results_small_sample(self):
         """Test results validation with small sample."""
@@ -807,7 +834,10 @@ class TestStatisticalValidator:
 
         assert validation["overall_validity"] is False
         assert not validation["metrics"]["metric1"]["is_valid"]
-        assert "Sample size too small" in validation["metrics"]["metric1"]["validity_issues"]
+        assert (
+            "Sample size too small"
+            in validation["metrics"]["metric1"]["validity_issues"]
+        )
 
 
 class TestComponentVersion:
@@ -1018,8 +1048,12 @@ class TestVersionControlManager:
         self.manager.create_manifest("test_run")
 
         with (
-            patch("benchmarking.validators.version_control.importlib.util.find_spec") as mock_find,
-            patch("benchmarking.validators.version_control.importlib.import_module") as mock_import,
+            patch(
+                "benchmarking.validators.version_control.importlib.util.find_spec"
+            ) as mock_find,
+            patch(
+                "benchmarking.validators.version_control.importlib.import_module"
+            ) as mock_import,
         ):
             # Mock module spec
             mock_spec = Mock()
@@ -1033,7 +1067,9 @@ class TestVersionControlManager:
             mock_module.__version__ = "1.0.0"
             mock_import.return_value = mock_module
 
-            component = self.manager.add_python_module("test_module", {"purpose": "testing"})
+            component = self.manager.add_python_module(
+                "test_module", {"purpose": "testing"}
+            )
 
             assert component.name == "test_module"
             assert component.type == "python_module"
@@ -1045,10 +1081,14 @@ class TestVersionControlManager:
         """Test adding non-existent Python module."""
         self.manager.create_manifest("test_run")
 
-        with patch("benchmarking.validators.version_control.importlib.util.find_spec") as mock_find:
+        with patch(
+            "benchmarking.validators.version_control.importlib.util.find_spec"
+        ) as mock_find:
             mock_find.return_value = None
 
-            with pytest.raises(ImportError, match="Module not found: non_existent_module"):
+            with pytest.raises(
+                ImportError, match="Module not found: non_existent_module"
+            ):
                 self.manager.add_python_module("non_existent_module")
 
     def test_add_model(self):
@@ -1060,7 +1100,9 @@ class TestVersionControlManager:
         test_file.write_text("model content")
 
         component = self.manager.add_model(
-            model_path=str(test_file), model_name="test_model", metadata={"type": "neural_network"}
+            model_path=str(test_file),
+            model_name="test_model",
+            metadata={"type": "neural_network"},
         )
 
         assert component.name == "test_model"
@@ -1077,7 +1119,9 @@ class TestVersionControlManager:
         test_file.write_text("dataset content")
 
         component = self.manager.add_dataset(
-            dataset_path=str(test_file), dataset_name="test_dataset", metadata={"size": "1000_rows"}
+            dataset_path=str(test_file),
+            dataset_name="test_dataset",
+            metadata={"size": "1000_rows"},
         )
 
         assert component.name == "test_dataset"
@@ -1182,7 +1226,10 @@ class TestVersionControlManager:
         test_file1.write_text("content1")
 
         self.manager.add_component(
-            name="component1", component_type="model", path=str(test_file1), version="1.0.0"
+            name="component1",
+            component_type="model",
+            path=str(test_file1),
+            version="1.0.0",
         )
 
         manifest1 = self.manager.get_current_manifest()
@@ -1232,7 +1279,10 @@ class TestVersionControlManager:
         test_file.write_text("test content")
 
         self.manager.add_component(
-            name="test_component", component_type="model", path=str(test_file), version="1.0.0"
+            name="test_component",
+            component_type="model",
+            path=str(test_file),
+            version="1.0.0",
         )
 
         reference_manifest = self.manager.get_current_manifest()
@@ -1247,7 +1297,10 @@ class TestVersionControlManager:
 
         # Should be reproducible since we're using the same files
         assert verification["overall_reproducible"] is True
-        assert verification["results"]["components"]["test_component"]["status"] == "reproducible"
+        assert (
+            verification["results"]["components"]["test_component"]["status"]
+            == "reproducible"
+        )
 
     def test_verify_reproducibility_modified_file(self):
         """Test reproducibility verification with modified file."""
@@ -1258,7 +1311,10 @@ class TestVersionControlManager:
         test_file.write_text("original content")
 
         self.manager.add_component(
-            name="test_component", component_type="model", path=str(test_file), version="1.0.0"
+            name="test_component",
+            component_type="model",
+            path=str(test_file),
+            version="1.0.0",
         )
 
         reference_manifest = self.manager.get_current_manifest()
@@ -1271,7 +1327,10 @@ class TestVersionControlManager:
 
         # Should not be reproducible due to modified file
         assert verification["overall_reproducible"] is False
-        assert verification["results"]["components"]["test_component"]["status"] == "modified"
+        assert (
+            verification["results"]["components"]["test_component"]["status"]
+            == "modified"
+        )
 
     def test_verify_reproducibility_missing_file(self):
         """Test reproducibility verification with missing file."""
@@ -1282,7 +1341,10 @@ class TestVersionControlManager:
         test_file.write_text("test content")
 
         self.manager.add_component(
-            name="test_component", component_type="model", path=str(test_file), version="1.0.0"
+            name="test_component",
+            component_type="model",
+            path=str(test_file),
+            version="1.0.0",
         )
 
         reference_manifest = self.manager.get_current_manifest()
@@ -1295,7 +1357,10 @@ class TestVersionControlManager:
 
         # Should not be reproducible due to missing file
         assert verification["overall_reproducible"] is False
-        assert verification["results"]["components"]["test_component"]["status"] == "missing"
+        assert (
+            verification["results"]["components"]["test_component"]["status"]
+            == "missing"
+        )
 
     def test_calculate_component_hash_file(self):
         """Test hash calculation for file."""
@@ -1359,11 +1424,16 @@ class TestVersionControlManager:
             assert env_info["architecture"] == "x86_64"
             assert env_info["processor"] == "x86_64"
             assert env_info["python_implementation"] == "CPython"
-            assert env_info["environment_variables"] == {"PATH": "/usr/bin", "HOME": "/home/user"}
+            assert env_info["environment_variables"] == {
+                "PATH": "/usr/bin",
+                "HOME": "/home/user",
+            }
 
     def test_capture_git_info(self):
         """Test git info capture."""
-        with patch("benchmarking.validators.version_control.subprocess.run") as mock_run:
+        with patch(
+            "benchmarking.validators.version_control.subprocess.run"
+        ) as mock_run:
             # Mock git commands
             def mock_subprocess(command, **kwargs):
                 result = Mock()
@@ -1388,7 +1458,9 @@ class TestVersionControlManager:
 
     def test_capture_git_info_no_git(self):
         """Test git info capture when git is not available."""
-        with patch("benchmarking.validators.version_control.subprocess.run") as mock_run:
+        with patch(
+            "benchmarking.validators.version_control.subprocess.run"
+        ) as mock_run:
             mock_run.side_effect = FileNotFoundError("git not found")
 
             git_info = self.manager._capture_git_info()
@@ -1523,7 +1595,9 @@ class TestAuditTrail:
             action="test_action",
         )
 
-        with pytest.raises(ValueError, match="Event run_id does not match trail run_id"):
+        with pytest.raises(
+            ValueError, match="Event run_id does not match trail run_id"
+        ):
             trail.add_event(event)
 
     def test_end(self):
@@ -1700,7 +1774,9 @@ class TestAuditTrailManager:
         """Test logging event without active trail."""
         with pytest.raises(ValueError, match="No active audit trail for run"):
             self.manager.log_event(
-                run_id="nonexistent_run", component="test_component", action="test_action"
+                run_id="nonexistent_run",
+                component="test_component",
+                action="test_action",
             )
 
     def test_log_event_with_buffer(self):
@@ -2098,13 +2174,18 @@ class TestReproducibilityValidator:
     def test_validate_reproducibility(self):
         """Test reproducibility validation."""
         # Create reference results
-        reference_results = {"metric1": [1, 2, 3, 4, 5], "metric2": [10, 20, 30, 40, 50]}
+        reference_results = {
+            "metric1": [1, 2, 3, 4, 5],
+            "metric2": [10, 20, 30, 40, 50],
+        }
 
         # Create current results (same as reference)
         current_results = {"metric1": [1, 2, 3, 4, 5], "metric2": [10, 20, 30, 40, 50]}
 
         report = self.validator.validate_reproducibility(
-            reference_results=reference_results, current_results=current_results, tolerance=0.01
+            reference_results=reference_results,
+            current_results=current_results,
+            tolerance=0.01,
         )
 
         assert isinstance(report, ReproducibilityReport)
@@ -2133,7 +2214,10 @@ class TestReproducibilityValidator:
 
     def test_validate_reproducibility_not_reproducible(self):
         """Test reproducibility validation with non-reproducible results."""
-        reference_results = {"metric1": [1, 2, 3, 4, 5], "metric2": [10, 20, 30, 40, 50]}
+        reference_results = {
+            "metric1": [1, 2, 3, 4, 5],
+            "metric2": [10, 20, 30, 40, 50],
+        }
 
         # Create current results (different from reference)
         current_results = {
@@ -2142,7 +2226,9 @@ class TestReproducibilityValidator:
         }
 
         report = self.validator.validate_reproducibility(
-            reference_results=reference_results, current_results=current_results, tolerance=0.01
+            reference_results=reference_results,
+            current_results=current_results,
+            tolerance=0.01,
         )
 
         assert report.overall_reproducible is False
@@ -2151,19 +2237,26 @@ class TestReproducibilityValidator:
 
     def test_validate_reproducibility_missing_metric(self):
         """Test reproducibility validation with missing metric."""
-        reference_results = {"metric1": [1, 2, 3, 4, 5], "metric2": [10, 20, 30, 40, 50]}
+        reference_results = {
+            "metric1": [1, 2, 3, 4, 5],
+            "metric2": [10, 20, 30, 40, 50],
+        }
 
         # Create current results (missing metric2)
         current_results = {"metric1": [1, 2, 3, 4, 5]}
 
         report = self.validator.validate_reproducibility(
-            reference_results=reference_results, current_results=current_results, tolerance=0.01
+            reference_results=reference_results,
+            current_results=current_results,
+            tolerance=0.01,
         )
 
         assert report.overall_reproducible is False
         assert report.metric_results["metric1"]["reproducible"] is True
         assert report.metric_results["metric2"]["reproducible"] is False
-        assert "Missing in current results" in report.metric_results["metric2"]["issues"]
+        assert (
+            "Missing in current results" in report.metric_results["metric2"]["issues"]
+        )
 
     def test_validate_reproducibility_extra_metric(self):
         """Test reproducibility validation with extra metric."""
@@ -2173,13 +2266,17 @@ class TestReproducibilityValidator:
         current_results = {"metric1": [1, 2, 3, 4, 5], "metric2": [10, 20, 30, 40, 50]}
 
         report = self.validator.validate_reproducibility(
-            reference_results=reference_results, current_results=current_results, tolerance=0.01
+            reference_results=reference_results,
+            current_results=current_results,
+            tolerance=0.01,
         )
 
         assert report.overall_reproducible is False
         assert report.metric_results["metric1"]["reproducible"] is True
         assert report.metric_results["metric2"]["reproducible"] is False
-        assert "Missing in reference results" in report.metric_results["metric2"]["issues"]
+        assert (
+            "Missing in reference results" in report.metric_results["metric2"]["issues"]
+        )
 
     def test_validate_reproducibility_different_lengths(self):
         """Test reproducibility validation with different length arrays."""
@@ -2189,7 +2286,9 @@ class TestReproducibilityValidator:
         current_results = {"metric1": [1, 2, 3, 4, 5, 6]}
 
         report = self.validator.validate_reproducibility(
-            reference_results=reference_results, current_results=current_results, tolerance=0.01
+            reference_results=reference_results,
+            current_results=current_results,
+            tolerance=0.01,
         )
 
         assert report.overall_reproducible is False
@@ -2230,28 +2329,34 @@ class TestReproducibilityValidator:
         """Test reproducibility validation with invalid metric data."""
         with pytest.raises(ValueError, match="Metric values must be lists of numbers"):
             self.validator.validate_reproducibility(
-                reference_results={"metric1": "invalid"}, current_results={"metric1": [1, 2, 3]}
+                reference_results={"metric1": "invalid"},
+                current_results={"metric1": [1, 2, 3]},
             )
 
     def test_validate_reproducibility_invalid_current_metric_data(self):
         """Test reproducibility validation with invalid current metric data."""
-        with pytest.raises(ValueError, match="Current metric values must be lists of numbers"):
+        with pytest.raises(
+            ValueError, match="Current metric values must be lists of numbers"
+        ):
             self.validator.validate_reproducibility(
-                reference_results={"metric1": [1, 2, 3]}, current_results={"metric1": "invalid"}
+                reference_results={"metric1": [1, 2, 3]},
+                current_results={"metric1": "invalid"},
             )
 
     def test_validate_reproducibility_empty_metric_data(self):
         """Test reproducibility validation with empty metric data."""
         with pytest.raises(ValueError, match="Metric values cannot be empty"):
             self.validator.validate_reproducibility(
-                reference_results={"metric1": []}, current_results={"metric1": [1, 2, 3]}
+                reference_results={"metric1": []},
+                current_results={"metric1": [1, 2, 3]},
             )
 
     def test_validate_reproducibility_empty_current_metric_data(self):
         """Test reproducibility validation with empty current metric data."""
         with pytest.raises(ValueError, match="Current metric values cannot be empty"):
             self.validator.validate_reproducibility(
-                reference_results={"metric1": [1, 2, 3]}, current_results={"metric1": []}
+                reference_results={"metric1": [1, 2, 3]},
+                current_results={"metric1": []},
             )
 
     def test_validate_reproducibility_non_numeric_data(self):
@@ -2264,7 +2369,9 @@ class TestReproducibilityValidator:
 
     def test_validate_reproducibility_non_numeric_current_data(self):
         """Test reproducibility validation with non-numeric current data."""
-        with pytest.raises(ValueError, match="Current metric values must be lists of numbers"):
+        with pytest.raises(
+            ValueError, match="Current metric values must be lists of numbers"
+        ):
             self.validator.validate_reproducibility(
                 reference_results={"metric1": [1, 2, 3]},
                 current_results={"metric1": [1, 2, "invalid"]},

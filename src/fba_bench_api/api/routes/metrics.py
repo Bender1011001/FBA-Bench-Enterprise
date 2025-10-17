@@ -4,10 +4,10 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter
+from money import Money  # For consistent Money->string defaults
 
 # Import pattern consistent with realtime router to avoid circulars
 from fba_bench_api.core.state import dashboard_service
-from money import Money  # For consistent Money->string defaults
 
 router = APIRouter(prefix="/api/metrics", tags=["Metrics"])
 
@@ -116,7 +116,9 @@ async def get_ledger() -> Dict[str, Any]:
             "total_assets": _money_str(pos.get("total_assets")),
             "total_liabilities": _money_str(pos.get("total_liabilities")),
             "total_equity": _money_str(pos.get("total_equity")),
-            "accounting_identity_valid": bool(pos.get("accounting_identity_valid", True)),
+            "accounting_identity_valid": bool(
+                pos.get("accounting_identity_valid", True)
+            ),
             "identity_difference": _money_str(pos.get("identity_difference")),
             "timestamp": ts_iso,
         }

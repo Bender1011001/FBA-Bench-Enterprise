@@ -31,7 +31,8 @@ class TrustScoreCalculationRequested(Event):
 
     event_name: str = "trust_score.calculation.requested"
     entity_id: str = Field(
-        ..., description="The ID of the entity (e.g., seller) whose score should be updated."
+        ...,
+        description="The ID of the entity (e.g., seller) whose score should be updated.",
     )
     # Use the canonical Money type for financial data in events
     sale_value: Money = Field(

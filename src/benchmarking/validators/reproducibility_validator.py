@@ -100,7 +100,9 @@ class ReproducibilityValidator:
             storage_path: Path to store validation results
         """
         self.storage_path = (
-            Path(storage_path) if storage_path else Path.cwd() / "reproducibility_reports"
+            Path(storage_path)
+            if storage_path
+            else Path.cwd() / "reproducibility_reports"
         )
         self.storage_path.mkdir(parents=True, exist_ok=True)
 
@@ -113,7 +115,9 @@ class ReproducibilityValidator:
         # Unit-test facing history
         self.validation_history: List[ReproducibilityReport] = []
 
-        logger.info(f"Initialized ReproducibilityValidator with storage at: {self.storage_path}")
+        logger.info(
+            f"Initialized ReproducibilityValidator with storage at: {self.storage_path}"
+        )
 
     def validate_reproducibility(
         self,
@@ -191,7 +195,10 @@ class ReproducibilityValidator:
             # Length mismatch handling
             if len(ref_vals) != len(cur_vals):
                 overall_ok = False
-                metric_results[key] = {"reproducible": False, "issues": ["Different array lengths"]}
+                metric_results[key] = {
+                    "reproducible": False,
+                    "issues": ["Different array lengths"],
+                }
                 continue
 
             # Numeric comparison within tolerance (safe to cast now)
@@ -241,7 +248,11 @@ class ReproducibilityValidator:
                     passed=is_active,
                     score=1.0 if is_active else 0.0,
                     details={"is_active": is_active},
-                    issues=["Deterministic environment not active"] if not is_active else [],
+                    issues=(
+                        ["Deterministic environment not active"]
+                        if not is_active
+                        else []
+                    ),
                 )
             )
 
@@ -301,28 +312,39 @@ class ReproducibilityValidator:
         return results
 
     def _validate_version_control(
-        self, run_id: str, reference_manifest: Optional[VersionManifest], audit_trail: AuditTrail
+        self,
+        run_id: str,
+        reference_manifest: Optional[VersionManifest],
+        audit_trail: AuditTrail,
     ) -> List[ValidationResult]:
         """Validate version control."""
         results = []
 
         try:
             # Create current manifest
-            current_manifest = self.version_manager.create_manifest(f"validation_{run_id}")
+            current_manifest = self.version_manager.create_manifest(
+                f"validation_{run_id}"
+            )
 
             # Add common components
             try:
-                self.version_manager.add_python_module("numpy", {"purpose": "numerical_computing"})
+                self.version_manager.add_python_module(
+                    "numpy", {"purpose": "numerical_computing"}
+                )
             except ImportError:
                 pass
 
             try:
-                self.version_manager.add_python_module("scipy", {"purpose": "statistical_analysis"})
+                self.version_manager.add_python_module(
+                    "scipy", {"purpose": "statistical_analysis"}
+                )
             except ImportError:
                 pass
 
             try:
-                self.version_manager.add_python_module("pandas", {"purpose": "data_analysis"})
+                self.version_manager.add_python_module(
+                    "pandas", {"purpose": "data_analysis"}
+                )
             except ImportError:
                 pass
 
@@ -349,7 +371,9 @@ class ReproducibilityValidator:
                 if total_components == 0:
                     score = 1.0  # No components to compare
                 else:
-                    unchanged_components = len(comparison["differences"]["components"]["unchanged"])
+                    unchanged_components = len(
+                        comparison["differences"]["components"]["unchanged"]
+                    )
                     score = unchanged_components / total_components
 
                 results.append(
@@ -372,7 +396,9 @@ class ReproducibilityValidator:
                 )
 
                 # Verify reproducibility
-                verification = self.version_manager.verify_reproducibility(reference_manifest)
+                verification = self.version_manager.verify_reproducibility(
+                    reference_manifest
+                )
 
                 results.append(
                     ValidationResult(
@@ -468,9 +494,11 @@ class ReproducibilityValidator:
                     continue
                 # Use two-sample t-test (unpaired) as general case; fallback if sizes differ
                 try:
-                    test: StatisticalSummary = self.statistical_validator.calculate_summary(cur)
-                    ref_summary: StatisticalSummary = self.statistical_validator.calculate_summary(
-                        ref
+                    test: StatisticalSummary = (
+                        self.statistical_validator.calculate_summary(cur)
+                    )
+                    ref_summary: StatisticalSummary = (
+                        self.statistical_validator.calculate_summary(ref)
                     )
                     ttest = self.statistical_validator.t_test_two_samples(
                         cur, ref, alpha=0.05, equal_var=False, alternative="two-sided"
@@ -527,7 +555,9 @@ class ReproducibilityValidator:
             )
         return results
 
-    def _validate_audit_trail(self, run_id: str, audit_trail: AuditTrail) -> List[ValidationResult]:
+    def _validate_audit_trail(
+        self, run_id: str, audit_trail: AuditTrail
+    ) -> List[ValidationResult]:
         """Validate audit trail."""
         results = []
 
@@ -556,7 +586,11 @@ class ReproducibilityValidator:
                     passed=integrity_ok,
                     score=1.0 if integrity_ok else 0.0,
                     details={"checksum": audit_trail.checksum},
-                    issues=["Audit trail integrity check failed"] if not integrity_ok else [],
+                    issues=(
+                        ["Audit trail integrity check failed"]
+                        if not integrity_ok
+                        else []
+                    ),
                 )
             )
 
@@ -572,7 +606,10 @@ class ReproducibilityValidator:
                     check_name="completeness",
                     passed=completeness_score >= 0.8,
                     score=completeness_score,
-                    details={"event_count": event_count, "min_expected": min_expected_events},
+                    details={
+                        "event_count": event_count,
+                        "min_expected": min_expected_events,
+                    },
                     issues=(
                         [f"Insufficient events: {event_count}/{min_expected_events}"]
                         if completeness_score < 0.8
@@ -582,7 +619,9 @@ class ReproducibilityValidator:
             )
 
             # Check for error events
-            error_events = [e for e in audit_trail.events if e.severity in ["error", "critical"]]
+            error_events = [
+                e for e in audit_trail.events if e.severity in ["error", "critical"]
+            ]
             error_rate = len(error_events) / event_count if event_count > 0 else 0.0
 
             error_score = max(0.0, 1.0 - (error_rate * 10))  # Penalize for errors
@@ -593,8 +632,15 @@ class ReproducibilityValidator:
                     check_name="error_rate",
                     passed=error_score >= 0.9,  # Max 1% error rate
                     score=error_score,
-                    details={"error_count": len(error_events), "error_rate": error_rate},
-                    issues=[f"High error rate: {error_rate:.2%}"] if error_score < 0.9 else [],
+                    details={
+                        "error_count": len(error_events),
+                        "error_rate": error_rate,
+                    },
+                    issues=(
+                        [f"High error rate: {error_rate:.2%}"]
+                        if error_score < 0.9
+                        else []
+                    ),
                 )
             )
 
@@ -704,13 +750,17 @@ class ReproducibilityValidator:
                                 "Improve audit trail completeness with more detailed event logging"
                             )
                         elif result.check_name == "error_rate":
-                            recommendations.append("Reduce error rate in benchmark execution")
+                            recommendations.append(
+                                "Reduce error rate in benchmark execution"
+                            )
 
         # Remove duplicates and limit to top recommendations
         unique_recommendations = list(set(recommendations))
         return unique_recommendations[:10]  # Top 10 recommendations
 
-    def save_report(self, report: ReproducibilityReport, filename: Optional[str] = None) -> str:
+    def save_report(
+        self, report: ReproducibilityReport, filename: Optional[str] = None
+    ) -> str:
         """Save minimal reproducibility report to disk and return file path."""
         if filename is None:
             filename = f"report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
@@ -762,7 +812,10 @@ class ReproducibilityValidator:
         """
         comparison = {
             "run_ids": [report1.run_id, report2.run_id],
-            "timestamps": [report1.timestamp.isoformat(), report2.timestamp.isoformat()],
+            "timestamps": [
+                report1.timestamp.isoformat(),
+                report2.timestamp.isoformat(),
+            ],
             "overall_scores": [report1.overall_score, report2.overall_score],
             "score_difference": report2.overall_score - report1.overall_score,
             "component_comparisons": {},

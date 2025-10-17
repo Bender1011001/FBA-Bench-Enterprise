@@ -2,12 +2,10 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
-from sqlalchemy import Enum as SAEnum
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import Enum as SAEnum, ForeignKey, Index, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base, JSONEncoded, TimestampMixin
-from sqlalchemy import Index
 
 
 class ExperimentStatusEnum(str):
@@ -25,7 +23,10 @@ class ExperimentORM(TimestampMixin, Base):
     description: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
     agent_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("agents.id", ondelete="RESTRICT"), nullable=False, index=True
+        String(36),
+        ForeignKey("agents.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
     )
     scenario_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 

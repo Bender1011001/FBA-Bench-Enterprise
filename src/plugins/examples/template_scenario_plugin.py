@@ -110,7 +110,11 @@ class TemplateScenarioPlugin(ScenarioPlugin):
                 "real_time_adjustments",
             ],
             # Resource Requirements
-            "resource_requirements": {"memory_mb": 64, "cpu_cores": 1, "storage_mb": 10},
+            "resource_requirements": {
+                "memory_mb": 64,
+                "cpu_cores": 1,
+                "storage_mb": 10,
+            },
             # Documentation
             "documentation_url": "https://docs.fba-bench.org/plugins/scenarios/template",
             "example_configs": [
@@ -148,7 +152,9 @@ class TemplateScenarioPlugin(ScenarioPlugin):
         try:
             self.market_condition = MarketCondition(initial_condition)
         except ValueError:
-            self.logger.warning(f"Invalid market condition '{initial_condition}', using STABLE")
+            self.logger.warning(
+                f"Invalid market condition '{initial_condition}', using STABLE"
+            )
             self.market_condition = MarketCondition.STABLE
 
         # Initialize event queue with scheduled events
@@ -179,7 +185,9 @@ class TemplateScenarioPlugin(ScenarioPlugin):
             # Scenario-Specific Data
             "custom_scenario_data": {
                 "event_count": len(self.event_queue),
-                "next_event_time": self.event_queue[0].timestamp if self.event_queue else None,
+                "next_event_time": (
+                    self.event_queue[0].timestamp if self.event_queue else None
+                ),
                 "market_condition": self.market_condition.value,
             },
         }
@@ -259,7 +267,11 @@ class TemplateScenarioPlugin(ScenarioPlugin):
         # Validate market volatility
         volatility = config.get("market_volatility")
         if volatility is not None:
-            if not isinstance(volatility, (int, float)) or volatility < 0 or volatility > 2.0:
+            if (
+                not isinstance(volatility, (int, float))
+                or volatility < 0
+                or volatility > 2.0
+            ):
                 errors.append("market_volatility must be between 0 and 2.0")
 
         # Validate competitor count
@@ -273,11 +285,15 @@ class TemplateScenarioPlugin(ScenarioPlugin):
         if market_condition is not None:
             valid_conditions = [condition.value for condition in MarketCondition]
             if market_condition not in valid_conditions:
-                errors.append(f"initial_market_condition must be one of: {valid_conditions}")
+                errors.append(
+                    f"initial_market_condition must be one of: {valid_conditions}"
+                )
 
         # Validate custom parameters
         if "custom_parameters" in config:
-            custom_errors = self._validate_custom_parameters(config["custom_parameters"])
+            custom_errors = self._validate_custom_parameters(
+                config["custom_parameters"]
+            )
             errors.extend(custom_errors)
 
         # Validate event configuration
@@ -370,11 +386,16 @@ class TemplateScenarioPlugin(ScenarioPlugin):
             timestamp=duration * 0.75,  # 3/4 through simulation
             impact_magnitude=1.2,
             affected_products=[],
-            event_data={"competitor_strategy": "aggressive_pricing", "market_share": 0.1},
+            event_data={
+                "competitor_strategy": "aggressive_pricing",
+                "market_share": 0.1,
+            },
         )
         self.event_queue.append(late_event)
 
-    async def _generate_product_catalog(self, config: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def _generate_product_catalog(
+        self, config: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Generate a product catalog for the scenario."""
         product_count = config.get("product_count", 5)
 
@@ -393,7 +414,9 @@ class TemplateScenarioPlugin(ScenarioPlugin):
 
         return products
 
-    async def _define_market_segments(self, config: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def _define_market_segments(
+        self, config: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Define market segments for the scenario."""
         return [
             {
@@ -433,7 +456,9 @@ class TemplateScenarioPlugin(ScenarioPlugin):
         new_volatility = event_data.get("new_volatility", 0.5)
         duration = event_data.get("duration_days", 1)
 
-        self.logger.info(f"Market volatility changed to {new_volatility} for {duration} days")
+        self.logger.info(
+            f"Market volatility changed to {new_volatility} for {duration} days"
+        )
 
         # Update scenario state
         self.custom_parameters["current_volatility"] = new_volatility
@@ -447,7 +472,9 @@ class TemplateScenarioPlugin(ScenarioPlugin):
                 impact_magnitude=1.0,
                 affected_products=[],
                 event_data={
-                    "original_volatility": self.custom_parameters.get("market_volatility", 0.3)
+                    "original_volatility": self.custom_parameters.get(
+                        "market_volatility", 0.3
+                    )
                 },
             )
             self.event_queue.append(restore_event)
@@ -469,7 +496,9 @@ class TemplateScenarioPlugin(ScenarioPlugin):
         affected_products = event_data.get("affected_products", [])
         spike_magnitude = event_data.get("spike_magnitude", 2.0)
 
-        self.logger.info(f"Demand spike of {spike_magnitude}x for products: {affected_products}")
+        self.logger.info(
+            f"Demand spike of {spike_magnitude}x for products: {affected_products}"
+        )
 
     async def _handle_supply_disruption(self, event_data: Dict[str, Any]) -> None:
         """Handle supply chain disruption events."""
@@ -501,7 +530,9 @@ class TemplateScenarioPlugin(ScenarioPlugin):
         regulation_type = event_data.get("regulation_type", "unknown")
         impact_severity = event_data.get("impact_severity", "low")
 
-        self.logger.info(f"Regulatory change: {regulation_type} with {impact_severity} impact")
+        self.logger.info(
+            f"Regulatory change: {regulation_type} with {impact_severity} impact"
+        )
 
     async def _handle_seasonal_event(self, event_data: Dict[str, Any]) -> None:
         """Handle seasonal events (holidays, sales periods, etc.)."""
@@ -510,12 +541,16 @@ class TemplateScenarioPlugin(ScenarioPlugin):
 
         self.logger.info(f"Seasonal event: {season_type} for {duration_days} days")
 
-    async def _handle_custom_event(self, event_type: str, event_data: Dict[str, Any]) -> None:
+    async def _handle_custom_event(
+        self, event_type: str, event_data: Dict[str, Any]
+    ) -> None:
         """Handle custom event types specific to this scenario."""
         self.logger.info(f"Custom event: {event_type}")
 
         # Update custom metrics
-        self.scenario_metrics["custom_metric_example"] += event_data.get("metric_delta", 1.0)
+        self.scenario_metrics["custom_metric_example"] += event_data.get(
+            "metric_delta", 1.0
+        )
 
     # Validation Helpers
 
@@ -528,7 +563,9 @@ class TemplateScenarioPlugin(ScenarioPlugin):
 
         return errors
 
-    def _validate_event_configuration(self, events_config: List[Dict[str, Any]]) -> List[str]:
+    def _validate_event_configuration(
+        self, events_config: List[Dict[str, Any]]
+    ) -> List[str]:
         """Validate event configuration."""
         errors = []
 
@@ -542,7 +579,9 @@ class TemplateScenarioPlugin(ScenarioPlugin):
             else:
                 timestamp = event_config["timestamp"]
                 if not isinstance(timestamp, (int, float)) or timestamp < 0:
-                    errors.append(f"Event {i}: 'timestamp' must be a non-negative number")
+                    errors.append(
+                        f"Event {i}: 'timestamp' must be a non-negative number"
+                    )
 
         return errors
 
@@ -564,7 +603,9 @@ class TemplateScenarioPlugin(ScenarioPlugin):
     async def _get_custom_state(self) -> Dict[str, Any]:
         """Get custom state information specific to this scenario."""
         return {
-            "template_specific_metric": self.scenario_metrics.get("custom_metric_example", 0.0),
+            "template_specific_metric": self.scenario_metrics.get(
+                "custom_metric_example", 0.0
+            ),
             "market_stability_index": self._calculate_market_stability(),
             "scenario_complexity_score": len(self.event_queue) * 0.1,
         }
@@ -650,7 +691,8 @@ if __name__ == "__main__":
 
         # Test event injection
         await plugin.inject_event(
-            "demand_spike", {"affected_products": ["TEMPLATE_PROD_001"], "spike_magnitude": 2.5}
+            "demand_spike",
+            {"affected_products": ["TEMPLATE_PROD_001"], "spike_magnitude": 2.5},
         )
 
         # Get scenario state

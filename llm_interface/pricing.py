@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Dict
 
-
 # Prices specified as micro-dollars per token (per-million-token pricing).
 # CostTrackingService divides these values by 1_000_000 to get per-token USD.
 # For the requested ":free" models, we define both input and output as 0.

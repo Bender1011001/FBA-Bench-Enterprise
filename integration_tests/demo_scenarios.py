@@ -36,18 +36,9 @@ except ImportError:
     RunnerFactory = None
     AGENT_RUNNERS_AVAILABLE = False
 
-from baseline_bots.bot_factory import BotFactory
-from constraints.budget_enforcer import BudgetEnforcer
-from event_bus import get_event_bus
-from financial_audit import FinancialAuditService
-
-# Core imports
-from integration_tests import IntegrationTestConfig, logger
-
 # Memory experiment imports
 from memory_experiments.memory_config import MemoryConfig
 from memory_experiments.memory_modes import MemoryMode
-from metrics.metric_suite import MetricSuite
 from redteam.adversarial_event_injector import AdversarialEventInjector
 
 # Adversarial testing imports
@@ -57,6 +48,15 @@ from services.trust_score_service import TrustScoreService
 
 # Services imports
 from services.world_store import WorldStore
+
+from baseline_bots.bot_factory import BotFactory
+from constraints.budget_enforcer import BudgetEnforcer
+from event_bus import get_event_bus
+from financial_audit import FinancialAuditService
+
+# Core imports
+from integration_tests import IntegrationTestConfig, logger
+from metrics.metric_suite import MetricSuite
 from simulation_orchestrator import SimulationConfig, SimulationOrchestrator
 
 

@@ -16,8 +16,10 @@ from typing import Optional
 from fba_events.base import (
     BaseEvent as _BaseEvent,  # Direct import after confirming its existence and structure
 )
-from fba_events.bus import EventBus as _BaseEventBus
-from fba_events.bus import InMemoryEventBus as _InMemoryEventBus
+from fba_events.bus import (
+    EventBus as _BaseEventBus,
+    InMemoryEventBus as _InMemoryEventBus,
+)
 
 
 class EventBus(_InMemoryEventBus):

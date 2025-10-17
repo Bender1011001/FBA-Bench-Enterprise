@@ -45,7 +45,9 @@ def sample_scenario():
 @pytest.fixture
 def sample_scenario_list(sample_scenario):
     """Sample scenario list for testing."""
-    return ScenarioList(scenarios=[sample_scenario], total=1, page=1, page_size=20, total_pages=1)
+    return ScenarioList(
+        scenarios=[sample_scenario], total=1, page=1, page_size=20, total_pages=1
+    )
 
 
 class TestScenariosAPI:
@@ -90,7 +92,9 @@ class TestScenariosAPI:
         )
 
     @patch("fba_bench_api.api.routes.scenarios.get_scenario_service")
-    def test_list_scenarios_service_error(self, mock_get_service, client, mock_scenario_service):
+    def test_list_scenarios_service_error(
+        self, mock_get_service, client, mock_scenario_service
+    ):
         """Test scenario listing with service error."""
         mock_get_service.return_value = mock_scenario_service
         mock_scenario_service.list_scenarios.side_effect = Exception("Service error")
@@ -119,7 +123,9 @@ class TestScenariosAPI:
         mock_scenario_service.get_scenario.assert_called_once_with("tier_0_baseline")
 
     @patch("fba_bench_api.api.routes.scenarios.get_scenario_service")
-    def test_get_scenario_not_found(self, mock_get_service, client, mock_scenario_service):
+    def test_get_scenario_not_found(
+        self, mock_get_service, client, mock_scenario_service
+    ):
         """Test scenario retrieval when scenario not found."""
         mock_get_service.return_value = mock_scenario_service
         mock_scenario_service.get_scenario.return_value = None
@@ -130,7 +136,9 @@ class TestScenariosAPI:
         assert response.json()["detail"] == "Scenario 'nonexistent' not found"
 
     @patch("fba_bench_api.api.routes.scenarios.get_scenario_service")
-    def test_get_scenario_service_error(self, mock_get_service, client, mock_scenario_service):
+    def test_get_scenario_service_error(
+        self, mock_get_service, client, mock_scenario_service
+    ):
         """Test scenario retrieval with service error."""
         mock_get_service.return_value = mock_scenario_service
         mock_scenario_service.get_scenario.side_effect = Exception("Service error")
@@ -156,7 +164,9 @@ class TestScenariosAPI:
         assert data["scenario_id"] == "tier_0_baseline"
         assert data["valid"] is True
         assert data["message"] == "Scenario validation passed"
-        mock_scenario_service.validate_scenario.assert_called_once_with("tier_0_baseline")
+        mock_scenario_service.validate_scenario.assert_called_once_with(
+            "tier_0_baseline"
+        )
 
     @patch("fba_bench_api.api.routes.scenarios.get_scenario_service")
     def test_validate_scenario_failed(
@@ -176,7 +186,9 @@ class TestScenariosAPI:
         assert data["message"] == "Scenario validation failed"
 
     @patch("fba_bench_api.api.routes.scenarios.get_scenario_service")
-    def test_validate_scenario_not_found(self, mock_get_service, client, mock_scenario_service):
+    def test_validate_scenario_not_found(
+        self, mock_get_service, client, mock_scenario_service
+    ):
         """Test scenario validation when scenario not found."""
         mock_get_service.return_value = mock_scenario_service
         mock_scenario_service.get_scenario.return_value = None
@@ -336,7 +348,10 @@ class TestScenarioService:
         )
 
         service = ScenarioService()
-        service._scenario_cache = {"tier_0_baseline": sample_scenario, "tier_1_moderate": scenario2}
+        service._scenario_cache = {
+            "tier_0_baseline": sample_scenario,
+            "tier_1_moderate": scenario2,
+        }
         service._cache_timestamp = sample_scenario.created_at
 
         # Test filtering by difficulty tier
@@ -431,7 +446,9 @@ class TestScenarioService:
         mock_framework_class.assert_not_called()
 
     @patch("scenarios.scenario_framework.ScenarioFramework")
-    def test_validate_scenario_validation_error(self, mock_framework_class, sample_scenario):
+    def test_validate_scenario_validation_error(
+        self, mock_framework_class, sample_scenario
+    ):
         """Test scenario validation with framework error."""
         mock_framework_class.side_effect = Exception("Validation error")
 

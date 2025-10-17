@@ -6,7 +6,8 @@ from pathlib import Path
 from typing import List
 
 import yaml
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
+
 from fba_bench_api.models.template import Template, TemplateResponse
 
 logger = logging.getLogger(__name__)
@@ -36,7 +37,9 @@ async def get_templates() -> TemplateResponse:
             parsed = yaml.safe_load(content) or {}
             stat = file_path.stat()
             size = stat.st_size
-            modified_timestamp = datetime.fromtimestamp(stat.st_mtime, tz=datetime.UTC).isoformat()
+            modified_timestamp = datetime.fromtimestamp(
+                stat.st_mtime, tz=datetime.UTC
+            ).isoformat()
 
             template = Template(
                 name=name,
@@ -44,7 +47,7 @@ async def get_templates() -> TemplateResponse:
                 content=content,
                 parsed=parsed,
                 size=size,
-                modified=modified_timestamp
+                modified=modified_timestamp,
             )
             templates.append(template)
 
@@ -55,14 +58,18 @@ async def get_templates() -> TemplateResponse:
             # Reconstruct template with partial data
             try:
                 stat = file_path.stat()
-                templates.append(Template(
-                    name=file_path.name,
-                    path=str(file_path.relative_to(Path.cwd())),
-                    content=file_path.read_text(encoding="utf-8"),
-                    parsed=parsed,
-                    size=stat.st_size,
-                    modified=datetime.fromtimestamp(stat.st_mtime, tz=datetime.UTC).isoformat()
-                ))
+                templates.append(
+                    Template(
+                        name=file_path.name,
+                        path=str(file_path.relative_to(Path.cwd())),
+                        content=file_path.read_text(encoding="utf-8"),
+                        parsed=parsed,
+                        size=stat.st_size,
+                        modified=datetime.fromtimestamp(
+                            stat.st_mtime, tz=datetime.UTC
+                        ).isoformat(),
+                    )
+                )
             except Exception as read_e:
                 logger.error("Failed to read file %s: %s", file_path, read_e)
         except Exception as e:
@@ -71,6 +78,7 @@ async def get_templates() -> TemplateResponse:
 
     logger.info("Loaded %d templates from configs directory", len(templates))
     return TemplateResponse(templates=templates)
+
 
 # Alias route without trailing slash to avoid 404/redirect issues when clients call "/api/v1/templates"
 @router.get("", response_model=TemplateResponse, include_in_schema=False)

@@ -33,9 +33,13 @@ ExperimentStatus = Literal["draft", "running", "completed", "failed"]
 class ExperimentBase(BaseModel):
     name: str = Field(..., min_length=1, description="Experiment name")
     description: Optional[str] = Field(None, description="Optional description")
-    agent_id: str = Field(..., min_length=1, description="Associated agent id (UUID4 string)")
+    agent_id: str = Field(
+        ..., min_length=1, description="Associated agent id (UUID4 string)"
+    )
     scenario_id: Optional[str] = Field(None, description="Scenario identifier")
-    params: dict = Field(default_factory=dict, description="Arbitrary parameters for the run")
+    params: dict = Field(
+        default_factory=dict, description="Arbitrary parameters for the run"
+    )
 
     @field_validator("name")
     @classmethod
@@ -94,7 +98,9 @@ def get_pm(db: AsyncSession = Depends(get_async_db_session)) -> AsyncPersistence
 _experiment_runs: Dict[str, ExperimentRun] = {}
 
 
-def _prefer_patched_pm(pm_param: Optional[AsyncPersistenceManager]) -> AsyncPersistenceManager:
+def _prefer_patched_pm(
+    pm_param: Optional[AsyncPersistenceManager],
+) -> AsyncPersistenceManager:
     """
     Prefer a patched get_pm() from unit tests when available.
 
@@ -219,7 +225,9 @@ async def _start_experiment_run(run: ExperimentRun) -> None:
             },
         )
 
-        logger.info("Started experiment run %s for experiment %s", run.id, run.experiment_id)
+        logger.info(
+            "Started experiment run %s for experiment %s", run.id, run.experiment_id
+        )
 
     except Exception as e:
         # Mark run as failed
@@ -230,7 +238,11 @@ async def _start_experiment_run(run: ExperimentRun) -> None:
         await _publish_experiment_event(
             run.experiment_id,
             "status",
-            {"run_id": run.id, "status": run.status, "error_message": run.error_message},
+            {
+                "run_id": run.id,
+                "status": run.status,
+                "error_message": run.error_message,
+            },
         )
 
         logger.error("Failed to start experiment run %s: %s", run.id, e)
@@ -242,7 +254,8 @@ async def _stop_experiment_run(run: ExperimentRun) -> None:
     try:
         if run.status != "running":
             raise HTTPException(
-                status.HTTP_400_BAD_REQUEST, f"Cannot stop experiment run in status: {run.status}"
+                status.HTTP_400_BAD_REQUEST,
+                f"Cannot stop experiment run in status: {run.status}",
             )
 
         # In a real implementation, this would:
@@ -262,18 +275,23 @@ async def _stop_experiment_run(run: ExperimentRun) -> None:
             {
                 "run_id": run.id,
                 "status": run.status,
-                "completed_at": run.completed_at.isoformat() if run.completed_at else None,
+                "completed_at": (
+                    run.completed_at.isoformat() if run.completed_at else None
+                ),
             },
         )
 
-        logger.info("Stopped experiment run %s for experiment %s", run.id, run.experiment_id)
+        logger.info(
+            "Stopped experiment run %s for experiment %s", run.id, run.experiment_id
+        )
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error("Failed to stop experiment run %s: %s", run.id, e)
         raise HTTPException(
-            status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to stop experiment run"
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to stop experiment run",
         )
 
 
@@ -326,11 +344,19 @@ async def create_experiment(
     return Experiment(**created)
 
 
-@router.get("/{experiment_id}", response_model=Experiment, description="Retrieve experiment by id")
-async def get_experiment(experiment_id: str, pm: AsyncPersistenceManager = Depends(get_pm)):
+@router.get(
+    "/{experiment_id}",
+    response_model=Experiment,
+    description="Retrieve experiment by id",
+)
+async def get_experiment(
+    experiment_id: str, pm: AsyncPersistenceManager = Depends(get_pm)
+):
     item = await pm.experiments().get(experiment_id)
     if not item:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, f"Experiment '{experiment_id}' not found")
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND, f"Experiment '{experiment_id}' not found"
+        )
     return Experiment(**item)
 
 
@@ -340,11 +366,15 @@ async def get_experiment(experiment_id: str, pm: AsyncPersistenceManager = Depen
     description="Update experiment metadata or transition status",
 )
 async def update_experiment(
-    experiment_id: str, payload: ExperimentUpdate, pm: AsyncPersistenceManager = Depends(get_pm)
+    experiment_id: str,
+    payload: ExperimentUpdate,
+    pm: AsyncPersistenceManager = Depends(get_pm),
 ):
     current = await pm.experiments().get(experiment_id)
     if not current:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, f"Experiment '{experiment_id}' not found")
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND, f"Experiment '{experiment_id}' not found"
+        )
     update_data = payload.model_dump(exclude_unset=True)
     # Handle status transitions
     if "status" in update_data:
@@ -363,12 +393,18 @@ async def update_experiment(
 
 
 @router.delete(
-    "/{experiment_id}", status_code=status.HTTP_204_NO_CONTENT, description="Delete an experiment"
+    "/{experiment_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    description="Delete an experiment",
 )
-async def delete_experiment(experiment_id: str, pm: AsyncPersistenceManager = Depends(get_pm)):
+async def delete_experiment(
+    experiment_id: str, pm: AsyncPersistenceManager = Depends(get_pm)
+):
     ok = await pm.experiments().delete(experiment_id)
     if not ok:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, f"Experiment '{experiment_id}' not found")
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND, f"Experiment '{experiment_id}' not found"
+        )
     return None
 
 
@@ -380,10 +416,14 @@ async def delete_experiment(experiment_id: str, pm: AsyncPersistenceManager = De
     "/{experiment_id}/results",
     description="Retrieve experiment results (placeholder payload if not implemented)",
 )
-async def get_experiment_results(experiment_id: str, pm: AsyncPersistenceManager = Depends(get_pm)):
+async def get_experiment_results(
+    experiment_id: str, pm: AsyncPersistenceManager = Depends(get_pm)
+):
     current = await pm.experiments().get(experiment_id)
     if not current:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, f"Experiment '{experiment_id}' not found")
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND, f"Experiment '{experiment_id}' not found"
+        )
     current_status = current.get("status", "unknown")
     return {
         "experiment_id": experiment_id,
@@ -402,7 +442,9 @@ async def get_experiment_results(experiment_id: str, pm: AsyncPersistenceManager
     description="Start experiment with scenario and agents",
 )
 async def start_experiment(
-    experiment_id: str, payload: ExperimentRunCreate, pm: AsyncPersistenceManager = Depends(get_pm)
+    experiment_id: str,
+    payload: ExperimentRunCreate,
+    pm: AsyncPersistenceManager = Depends(get_pm),
 ):
     """
     Start a new experiment run with the specified scenario and agent participants.
@@ -421,7 +463,9 @@ async def start_experiment(
     # Validate experiment exists and is in correct status
     experiment = await pm.experiments().get(experiment_id)
     if not experiment:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, f"Experiment '{experiment_id}' not found")
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND, f"Experiment '{experiment_id}' not found"
+        )
 
     if experiment.get("status") != "draft":
         raise HTTPException(
@@ -463,7 +507,9 @@ async def start_experiment(
     _experiment_runs[run_id] = run
 
     # Update experiment status to running
-    await pm.experiments().update(experiment_id, {"status": "running", "updated_at": _now()})
+    await pm.experiments().update(
+        experiment_id, {"status": "running", "updated_at": _now()}
+    )
 
     # Start the run asynchronously
     import asyncio
@@ -485,7 +531,9 @@ async def start_experiment(
     response_model=RunStatus,
     description="Get real-time experiment run status",
 )
-async def get_experiment_status(experiment_id: str, pm: AsyncPersistenceManager = Depends(get_pm)):
+async def get_experiment_status(
+    experiment_id: str, pm: AsyncPersistenceManager = Depends(get_pm)
+):
     """
     Get the current status of the active experiment run.
 
@@ -502,25 +550,34 @@ async def get_experiment_status(experiment_id: str, pm: AsyncPersistenceManager 
     # Validate experiment exists
     experiment = await pm.experiments().get(experiment_id)
     if not experiment:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, f"Experiment '{experiment_id}' not found")
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND, f"Experiment '{experiment_id}' not found"
+        )
 
     # Find active run for this experiment
     active_run = None
     for run in _experiment_runs.values():
-        if run.experiment_id == experiment_id and run.status in ["pending", "starting", "running"]:
+        if run.experiment_id == experiment_id and run.status in [
+            "pending",
+            "starting",
+            "running",
+        ]:
             active_run = run
             break
 
     if not active_run:
         # Check for most recent completed/failed run
         recent_runs = [
-            run for run in _experiment_runs.values() if run.experiment_id == experiment_id
+            run
+            for run in _experiment_runs.values()
+            if run.experiment_id == experiment_id
         ]
         if recent_runs:
             active_run = max(recent_runs, key=lambda r: r.updated_at)
         else:
             raise HTTPException(
-                status.HTTP_404_NOT_FOUND, f"No runs found for experiment '{experiment_id}'"
+                status.HTTP_404_NOT_FOUND,
+                f"No runs found for experiment '{experiment_id}'",
             )
 
     return RunStatus(
@@ -560,18 +617,25 @@ async def get_experiment_progress(
     # Validate experiment exists
     experiment = await pm.experiments().get(experiment_id)
     if not experiment:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, f"Experiment '{experiment_id}' not found")
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND, f"Experiment '{experiment_id}' not found"
+        )
 
     # Find active run
     active_run = None
     for run in _experiment_runs.values():
-        if run.experiment_id == experiment_id and run.status in ["pending", "starting", "running"]:
+        if run.experiment_id == experiment_id and run.status in [
+            "pending",
+            "starting",
+            "running",
+        ]:
             active_run = run
             break
 
     if not active_run:
         raise HTTPException(
-            status.HTTP_404_NOT_FOUND, f"No active run found for experiment '{experiment_id}'"
+            status.HTTP_404_NOT_FOUND,
+            f"No active run found for experiment '{experiment_id}'",
         )
 
     # Calculate timing metrics
@@ -601,8 +665,12 @@ async def get_experiment_progress(
             {
                 "agent_id": participant.agent_id,
                 "role": participant.role,
-                "status": "active" if active_run.status == "running" else active_run.status,
-                "current_action": "processing" if active_run.status == "running" else None,
+                "status": (
+                    "active" if active_run.status == "running" else active_run.status
+                ),
+                "current_action": (
+                    "processing" if active_run.status == "running" else None
+                ),
                 "metrics": {
                     "decisions_made": active_run.current_tick or 0,
                     "performance_score": 85.0,  # Mock score
@@ -627,9 +695,13 @@ async def get_experiment_progress(
 
 
 @router.post(
-    "/{experiment_id}/stop", response_model=RunStatus, description="Stop the active experiment run"
+    "/{experiment_id}/stop",
+    response_model=RunStatus,
+    description="Stop the active experiment run",
 )
-async def stop_experiment_run(experiment_id: str, pm: AsyncPersistenceManager = Depends(get_pm)):
+async def stop_experiment_run(
+    experiment_id: str, pm: AsyncPersistenceManager = Depends(get_pm)
+):
     """
     Gracefully stop the active experiment run.
 
@@ -667,10 +739,14 @@ async def stop_experiment_run(experiment_id: str, pm: AsyncPersistenceManager = 
 
     # Best-effort experiment status update; do not fail stop if update fails
     try:
-        await pm.experiments().update(experiment_id, {"status": "completed", "updated_at": _now()})
+        await pm.experiments().update(
+            experiment_id, {"status": "completed", "updated_at": _now()}
+        )
     except Exception as _e:
         # Log at debug level to avoid noisy output in tests
-        logger.debug("Experiment status update failed post-stop for %s: %s", experiment_id, _e)
+        logger.debug(
+            "Experiment status update failed post-stop for %s: %s", experiment_id, _e
+        )
 
     return RunStatus(
         experiment_id=experiment_id,

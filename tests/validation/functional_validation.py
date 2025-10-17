@@ -21,15 +21,6 @@ from unittest.mock import Mock
 # Add project root to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from agents.cognitive_config import CognitiveConfig
-from agents.hierarchical_planner import PlanType, StrategicPlanner, TacticalPlanner
-from agents.skill_config import SkillConfig
-from agents.skill_coordinator import CoordinationStrategy, SkillCoordinator
-from event_bus import get_event_bus
-from events import SaleOccurred, SetPriceCommand, TickEvent
-from infrastructure.performance_monitor import PerformanceMonitor
-from integration.real_world_adapter import RealWorldAdapter
-from learning.episodic_learning import EpisodicLearningManager
 from memory_experiments.dual_memory_manager import DualMemoryManager
 from memory_experiments.memory_config import ConsolidationAlgorithm, MemoryConfig
 from memory_experiments.memory_validator import MemoryValidator
@@ -39,6 +30,16 @@ from observability.trace_analyzer import TraceAnalyzer
 from reproducibility.golden_master import GoldenMaster
 from reproducibility.llm_cache import LLMResponseCache
 from reproducibility.sim_seed import SimSeed
+
+from agents.cognitive_config import CognitiveConfig
+from agents.hierarchical_planner import PlanType, StrategicPlanner, TacticalPlanner
+from agents.skill_config import SkillConfig
+from agents.skill_coordinator import CoordinationStrategy, SkillCoordinator
+from event_bus import get_event_bus
+from events import SaleOccurred, SetPriceCommand, TickEvent
+from infrastructure.performance_monitor import PerformanceMonitor
+from integration.real_world_adapter import RealWorldAdapter
+from learning.episodic_learning import EpisodicLearningManager
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +92,10 @@ class FunctionalValidationSuite:
         # Create temporary directory for test files
         self.temp_dir = tempfile.mkdtemp(prefix="fba_bench_validation_")
 
-        environment = {"temp_dir": self.temp_dir, "test_agent_id": "functional_test_agent"}
+        environment = {
+            "temp_dir": self.temp_dir,
+            "test_agent_id": "functional_test_agent",
+        }
 
         return environment
 
@@ -115,7 +119,9 @@ class FunctionalValidationSuite:
             logger.info("Testing hierarchical planning system")
 
             strategic_planner = StrategicPlanner(agent_id, self.event_bus)
-            tactical_planner = TacticalPlanner(agent_id, strategic_planner, self.event_bus)
+            tactical_planner = TacticalPlanner(
+                agent_id, strategic_planner, self.event_bus
+            )
 
             # Test strategic planning capabilities
             context = {
@@ -143,7 +149,8 @@ class FunctionalValidationSuite:
 
             validation_details["strategic_planning"] = {
                 "strategy_types_tested": len(strategy_tests),
-                "strategy_success_rate": sum(strategy_tests.values()) / len(strategy_tests),
+                "strategy_success_rate": sum(strategy_tests.values())
+                / len(strategy_tests),
                 "strategy_results": strategy_tests,
             }
 
@@ -154,7 +161,9 @@ class FunctionalValidationSuite:
                 )
                 validation_details["tactical_planning"] = {
                     "actions_generated": len(tactical_actions),
-                    "action_types": list(set(action.action_type for action in tactical_actions)),
+                    "action_types": list(
+                        set(action.action_type for action in tactical_actions)
+                    ),
                 }
 
             # Test action alignment validation
@@ -209,10 +218,13 @@ class FunctionalValidationSuite:
                     memory_storage_results.append(False)
 
             # Test memory retrieval
-            query_results = await memory_manager.query_memories("sale", domain="sales", limit=5)
+            query_results = await memory_manager.query_memories(
+                "sale", domain="sales", limit=5
+            )
 
             validation_details["memory_integration"] = {
-                "storage_success_rate": sum(memory_storage_results) / len(memory_storage_results),
+                "storage_success_rate": sum(memory_storage_results)
+                / len(memory_storage_results),
                 "memories_stored": sum(memory_storage_results),
                 "retrieval_working": len(query_results) > 0,
                 "query_results_count": len(query_results),
@@ -236,7 +248,9 @@ class FunctionalValidationSuite:
             trigger_tests = {}
 
             # Test periodic trigger
-            reflection_result = await reflection_loop.trigger_reflection(tick_interval=24)
+            reflection_result = await reflection_loop.trigger_reflection(
+                tick_interval=24
+            )
             trigger_tests["periodic"] = reflection_result is not None
 
             # Test event-driven trigger
@@ -248,12 +262,15 @@ class FunctionalValidationSuite:
                     "timestamp": datetime.now().isoformat(),
                 }
             ]
-            reflection_result = await reflection_loop.trigger_reflection(major_events=major_events)
+            reflection_result = await reflection_loop.trigger_reflection(
+                major_events=major_events
+            )
             trigger_tests["event_driven"] = reflection_result is not None
 
             validation_details["reflection_system"] = {
                 "trigger_types_tested": len(trigger_tests),
-                "trigger_success_rate": sum(trigger_tests.values()) / len(trigger_tests),
+                "trigger_success_rate": sum(trigger_tests.values())
+                / len(trigger_tests),
                 "trigger_results": trigger_tests,
             }
 
@@ -263,12 +280,14 @@ class FunctionalValidationSuite:
             # Test invalid strategy context
             try:
                 invalid_context = {"invalid": "data"}
-                objectives = await strategic_planner.create_strategic_plan(invalid_context, 30)
+                objectives = await strategic_planner.create_strategic_plan(
+                    invalid_context, 30
+                )
                 error_handling_tests["invalid_strategy_context"] = True
             except Exception:
-                error_handling_tests[
-                    "invalid_strategy_context"
-                ] = True  # Expected to handle gracefully
+                error_handling_tests["invalid_strategy_context"] = (
+                    True  # Expected to handle gracefully
+                )
 
             # Test memory overflow
             try:
@@ -305,10 +324,18 @@ class FunctionalValidationSuite:
             # Test memory config validation
             try:
                 test_memory_configs = [
-                    MemoryConfig(consolidation_algorithm=ConsolidationAlgorithm.IMPORTANCE_SCORE),
-                    MemoryConfig(consolidation_algorithm=ConsolidationAlgorithm.RECENCY_FREQUENCY),
-                    MemoryConfig(consolidation_algorithm=ConsolidationAlgorithm.STRATEGIC_VALUE),
-                    MemoryConfig(consolidation_algorithm=ConsolidationAlgorithm.LLM_REFLECTION),
+                    MemoryConfig(
+                        consolidation_algorithm=ConsolidationAlgorithm.IMPORTANCE_SCORE
+                    ),
+                    MemoryConfig(
+                        consolidation_algorithm=ConsolidationAlgorithm.RECENCY_FREQUENCY
+                    ),
+                    MemoryConfig(
+                        consolidation_algorithm=ConsolidationAlgorithm.STRATEGIC_VALUE
+                    ),
+                    MemoryConfig(
+                        consolidation_algorithm=ConsolidationAlgorithm.LLM_REFLECTION
+                    ),
                 ]
 
                 config_tests = []
@@ -321,9 +348,9 @@ class FunctionalValidationSuite:
                     except Exception:
                         config_tests.append(False)
 
-                configuration_tests["memory_config_algorithms"] = sum(config_tests) / len(
+                configuration_tests["memory_config_algorithms"] = sum(
                     config_tests
-                )
+                ) / len(config_tests)
             except Exception as e:
                 logger.error(f"Memory config validation failed: {e}")
                 configuration_tests["memory_config_algorithms"] = 0.0
@@ -331,9 +358,12 @@ class FunctionalValidationSuite:
             # Success criteria
             cognitive_completeness = (
                 validation_details["strategic_planning"]["strategy_success_rate"] > 0.8
-                and validation_details["memory_integration"]["storage_success_rate"] > 0.9
-                and validation_details["reflection_system"]["trigger_success_rate"] > 0.5
-                and sum(error_handling_tests.values()) >= len(error_handling_tests) * 0.8
+                and validation_details["memory_integration"]["storage_success_rate"]
+                > 0.9
+                and validation_details["reflection_system"]["trigger_success_rate"]
+                > 0.5
+                and sum(error_handling_tests.values())
+                >= len(error_handling_tests) * 0.8
             )
 
             duration = time.time() - start_time
@@ -397,7 +427,10 @@ class FunctionalValidationSuite:
                     test_coordinator = SkillCoordinator(
                         agent_id,
                         self.event_bus,
-                        {"coordination_strategy": strategy.value, "max_concurrent_skills": 3},
+                        {
+                            "coordination_strategy": strategy.value,
+                            "max_concurrent_skills": 3,
+                        },
                     )
                     strategy_tests[strategy.value] = True
                 except Exception as e:
@@ -425,11 +458,15 @@ class FunctionalValidationSuite:
             for skill in skills:
                 try:
                     success = await skill_coordinator.register_skill(
-                        skill, skill.get_supported_event_types(), priority_multiplier=1.0
+                        skill,
+                        skill.get_supported_event_types(),
+                        priority_multiplier=1.0,
                     )
                     registration_results[skill.skill_name] = success
                 except Exception as e:
-                    logger.error(f"Skill registration failed for {skill.skill_name}: {e}")
+                    logger.error(
+                        f"Skill registration failed for {skill.skill_name}: {e}"
+                    )
                     registration_results[skill.skill_name] = False
 
             validation_details["skill_registration"] = {
@@ -471,7 +508,9 @@ class FunctionalValidationSuite:
                         "coordinated": len(actions) > 0,
                     }
                 except Exception as e:
-                    logger.error(f"Event coordination failed for {type(event).__name__}: {e}")
+                    logger.error(
+                        f"Event coordination failed for {type(event).__name__}: {e}"
+                    )
                     event_coordination_results[type(event).__name__] = {
                         "actions_generated": 0,
                         "coordinated": False,
@@ -532,7 +571,9 @@ class FunctionalValidationSuite:
                 task = asyncio.create_task(skill_coordinator.dispatch_event(event))
                 concurrent_tasks.append(task)
 
-            concurrent_results = await asyncio.gather(*concurrent_tasks, return_exceptions=True)
+            concurrent_results = await asyncio.gather(
+                *concurrent_tasks, return_exceptions=True
+            )
 
             successful_concurrent = sum(
                 1
@@ -543,7 +584,8 @@ class FunctionalValidationSuite:
             validation_details["concurrent_execution"] = {
                 "concurrent_events": len(concurrent_events),
                 "successful_concurrent": successful_concurrent,
-                "concurrency_success_rate": successful_concurrent / len(concurrent_events),
+                "concurrency_success_rate": successful_concurrent
+                / len(concurrent_events),
             }
 
             # Test 6: Error Handling
@@ -556,7 +598,9 @@ class FunctionalValidationSuite:
                 actions = await skill_coordinator.dispatch_event(invalid_event)
                 error_handling_tests["invalid_event_handling"] = True
             except Exception:
-                error_handling_tests["invalid_event_handling"] = True  # Should handle gracefully
+                error_handling_tests["invalid_event_handling"] = (
+                    True  # Should handle gracefully
+                )
 
             # Test skill failure recovery
             try:
@@ -598,7 +642,10 @@ class FunctionalValidationSuite:
             test_params = [
                 {"coordination_strategy": "priority_based", "max_concurrent_skills": 3},
                 {"coordination_strategy": "round_robin", "max_concurrent_skills": 5},
-                {"coordination_strategy": "resource_optimal", "max_concurrent_skills": 2},
+                {
+                    "coordination_strategy": "resource_optimal",
+                    "max_concurrent_skills": 2,
+                },
             ]
 
             param_tests = []
@@ -611,14 +658,22 @@ class FunctionalValidationSuite:
                 except Exception:
                     param_tests.append(False)
 
-            configuration_tests["coordination_params"] = sum(param_tests) / len(param_tests)
+            configuration_tests["coordination_params"] = sum(param_tests) / len(
+                param_tests
+            )
 
             # Success criteria
             multi_skill_completeness = (
-                validation_details["skill_registration"]["registration_success_rate"] > 0.8
-                and validation_details["concurrent_execution"]["concurrency_success_rate"] > 0.7
-                and validation_details["performance_tracking"]["skills_with_metrics"] > 0
-                and sum(error_handling_tests.values()) >= len(error_handling_tests) * 0.7
+                validation_details["skill_registration"]["registration_success_rate"]
+                > 0.8
+                and validation_details["concurrent_execution"][
+                    "concurrency_success_rate"
+                ]
+                > 0.7
+                and validation_details["performance_tracking"]["skills_with_metrics"]
+                > 0
+                and sum(error_handling_tests.values())
+                >= len(error_handling_tests) * 0.7
             )
 
             duration = time.time() - start_time
@@ -635,7 +690,9 @@ class FunctionalValidationSuite:
             )
 
         except Exception as e:
-            logger.error(f"Multi-skill coordination validation failed: {e}", exc_info=True)
+            logger.error(
+                f"Multi-skill coordination validation failed: {e}", exc_info=True
+            )
             duration = time.time() - start_time
 
             return FunctionalTestResult(
@@ -681,7 +738,9 @@ class FunctionalValidationSuite:
                 random_sequences.append(sequence)
 
             # All sequences should be identical
-            sequences_identical = all(seq == random_sequences[0] for seq in random_sequences)
+            sequences_identical = all(
+                seq == random_sequences[0] for seq in random_sequences
+            )
 
             validation_details["seed_management"] = {
                 "deterministic_generation": sequences_identical,
@@ -772,12 +831,16 @@ class FunctionalValidationSuite:
 
             # Test golden master creation and validation
             golden_master.create_golden_master(test_simulation_data)
-            validation_result = golden_master.validate_against_golden_master(test_simulation_data)
+            validation_result = golden_master.validate_against_golden_master(
+                test_simulation_data
+            )
 
             # Test with modified data (should fail validation)
             modified_data = test_simulation_data.copy()
             modified_data["final_state"]["agent_cash"] = 9999
-            validation_should_fail = not golden_master.validate_against_golden_master(modified_data)
+            validation_should_fail = not golden_master.validate_against_golden_master(
+                modified_data
+            )
 
             validation_details["golden_master"] = {
                 "creation_success": os.path.exists(golden_master_file),
@@ -802,9 +865,13 @@ class FunctionalValidationSuite:
                 llm_cache.set_deterministic_mode(True)
                 missing_hash = "definitely_missing_hash"
                 result = llm_cache.get_cached_response(missing_hash)
-                error_handling_tests["deterministic_cache_miss"] = False  # Should raise exception
+                error_handling_tests["deterministic_cache_miss"] = (
+                    False  # Should raise exception
+                )
             except ValueError:
-                error_handling_tests["deterministic_cache_miss"] = True  # Expected behavior
+                error_handling_tests["deterministic_cache_miss"] = (
+                    True  # Expected behavior
+                )
             except Exception:
                 error_handling_tests["deterministic_cache_miss"] = False
 
@@ -827,7 +894,9 @@ class FunctionalValidationSuite:
                 except Exception:
                     config_tests.append(False)
 
-            configuration_tests["cache_configurations"] = sum(config_tests) / len(config_tests)
+            configuration_tests["cache_configurations"] = sum(config_tests) / len(
+                config_tests
+            )
 
             # Test seed configuration
             try:
@@ -840,7 +909,9 @@ class FunctionalValidationSuite:
                     except Exception:
                         seed_tests.append(False)
 
-                configuration_tests["seed_configurations"] = sum(seed_tests) / len(seed_tests)
+                configuration_tests["seed_configurations"] = sum(seed_tests) / len(
+                    seed_tests
+                )
             except Exception:
                 configuration_tests["seed_configurations"] = 0.0
 
@@ -928,9 +999,11 @@ class FunctionalValidationSuite:
                 trace = {
                     "trace_id": f"trace_{i}",
                     "timestamp": datetime.now() - timedelta(seconds=i),
-                    "component": ["strategic_planner", "skill_coordinator", "memory_manager"][
-                        i % 3
-                    ],
+                    "component": [
+                        "strategic_planner",
+                        "skill_coordinator",
+                        "memory_manager",
+                    ][i % 3],
                     "operation": f"operation_{i % 5}",
                     "duration_ms": 50 + (i % 200),
                     "success": i % 10 != 0,  # 90% success rate
@@ -1011,7 +1084,11 @@ class FunctionalValidationSuite:
             # Generate some activity to monitor
             for i in range(20):
                 await performance_monitor.record_event(
-                    {"event_type": "test_event", "duration_ms": 100 + i * 5, "success": i % 8 != 0}
+                    {
+                        "event_type": "test_event",
+                        "duration_ms": 100 + i * 5,
+                        "success": i % 8 != 0,
+                    }
                 )
 
             # Get performance metrics
@@ -1031,7 +1108,11 @@ class FunctionalValidationSuite:
             # Simulate error conditions
             error_scenarios = [
                 {"type": "timeout", "severity": "high", "component": "llm_batcher"},
-                {"type": "memory_overflow", "severity": "critical", "component": "memory_manager"},
+                {
+                    "type": "memory_overflow",
+                    "severity": "critical",
+                    "component": "memory_manager",
+                },
                 {
                     "type": "coordination_failure",
                     "severity": "medium",
@@ -1042,8 +1123,12 @@ class FunctionalValidationSuite:
             error_detection_results = {}
             for scenario in error_scenarios:
                 try:
-                    detection_result = await trace_analyzer.detect_error_patterns([scenario])
-                    error_detection_results[scenario["type"]] = detection_result is not None
+                    detection_result = await trace_analyzer.detect_error_patterns(
+                        [scenario]
+                    )
+                    error_detection_results[scenario["type"]] = (
+                        detection_result is not None
+                    )
                 except Exception as e:
                     logger.error(f"Error detection failed for {scenario['type']}: {e}")
                     error_detection_results[scenario["type"]] = False
@@ -1062,11 +1147,13 @@ class FunctionalValidationSuite:
             try:
                 corrupted_traces = [{"invalid": "trace"}, None, {"partial": "data"}]
                 result = await trace_analyzer.analyze_traces(corrupted_traces)
-                error_handling_tests["corrupted_trace_data"] = True  # Should handle gracefully
+                error_handling_tests["corrupted_trace_data"] = (
+                    True  # Should handle gracefully
+                )
             except Exception:
-                error_handling_tests[
-                    "corrupted_trace_data"
-                ] = True  # Expected to handle or fail gracefully
+                error_handling_tests["corrupted_trace_data"] = (
+                    True  # Expected to handle or fail gracefully
+                )
 
             # Test alert system with invalid metrics
             try:
@@ -1114,8 +1201,12 @@ class FunctionalValidationSuite:
             # Test trace export (mock CLI functionality)
             try:
                 export_file = os.path.join(environment["temp_dir"], "trace_export.json")
-                export_success = await trace_analyzer.export_traces(test_traces, export_file)
-                cli_tests["trace_export"] = export_success and os.path.exists(export_file)
+                export_success = await trace_analyzer.export_traces(
+                    test_traces, export_file
+                )
+                cli_tests["trace_export"] = export_success and os.path.exists(
+                    export_file
+                )
             except Exception:
                 cli_tests["trace_export"] = False
 
@@ -1123,7 +1214,9 @@ class FunctionalValidationSuite:
             try:
                 report_file = os.path.join(environment["temp_dir"], "alert_report.json")
                 report_success = await alert_system.generate_report(report_file)
-                cli_tests["alert_report"] = report_success and os.path.exists(report_file)
+                cli_tests["alert_report"] = report_success and os.path.exists(
+                    report_file
+                )
             except Exception:
                 cli_tests["alert_report"] = False
 
@@ -1131,8 +1224,11 @@ class FunctionalValidationSuite:
             observability_completeness = (
                 validation_details["trace_analysis"]["analysis_results_available"]
                 and validation_details["alert_system"]["alert_success_rate"] > 0.7
-                and validation_details["performance_monitoring"]["monitoring_system_working"]
-                and validation_details["error_detection"]["detection_success_rate"] > 0.6
+                and validation_details["performance_monitoring"][
+                    "monitoring_system_working"
+                ]
+                and validation_details["error_detection"]["detection_success_rate"]
+                > 0.6
             )
 
             duration = time.time() - start_time
@@ -1229,13 +1325,19 @@ class FunctionalValidationSuite:
                             "final_outcome": 0.7,
                         }
                     )
-                    evaluation_mode_tests["blocks_learning_in_eval"] = False  # Should not allow
+                    evaluation_mode_tests["blocks_learning_in_eval"] = (
+                        False  # Should not allow
+                    )
                 except Exception:
-                    evaluation_mode_tests["blocks_learning_in_eval"] = True  # Expected behavior
+                    evaluation_mode_tests["blocks_learning_in_eval"] = (
+                        True  # Expected behavior
+                    )
 
                 # Test that evaluation data is isolated
                 eval_data = await learning_manager.get_evaluation_metrics()
-                evaluation_mode_tests["evaluation_data_isolated"] = eval_data is not None
+                evaluation_mode_tests["evaluation_data_isolated"] = (
+                    eval_data is not None
+                )
 
                 # Return to learning mode
                 learning_manager.set_evaluation_mode(False)
@@ -1275,8 +1377,12 @@ class FunctionalValidationSuite:
 
             for action in dangerous_actions:
                 try:
-                    safety_check = await real_world_adapter.validate_action_safety(action)
-                    safety_tests[action["type"]] = not safety_check  # Should be blocked (False)
+                    safety_check = await real_world_adapter.validate_action_safety(
+                        action
+                    )
+                    safety_tests[action["type"]] = (
+                        not safety_check
+                    )  # Should be blocked (False)
                 except Exception:
                     safety_tests[action["type"]] = True  # Blocked by exception (good)
 
@@ -1327,7 +1433,9 @@ class FunctionalValidationSuite:
                     ep["episode_id"] == "agent2_episode" for ep in agent1_data
                 )
 
-                isolation_tests["data_isolation"] = agent1_has_own_data and agent1_no_other_data
+                isolation_tests["data_isolation"] = (
+                    agent1_has_own_data and agent1_no_other_data
+                )
 
             except Exception as e:
                 logger.error(f"Data isolation test failed: {e}")
@@ -1342,9 +1450,13 @@ class FunctionalValidationSuite:
             try:
                 invalid_episode = {"invalid": "data", "missing_required_fields": True}
                 await learning_manager.store_episode(invalid_episode)
-                error_handling_tests["invalid_learning_data"] = True  # Should handle gracefully
+                error_handling_tests["invalid_learning_data"] = (
+                    True  # Should handle gracefully
+                )
             except Exception:
-                error_handling_tests["invalid_learning_data"] = True  # Expected to fail gracefully
+                error_handling_tests["invalid_learning_data"] = (
+                    True  # Expected to fail gracefully
+                )
 
             # Test real-world adapter error handling
             try:
@@ -1359,9 +1471,21 @@ class FunctionalValidationSuite:
 
             # Test learning configuration options
             learning_configs = [
-                {"enable_episodic_learning": True, "max_episodes": 1000, "evaluation_mode": False},
-                {"enable_episodic_learning": False, "max_episodes": 500, "evaluation_mode": True},
-                {"enable_episodic_learning": True, "max_episodes": 2000, "privacy_mode": True},
+                {
+                    "enable_episodic_learning": True,
+                    "max_episodes": 1000,
+                    "evaluation_mode": False,
+                },
+                {
+                    "enable_episodic_learning": False,
+                    "max_episodes": 500,
+                    "evaluation_mode": True,
+                },
+                {
+                    "enable_episodic_learning": True,
+                    "max_episodes": 2000,
+                    "privacy_mode": True,
+                },
             ]
 
             config_tests = []
@@ -1374,7 +1498,9 @@ class FunctionalValidationSuite:
                 except Exception:
                     config_tests.append(False)
 
-            configuration_tests["learning_configurations"] = sum(config_tests) / len(config_tests)
+            configuration_tests["learning_configurations"] = sum(config_tests) / len(
+                config_tests
+            )
 
             # Test real-world adapter configuration
             try:
@@ -1395,25 +1521,38 @@ class FunctionalValidationSuite:
 
             # Test learning data export
             try:
-                export_file = os.path.join(environment["temp_dir"], "learning_export.json")
+                export_file = os.path.join(
+                    environment["temp_dir"], "learning_export.json"
+                )
                 export_success = await learning_manager.export_episodes(export_file)
-                cli_tests["learning_export"] = export_success and os.path.exists(export_file)
+                cli_tests["learning_export"] = export_success and os.path.exists(
+                    export_file
+                )
             except Exception:
                 cli_tests["learning_export"] = False
 
             # Test safety validation CLI
             try:
-                safety_report_file = os.path.join(environment["temp_dir"], "safety_report.json")
-                report_success = await real_world_adapter.generate_safety_report(safety_report_file)
-                cli_tests["safety_report"] = report_success and os.path.exists(safety_report_file)
+                safety_report_file = os.path.join(
+                    environment["temp_dir"], "safety_report.json"
+                )
+                report_success = await real_world_adapter.generate_safety_report(
+                    safety_report_file
+                )
+                cli_tests["safety_report"] = report_success and os.path.exists(
+                    safety_report_file
+                )
             except Exception:
                 cli_tests["safety_report"] = False
 
             # Success criteria
             learning_safety_completeness = (
                 validation_details["episodic_learning"]["storage_success_rate"] > 0.8
-                and validation_details["learning_evaluation_separation"]["blocks_learning_in_eval"]
-                and validation_details["real_world_safety"]["safety_blocks_working"] > 0.8
+                and validation_details["learning_evaluation_separation"][
+                    "blocks_learning_in_eval"
+                ]
+                and validation_details["real_world_safety"]["safety_blocks_working"]
+                > 0.8
                 and validation_details["data_isolation"]["data_isolation"]
             )
 
@@ -1431,7 +1570,9 @@ class FunctionalValidationSuite:
             )
 
         except Exception as e:
-            logger.error(f"Learning system safety validation failed: {e}", exc_info=True)
+            logger.error(
+                f"Learning system safety validation failed: {e}", exc_info=True
+            )
             duration = time.time() - start_time
 
             return FunctionalTestResult(
@@ -1472,10 +1613,15 @@ class FunctionalValidationSuite:
                 if result.success:
                     logger.info(f"✅ {result.test_name} passed")
                 else:
-                    logger.error(f"❌ {result.test_name} failed: {result.error_details}")
+                    logger.error(
+                        f"❌ {result.test_name} failed: {result.error_details}"
+                    )
 
             except Exception as e:
-                logger.error(f"Validation {validation_method.__name__} crashed: {e}", exc_info=True)
+                logger.error(
+                    f"Validation {validation_method.__name__} crashed: {e}",
+                    exc_info=True,
+                )
                 results.append(
                     FunctionalTestResult(
                         test_name=validation_method.__name__,
@@ -1507,9 +1653,13 @@ class FunctionalValidationSuite:
             if result.feature_category == "cognitive_loops":
                 feature_completeness.cognitive_loops = result.validation_details
             elif result.feature_category == "multi_skill":
-                feature_completeness.multi_skill_capabilities = result.validation_details
+                feature_completeness.multi_skill_capabilities = (
+                    result.validation_details
+                )
             elif result.feature_category == "reproducibility":
-                feature_completeness.reproducibility_features = result.validation_details
+                feature_completeness.reproducibility_features = (
+                    result.validation_details
+                )
             elif result.feature_category == "observability":
                 feature_completeness.observability_features = result.validation_details
             elif result.feature_category == "learning_safety":
@@ -1544,7 +1694,9 @@ class FunctionalValidationSuite:
         avg_error_handling = (
             error_handling_score / total_validations if total_validations > 0 else 0
         )
-        avg_configuration = configuration_score / total_validations if total_validations > 0 else 0
+        avg_configuration = (
+            configuration_score / total_validations if total_validations > 0 else 0
+        )
         avg_cli = cli_score / total_validations if total_validations > 0 else 0
 
         summary = {
@@ -1552,7 +1704,9 @@ class FunctionalValidationSuite:
             "total_validations": total_validations,
             "passed_validations": passed_validations,
             "failed_validations": failed_validations,
-            "success_rate": passed_validations / total_validations if total_validations > 0 else 0,
+            "success_rate": (
+                passed_validations / total_validations if total_validations > 0 else 0
+            ),
             "feature_completeness": feature_completeness.__dict__,
             "error_handling_score": avg_error_handling,
             "configuration_score": avg_configuration,
@@ -1581,7 +1735,8 @@ async def main():
     """Run functional validation suite."""
     # Configure logging
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     validation_suite = FunctionalValidationSuite()

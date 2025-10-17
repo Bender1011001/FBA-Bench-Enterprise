@@ -3,13 +3,13 @@ Baseline Bot Factory for FBA-Bench.
 Creates simple agent bots that use LLMBatcher for LLM decisions with dynamic model support.
 """
 
-import os
 import asyncio
-import uuid
 import logging
-from typing import Any, Callable, Optional, Dict, List
+import os
+import uuid
+from typing import Any, Callable, Dict, List, Optional
 
-from infrastructure.llm_batcher import LLMBatcher, LLMRequest
+from infrastructure.llm_batcher import LLMBatcher
 
 logger = logging.getLogger(__name__)
 
@@ -86,9 +86,9 @@ class BotFactory:
             # Use OpenRouterBot for real LLM calls
             try:
                 from baseline_bots.openrouter_bot import OpenRouterBot
+                from constraints.agent_gateway import AgentGateway
                 from llm_interface.prompt_adapter import PromptAdapter
                 from llm_interface.response_parser import LLMResponseParser
-                from constraints.agent_gateway import AgentGateway
 
                 # Create dependencies (simple defaults for demo)
                 prompt_adapter = PromptAdapter()

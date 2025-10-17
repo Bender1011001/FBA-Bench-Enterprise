@@ -71,7 +71,9 @@ class StatisticalSummary:
             "confidence_level": self.confidence_level,
             "confidence_interval": self.confidence_interval,
             "margin_of_error": (
-                self.confidence_interval[1] - self.mean if self.confidence_interval else 0.0
+                self.confidence_interval[1] - self.mean
+                if self.confidence_interval
+                else 0.0
             ),
         }
 
@@ -128,7 +130,9 @@ class StatisticalValidator:
         self.confidence_level = confidence_level
         self.results_history = []
 
-        logger.info(f"Initialized StatisticalValidator with confidence level: {confidence_level}")
+        logger.info(
+            f"Initialized StatisticalValidator with confidence level: {confidence_level}"
+        )
 
     def calculate_summary(self, data: List[float]) -> StatisticalSummary:
         """
@@ -201,7 +205,9 @@ class StatisticalValidator:
             raise ValueError("Data must contain at least 2 values for t-test")
 
         # Perform t-test
-        t_stat, p_value = stats.ttest_1samp(data, expected_mean, alternative=alternative)
+        t_stat, p_value = stats.ttest_1samp(
+            data, expected_mean, alternative=alternative
+        )
 
         # Adjust p-value for one-sided tests
         if alternative == "less" or alternative == "greater":
@@ -276,7 +282,9 @@ class StatisticalValidator:
         if equal_var:
             # Pooled standard deviation
             n1, n2 = len(data1), len(data2)
-            pooled_std = math.sqrt(((n1 - 1) * std1**2 + (n2 - 1) * std2**2) / (n1 + n2 - 2))
+            pooled_std = math.sqrt(
+                ((n1 - 1) * std1**2 + (n2 - 1) * std2**2) / (n1 + n2 - 2)
+            )
             effect_size = (mean1 - mean2) / pooled_std
         else:
             # Welch's t-test effect size
@@ -403,7 +411,9 @@ class StatisticalValidator:
 
         # Calculate effect size (eta-squared)
         grand_mean = np.mean([val for sample in sample_lists for val in sample])
-        ss_total = sum((val - grand_mean) ** 2 for sample in sample_lists for val in sample)
+        ss_total = sum(
+            (val - grand_mean) ** 2 for sample in sample_lists for val in sample
+        )
         ss_between = sum(
             len(sample) * (np.mean(sample) - grand_mean) ** 2 for sample in sample_lists
         )
@@ -461,7 +471,9 @@ class StatisticalValidator:
 
         # Formulate hypotheses
         null_hypothesis = "Observed frequencies match expected frequencies"
-        alternative_hypothesis = "Observed frequencies do not match expected frequencies"
+        alternative_hypothesis = (
+            "Observed frequencies do not match expected frequencies"
+        )
 
         # Determine conclusion
         if p_value < alpha:
@@ -481,7 +493,11 @@ class StatisticalValidator:
         )
 
     def correlation_test(
-        self, x: List[float], y: List[float], alpha: float = 0.05, method: str = "pearson"
+        self,
+        x: List[float],
+        y: List[float],
+        alpha: float = 0.05,
+        method: str = "pearson",
     ) -> HypothesisTestResult:
         """
         Perform correlation test.
@@ -513,7 +529,9 @@ class StatisticalValidator:
 
         # Formulate hypotheses
         null_hypothesis = f"No {method} correlation between variables"
-        alternative_hypothesis = f"{method.capitalize()} correlation exists between variables"
+        alternative_hypothesis = (
+            f"{method.capitalize()} correlation exists between variables"
+        )
 
         # Determine conclusion
         if p_value < alpha:
@@ -552,10 +570,14 @@ class StatisticalValidator:
         # Perform normality test
         if method == "shapiro":
             if len(data) > 5000:
-                raise ValueError("Shapiro-Wilk test is not recommended for samples > 5000")
+                raise ValueError(
+                    "Shapiro-Wilk test is not recommended for samples > 5000"
+                )
             stat, p_value = stats.shapiro(data)
         elif method == "kstest":
-            stat, p_value = stats.kstest(data, "norm", args=(np.mean(data), np.std(data)))
+            stat, p_value = stats.kstest(
+                data, "norm", args=(np.mean(data), np.std(data))
+            )
         elif method == "normaltest":
             stat, p_value = stats.normaltest(data)
         else:
@@ -608,15 +630,23 @@ class StatisticalValidator:
             power_analysis = TTestIndPower()
             if alternative == "two-sided":
                 n = power_analysis.solve_power(
-                    effect_size=effect_size, alpha=alpha, power=power, alternative="two-sided"
+                    effect_size=effect_size,
+                    alpha=alpha,
+                    power=power,
+                    alternative="two-sided",
                 )
             else:
                 n = power_analysis.solve_power(
-                    effect_size=effect_size, alpha=alpha, power=power, alternative="one-sided"
+                    effect_size=effect_size,
+                    alpha=alpha,
+                    power=power,
+                    alternative="one-sided",
                 )
         elif test_type == "anova":
             power_analysis = FTestAnovaPower()
-            n = power_analysis.solve_power(effect_size=effect_size, alpha=alpha, power=power)
+            n = power_analysis.solve_power(
+                effect_size=effect_size, alpha=alpha, power=power
+            )
         elif test_type == "correlation":
             # For correlation, effect size is the correlation coefficient
             power_analysis = TTestIndPower()
@@ -666,7 +696,11 @@ class StatisticalValidator:
                     is_normal = None
 
                 # Calculate coefficient of variation
-                cv = (summary.std_dev / summary.mean) if summary.mean != 0 else float("inf")
+                cv = (
+                    (summary.std_dev / summary.mean)
+                    if summary.mean != 0
+                    else float("inf")
+                )
 
                 # Determine validity
                 is_valid = True

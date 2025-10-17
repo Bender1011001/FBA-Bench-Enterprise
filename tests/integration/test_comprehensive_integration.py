@@ -18,6 +18,13 @@ from typing import Any, Dict, List, Optional
 # Add project root to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+from memory_experiments.dual_memory_manager import DualMemoryManager
+from memory_experiments.memory_config import ConsolidationAlgorithm, MemoryConfig
+from memory_experiments.reflection_module import StructuredReflectionLoop
+from observability.trace_analyzer import TraceAnalyzer
+from reproducibility.llm_cache import LLMResponseCache
+from reproducibility.sim_seed import SimSeed
+
 from agents.hierarchical_planner import StrategicPlanner, TacticalPlanner
 from agents.skill_coordinator import SkillCoordinator
 from agents.skill_modules.customer_service import CustomerService
@@ -28,12 +35,6 @@ from event_bus import get_event_bus
 from events import SaleOccurred, TickEvent
 from infrastructure.llm_batcher import LLMBatcher
 from infrastructure.performance_monitor import PerformanceMonitor
-from memory_experiments.dual_memory_manager import DualMemoryManager
-from memory_experiments.memory_config import ConsolidationAlgorithm, MemoryConfig
-from memory_experiments.reflection_module import StructuredReflectionLoop
-from observability.trace_analyzer import TraceAnalyzer
-from reproducibility.llm_cache import LLMResponseCache
-from reproducibility.sim_seed import SimSeed
 from scenarios.curriculum_validator import CurriculumValidator
 
 logger = logging.getLogger(__name__)
@@ -92,7 +93,9 @@ class ComprehensiveIntegrationTests:
         self.llm_cache = None
         self.seed_manager = None
 
-    async def setup_test_environment(self, config: EndToEndTestConfig) -> Dict[str, Any]:
+    async def setup_test_environment(
+        self, config: EndToEndTestConfig
+    ) -> Dict[str, Any]:
         """Setup test environment with all systems initialized."""
         logger.info("Setting up comprehensive test environment")
 
@@ -103,7 +106,9 @@ class ComprehensiveIntegrationTests:
         if config.enable_reproducibility:
             self.seed_manager = SimSeed("integration_test_seed_42")
             self.llm_cache = LLMResponseCache(
-                cache_file="test_integration.cache", enable_compression=True, enable_validation=True
+                cache_file="test_integration.cache",
+                enable_compression=True,
+                enable_validation=True,
             )
             self.llm_cache.set_deterministic_mode(config.deterministic_mode)
             environment["seed_manager"] = self.seed_manager
@@ -136,7 +141,9 @@ class ComprehensiveIntegrationTests:
             # Cognitive systems
             if config.enable_cognitive_loops:
                 strategic_planner = StrategicPlanner(agent_id, self.event_bus)
-                tactical_planner = TacticalPlanner(agent_id, strategic_planner, self.event_bus)
+                tactical_planner = TacticalPlanner(
+                    agent_id, strategic_planner, self.event_bus
+                )
                 reflection_loop = StructuredReflectionLoop(
                     agent_id, memory_manager, memory_config, self.event_bus
                 )
@@ -150,7 +157,10 @@ class ComprehensiveIntegrationTests:
                 skill_coordinator = SkillCoordinator(
                     agent_id,
                     self.event_bus,
-                    {"coordination_strategy": "priority_based", "max_concurrent_skills": 3},
+                    {
+                        "coordination_strategy": "priority_based",
+                        "max_concurrent_skills": 3,
+                    },
                 )
 
                 # Register skill modules
@@ -163,7 +173,9 @@ class ComprehensiveIntegrationTests:
 
                 for skill in skills:
                     await skill_coordinator.register_skill(
-                        skill, skill.get_supported_event_types(), priority_multiplier=1.0
+                        skill,
+                        skill.get_supported_event_types(),
+                        priority_multiplier=1.0,
                     )
             else:
                 skill_coordinator = None
@@ -219,12 +231,17 @@ class ComprehensiveIntegrationTests:
                             "revenue_growth": 0.08,
                             "market_share": 0.15,
                         },
-                        "market_conditions": {"competitive_pressure": 0.6, "volatility": 0.4},
+                        "market_conditions": {
+                            "competitive_pressure": 0.6,
+                            "volatility": 0.4,
+                        },
                     }
 
-                    objectives = await agent["strategic_planner"].create_strategic_plan(context, 90)
-                    validation_results[f"{agent['agent_id']}_strategic_objectives"] = len(
-                        objectives
+                    objectives = await agent["strategic_planner"].create_strategic_plan(
+                        context, 90
+                    )
+                    validation_results[f"{agent['agent_id']}_strategic_objectives"] = (
+                        len(objectives)
                     )
                     assert (
                         len(objectives) > 0
@@ -249,7 +266,9 @@ class ComprehensiveIntegrationTests:
                 for agent in agents:
                     if agent["skill_coordinator"]:
                         actions = await agent["skill_coordinator"].dispatch_event(event)
-                        validation_results[f"{agent['agent_id']}_actions_generated"] = len(actions)
+                        validation_results[f"{agent['agent_id']}_actions_generated"] = (
+                            len(actions)
+                        )
 
             # Test Phase 3: Cognitive Reflection and Learning
             logger.info("Phase 3: Cognitive reflection and learning")
@@ -265,28 +284,32 @@ class ComprehensiveIntegrationTests:
                         }
                     ]
 
-                    reflection_result = await agent["reflection_loop"].trigger_reflection(
-                        tick_interval=24, major_events=major_events
-                    )
+                    reflection_result = await agent[
+                        "reflection_loop"
+                    ].trigger_reflection(tick_interval=24, major_events=major_events)
 
                     if reflection_result:
-                        validation_results[f"{agent['agent_id']}_insights_generated"] = len(
-                            reflection_result.insights
-                        )
-                        validation_results[f"{agent['agent_id']}_policy_adjustments"] = len(
-                            reflection_result.policy_adjustments
-                        )
+                        validation_results[
+                            f"{agent['agent_id']}_insights_generated"
+                        ] = len(reflection_result.insights)
+                        validation_results[
+                            f"{agent['agent_id']}_policy_adjustments"
+                        ] = len(reflection_result.policy_adjustments)
 
             # Test Phase 4: Reproducibility and Determinism
             logger.info("Phase 4: Reproducibility validation")
             if config.enable_reproducibility and self.llm_cache:
                 # Test deterministic behavior
                 test_prompt = "What is the optimal pricing strategy for ASIN TEST-001?"
-                prompt_hash = self.llm_cache.generate_prompt_hash(test_prompt, "gpt-4", 0.0)
+                prompt_hash = self.llm_cache.generate_prompt_hash(
+                    test_prompt, "gpt-4", 0.0
+                )
 
                 # Cache a response
                 test_response = {
-                    "choices": [{"message": {"content": "Strategic pricing analysis..."}}]
+                    "choices": [
+                        {"message": {"content": "Strategic pricing analysis..."}}
+                    ]
                 }
                 cache_success = self.llm_cache.cache_response(
                     prompt_hash, test_response, {"model": "gpt-4", "temperature": 0.0}
@@ -322,7 +345,8 @@ class ComprehensiveIntegrationTests:
 
                 # Validate performance targets
                 validation_results["performance_meets_targets"] = (
-                    ticks_per_minute >= config.performance_targets["min_ticks_per_minute"]
+                    ticks_per_minute
+                    >= config.performance_targets["min_ticks_per_minute"]
                 )
 
             # Test Phase 6: Integration Validation
@@ -349,12 +373,16 @@ class ComprehensiveIntegrationTests:
 
                 # Check memory system
                 if agent["memory_manager"]:
-                    short_term_size = await agent["memory_manager"].short_term_store.size()
+                    short_term_size = await agent[
+                        "memory_manager"
+                    ].short_term_store.size()
                     if short_term_size >= 0:  # Basic functionality check
                         integration_score += 1
                     total_checks += 1
 
-            validation_results["integration_score"] = integration_score / max(total_checks, 1)
+            validation_results["integration_score"] = integration_score / max(
+                total_checks, 1
+            )
             validation_results["systems_integrated"] = total_checks
 
             # Overall success criteria
@@ -411,7 +439,9 @@ class ComprehensiveIntegrationTests:
                     "market_conditions": {"competitive_pressure": 0.7},
                 }
 
-                objectives = await agent["strategic_planner"].create_strategic_plan(context, 30)
+                objectives = await agent["strategic_planner"].create_strategic_plan(
+                    context, 30
+                )
                 validation_results["strategic_objectives_created"] = len(objectives) > 0
 
                 # Test skill coordination alignment with strategy
@@ -428,10 +458,12 @@ class ComprehensiveIntegrationTests:
 
                 # Test tactical actions from strategic objectives
                 if agent["tactical_planner"]:
-                    tactical_actions = await agent["tactical_planner"].generate_tactical_actions(
-                        objectives, context
+                    tactical_actions = await agent[
+                        "tactical_planner"
+                    ].generate_tactical_actions(objectives, context)
+                    validation_results["tactical_actions_generated"] = len(
+                        tactical_actions
                     )
-                    validation_results["tactical_actions_generated"] = len(tactical_actions)
 
             # Test reflection integration with skill performance
             if agent["reflection_loop"] and agent["skill_coordinator"]:
@@ -446,7 +478,9 @@ class ComprehensiveIntegrationTests:
                     fees=600,
                 )
 
-                skill_actions = await agent["skill_coordinator"].dispatch_event(test_event)
+                skill_actions = await agent["skill_coordinator"].dispatch_event(
+                    test_event
+                )
                 validation_results["skill_actions_from_event"] = len(skill_actions)
 
                 # Trigger reflection on performance
@@ -464,7 +498,9 @@ class ComprehensiveIntegrationTests:
                     event_history, outcomes
                 )
 
-                validation_results["reflection_analysis_complete"] = "recommendations" in analysis
+                validation_results["reflection_analysis_complete"] = (
+                    "recommendations" in analysis
+                )
                 validation_results["recommendations_count"] = len(
                     analysis.get("recommendations", [])
                 )
@@ -510,7 +546,9 @@ class ComprehensiveIntegrationTests:
             )
 
         except Exception as e:
-            logger.error(f"Cognitive-multi-skill integration test failed: {e}", exc_info=True)
+            logger.error(
+                f"Cognitive-multi-skill integration test failed: {e}", exc_info=True
+            )
             duration = time.time() - start_time
 
             return IntegrationTestResult(
@@ -559,21 +597,25 @@ class ComprehensiveIntegrationTests:
                     # Process events across all agents
                     for tick in range(50):  # Smaller number for performance
                         tick_event = TickEvent(
-                            event_id=f"tick_{run}_{tick}", timestamp=datetime.now(), tick=tick
+                            event_id=f"tick_{run}_{tick}",
+                            timestamp=datetime.now(),
+                            tick=tick,
                         )
 
                         for agent in environment["agents"]:
                             if agent["skill_coordinator"]:
-                                actions = await agent["skill_coordinator"].dispatch_event(
-                                    tick_event
-                                )
+                                actions = await agent[
+                                    "skill_coordinator"
+                                ].dispatch_event(tick_event)
                                 # Record deterministic outcome
                                 run_results.append(
                                     {
                                         "tick": tick,
                                         "agent": agent["agent_id"],
                                         "action_count": len(actions),
-                                        "action_types": [a.action_type for a in actions],
+                                        "action_types": [
+                                            a.action_type for a in actions
+                                        ],
                                     }
                                 )
 
@@ -681,7 +723,9 @@ class ComprehensiveIntegrationTests:
             )
 
         except Exception as e:
-            logger.error(f"Scalability with determinism test failed: {e}", exc_info=True)
+            logger.error(
+                f"Scalability with determinism test failed: {e}", exc_info=True
+            )
             duration = time.time() - start_time
 
             return IntegrationTestResult(
@@ -706,7 +750,9 @@ class ComprehensiveIntegrationTests:
                         tick=i,
                     )
 
-                    actions = await agent["skill_coordinator"].dispatch_event(test_event)
+                    actions = await agent["skill_coordinator"].dispatch_event(
+                        test_event
+                    )
                     events_processed += 1
 
                     # Small delay to prevent overwhelming
@@ -744,10 +790,26 @@ class ComprehensiveIntegrationTests:
 
                     # Mock tier-specific challenges
                     tier_config = {
-                        "T0": {"complexity": 0.2, "constraints": 1, "expected_success": 0.8},
-                        "T1": {"complexity": 0.4, "constraints": 2, "expected_success": 0.6},
-                        "T2": {"complexity": 0.6, "constraints": 3, "expected_success": 0.4},
-                        "T3": {"complexity": 0.8, "constraints": 5, "expected_success": 0.2},
+                        "T0": {
+                            "complexity": 0.2,
+                            "constraints": 1,
+                            "expected_success": 0.8,
+                        },
+                        "T1": {
+                            "complexity": 0.4,
+                            "constraints": 2,
+                            "expected_success": 0.6,
+                        },
+                        "T2": {
+                            "complexity": 0.6,
+                            "constraints": 3,
+                            "expected_success": 0.4,
+                        },
+                        "T3": {
+                            "complexity": 0.8,
+                            "constraints": 5,
+                            "expected_success": 0.2,
+                        },
                     }
 
                     config_data = tier_config[tier]
@@ -760,7 +822,9 @@ class ComprehensiveIntegrationTests:
                         difficulty_penalty = config_data["complexity"] * 0.5
                         constraint_penalty = config_data["constraints"] * 0.05
 
-                        agent_score = max(0.0, base_score - difficulty_penalty - constraint_penalty)
+                        agent_score = max(
+                            0.0, base_score - difficulty_penalty - constraint_penalty
+                        )
                         agent_scores.append(agent_score)
 
                     avg_score = sum(agent_scores) / len(agent_scores)
@@ -781,12 +845,15 @@ class ComprehensiveIntegrationTests:
 
                 # Validate progression (scores should generally decrease with difficulty)
                 scores = [tier_results[tier]["average_score"] for tier in tiers]
-                progression_valid = all(scores[i] >= scores[i + 1] for i in range(len(scores) - 1))
+                progression_valid = all(
+                    scores[i] >= scores[i + 1] for i in range(len(scores) - 1)
+                )
                 validation_results["progression_valid"] = progression_valid
 
                 # Check if at least T0 and T1 meet targets
                 basic_tiers_pass = (
-                    tier_results["T0"]["meets_target"] and tier_results["T1"]["meets_target"]
+                    tier_results["T0"]["meets_target"]
+                    and tier_results["T1"]["meets_target"]
                 )
                 validation_results["basic_tiers_pass"] = basic_tiers_pass
 
@@ -817,19 +884,25 @@ class ComprehensiveIntegrationTests:
                     agent_actions = []
                     for agent in environment["agents"]:
                         if agent.get("skill_coordinator"):
-                            actions = await agent["skill_coordinator"].dispatch_event(event)
+                            actions = await agent["skill_coordinator"].dispatch_event(
+                                event
+                            )
                             agent_actions.extend(actions)
 
                     # Check for coordination (agents responding to same event)
                     if len(agent_actions) > 1:
                         total_coordinations += 1
                         # Simple coordination check - different action types indicate coordination
-                        action_types = set(action.action_type for action in agent_actions)
+                        action_types = set(
+                            action.action_type for action in agent_actions
+                        )
                         if len(action_types) > 1:
                             coordination_successful += 1
 
                 cooperation_duration = time.time() - coop_start
-                coordination_rate = coordination_successful / max(total_coordinations, 1)
+                coordination_rate = coordination_successful / max(
+                    total_coordinations, 1
+                )
 
                 validation_results["cooperation_tested"] = True
                 validation_results["coordination_rate"] = coordination_rate
@@ -853,7 +926,9 @@ class ComprehensiveIntegrationTests:
             )
 
         except Exception as e:
-            logger.error(f"Scenario curriculum progression test failed: {e}", exc_info=True)
+            logger.error(
+                f"Scenario curriculum progression test failed: {e}", exc_info=True
+            )
             duration = time.time() - start_time
 
             return IntegrationTestResult(
@@ -941,22 +1016,34 @@ class ComprehensiveIntegrationTests:
                 # Mock trace analysis processing
                 analysis_results = {
                     "total_traces": len(trace_events),
-                    "components_traced": len(set(event["component"] for event in trace_events)),
-                    "agents_traced": len(set(event["agent_id"] for event in trace_events)),
+                    "components_traced": len(
+                        set(event["component"] for event in trace_events)
+                    ),
+                    "agents_traced": len(
+                        set(event["agent_id"] for event in trace_events)
+                    ),
                     "success_rate": sum(1 for event in trace_events if event["success"])
                     / len(trace_events),
                     "trace_coverage": {
                         "strategic_planning": sum(
-                            1 for e in trace_events if e["component"] == "strategic_planner"
+                            1
+                            for e in trace_events
+                            if e["component"] == "strategic_planner"
                         ),
                         "skill_coordination": sum(
-                            1 for e in trace_events if e["component"] == "skill_coordinator"
+                            1
+                            for e in trace_events
+                            if e["component"] == "skill_coordinator"
                         ),
                         "memory_management": sum(
-                            1 for e in trace_events if e["component"] == "memory_manager"
+                            1
+                            for e in trace_events
+                            if e["component"] == "memory_manager"
                         ),
                         "reflection": sum(
-                            1 for e in trace_events if e["component"] == "reflection_loop"
+                            1
+                            for e in trace_events
+                            if e["component"] == "reflection_loop"
                         ),
                     },
                 }
@@ -964,20 +1051,27 @@ class ComprehensiveIntegrationTests:
                 analysis_duration = time.time() - analysis_start
 
                 validation_results["trace_analysis_complete"] = True
-                validation_results["components_traced"] = analysis_results["components_traced"]
+                validation_results["components_traced"] = analysis_results[
+                    "components_traced"
+                ]
                 validation_results["trace_coverage_comprehensive"] = (
                     analysis_results["components_traced"] >= 3
                 )
                 validation_results["success_rate"] = analysis_results["success_rate"]
 
                 performance_metrics["analysis_duration"] = analysis_duration
-                performance_metrics["traces_per_second"] = len(trace_events) / analysis_duration
+                performance_metrics["traces_per_second"] = (
+                    len(trace_events) / analysis_duration
+                )
 
                 # Test analysis speed requirement
                 meets_speed_requirement = (
-                    analysis_duration <= config.performance_targets["max_analysis_time_seconds"]
+                    analysis_duration
+                    <= config.performance_targets["max_analysis_time_seconds"]
                 )
-                validation_results["analysis_speed_acceptable"] = meets_speed_requirement
+                validation_results["analysis_speed_acceptable"] = (
+                    meets_speed_requirement
+                )
 
                 # Test error detection and pattern analysis
                 # Simulate some error conditions
@@ -1000,7 +1094,9 @@ class ComprehensiveIntegrationTests:
                 }
 
                 validation_results["error_detection_working"] = len(error_patterns) > 0
-                validation_results["error_patterns_identified"] = sum(error_patterns.values())
+                validation_results["error_patterns_identified"] = sum(
+                    error_patterns.values()
+                )
 
             # Test performance monitoring integration
             if environment.get("performance_monitor"):
@@ -1077,9 +1173,13 @@ class ComprehensiveIntegrationTests:
                 self.test_results.append(result)
 
                 if result.success:
-                    logger.info(f"✅ {result.test_name} passed in {result.duration_seconds:.2f}s")
+                    logger.info(
+                        f"✅ {result.test_name} passed in {result.duration_seconds:.2f}s"
+                    )
                 else:
-                    logger.error(f"❌ {result.test_name} failed: {result.error_details}")
+                    logger.error(
+                        f"❌ {result.test_name} failed: {result.error_details}"
+                    )
 
             except Exception as e:
                 logger.error(f"Test {test_method.__name__} crashed: {e}", exc_info=True)
@@ -1111,7 +1211,9 @@ class ComprehensiveIntegrationTests:
             "overall_success": failed_tests == 0,
         }
 
-        logger.info(f"Integration test suite completed: {passed_tests}/{total_tests} passed")
+        logger.info(
+            f"Integration test suite completed: {passed_tests}/{total_tests} passed"
+        )
         return summary
 
     async def cleanup_test_environment(self):
@@ -1161,7 +1263,9 @@ async def main():
 
         if results["overall_success"]:
             print("\n🎉 ALL INTEGRATION TESTS PASSED!")
-            print("FBA-Bench comprehensive improvements are working correctly together.")
+            print(
+                "FBA-Bench comprehensive improvements are working correctly together."
+            )
         else:
             print("\n⚠️  Some integration tests failed.")
             print("Review logs for details on failed tests.")

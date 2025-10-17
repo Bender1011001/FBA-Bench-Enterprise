@@ -3,16 +3,16 @@ from datetime import datetime
 from unittest.mock import patch
 
 import pytest
-
-from agents.multi_domain_controller import MultiDomainController
-from agents.skill_coordinator import SkillCoordinator
-from agents.skill_modules.base_skill import SkillAction
-from event_bus import EventBus, set_event_bus
 from money import Money
 from services.market_simulator import MarketSimulationService
 from services.marketing_service import MarketingService
 from services.supply_chain_service import SupplyChainService
 from services.world_store import WorldStore
+
+from agents.multi_domain_controller import MultiDomainController
+from agents.skill_coordinator import SkillCoordinator
+from agents.skill_modules.base_skill import SkillAction
+from event_bus import EventBus, set_event_bus
 
 
 class DummyRunnerToolCall:

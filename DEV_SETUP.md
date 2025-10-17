@@ -1,152 +1,218 @@
-# FBA-Bench Enterprise Local Development Setup
+# FBA-Bench Enterprise Development Setup
+
+This guide provides step-by-step instructions for setting up the FBA-Bench Enterprise project for local development. It reflects the standardized Poetry workflow, `src/` package structure, and Makefile-based commands for consistency and reproducibility.
 
 ## Prerequisites
-- Python 3.10+ recommended (compatible with 3.9–3.12)
-- A virtual environment (venv) is strongly recommended
 
-## Installation Steps
+- **Python**: 3.9–3.12 (tested with 3.10+; Poetry manages versions).
+- **Poetry**: Dependency and environment manager. Install via:
+  ```
+  curl -sSL https://install.python-poetry.org | python3 -
+  ```
+  Add to PATH if needed (`export PATH="$HOME/.local/bin:$PATH"` on Unix).
+- **Git**: For cloning and version control.
+- **Docker** (optional): For containerized services like PostgreSQL, Redis, or full-stack dev.
+- **Node.js** (if using frontend components): 18+ for any JS/TS tools (e.g., in `web/` or `frontend/` if present).
+- **Make**: Standard on Unix; on Windows, use Git Bash, WSL, or install via Chocolatey (`choco install make`).
 
-### Using Poetry (Recommended)
-1. Ensure Poetry is installed: `pip install poetry` (or use the official installer from [python-poetry.org](https://python-poetry.org/)).
+Ensure your system meets these for smooth operation. No additional global packages are required—Poetry handles everything.
 
-2. From the workspace root (`c:/Users/admin/Downloads/fba`), navigate to the enterprise repo and install:
-   ```
-   cd repos/fba-bench-enterprise
-   poetry install
-   ```
-   This installs runtime dependencies from [pyproject.toml](pyproject.toml) (FastAPI, SQLAlchemy, Alembic, argon2-cffi, python-dotenv, uvicorn).
+## Installation
 
-### Using Pip
-1. Create and activate a virtual environment:
-   - Windows: `python -m venv .venv` then `.\.venv\Scripts\Activate.ps1`
-   - macOS/Linux: `python3 -m venv .venv` then `source .venv/bin/activate`
+### 1. Clone the Repository
+```
+git clone https://github.com/your-org/FBA-Bench-Enterprise.git
+cd FBA-Bench-Enterprise
+```
 
-2. Install dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
+### 2. Install Dependencies with Poetry
+Poetry creates a virtual environment and installs from `pyproject.toml` and `poetry.lock`:
+```
+poetry install
+```
+This includes:
+- Runtime: FastAPI, SQLAlchemy, Pydantic, etc.
+- Dev groups: pytest, ruff, mypy, black, isort.
+- Optional: Add `--with dev` explicitly if needed.
+
+Activate the shell for commands:
+```
+poetry shell
+```
+Or prefix with `poetry run` (e.g., `poetry run pytest`).
+
+**Notes**:
+- Locks ensure reproducibility; commit `poetry.lock`.
+- If switching Python versions, run `poetry env use python3.11` and reinstall.
+- For editable installs of sub-packages (e.g., `src/fba_bench_core`), Poetry handles via paths in `pyproject.toml`.
+
+### 3. Verify Installation
+Run a quick check:
+```
+poetry run python -c "import src.fba_bench_core; print('Core imported successfully')"
+```
+Expected: No errors, confirming `src/` imports.
 
 ## Environment Configuration
-1. Copy the example environment file:
+
+1. Copy the example:
    ```
    cp .env.example .env
    ```
 
-2. Edit `.env` if desired (defaults are safe for local development):
-   - `DATABASE_URL=sqlite:///./enterprise.db` (SQLite for local dev; override for Postgres)
-   - Argon2id parameters: `ARGON2_TIME_COST=3`, `ARGON2_MEMORY_COST=65536`, etc. (tune for security/performance)
+2. Edit `.env` for your setup (defaults are dev-friendly):
+   - **Database**: `DATABASE_URL=sqlite:///./fba_bench.db` (local SQLite; no server needed). For PostgreSQL: `postgresql+psycopg2://user:pass@localhost/fba_bench`.
+   - **Secrets**: `SECRET_KEY=dev-secret-change-me` (generate secure for prod), `JWT_SECRET=dev-jwt-secret`.
+   - **API Keys**: `OPENAI_API_KEY=sk-...` (or OpenRouter, etc.), `CLEARML_API_HOST=http://localhost:8080`.
+   - **Argon2 Params**: Defaults secure; tune for performance (`ARGON2_TIME_COST=3`, etc.).
+   - **Stripe** (if using billing): `STRIPE_SECRET_KEY=sk_test_...`, `STRIPE_WEBHOOK_SECRET=whsec_...`.
 
-Poetry automatically loads `.env` via python-dotenv; for pip, it will be loaded in scripts/app startup.
+Pydantic Settings in `config/model_config.py` loads `.env` automatically. Never commit `.env`—add to `.gitignore`.
 
-## Database Bootstrap and Migration Commands
-Alembic is configured locally in this repo for project-local migrations.
+**Security Note**: Use `.env.prod` for production; tools like Docker secrets for orchestration.
 
-1. Ensure `.env` is copied and `DATABASE_URL` is set.
+## Database Setup and Migrations
 
-2. From the enterprise repo directory (`repos/fba-bench-enterprise`), apply migrations:
-   - Poetry: `poetry run alembic upgrade head`
-   - Pip: `alembic upgrade head`
+The API uses Alembic for schema management (`alembic/`).
 
-This applies the initial migration, creating the `users` table with schema: id (UUID string PK), email (unique/indexed), password_hash, created_at/updated_at (timestamps), is_active (bool default True), subscription_status (nullable string).
+1. Ensure `DATABASE_URL` in `.env`.
 
-Verification:
-- SQLite: Confirm `enterprise.db` file exists.
-- Use a DB viewer or query to verify the `users` table structure.
+2. Apply migrations:
+   ```
+   make be-migrate
+   ```
+   Or directly: `poetry run alembic upgrade head`.
 
-For Postgres (optional):
-- Install `psycopg2-binary`: `poetry add --group dev psycopg2-binary` or `pip install psycopg2-binary`
-- Set `DATABASE_URL=postgresql+psycopg2://user:pass@localhost/dbname`
-- Ensure Postgres server is running and the database exists.
+This creates tables (e.g., `users`, `experiments`, `metrics`) in the DB. For SQLite, `fba_bench.db` appears in root.
 
-## Smoke Test: User Store Persistence
-After migrations, run the smoke script to validate user insertion/fetch with password hashing.
+**Verification**:
+- SQLite: `sqlite3 fba_bench.db "SELECT name FROM sqlite_master WHERE type='table';"`
+- PostgreSQL: `psql $DATABASE_URL -c "\dt"`.
+- Expected: Tables like `users` (id, email, password_hash, etc.).
 
-From the enterprise repo directory:
-- Poetry: `poetry run python scripts/smoke_user_store.py`
-- Pip: `python scripts/smoke_user_store.py`
+**Troubleshooting**:
+- "No such table": Re-run migrations.
+- Connection errors: Check URL format; ensure Postgres running (`docker-compose up postgres` if using Docker).
+- Alembic config: `alembic.ini` points to `.env`; edit if custom.
 
-Expected output (first run inserts; subsequent detects duplicate and fetches):
+## Running the Project
+
+### API Server
+Start the FastAPI app:
 ```
-Password verified successfully.
-{"email": "smoke@example.com", "id": "de305d54-75b4-431b-adb2-eb6b9e546014", "is_active": true, "subscription_status": null}
+poetry run uvicorn src.fba_bench_api.main:app --reload --host 0.0.0.0 --port 8000
 ```
+- `--reload`: Auto-restarts on code changes (dev only).
+- Access: http://localhost:8000/docs (Swagger UI), /redoc (ReDoc).
+- Logs: Includes startup checks (DB connect, env validation).
 
-On duplicate (second run):
+For full stack (with Redis, ClearML):
 ```
-User with email 'smoke@example.com' already exists. Skipping insertion.
-Password verified successfully.
-{"email": "smoke@example.com", "id": "de305d54-75b4-431b-adb2-eb6b9e546014", "is_active": true, "subscription_status": null}
-```
-
-This confirms DB connectivity, schema, hashing, and idempotent behavior. If it fails, check `.env` (DATABASE_URL) and re-run migrations.
-
-## Optional: Run the App Locally
-Start the FastAPI app with Uvicorn (loads .env, initializes DB connection on startup):
-- Poetry: `poetry run python api_server.py`
-- Pip: `python api_server.py`
-
-Or directly:
-- `uvicorn api.server:app --reload --host 0.0.0.0 --port 8000`
-
-Expected: Server starts successfully at http://localhost:8000 with no DB connection errors. Visit `/docs` for OpenAPI UI (no endpoints yet).
-## Running Tests Locally
-
-### Backend Tests
-From the workspace root (`c:/Users/admin/Downloads/fba`):
-```bash
-# Install dependencies (includes pytest and pytest-cov)
-pip install -r repos/fba-bench-enterprise/requirements.txt
-
-# Run tests (requires .env with stubbed vars; Stripe is mocked, no real calls)
-pytest -q repos/fba-bench-enterprise/tests
-
-# With coverage
-pytest --cov=repos/fba-bench-enterprise/api --cov-report=term-missing repos/fba-bench-enterprise/tests
+make dev-up  # If Makefile target; else docker-compose -f docker-compose.dev.yml up
 ```
 
-Backend tests cover auth (register/login/me) and Stripe (checkout/webhooks/portal) endpoints. Required env vars (e.g., DATABASE_URL=sqlite:///./enterprise.db, JWT_SECRET=CHANGE_ME_DEV, STRIPE_SECRET_KEY=sk_test_CHANGE_ME, etc.) are stubbed in CI with safe placeholders; local runs use your `.env` (use test values only; copy from .env.example and adjust).
+### Example Runs
+- Simple simulation: `poetry run python examples/learning_example.py`
+- Benchmark: `poetry run python scripts/run_benchmark.py --config configs/smoketest.yaml`
+- Experiment CLI: `poetry run python experiment_cli.py --scenario core.sourcing`
 
-### Frontend Tests
-```bash
-# Frontend client
-cd repos/fba-bench-enterprise/frontend
-npm i
-npm run test
+Outputs to `results/` or `artifacts/`; tracked in ClearML if configured.
 
-# Web app
-cd repos/fba-bench-enterprise/web
-npm i
-npm run test
+### Frontend (if applicable)
+If JS components (e.g., dashboard in `web/`):
+```
+cd web
+npm install
+npm run dev  # Vite server at http://localhost:5173
+```
+Set `VITE_API_BASE_URL=http://localhost:8000` in `web/.env`.
+
+## Standardized Commands (Makefile)
+
+The `Makefile` provides CI/CD parity. Run from root:
+
+- **Lint**: `make lint` – Ruff static analysis.
+- **Format Check**: `make format-check` – Verify black/ruff-format/isort.
+- **Format Fix**: `make format-fix` – Auto-format sources.
+- **Type Check**: `make type-check` – Mypy strict on `src/`.
+- **Tests**:
+  - Contracts: `make test-contracts` – Fast schema/API checks.
+  - Unit/Integration: `poetry run pytest -m "not integration"` (default skips integration).
+  - Full Suite + Coverage: `make test-all` – All tests, generates `.coverage` and `coverage.xml`.
+  - Integration Only: `poetry run pytest -m integration -v`.
+- **Local CI**: `make ci-local` – Full lint/format/type/test bundle (mirrors GitHub Actions).
+- **Migrations**: `make be-migrate` – Alembic upgrade.
+- **Pre-Commit**: Install hooks: `make pre-commit-install`; Run: `make pre-commit-run`.
+
+**Example Workflow**:
+```
+make ci-local  # All checks
+git add .
+git commit -m "feat(benchmarking): add validator"
 ```
 
-This runs unit tests for both the auth client library and web app components using Vitest.
+**Customization**: Edit `Makefile` for new targets; uses `poetry run` internally.
 
-### Build Checks (TypeScript Compilation)
-```bash
-# Frontend client
-cd repos/fba-bench-enterprise/frontend
-npm run build  # or npx tsc -p . if no build script
+## Testing
 
-# Web app
-cd repos/fba-bench-enterprise/web
-npm run build  # Vite build
+### Running Tests
+- All (fast): `poetry run pytest -q` – Unit/contracts only.
+- Coverage: `make test-all` – Reports missing lines.
+- Specific: `poetry run pytest tests/benchmarking/ -v`.
+
+Framework: Pytest with markers (`@pytest.mark.unit`, `@pytest.mark.integration`). Fixtures in `tests/fixtures/`. Coverage targets `src/` (>80% goal).
+
+**DB for Tests**: Uses in-memory SQLite; no external DB needed. Run `make test-all` post-setup.
+
+### Linting and Formatting
+Pre-commit hooks enforce on `git commit`. Manual:
+```
+make lint  # Check only
+make format-fix  # Apply
 ```
 
-Validates TypeScript compilation and bundling; skips if build script missing.
+## Troubleshooting Common Issues
 
-## CI Workflow
-The GitHub Actions CI workflow at [.github/workflows/ci.yml](.github/workflows/ci.yml) automates these checks on push and pull requests to any branch:
+### Poetry/Venv Problems
+- **"Poetry not found"**: Add to PATH; restart terminal.
+- **Version mismatch**: `poetry env info`; recreate: `poetry env remove --all && poetry install`.
+- **Lock conflicts**: `poetry lock --no-update`; resolve manually.
 
-- Backend: Python 3.10/3.11 matrix tests with pytest-cov (coverage report uploaded as artifact), using isolated SQLite DB and mocked Stripe (no network calls).
-- Frontend Client: Node 18.x unit tests (Vitest) and build check.
-- Web App: Node 18.x unit tests (Vitest) and build check.
+### Database Errors
+- **SQLite locked**: Close other connections; delete `*.db` and re-migrate.
+- **Postgres connection refused**: Start server (`docker run -p 5432:5432 -e POSTGRES_PASSWORD=pass postgres`), update URL.
+- **Migration fails**: `poetry run alembic downgrade -1`; check `alembic/versions/`.
 
-### CI Locally
-To run CI-equivalent checks locally:
-- Python: `pip install -r repos/fba-bench-enterprise/requirements.txt && pytest -q --cov=api --cov-report=term repos/fba-bench-enterprise/tests`
-- Frontend: `cd repos/fba-bench-enterprise/frontend && npm i && npm run test && npm run build` (skip build if no script)
-- Web: `cd repos/fba-bench-enterprise/web && npm i && npm run test && npm run build`
+### Import Errors
+- **"Module not found"**: Ensure `poetry shell` or `poetry run`; check `PYTHONPATH` if needed (rare).
+- **Cyclic imports**: Review `src/` layers; use absolute imports (`from src.fba_bench_core import ...`).
 
-Set env vars as in CI (e.g., via export or .env) for consistency.
+### API Startup Fails
+- **Env missing**: Verify `.env` vars (e.g., `SECRET_KEY`); app logs specifics.
+- **Port in use**: Change `--port 8001`; kill process (`netstat -ano | findstr :8000` on Windows).
+- **CORS/HTTPS**: Dev defaults allow localhost; prod configure in `src/fba_bench_api/main.py`.
 
-Caching is enabled for pip/npm to speed up runs. Tests pass with provided env stubs; coverage is optional but collected for critical paths.
+### Tests Fail
+- **Integration skips**: Add `-m integration`.
+- **Coverage low**: Run `make test-all`; fix in `src/`.
+- **Fixture errors**: Check `tests/conftest.py`; ensure deps installed.
+
+### Performance/Slowdown
+- **Large simulations**: Use `--max-tokens 1024` in configs; monitor with `make lint` for inefficiencies.
+- **Memory**: Poetry envs are isolated; close unused terminals.
+
+### General
+- **Windows Paths**: Use forward slashes in URLs; Git Bash for commands.
+- **Clear Cache**: `poetry cache clear --all`; `rm -rf .mypy_cache .ruff_cache`.
+- **Logs**: Enable debug in `.env` (`LOG_LEVEL=DEBUG`); check `logs/`.
+- **Reinstall**: Nuclear option: `rm -rf .venv poetry.lock && poetry install`.
+
+For persistent issues, check [troubleshooting/](docs/troubleshooting/) or open an issue.
+
+## Next Steps
+
+- Run `make ci-local` to validate setup.
+- Explore examples: `examples/real_world_integration_example.py`.
+- Contribute: See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+This setup ensures a robust, reproducible dev environment aligned with project standards.

@@ -35,7 +35,9 @@ class SimulationSnapshot(BaseModel):
 
 class RecentEventsResponse(BaseModel):
     events: List[Dict[str, Any]] = Field(default_factory=list)
-    event_type: Optional[str] = Field(None, description="Filter applied (sales|commands|...)")
+    event_type: Optional[str] = Field(
+        None, description="Filter applied (sales|commands|...)"
+    )
     limit: int = Field(..., ge=1, le=100)
     total_returned: int = Field(..., ge=0)
     timestamp: datetime

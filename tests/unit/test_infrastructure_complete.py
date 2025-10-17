@@ -91,7 +91,9 @@ class TestDistributedEventBus(unittest.TestCase):
 
         # Verify the partition was created
         self.assertIn("test_partition", self.event_bus._partitions)
-        self.assertEqual(self.event_bus._partitions["test_partition"], ["agent1", "agent2"])
+        self.assertEqual(
+            self.event_bus._partitions["test_partition"], ["agent1", "agent2"]
+        )
 
         await self.event_bus.stop()
 
@@ -118,7 +120,9 @@ class TestDistributedCoordinator(unittest.TestCase):
         """Set up test fixtures before each test method."""
         self.event_bus = Mock()
         self.simulation_config = Mock()
-        self.coordinator = DistributedCoordinator(self.event_bus, self.simulation_config)
+        self.coordinator = DistributedCoordinator(
+            self.event_bus, self.simulation_config
+        )
 
     @pytest.mark.asyncio
     async def test_coordinator_initialization(self):
@@ -222,7 +226,9 @@ class TestFastForwardEngine(unittest.TestCase):
         """Test that the engine initializes correctly."""
         self.assertIsNotNone(self.engine)
         self.assertEqual(self.engine._event_bus, self.event_bus)
-        self.assertEqual(self.engine._simulation_orchestrator, self.simulation_orchestrator)
+        self.assertEqual(
+            self.engine._simulation_orchestrator, self.simulation_orchestrator
+        )
         self.assertEqual(len(self.engine._agent_activities), 0)
 
     @pytest.mark.asyncio
@@ -302,7 +308,9 @@ class TestLLMBatcher(unittest.TestCase):
     @pytest.mark.asyncio
     async def test_set_batch_parameters(self):
         """Test setting batch parameters."""
-        self.batcher.set_batch_parameters(max_size=20, timeout_ms=200, similarity_threshold=0.8)
+        self.batcher.set_batch_parameters(
+            max_size=20, timeout_ms=200, similarity_threshold=0.8
+        )
 
         self.assertEqual(self.batcher._max_batch_size, 20)
         self.assertEqual(self.batcher._timeout_ms, 200)
@@ -409,7 +417,9 @@ class TestResourceManager(unittest.TestCase):
         self.resource_manager.record_llm_cost("gpt-4", 0.02, 1000)
 
         self.assertEqual(self.resource_manager._llm_costs["gpt-4"]["total_cost"], 0.02)
-        self.assertEqual(self.resource_manager._llm_costs["gpt-4"]["total_tokens"], 1000)
+        self.assertEqual(
+            self.resource_manager._llm_costs["gpt-4"]["total_tokens"], 1000
+        )
 
     def test_get_current_token_usage(self):
         """Test getting current token usage."""

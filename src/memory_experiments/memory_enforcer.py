@@ -53,7 +53,9 @@ class MemoryEnforcer:
             f"MemoryEnforcer initialized for agent {agent_id} with mode {config.memory_mode}"
         )
 
-    async def preprocess_memory_for_prompt(self, prompt: str, action_type: str) -> Dict[str, Any]:
+    async def preprocess_memory_for_prompt(
+        self, prompt: str, action_type: str
+    ) -> Dict[str, Any]:
         """
         Retrieve relevant memories and prepare them for injection into agent prompt.
 
@@ -64,7 +66,10 @@ class MemoryEnforcer:
         Returns:
             Dict containing memory content and metadata for prompt injection
         """
-        if not self.config.enable_memory_injection or not self.config.is_memory_enabled():
+        if (
+            not self.config.enable_memory_injection
+            or not self.config.is_memory_enabled()
+        ):
             return {
                 "memory_content": "",
                 "memory_tokens": 0,
@@ -105,7 +110,9 @@ class MemoryEnforcer:
                 memory_content, self.config.memory_budget_tokens
             )
             memory_tokens = self.token_counter.count_tokens(memory_content)
-            logger.warning(f"Memory content truncated to fit budget: {memory_tokens} tokens")
+            logger.warning(
+                f"Memory content truncated to fit budget: {memory_tokens} tokens"
+            )
 
         # Track memory usage
         self.memory_tokens_used = memory_tokens
@@ -124,7 +131,9 @@ class MemoryEnforcer:
         self.memory_injection_history.append(injection_record)
 
         # Warning about unbounded history for production considerations
-        if len(self.memory_injection_history) > 1000:  # Threshold for warning, not a hard cap
+        if (
+            len(self.memory_injection_history) > 1000
+        ):  # Threshold for warning, not a hard cap
             logger.warning(
                 f"Memory injection history for agent {self.agent_id} is growing very large ({len(self.memory_injection_history)} entries). Consider implementing a bounded collection or persistent storage in production."
             )
@@ -137,7 +146,9 @@ class MemoryEnforcer:
             "within_budget": within_budget,
         }
 
-    async def inject_memory_into_prompt(self, prompt: str, memory_data: Dict[str, Any]) -> str:
+    async def inject_memory_into_prompt(
+        self, prompt: str, memory_data: Dict[str, Any]
+    ) -> str:
         """
         Inject memory content into agent prompt.
 
@@ -171,7 +182,9 @@ MEMORY GUIDANCE: Consider the above memories when making your decision. Recent e
 
         return await self.memory_manager.store_event(event, domain)
 
-    async def check_reflection_trigger(self, current_time: Optional[datetime] = None) -> bool:
+    async def check_reflection_trigger(
+        self, current_time: Optional[datetime] = None
+    ) -> bool:
         """Check if reflection should be triggered and perform it if needed."""
         if not self.reflection_module:
             return False
@@ -210,7 +223,9 @@ MEMORY GUIDANCE: Consider the above memories when making your decision. Recent e
         if not self.config.track_memory_usage:
             return ""
 
-        memory_summary = await self.memory_manager.get_memory_summary()  # Await the call
+        memory_summary = (
+            await self.memory_manager.get_memory_summary()
+        )  # Await the call
 
         status = f"""
 MEMORY STATUS:
@@ -223,7 +238,9 @@ MEMORY STATUS:
         # Access memory_summary directly as it is now awaited
         if self.config.memory_mode.value in ["reflection_enabled", "hybrid_reflection"]:
             last_reflection = (
-                memory_summary.get("last_reflection_data", {}).get("last_reflection_time")
+                memory_summary.get("last_reflection_data", {}).get(
+                    "last_reflection_time"
+                )
                 or self.memory_manager.last_reflection_time
             )  # Use summary if available
             if last_reflection:
@@ -239,7 +256,9 @@ MEMORY STATUS:
 
         return status
 
-    async def validate_memory_constraints(self, estimated_tokens: int) -> tuple[bool, str]:
+    async def validate_memory_constraints(
+        self, estimated_tokens: int
+    ) -> tuple[bool, str]:
         """
         Validate if action can proceed given memory constraints.
 
@@ -286,7 +305,12 @@ MEMORY STATUS:
                 "competitor prices",
                 "sales performance",
             ],
-            "adjust_inventory": ["inventory levels", "stock", "demand forecast", "production cost"],
+            "adjust_inventory": [
+                "inventory levels",
+                "stock",
+                "demand forecast",
+                "production cost",
+            ],
             "research_market": ["market trends", "competitor analysis", "new products"],
             # Add more action-specific keywords as needed
         }
@@ -311,17 +335,22 @@ MEMORY STATUS:
             business_keywords.update(action_keywords[action_type])
 
         prompt_lower = prompt.lower()
-        found_keywords = [keyword for keyword in business_keywords if keyword in prompt_lower]
+        found_keywords = [
+            keyword for keyword in business_keywords if keyword in prompt_lower
+        ]
 
         if found_keywords:
             # Construct a query from unique and relevant keywords
-            unique_keywords = sorted(list(set(found_keywords)), key=lambda x: prompt_lower.find(x))
+            unique_keywords = sorted(
+                list(set(found_keywords)), key=lambda x: prompt_lower.find(x)
+            )
             return " ".join(unique_keywords)
 
         # Fallback to action type and the main topic extracted from prompt
         # A more advanced solution would use an LLM to generate a concise query from the prompt
         main_topic_match = re.search(
-            r"(what is|tell me about|analyze|consider|how to|report on) (.+?)[\.\?]", prompt_lower
+            r"(what is|tell me about|analyze|consider|how to|report on) (.+?)[\.\?]",
+            prompt_lower,
         )
         if main_topic_match:
             return main_topic_match.group(2).strip()
@@ -376,7 +405,10 @@ MEMORY STATUS:
 
         # Re-check tokens after word-based truncation, might still be over due to tokenization quirks
         # Small iterative reduction to get close to the target
-        while self.token_counter.count_tokens(truncated_content) > max_tokens and len(words) > 1:
+        while (
+            self.token_counter.count_tokens(truncated_content) > max_tokens
+            and len(words) > 1
+        ):
             words.pop()  # Remove a word
             truncated_content = " ".join(words)
 

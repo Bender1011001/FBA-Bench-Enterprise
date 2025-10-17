@@ -11,11 +11,12 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
+from money import Money
+
 from fba_events.base import BaseEvent
 from fba_events.inventory import InventoryUpdate
 from fba_events.sales import SaleOccurred
 from fba_events.time_events import TickEvent
-from money import Money
 
 from .base_skill import BaseSkill, SkillAction, SkillContext, SkillOutcome
 
@@ -104,7 +105,9 @@ class SupplyManagerSkill(BaseSkill):
         self.config = config or {}
         self.safety_stock_days = self.config.get("safety_stock_days", 7)
         self.reorder_lead_time = self.config.get("reorder_lead_time", 14)
-        self.max_order_budget = Money(self.config.get("max_order_budget_cents", 500000))  # $5000
+        self.max_order_budget = Money(
+            self.config.get("max_order_budget_cents", 500000)
+        )  # $5000
         self.stockout_risk_threshold = self.config.get("stockout_risk_threshold", 0.3)
 
         # Inventory tracking
@@ -181,9 +184,13 @@ class SupplyManagerSkill(BaseSkill):
                 actions.extend(await self._handle_tick_event(event))
 
             # Filter actions by confidence threshold
-            confidence_threshold = self.adaptation_parameters.get("confidence_threshold", 0.6)
+            confidence_threshold = self.adaptation_parameters.get(
+                "confidence_threshold", 0.6
+            )
             filtered_actions = [
-                action for action in actions if action.confidence >= confidence_threshold
+                action
+                for action in actions
+                if action.confidence >= confidence_threshold
             ]
 
             return filtered_actions if filtered_actions else None
@@ -192,7 +199,9 @@ class SupplyManagerSkill(BaseSkill):
             logger.error(f"Error processing event in SupplyManagerSkill: {e}")
             return None
 
-    async def _handle_inventory_update(self, event: InventoryUpdate) -> List[SkillAction]:
+    async def _handle_inventory_update(
+        self, event: InventoryUpdate
+    ) -> List[SkillAction]:
         """Handle inventory level updates."""
         actions = []
 
@@ -206,7 +215,9 @@ class SupplyManagerSkill(BaseSkill):
 
         # Keep only recent history
         if len(self.inventory_history[event.asin]) > 100:
-            self.inventory_history[event.asin] = self.inventory_history[event.asin][-50:]
+            self.inventory_history[event.asin] = self.inventory_history[event.asin][
+                -50:
+            ]
 
         # Analyze if reorder is needed
         analysis = await self._analyze_inventory_needs(event.asin)
@@ -251,7 +262,10 @@ class SupplyManagerSkill(BaseSkill):
         # Periodic inventory analysis for all tracked items
         for asin in self.inventory_levels.keys():
             analysis = await self._analyze_inventory_needs(asin)
-            if analysis and analysis.recommended_action in ["reorder", "urgent_reorder"]:
+            if analysis and analysis.recommended_action in [
+                "reorder",
+                "urgent_reorder",
+            ]:
                 reorder_action = await self._create_reorder_action(analysis)
                 if reorder_action:
                     actions.append(reorder_action)
@@ -272,7 +286,9 @@ class SupplyManagerSkill(BaseSkill):
             units = int(outcome.impact_metrics.get("units_sold", 0))
             delta = 0.01 if success and units > 0 else -0.02
             for sid, prof in self.suppliers.items():
-                prof.reliability_score = max(0.0, min(1.0, prof.reliability_score + delta))
+                prof.reliability_score = max(
+                    0.0, min(1.0, prof.reliability_score + delta)
+                )
         except Exception as e:
             logger.warning(f"SupplyManagerSkill.learn failed: {e}")
 
@@ -303,13 +319,17 @@ class SupplyManagerSkill(BaseSkill):
 
                 if analysis and analysis.recommended_action != "none":
                     # Check if we can afford the order
-                    estimated_cost = self._estimate_order_cost(analysis.optimal_order_quantity)
+                    estimated_cost = self._estimate_order_cost(
+                        analysis.optimal_order_quantity
+                    )
                     if estimated_cost <= budget_limit:
                         action = await self._create_reorder_action(analysis)
                         if action:
                             actions.append(action)
                             # Reduce available budget
-                            budget_limit = Money(budget_limit.cents - estimated_cost.cents)
+                            budget_limit = Money(
+                                budget_limit.cents - estimated_cost.cents
+                            )
 
             # Sort by priority (stockout risk)
             actions.sort(key=lambda x: x.priority, reverse=True)
@@ -363,16 +383,25 @@ class SupplyManagerSkill(BaseSkill):
             days_remaining = current_stock / max(daily_velocity, 0.1)
 
             # Calculate reorder point (lead time + safety stock)
-            reorder_point = int((self.reorder_lead_time + self.safety_stock_days) * daily_velocity)
+            reorder_point = int(
+                (self.reorder_lead_time + self.safety_stock_days) * daily_velocity
+            )
 
             # Calculate optimal order quantity (simple EOQ approximation)
-            optimal_quantity = max(int(30 * daily_velocity), 100)  # 30 days worth  # Minimum order
+            optimal_quantity = max(
+                int(30 * daily_velocity), 100
+            )  # 30 days worth  # Minimum order
 
             # Calculate stockout risk
             stockout_risk = max(
                 0.0,
                 min(
-                    1.0, 1.0 - (days_remaining / (self.reorder_lead_time + self.safety_stock_days))
+                    1.0,
+                    1.0
+                    - (
+                        days_remaining
+                        / (self.reorder_lead_time + self.safety_stock_days)
+                    ),
                 ),
             )
 
@@ -404,7 +433,9 @@ class SupplyManagerSkill(BaseSkill):
             logger.error(f"Error analyzing inventory needs for {asin}: {e}")
             return None
 
-    async def _create_reorder_action(self, analysis: InventoryAnalysis) -> Optional[SkillAction]:
+    async def _create_reorder_action(
+        self, analysis: InventoryAnalysis
+    ) -> Optional[SkillAction]:
         """Create a reorder action based on inventory analysis."""
         try:
             # Select optimal supplier
@@ -419,7 +450,9 @@ class SupplyManagerSkill(BaseSkill):
             confidence = self._calculate_reorder_confidence(analysis, selected_supplier)
 
             # Prepare negotiation terms
-            negotiation_terms = await self._prepare_negotiation_terms(selected_supplier, analysis)
+            negotiation_terms = await self._prepare_negotiation_terms(
+                selected_supplier, analysis
+            )
 
             # Create action parameters
             parameters = {
@@ -445,7 +478,9 @@ class SupplyManagerSkill(BaseSkill):
                 reasoning=reasoning,
                 priority=priority,
                 resource_requirements={
-                    "budget": self._estimate_order_cost(analysis.optimal_order_quantity).cents,
+                    "budget": self._estimate_order_cost(
+                        analysis.optimal_order_quantity
+                    ).cents,
                     "lead_time": selected_supplier.lead_time_days,
                 },
                 expected_outcome={
@@ -525,7 +560,9 @@ class SupplyManagerSkill(BaseSkill):
 
         # Adjust based on urgency and quantity
         urgency_multiplier = 1.1 if analysis.stockout_risk > 0.5 else 1.0
-        quantity_discount = max(0.9, 1.0 - (analysis.optimal_order_quantity / 1000.0) * 0.1)
+        quantity_discount = max(
+            0.9, 1.0 - (analysis.optimal_order_quantity / 1000.0) * 0.1
+        )
 
         max_unit_price = base_unit_price * urgency_multiplier * quantity_discount
 
@@ -560,7 +597,10 @@ class SupplyManagerSkill(BaseSkill):
         # Adjust based on urgency (higher urgency = lower confidence due to limited options)
         urgency_penalty = analysis.stockout_risk * 0.2
 
-        confidence = base_confidence * velocity_confidence * supplier_confidence - urgency_penalty
+        confidence = (
+            base_confidence * velocity_confidence * supplier_confidence
+            - urgency_penalty
+        )
         return max(0.3, min(0.95, confidence))
 
     def _update_sales_velocity(self, asin: str, units_sold: int):
@@ -569,7 +609,9 @@ class SupplyManagerSkill(BaseSkill):
             self.sales_velocity[asin] = float(units_sold)
         else:
             # Exponential moving average
-            self.sales_velocity[asin] = (self.sales_velocity[asin] * 0.8) + (units_sold * 0.2)
+            self.sales_velocity[asin] = (self.sales_velocity[asin] * 0.8) + (
+                units_sold * 0.2
+            )
 
     def _estimate_order_cost(self, quantity: int, unit_price: float = 10.0) -> Money:
         """Estimate total cost of an order."""
@@ -591,10 +633,13 @@ class SupplyManagerSkill(BaseSkill):
                 )
                 supplier.quality_score = min(
                     0.95,
-                    supplier.quality_score * 0.95 + performance.get("quality_rating", 0.8) * 0.05,
+                    supplier.quality_score * 0.95
+                    + performance.get("quality_rating", 0.8) * 0.05,
                 )
 
-        logger.debug(f"Completed supplier performance review for {len(self.suppliers)} suppliers")
+        logger.debug(
+            f"Completed supplier performance review for {len(self.suppliers)} suppliers"
+        )
 
     async def evaluate_reorder_needs(self) -> Dict[str, InventoryAnalysis]:
         """Evaluate reorder needs for all tracked inventory."""
@@ -605,7 +650,9 @@ class SupplyManagerSkill(BaseSkill):
                 analyses[asin] = analysis
         return analyses
 
-    async def select_optimal_supplier(self, asin: str, quantity: int) -> Optional[SupplierProfile]:
+    async def select_optimal_supplier(
+        self, asin: str, quantity: int
+    ) -> Optional[SupplierProfile]:
         """Public method to select optimal supplier for external use."""
         # Create mock analysis for supplier selection
         mock_analysis = InventoryAnalysis(

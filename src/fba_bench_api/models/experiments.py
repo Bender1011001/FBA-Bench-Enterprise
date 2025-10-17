@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Literal, Optional
 
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class ConfigTemplateSave(BaseModel):
@@ -126,7 +126,9 @@ class ExperimentRunCreate(BaseModel):
 
     @field_validator("participants")
     @classmethod
-    def validate_participants(cls, v: List[ExperimentParticipant]) -> List[ExperimentParticipant]:
+    def validate_participants(
+        cls, v: List[ExperimentParticipant]
+    ) -> List[ExperimentParticipant]:
         if not v:
             raise ValueError("At least one participant is required")
 
@@ -138,7 +140,9 @@ class ExperimentRunCreate(BaseModel):
         return v
 
 
-RunStatusType = Literal["pending", "starting", "running", "completed", "failed", "stopped"]
+RunStatusType = Literal[
+    "pending", "starting", "running", "completed", "failed", "stopped"
+]
 
 
 class ExperimentRun(BaseModel):
@@ -147,14 +151,22 @@ class ExperimentRun(BaseModel):
     id: str = Field(..., description="Unique run identifier")
     experiment_id: str = Field(..., description="Parent experiment identifier")
     scenario_id: str = Field(..., description="Scenario being executed")
-    participants: List[ExperimentParticipant] = Field(..., description="Agent participants")
-    params: Dict[str, Any] = Field(default_factory=dict, description="Scenario parameters")
+    participants: List[ExperimentParticipant] = Field(
+        ..., description="Agent participants"
+    )
+    params: Dict[str, Any] = Field(
+        default_factory=dict, description="Scenario parameters"
+    )
     status: RunStatusType = Field(default="pending", description="Current run status")
 
     # Progress tracking
-    current_tick: Optional[int] = Field(None, ge=0, description="Current simulation tick")
+    current_tick: Optional[int] = Field(
+        None, ge=0, description="Current simulation tick"
+    )
     total_ticks: Optional[int] = Field(None, ge=1, description="Total expected ticks")
-    progress_percent: Optional[float] = Field(None, ge=0, le=100, description="Progress percentage")
+    progress_percent: Optional[float] = Field(
+        None, ge=0, le=100, description="Progress percentage"
+    )
 
     # Timing
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 import yaml
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 # Import the module so tests patching 'scenarios.scenario_framework.ScenarioFramework'
 # correctly intercept our usage at call time.
@@ -20,15 +20,27 @@ class Scenario(BaseModel):
     name: str = Field(..., min_length=1, description="Human-readable scenario name")
     description: Optional[str] = Field(None, description="Scenario description")
     difficulty_tier: int = Field(..., ge=0, le=3, description="Difficulty level (0-3)")
-    expected_duration: int = Field(..., gt=0, description="Expected duration in simulation ticks")
-    tags: List[str] = Field(default_factory=list, description="Scenario tags for categorization")
-    default_params: Dict[str, Any] = Field(default_factory=dict, description="Default parameters")
-    success_criteria: Dict[str, Any] = Field(default_factory=dict, description="Success criteria")
-    market_conditions: Dict[str, Any] = Field(default_factory=dict, description="Market conditions")
+    expected_duration: int = Field(
+        ..., gt=0, description="Expected duration in simulation ticks"
+    )
+    tags: List[str] = Field(
+        default_factory=list, description="Scenario tags for categorization"
+    )
+    default_params: Dict[str, Any] = Field(
+        default_factory=dict, description="Default parameters"
+    )
+    success_criteria: Dict[str, Any] = Field(
+        default_factory=dict, description="Success criteria"
+    )
+    market_conditions: Dict[str, Any] = Field(
+        default_factory=dict, description="Market conditions"
+    )
     external_events: List[Dict[str, Any]] = Field(
         default_factory=list, description="External events"
     )
-    agent_constraints: Dict[str, Any] = Field(default_factory=dict, description="Agent constraints")
+    agent_constraints: Dict[str, Any] = Field(
+        default_factory=dict, description="Agent constraints"
+    )
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -38,15 +50,27 @@ class ScenarioCreate(BaseModel):
     name: str = Field(..., min_length=1, description="Human-readable scenario name")
     description: Optional[str] = Field(None, description="Scenario description")
     difficulty_tier: int = Field(..., ge=0, le=3, description="Difficulty level (0-3)")
-    expected_duration: int = Field(..., gt=0, description="Expected duration in simulation ticks")
-    tags: List[str] = Field(default_factory=list, description="Scenario tags for categorization")
-    default_params: Dict[str, Any] = Field(default_factory=dict, description="Default parameters")
-    success_criteria: Dict[str, Any] = Field(default_factory=dict, description="Success criteria")
-    market_conditions: Dict[str, Any] = Field(default_factory=dict, description="Market conditions")
+    expected_duration: int = Field(
+        ..., gt=0, description="Expected duration in simulation ticks"
+    )
+    tags: List[str] = Field(
+        default_factory=list, description="Scenario tags for categorization"
+    )
+    default_params: Dict[str, Any] = Field(
+        default_factory=dict, description="Default parameters"
+    )
+    success_criteria: Dict[str, Any] = Field(
+        default_factory=dict, description="Success criteria"
+    )
+    market_conditions: Dict[str, Any] = Field(
+        default_factory=dict, description="Market conditions"
+    )
     external_events: List[Dict[str, Any]] = Field(
         default_factory=list, description="External events"
     )
-    agent_constraints: Dict[str, Any] = Field(default_factory=dict, description="Agent constraints")
+    agent_constraints: Dict[str, Any] = Field(
+        default_factory=dict, description="Agent constraints"
+    )
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -69,18 +93,34 @@ class ScenarioCreate(BaseModel):
 class ScenarioUpdate(BaseModel):
     """Model for updating an existing scenario."""
 
-    name: Optional[str] = Field(None, min_length=1, description="Human-readable scenario name")
+    name: Optional[str] = Field(
+        None, min_length=1, description="Human-readable scenario name"
+    )
     description: Optional[str] = Field(None, description="Scenario description")
-    difficulty_tier: Optional[int] = Field(None, ge=0, le=3, description="Difficulty level (0-3)")
-    expected_duration: Optional[int] = Field(None, gt=0, description="Expected duration in simulation ticks")
-    tags: Optional[List[str]] = Field(None, description="Scenario tags for categorization")
-    default_params: Optional[Dict[str, Any]] = Field(None, description="Default parameters")
-    success_criteria: Optional[Dict[str, Any]] = Field(None, description="Success criteria")
-    market_conditions: Optional[Dict[str, Any]] = Field(None, description="Market conditions")
+    difficulty_tier: Optional[int] = Field(
+        None, ge=0, le=3, description="Difficulty level (0-3)"
+    )
+    expected_duration: Optional[int] = Field(
+        None, gt=0, description="Expected duration in simulation ticks"
+    )
+    tags: Optional[List[str]] = Field(
+        None, description="Scenario tags for categorization"
+    )
+    default_params: Optional[Dict[str, Any]] = Field(
+        None, description="Default parameters"
+    )
+    success_criteria: Optional[Dict[str, Any]] = Field(
+        None, description="Success criteria"
+    )
+    market_conditions: Optional[Dict[str, Any]] = Field(
+        None, description="Market conditions"
+    )
     external_events: Optional[List[Dict[str, Any]]] = Field(
         None, description="External events"
     )
-    agent_constraints: Optional[Dict[str, Any]] = Field(None, description="Agent constraints")
+    agent_constraints: Optional[Dict[str, Any]] = Field(
+        None, description="Agent constraints"
+    )
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -167,7 +207,11 @@ class ScenarioService:
             product_categories = business_params.get("product_categories", [])
             if product_categories:
                 tags.extend(
-                    [f"category_{cat}" for cat in product_categories if isinstance(cat, str)]
+                    [
+                        f"category_{cat}"
+                        for cat in product_categories
+                        if isinstance(cat, str)
+                    ]
                 )
 
             # Normalize success criteria format
@@ -232,7 +276,9 @@ class ScenarioService:
             if "profit_target" in success_criteria:
                 parts.append(f"Profit target: ${success_criteria['profit_target']}")
             if "final_profit" in success_criteria:
-                parts.append(f"Final profit target: ${success_criteria['final_profit']}")
+                parts.append(
+                    f"Final profit target: ${success_criteria['final_profit']}"
+                )
             if "customer_satisfaction" in success_criteria:
                 parts.append(
                     f"Customer satisfaction: {success_criteria['customer_satisfaction']:.0%}"
@@ -275,7 +321,9 @@ class ScenarioService:
         if self._should_refresh_cache():
             self._refresh_scenarios()
 
-        all_scenarios = list(self._scenario_cache.values()) if self._scenario_cache else []
+        all_scenarios = (
+            list(self._scenario_cache.values()) if self._scenario_cache else []
+        )
 
         # Apply filters
         filtered_scenarios = all_scenarios
@@ -374,7 +422,9 @@ class ScenarioService:
             raise ValueError("Failed to create scenario - reload error")
         return created
 
-    def update_scenario(self, scenario_id: str, update_data: ScenarioUpdate) -> Scenario:
+    def update_scenario(
+        self, scenario_id: str, update_data: ScenarioUpdate
+    ) -> Scenario:
         """Update an existing scenario and rewrite YAML file."""
         if self._should_refresh_cache():
             self._refresh_scenarios()

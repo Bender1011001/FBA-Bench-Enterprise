@@ -1,10 +1,10 @@
 """Golden snapshot testing for deterministic simulation reproducibility."""
 
 import pytest
-
-from event_bus import get_event_bus
 from reproducibility.ci_integration import CIIntegration
 from reproducibility.event_snapshots import EventSnapshot
+
+from event_bus import get_event_bus
 from simulation_orchestrator import SimulationConfig  # Import SimulationConfig
 
 
@@ -18,8 +18,12 @@ def serialize_run_audit(audit):
         "git_tree_hash": audit.git_tree_hash,  # Add new git tree hash
         "fee_schedule_hash": audit.fee_schedule_hash,
         "final_ledger_hash": audit.final_ledger_hash,
-        "final_balance_sheet": {k: str(v) for k, v in audit.final_balance_sheet.items()},
-        "final_income_statement": {k: str(v) for k, v in audit.final_income_statement.items()},
+        "final_balance_sheet": {
+            k: str(v) for k, v in audit.final_balance_sheet.items()
+        },
+        "final_income_statement": {
+            k: str(v) for k, v in audit.final_income_statement.items()
+        },
         "tick_count": len(audit.ticks),
         "tick_ledger_hashes": [t.ledger_tick_hash for t in audit.ticks],
         "rng_hashes": [t.rng_state_hash for t in audit.ticks],
@@ -96,22 +100,38 @@ def test_golden_run_365_days_snapshot(sim_factory, data_regression):
         "git_tree_hash": audit.git_tree_hash,  # Add new git tree hash
         "fee_schedule_hash": audit.fee_schedule_hash,
         "violations": audit.violations,
-        "final_balance_sheet": {k: str(v) for k, v in audit.final_balance_sheet.items()},
-        "final_income_statement": {k: str(v) for k, v in audit.final_income_statement.items()},
+        "final_balance_sheet": {
+            k: str(v) for k, v in audit.final_balance_sheet.items()
+        },
+        "final_income_statement": {
+            k: str(v) for k, v in audit.final_income_statement.items()
+        },
         # Sample of tick hashes for spot checking
         "sample_tick_hashes": {
             "day_1": audit.ticks[0].ledger_tick_hash if len(audit.ticks) > 0 else None,
-            "day_30": audit.ticks[29].ledger_tick_hash if len(audit.ticks) > 29 else None,
-            "day_90": audit.ticks[89].ledger_tick_hash if len(audit.ticks) > 89 else None,
-            "day_180": audit.ticks[179].ledger_tick_hash if len(audit.ticks) > 179 else None,
-            "day_365": audit.ticks[364].ledger_tick_hash if len(audit.ticks) > 364 else None,
+            "day_30": (
+                audit.ticks[29].ledger_tick_hash if len(audit.ticks) > 29 else None
+            ),
+            "day_90": (
+                audit.ticks[89].ledger_tick_hash if len(audit.ticks) > 89 else None
+            ),
+            "day_180": (
+                audit.ticks[179].ledger_tick_hash if len(audit.ticks) > 179 else None
+            ),
+            "day_365": (
+                audit.ticks[364].ledger_tick_hash if len(audit.ticks) > 364 else None
+            ),
         },
         "sample_rng_hashes": {
             "day_1": audit.ticks[0].rng_state_hash if len(audit.ticks) > 0 else None,
             "day_30": audit.ticks[29].rng_state_hash if len(audit.ticks) > 29 else None,
             "day_90": audit.ticks[89].rng_state_hash if len(audit.ticks) > 89 else None,
-            "day_180": audit.ticks[179].rng_state_hash if len(audit.ticks) > 179 else None,
-            "day_365": audit.ticks[364].rng_state_hash if len(audit.ticks) > 364 else None,
+            "day_180": (
+                audit.ticks[179].rng_state_hash if len(audit.ticks) > 179 else None
+            ),
+            "day_365": (
+                audit.ticks[364].rng_state_hash if len(audit.ticks) > 364 else None
+            ),
         },
     }
 
@@ -135,8 +155,12 @@ async def test_different_seeds_produce_different_results(sim_factory, seed):
     audit2 = sim2.run_and_audit(days=10)
 
     assert audit.final_ledger_hash == audit2.final_ledger_hash
-    assert [t.ledger_tick_hash for t in audit.ticks] == [t.ledger_tick_hash for t in audit2.ticks]
-    assert [t.rng_state_hash for t in audit.ticks] == [t.rng_state_hash for t in audit2.ticks]
+    assert [t.ledger_tick_hash for t in audit.ticks] == [
+        t.ledger_tick_hash for t in audit2.ticks
+    ]
+    assert [t.rng_state_hash for t in audit.ticks] == [
+        t.rng_state_hash for t in audit2.ticks
+    ]
 
 
 @pytest.mark.golden
@@ -163,7 +187,9 @@ async def test_hash_stability_across_runs(sim_factory):
             assert (
                 tick1.ledger_tick_hash == tick2.ledger_tick_hash
             ), f"Ledger hash mismatch at tick {i}"
-            assert tick1.rng_state_hash == tick2.rng_state_hash, f"RNG hash mismatch at tick {i}"
+            assert (
+                tick1.rng_state_hash == tick2.rng_state_hash
+            ), f"RNG hash mismatch at tick {i}"
             assert (
                 tick1.inventory_hash == tick2.inventory_hash
             ), f"Inventory hash mismatch at tick {i}"
@@ -211,8 +237,12 @@ def test_minimal_run_snapshot(sim_factory, data_regression):
             "rng_hash": audit.ticks[0].rng_state_hash,
             "inventory_hash": audit.ticks[0].inventory_hash,
         },
-        "final_balance_sheet": {k: str(v) for k, v in audit.final_balance_sheet.items()},
-        "final_income_statement": {k: str(v) for k, v in audit.final_income_statement.items()},
+        "final_balance_sheet": {
+            k: str(v) for k, v in audit.final_balance_sheet.items()
+        },
+        "final_income_statement": {
+            k: str(v) for k, v in audit.final_income_statement.items()
+        },
     }
 
     data_regression.check(snapshot_data)
@@ -281,6 +311,6 @@ async def test_ci_reproducibility_check(sim_factory, seed):
     assert is_reproducible, "CI reproducibility check failed: event streams diverge!"
 
     # Clean up the mock baseline file
-    (EventSnapshot.ARTIFACTS_DIR / f"{mock_baseline_git_sha}_{mock_run_id}.parquet").unlink(
-        missing_ok=True
-    )
+    (
+        EventSnapshot.ARTIFACTS_DIR / f"{mock_baseline_git_sha}_{mock_run_id}.parquet"
+    ).unlink(missing_ok=True)

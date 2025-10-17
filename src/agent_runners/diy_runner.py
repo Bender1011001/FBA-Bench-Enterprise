@@ -17,7 +17,11 @@ from sklearn.linear_model import Ridge  # type: ignore
 from benchmarking.config.pydantic_config import AgentConfig, FrameworkType, LLMConfig
 from config.model_config import get_model_params
 
-from .base_runner import AgentRunner, AgentRunnerDecisionError, AgentRunnerInitializationError
+from .base_runner import (
+    AgentRunner,
+    AgentRunnerDecisionError,
+    AgentRunnerInitializationError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +76,9 @@ class PricingStrategy:
     def __init__(self, agent_id: str):
         self.agent_id = agent_id
 
-    def calculate_price(self, product_data: Dict[str, Any], market_data: Dict[str, Any]) -> float:
+    def calculate_price(
+        self, product_data: Dict[str, Any], market_data: Dict[str, Any]
+    ) -> float:
         """Calculate the optimal price for a product."""
         raise NotImplementedError
 
@@ -98,14 +104,22 @@ class CompetitivePricingStrategy(PricingStrategy):
         )
         self._pp = pp
 
-    def calculate_price(self, product_data: Dict[str, Any], market_data: Dict[str, Any]) -> float:
+    def calculate_price(
+        self, product_data: Dict[str, Any], market_data: Dict[str, Any]
+    ) -> float:
         """Calculate price based on competitive analysis."""
         cost = float(product_data.get("cost", 0.0))
         # Ensure current_price has a sensible default if neither current_price nor cost are available
-        default_price_from_cost = cost * (1.0 + self.margin_target) if cost > 0 else 0.01
-        current_price = float(product_data.get("current_price", default_price_from_cost))
+        default_price_from_cost = (
+            cost * (1.0 + self.margin_target) if cost > 0 else 0.01
+        )
+        current_price = float(
+            product_data.get("current_price", default_price_from_cost)
+        )
         sales_rank = int(product_data.get("sales_rank", 1_000_000))
-        inventory = int(product_data.get("inventory", int(self._pp.high_inventory_threshold)))
+        inventory = int(
+            product_data.get("inventory", int(self._pp.high_inventory_threshold))
+        )
 
         # Get competitor prices from market data
         competitor_prices = [
@@ -119,7 +133,9 @@ class CompetitivePricingStrategy(PricingStrategy):
         )
 
         # Base price calculation (cost + target margin), ensuring a minimum floor
-        base_price = cost * (1.0 + self.margin_target) if cost > 0 else max(current_price, 0.01)
+        base_price = (
+            cost * (1.0 + self.margin_target) if cost > 0 else max(current_price, 0.01)
+        )
 
         # Adjust based on sales rank thresholds
         rank_factor = 1.0
@@ -154,7 +170,9 @@ class CompetitivePricingStrategy(PricingStrategy):
 
         # Ensure minimum profit margin over cost
         minimum_price = (
-            cost * (1.0 + float(self._pp.minimum_margin_over_cost)) if cost > 0 else 0.01
+            cost * (1.0 + float(self._pp.minimum_margin_over_cost))
+            if cost > 0
+            else 0.01
         )
         final_price = max(final_price, minimum_price)
 
@@ -172,11 +190,17 @@ class DynamicPricingStrategy(PricingStrategy):
     ):
         super().__init__(agent_id)
         pp = get_model_params().pricing
-        self.base_margin = float(pp.base_margin) if base_margin is None else float(base_margin)
-        self.elasticity_factor = (
-            float(pp.elasticity_factor) if elasticity_factor is None else float(elasticity_factor)
+        self.base_margin = (
+            float(pp.base_margin) if base_margin is None else float(base_margin)
         )
-        self.price_history: Dict[str, List[float]] = {}  # Track price history for each product
+        self.elasticity_factor = (
+            float(pp.elasticity_factor)
+            if elasticity_factor is None
+            else float(elasticity_factor)
+        )
+        self.price_history: Dict[str, List[float]] = (
+            {}
+        )  # Track price history for each product
         self._pp = pp
 
     def _estimate_elasticity(self, market_data: Dict[str, Any]) -> Optional[float]:
@@ -184,9 +208,9 @@ class DynamicPricingStrategy(PricingStrategy):
         try:
             recent_prices = market_data.get("recent_prices") or []
             recent_sales = market_data.get("recent_sales") or []
-            if len(recent_prices) >= int(self._pp.elasticity_history_min_points) and len(
-                recent_prices
-            ) == len(recent_sales):
+            if len(recent_prices) >= int(
+                self._pp.elasticity_history_min_points
+            ) and len(recent_prices) == len(recent_sales):
                 # Filter positive pairs
                 pairs = [
                     (float(p), float(q))
@@ -214,7 +238,9 @@ class DynamicPricingStrategy(PricingStrategy):
             return None
         return None
 
-    def calculate_price(self, product_data: Dict[str, Any], market_data: Dict[str, Any]) -> float:
+    def calculate_price(
+        self, product_data: Dict[str, Any], market_data: Dict[str, Any]
+    ) -> float:
         """Calculate price using dynamic pricing algorithm."""
         asin = str(product_data.get("asin", "unknown"))
         cost = float(product_data.get("cost", 0.0))
@@ -224,19 +250,25 @@ class DynamicPricingStrategy(PricingStrategy):
             else float(product_data.get("current_price", 0.0))
         )
         sales_rank = int(product_data.get("sales_rank", 1_000_000))
-        inventory = int(product_data.get("inventory", int(self._pp.high_inventory_threshold)))
+        inventory = int(
+            product_data.get("inventory", int(self._pp.high_inventory_threshold))
+        )
 
         # Get market demand indicator and seasonality factor
         market_demand = float(market_data.get("market_demand", 1.0))  # 1.0 = neutral
         seasonality = float(market_data.get("seasonality", 1.0))  # 1.0 = neutral
 
         # Calculate base price
-        base_price = cost * (1.0 + self.base_margin) if cost > 0 else max(current_price, 0.01)
+        base_price = (
+            cost * (1.0 + self.base_margin) if cost > 0 else max(current_price, 0.01)
+        )
 
         # Demand-based adjustment scaled by (learned) elasticity magnitude
         learned_elasticity = self._estimate_elasticity(market_data)
         effective_elasticity = (
-            abs(learned_elasticity) if learned_elasticity is not None else self.elasticity_factor
+            abs(learned_elasticity)
+            if learned_elasticity is not None
+            else self.elasticity_factor
         )
         demand_factor = 1.0 + (market_demand - 1.0) * effective_elasticity
 
@@ -263,7 +295,11 @@ class DynamicPricingStrategy(PricingStrategy):
 
         # First compute a preliminary price without history dampening
         preliminary_price = (
-            base_price * demand_factor * seasonality_factor * rank_adjustment * inventory_adjustment
+            base_price
+            * demand_factor
+            * seasonality_factor
+            * rank_adjustment
+            * inventory_adjustment
         )
 
         # Apply history-based dampening to avoid large swings
@@ -283,7 +319,9 @@ class DynamicPricingStrategy(PricingStrategy):
 
         # Ensure minimum profit margin over cost
         minimum_price = (
-            cost * (1.0 + float(self._pp.minimum_margin_over_cost)) if cost > 0 else 0.01
+            cost * (1.0 + float(self._pp.minimum_margin_over_cost))
+            if cost > 0
+            else 0.01
         )
         final_price = max(final_price, minimum_price)
 
@@ -368,11 +406,15 @@ class DIYRunner(AgentRunner):
 
     def _create_pricing_strategy(self) -> None:
         """Create the pricing strategy based on configuration."""
-        strategy_type = self.agent_config.parameters.get("pricing_strategy", "competitive")
+        strategy_type = self.agent_config.parameters.get(
+            "pricing_strategy", "competitive"
+        )
 
         if strategy_type == "competitive":
             margin_target = self.agent_config.parameters.get("margin_target", 0.3)
-            competitor_sensitivity = self.agent_config.parameters.get("competitor_sensitivity", 0.5)
+            competitor_sensitivity = self.agent_config.parameters.get(
+                "competitor_sensitivity", 0.5
+            )
             self.pricing_strategy = CompetitivePricingStrategy(
                 agent_id=self.agent_id,
                 margin_target=margin_target,
@@ -380,9 +422,13 @@ class DIYRunner(AgentRunner):
             )
         elif strategy_type == "dynamic":
             base_margin = self.agent_config.parameters.get("base_margin", 0.25)
-            elasticity_factor = self.agent_config.parameters.get("elasticity_factor", 0.3)
+            elasticity_factor = self.agent_config.parameters.get(
+                "elasticity_factor", 0.3
+            )
             self.pricing_strategy = DynamicPricingStrategy(
-                agent_id=self.agent_id, base_margin=base_margin, elasticity_factor=elasticity_factor
+                agent_id=self.agent_id,
+                base_margin=base_margin,
+                elasticity_factor=elasticity_factor,
             )
         else:
             # Default to competitive pricing
@@ -417,13 +463,17 @@ class DIYRunner(AgentRunner):
                 asin = product.get("asin", "unknown")
 
                 # Calculate price using the pricing strategy
-                new_price = self.pricing_strategy.calculate_price(product, market_conditions)
+                new_price = self.pricing_strategy.calculate_price(
+                    product, market_conditions
+                )
 
                 # Calculate confidence based on data quality
                 confidence = self._calculate_confidence(product, market_conditions)
 
                 # Generate reasoning
-                product_reasoning = self._generate_reasoning(product, market_conditions, new_price)
+                product_reasoning = self._generate_reasoning(
+                    product, market_conditions, new_price
+                )
 
                 pricing_decisions[asin] = {
                     "price": new_price,
@@ -479,7 +529,9 @@ class DIYRunner(AgentRunner):
                 framework="DIY",
             ) from e
 
-    def _calculate_confidence(self, product: Dict[str, Any], market_data: Dict[str, Any]) -> float:
+    def _calculate_confidence(
+        self, product: Dict[str, Any], market_data: Dict[str, Any]
+    ) -> float:
         """Calculate confidence score for the pricing decision."""
         mp_adv = get_model_params().advanced_agent
         confidence = 0.5  # Base confidence
@@ -553,11 +605,15 @@ class DIYRunner(AgentRunner):
             if new_price > avg_competitor_price * (
                 1.0 + mp_adv.reasoning_competitor_price_deviation_pct
             ):
-                reasoning += f"Priced above competitors (avg ${avg_competitor_price:.2f}). "
+                reasoning += (
+                    f"Priced above competitors (avg ${avg_competitor_price:.2f}). "
+                )
             elif new_price < avg_competitor_price * (
                 1.0 - mp_adv.reasoning_competitor_price_deviation_pct
             ):
-                reasoning += f"Priced below competitors (avg ${avg_competitor_price:.2f}). "
+                reasoning += (
+                    f"Priced below competitors (avg ${avg_competitor_price:.2f}). "
+                )
 
         return reasoning.strip()
 

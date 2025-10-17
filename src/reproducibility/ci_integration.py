@@ -1,8 +1,7 @@
 import subprocess
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-
-from datetime import datetime
 
 from reproducibility.event_snapshots import EventSnapshot
 
@@ -30,18 +29,26 @@ class CIIntegration:
                 timeout=10,
             )
             return result.stdout.strip()
-        except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
+        except (
+            subprocess.CalledProcessError,
+            FileNotFoundError,
+            subprocess.TimeoutExpired,
+        ):
             return "unknown_sha"
 
     @staticmethod
-    def capture_golden_snapshot(events: List[Dict[str, Any]], run_id: str) -> Optional[Path]:
+    def capture_golden_snapshot(
+        events: List[Dict[str, Any]], run_id: str
+    ) -> Optional[Path]:
         """
         Captures a golden event snapshot, typically after a successful build/test run in CI.
         The snapshot is named using the current Git SHA and a unique run_id.
         """
         git_sha = CIIntegration.get_current_git_sha()
         if git_sha == "unknown_sha":
-            print("Warning: Not in a Git repository. Cannot capture golden snapshot with SHA.")
+            print(
+                "Warning: Not in a Git repository. Cannot capture golden snapshot with SHA."
+            )
             return None
 
         print(f"Capturing golden snapshot for Git SHA: {git_sha} and Run ID: {run_id}")
@@ -49,7 +56,9 @@ class CIIntegration:
 
     @staticmethod
     def verify_reproducibility(
-        current_events: List[Dict[str, Any]], baseline_git_sha: str, baseline_run_id: str
+        current_events: List[Dict[str, Any]],
+        baseline_git_sha: str,
+        baseline_run_id: str,
     ) -> bool:
         """
         Compares the current event stream against a previously captured golden snapshot.
@@ -81,7 +90,9 @@ class CIIntegration:
         print(f"Comparing current events against baseline snapshot: {target_path}")
         baseline_events = EventSnapshot.load_events(target_path)
 
-        is_reproducible = EventSnapshot.compare_event_streams(current_events, baseline_events)
+        is_reproducible = EventSnapshot.compare_event_streams(
+            current_events, baseline_events
+        )
 
         if is_reproducible:
             print("Reproducibility check: PASSED. Event streams are identical.")
@@ -116,7 +127,9 @@ if __name__ == "__main__":
     # In CI, 'run_id' could be a build number or dynamically generated
     current_git_sha = CIIntegration.get_current_git_sha()
     if current_git_sha != "unknown_sha":
-        snapshot_path = CIIntegration.capture_golden_snapshot(sample_events, run_id="build_123")
+        snapshot_path = CIIntegration.capture_golden_snapshot(
+            sample_events, run_id="build_123"
+        )
         if snapshot_path:
             print(f"Captured example snapshot to {snapshot_path}")
 

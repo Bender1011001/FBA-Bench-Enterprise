@@ -9,6 +9,7 @@ import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
+from money import Money
 from pydantic import Field, PositiveInt, confloat
 
 from benchmarking.agents.base import BaseAgent
@@ -18,7 +19,6 @@ from fba_bench_core.services.market_simulator import MarketSimulationService
 from fba_bench_core.services.supply_chain_service import SupplyChainService
 from fba_bench_core.services.world_store import WorldStore
 from fba_events.supplier import PlaceOrderCommand
-from money import Money
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,8 @@ class SupplyChainDisruptionConfig(ScenarioConfig):
     """Configuration for the Supply Chain Disruption Scenario."""
 
     product_asin: str = Field(
-        "B0CSUPPLYCHAIN", description="ASIN of the product affected by supply chain disruption."
+        "B0CSUPPLYCHAIN",
+        description="ASIN of the product affected by supply chain disruption.",
     )
     initial_inventory: PositiveInt = Field(
         1000, description="Initial inventory level for the product."
@@ -61,7 +62,9 @@ class SupplyChainDisruptionScenario(BaseScenario):
         self.product_asin: str = self.scenario_config.product_asin
         self.initial_inventory: int = self.scenario_config.initial_inventory
         self.disruption_magnitude: float = self.scenario_config.disruption_magnitude
-        self.disruption_duration_ticks: int = self.scenario_config.disruption_duration_ticks
+        self.disruption_duration_ticks: int = (
+            self.scenario_config.disruption_duration_ticks
+        )
         self.disruption_start_tick: int = self.scenario_config.disruption_start_tick
         self.demand_per_tick: int = self.scenario_config.demand_per_tick
 
@@ -100,9 +103,13 @@ class SupplyChainDisruptionScenario(BaseScenario):
                 # If initialize_product already done, ensure inventory aligns
                 pass
 
-        logger.info(f"Initial inventory for {self.product_asin}: {self.initial_inventory}")
+        logger.info(
+            f"Initial inventory for {self.product_asin}: {self.initial_inventory}"
+        )
 
-    async def run(self, agent: BaseAgent, run_number: int, *args, **kwargs) -> AgentRunResult:
+    async def run(
+        self, agent: BaseAgent, run_number: int, *args, **kwargs
+    ) -> AgentRunResult:
         """
         Execute a single tick of the supply chain disruption scenario.
         Apply disruption, simulate demand, and measure agent's mitigation.
@@ -118,7 +125,9 @@ class SupplyChainDisruptionScenario(BaseScenario):
             <= self.current_tick
             < self.disruption_start_tick + self.disruption_duration_ticks
         ):
-            reduced_supply = int(self.original_supply_per_tick * (1 - self.disruption_magnitude))
+            reduced_supply = int(
+                self.original_supply_per_tick * (1 - self.disruption_magnitude)
+            )
             self.current_supply_per_tick = max(
                 0, reduced_supply
             )  # Ensure supply doesn't go negative
@@ -154,8 +163,12 @@ class SupplyChainDisruptionScenario(BaseScenario):
             # Publish PlaceOrderCommand if agent proposed one
             event_bus = kwargs.get("event_bus")
             world_store: Optional[WorldStore] = kwargs.get("world_store")
-            supply_chain: Optional[SupplyChainService] = kwargs.get("supply_chain_service")
-            market_simulator: Optional[MarketSimulationService] = kwargs.get("market_simulator")
+            supply_chain: Optional[SupplyChainService] = kwargs.get(
+                "supply_chain_service"
+            )
+            market_simulator: Optional[MarketSimulationService] = kwargs.get(
+                "market_simulator"
+            )
 
             prev_inventory = (
                 world_store.get_product_inventory_quantity(self.product_asin)
@@ -166,8 +179,12 @@ class SupplyChainDisruptionScenario(BaseScenario):
             if event_bus and world_store:
                 order_qty = int(agent_decision_output.get("order_quantity", 0) or 0)
                 if order_qty > 0:
-                    supplier_id = str(agent_decision_output.get("supplier_id", "default_supplier"))
-                    max_unit_price = float(agent_decision_output.get("max_unit_price", 100.0))
+                    supplier_id = str(
+                        agent_decision_output.get("supplier_id", "default_supplier")
+                    )
+                    max_unit_price = float(
+                        agent_decision_output.get("max_unit_price", 100.0)
+                    )
                     cmd = PlaceOrderCommand(
                         event_id=f"order_{agent.agent_id}_{self.current_tick}",
                         timestamp=datetime.now(),
@@ -193,7 +210,9 @@ class SupplyChainDisruptionScenario(BaseScenario):
                 # Increase lead time by 1x magnitude in disruption window and reduce fulfillment rate
                 kwargs["supply_chain_service"].set_disruption(
                     active=disruption_active,
-                    lead_time_increase=max(0, int(round(self.disruption_magnitude * 2))),
+                    lead_time_increase=max(
+                        0, int(round(self.disruption_magnitude * 2))
+                    ),
                     fulfillment_rate=max(0.0, 1.0 - self.disruption_magnitude),
                 )
                 # Process arrivals for this tick
@@ -278,7 +297,9 @@ class SupplyChainDisruptionScenario(BaseScenario):
         """
         Clean up resources after the supply chain disruption scenario.
         """
-        logger.info(f"Tearing down Supply Chain Disruption Scenario: {self.scenario_id}")
+        logger.info(
+            f"Tearing down Supply Chain Disruption Scenario: {self.scenario_id}"
+        )
         self.current_tick = 0
         self.current_inventory = self.initial_inventory
         self.total_revenue_lost = 0.0

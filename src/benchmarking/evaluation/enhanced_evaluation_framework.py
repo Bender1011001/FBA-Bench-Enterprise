@@ -188,7 +188,10 @@ class EnhancedEvaluationFramework:
         )
 
     async def evaluate_agent(
-        self, agent_id: str, scenario_result: ScenarioResult, context: Dict[str, Any] = None
+        self,
+        agent_id: str,
+        scenario_result: ScenarioResult,
+        context: Dict[str, Any] = None,
     ) -> MultiDimensionalEvaluation:
         """
         Evaluate an agent's performance across multiple dimensions.
@@ -201,7 +204,9 @@ class EnhancedEvaluationFramework:
         Returns:
             Multi-dimensional evaluation result
         """
-        logger.info(f"Evaluating agent {agent_id} on scenario {scenario_result.scenario_name}")
+        logger.info(
+            f"Evaluating agent {agent_id} on scenario {scenario_result.scenario_name}"
+        )
 
         if context is None:
             context = {}
@@ -212,10 +217,14 @@ class EnhancedEvaluationFramework:
             logger.warning(
                 f"No results found for agent {agent_id} in scenario {scenario_result.scenario_name}"
             )
-            return self._create_empty_evaluation(agent_id, scenario_result.scenario_name)
+            return self._create_empty_evaluation(
+                agent_id, scenario_result.scenario_name
+            )
 
         # Calculate dimension scores
-        dimension_scores = await self._calculate_dimension_scores(agent_id, agent_results, context)
+        dimension_scores = await self._calculate_dimension_scores(
+            agent_id, agent_results, context
+        )
 
         # Calculate overall score
         overall_score = self._calculate_overall_score(dimension_scores)
@@ -230,7 +239,9 @@ class EnhancedEvaluationFramework:
         # Perform trend analysis if enabled
         trend_analysis = {}
         if self.config.include_trend_analysis:
-            trend_analysis = await self._perform_trend_analysis(agent_id, dimension_scores)
+            trend_analysis = await self._perform_trend_analysis(
+                agent_id, dimension_scores
+            )
 
         # Calculate statistical significance if enabled
         statistical_significance = {}
@@ -272,11 +283,16 @@ class EnhancedEvaluationFramework:
         # Update agent profile
         await self._update_agent_profile(agent_id)
 
-        logger.info(f"Completed evaluation for agent {agent_id}: overall score {overall_score:.3f}")
+        logger.info(
+            f"Completed evaluation for agent {agent_id}: overall score {overall_score:.3f}"
+        )
         return evaluation
 
     async def evaluate_multiple_agents(
-        self, agent_ids: List[str], scenario_result: ScenarioResult, context: Dict[str, Any] = None
+        self,
+        agent_ids: List[str],
+        scenario_result: ScenarioResult,
+        context: Dict[str, Any] = None,
     ) -> Dict[str, MultiDimensionalEvaluation]:
         """
         Evaluate multiple agents on the same scenario.
@@ -363,11 +379,16 @@ class EnhancedEvaluationFramework:
         # Store profile
         self.agent_profiles[agent_id] = profile
 
-        logger.info(f"Created profile for agent {agent_id} with {len(evaluations)} evaluations")
+        logger.info(
+            f"Created profile for agent {agent_id} with {len(evaluations)} evaluations"
+        )
         return profile
 
     async def generate_evaluation_report(
-        self, agent_ids: List[str], format_type: str = "json", include_recommendations: bool = True
+        self,
+        agent_ids: List[str],
+        format_type: str = "json",
+        include_recommendations: bool = True,
     ) -> Dict[str, Any]:
         """
         Generate a comprehensive evaluation report.
@@ -417,7 +438,10 @@ class EnhancedEvaluationFramework:
         return report
 
     async def _calculate_dimension_scores(
-        self, agent_id: str, agent_results: List[AgentRunResult], context: Dict[str, Any]
+        self,
+        agent_id: str,
+        agent_results: List[AgentRunResult],
+        context: Dict[str, Any],
     ) -> List[DimensionScore]:
         """Calculate scores for each evaluation dimension."""
         dimension_scores = []
@@ -434,7 +458,9 @@ class EnhancedEvaluationFramework:
             trend = self._determine_dimension_trend(agent_id, dimension, score)
 
             # Calculate statistical significance
-            significance = self._calculate_dimension_significance(dimension, agent_results, score)
+            significance = self._calculate_dimension_significance(
+                dimension, agent_results, score
+            )
 
             dimension_scores.append(
                 DimensionScore(
@@ -577,7 +603,10 @@ class EnhancedEvaluationFramework:
             return 0.0
 
         # Different aggregation methods based on dimension
-        if dimension in [EvaluationDimension.TASK_COMPLETION, EvaluationDimension.SAFETY]:
+        if dimension in [
+            EvaluationDimension.TASK_COMPLETION,
+            EvaluationDimension.SAFETY,
+        ]:
             # For these dimensions, use minimum to ensure no critical failures
             return min(values)
         elif dimension in [
@@ -586,7 +615,10 @@ class EnhancedEvaluationFramework:
         ]:
             # For efficiency, use harmonic mean to penalize extreme inefficiencies
             return len(values) / sum(1.0 / (v + 1e-6) for v in values)
-        elif dimension in [EvaluationDimension.CREATIVITY, EvaluationDimension.ADAPTABILITY]:
+        elif dimension in [
+            EvaluationDimension.CREATIVITY,
+            EvaluationDimension.ADAPTABILITY,
+        ]:
             # For creativity and adaptability, use maximum to highlight peak performance
             return max(values)
         else:
@@ -606,7 +638,9 @@ class EnhancedEvaluationFramework:
         # Base confidence on consistency (inverse of variance)
         if len(values) > 1:
             variance = statistics.variance(values)
-            max_possible_variance = max((v - 0.5) ** 2 for v in values) if values else 0.25
+            max_possible_variance = (
+                max((v - 0.5) ** 2 for v in values) if values else 0.25
+            )
             consistency_confidence = 1.0 - (variance / (max_possible_variance + 1e-6))
             consistency_confidence = max(0.0, min(1.0, consistency_confidence))
         else:
@@ -661,7 +695,10 @@ class EnhancedEvaluationFramework:
             return "stable"
 
     def _calculate_dimension_significance(
-        self, dimension: EvaluationDimension, agent_results: List[AgentRunResult], score: float
+        self,
+        dimension: EvaluationDimension,
+        agent_results: List[AgentRunResult],
+        score: float,
     ) -> float:
         """Calculate statistical significance of a dimension score."""
         if len(agent_results) < 3:
@@ -718,7 +755,10 @@ class EnhancedEvaluationFramework:
         return weighted_sum / total_weight
 
     async def _perform_comparative_analysis(
-        self, agent_id: str, scenario_result: ScenarioResult, dimension_scores: List[DimensionScore]
+        self,
+        agent_id: str,
+        scenario_result: ScenarioResult,
+        dimension_scores: List[DimensionScore],
     ) -> Dict[str, float]:
         """Perform comparative analysis against other agents."""
         # Get all agent IDs from the scenario
@@ -842,14 +882,19 @@ class EnhancedEvaluationFramework:
         return significance_results
 
     async def _perform_benchmark_comparison(
-        self, agent_id: str, scenario_result: ScenarioResult, dimension_scores: List[DimensionScore]
+        self,
+        agent_id: str,
+        scenario_result: ScenarioResult,
+        dimension_scores: List[DimensionScore],
     ) -> Dict[str, Any]:
         """Perform comparison against baseline/benchmark agent."""
         if not self.config.baseline_agent_id:
             return {}
 
         # Get baseline agent results
-        baseline_results = scenario_result.get_agent_results(self.config.baseline_agent_id)
+        baseline_results = scenario_result.get_agent_results(
+            self.config.baseline_agent_id
+        )
         if not baseline_results:
             return {}
 
@@ -987,7 +1032,9 @@ class EnhancedEvaluationFramework:
             "total_evaluations": len(evaluations),
             "overall_performance": {
                 "mean": statistics.mean(overall_scores),
-                "std_dev": statistics.stdev(overall_scores) if len(overall_scores) > 1 else 0.0,
+                "std_dev": (
+                    statistics.stdev(overall_scores) if len(overall_scores) > 1 else 0.0
+                ),
                 "min": min(overall_scores),
                 "max": max(overall_scores),
                 "trend": self._determine_overall_trend(evaluations),
@@ -1019,7 +1066,9 @@ class EnhancedEvaluationFramework:
                 dimension_scores[dimension] = statistics.mean(scores)
 
         # Sort dimensions by score
-        sorted_dimensions = sorted(dimension_scores.items(), key=lambda x: x[1], reverse=True)
+        sorted_dimensions = sorted(
+            dimension_scores.items(), key=lambda x: x[1], reverse=True
+        )
 
         # Identify top 3 as strengths, bottom 3 as weaknesses
         strengths = [dim for dim, score in sorted_dimensions[:3]]
@@ -1038,7 +1087,9 @@ class EnhancedEvaluationFramework:
 
         # Check for declining trends
         for dimension in EvaluationDimension:
-            trend = self._determine_dimension_trend_from_evaluations(evaluations, dimension)
+            trend = self._determine_dimension_trend_from_evaluations(
+                evaluations, dimension
+            )
             if trend == "declining":
                 improvement_areas.append(f"improve_{dimension.value}")
 
@@ -1055,7 +1106,9 @@ class EnhancedEvaluationFramework:
 
         return improvement_areas
 
-    def _determine_overall_trend(self, evaluations: List[MultiDimensionalEvaluation]) -> str:
+    def _determine_overall_trend(
+        self, evaluations: List[MultiDimensionalEvaluation]
+    ) -> str:
         """Determine overall performance trend."""
         if len(evaluations) < 3:
             return "insufficient_data"
@@ -1096,7 +1149,9 @@ class EnhancedEvaluationFramework:
             return "stable"
 
     def _determine_dimension_trend_from_evaluations(
-        self, evaluations: List[MultiDimensionalEvaluation], dimension: EvaluationDimension
+        self,
+        evaluations: List[MultiDimensionalEvaluation],
+        dimension: EvaluationDimension,
     ) -> str:
         """Determine trend for a specific dimension from evaluations."""
         if len(evaluations) < 3:
@@ -1145,7 +1200,9 @@ class EnhancedEvaluationFramework:
                 agent_performance[agent_id] = 0.0
 
         # Rank agents
-        ranked_agents = sorted(agent_performance.items(), key=lambda x: x[1], reverse=True)
+        ranked_agents = sorted(
+            agent_performance.items(), key=lambda x: x[1], reverse=True
+        )
 
         # Calculate performance gaps
         best_score = ranked_agents[0][1] if ranked_agents else 0.0
@@ -1164,7 +1221,9 @@ class EnhancedEvaluationFramework:
             profile = profiles[agent_id]
             if profile.evaluations:
                 latest_eval = profile.evaluations[-1]
-                dimension_scores = [dim_score.score for dim_score in latest_eval.dimension_scores]
+                dimension_scores = [
+                    dim_score.score for dim_score in latest_eval.dimension_scores
+                ]
                 performance_matrix.append(dimension_scores)
             else:
                 performance_matrix.append([0.0] * len(EvaluationDimension))
@@ -1209,11 +1268,15 @@ class EnhancedEvaluationFramework:
 
             # Add recommendations based on weaknesses
             for weakness in profile.weaknesses:
-                agent_recommendations.append(f"Focus on improving {weakness.value} capabilities")
+                agent_recommendations.append(
+                    f"Focus on improving {weakness.value} capabilities"
+                )
 
             # Add recommendations based on improvement areas
             for area in profile.improvement_areas:
-                agent_recommendations.append(f"Implement strategies to {area.replace('_', ' ')}")
+                agent_recommendations.append(
+                    f"Implement strategies to {area.replace('_', ' ')}"
+                )
 
             # Add trend-based recommendations
             if profile.overall_trend == "declining":
@@ -1295,7 +1358,9 @@ class EnhancedEvaluationFramework:
             "total_agents": len(profiles),
             "overall_statistics": {
                 "mean": statistics.mean(overall_scores),
-                "std_dev": statistics.stdev(overall_scores) if len(overall_scores) > 1 else 0.0,
+                "std_dev": (
+                    statistics.stdev(overall_scores) if len(overall_scores) > 1 else 0.0
+                ),
                 "min": min(overall_scores),
                 "max": max(overall_scores),
             },

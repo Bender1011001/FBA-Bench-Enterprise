@@ -187,7 +187,8 @@ class ExampleCommunityAgent(AgentPlugin):
 
         recent_avg = sum(prices[-self.momentum_window :]) / self.momentum_window
         older_avg = (
-            sum(prices[-self.momentum_window * 2 : -self.momentum_window]) / self.momentum_window
+            sum(prices[-self.momentum_window * 2 : -self.momentum_window])
+            / self.momentum_window
         )
 
         return (recent_avg - older_avg) / older_avg if older_avg > 0 else 0.0
@@ -222,7 +223,8 @@ class ExampleCommunityAgent(AgentPlugin):
             "volume_threshold": self.volume_threshold,
             "tracked_products": len(self.price_history),
             "avg_history_length": (
-                sum(len(h) for h in self.price_history.values()) / len(self.price_history)
+                sum(len(h) for h in self.price_history.values())
+                / len(self.price_history)
                 if self.price_history
                 else 0
             ),
@@ -336,8 +338,12 @@ class CommunityContributionExample:
         logger.info("Validation Results:")
         logger.info(f"  Valid: {'✓' if validation_result['valid'] else '✗'}")
         logger.info(f"  Structure Score: {validation_result['structure_score']:.1f}/10")
-        logger.info(f"  Code Quality Score: {validation_result['code_quality_score']:.1f}/10")
-        logger.info(f"  Documentation Score: {validation_result['documentation_score']:.1f}/10")
+        logger.info(
+            f"  Code Quality Score: {validation_result['code_quality_score']:.1f}/10"
+        )
+        logger.info(
+            f"  Documentation Score: {validation_result['documentation_score']:.1f}/10"
+        )
 
         if validation_result["errors"]:
             logger.info("  Errors:")
@@ -368,7 +374,9 @@ class CommunityContributionExample:
         logger.info(f"  Overall QA Score: {qa_results['overall_score']:.1f}/100")
         logger.info(f"  Code Quality: {qa_results['code_quality_score']:.1f}/100")
         logger.info(f"  Test Coverage: {qa_results['test_coverage']:.1f}%")
-        logger.info(f"  Documentation Quality: {qa_results['documentation_score']:.1f}/100")
+        logger.info(
+            f"  Documentation Quality: {qa_results['documentation_score']:.1f}/100"
+        )
         logger.info(f"  Security Score: {qa_results['security_score']:.1f}/100")
         logger.info(f"  Performance Score: {qa_results['performance_score']:.1f}/100")
 
@@ -391,12 +399,20 @@ class CommunityContributionExample:
         benchmark_scenarios = [
             {
                 "name": "Standard Market Conditions",
-                "config": {"market_type": "standard", "volatility": 0.3, "duration_days": 10},
+                "config": {
+                    "market_type": "standard",
+                    "volatility": 0.3,
+                    "duration_days": 10,
+                },
                 "expected_performance": {"min_score": 60, "target_score": 80},
             },
             {
                 "name": "High Volatility Market",
-                "config": {"market_type": "volatile", "volatility": 0.8, "duration_days": 10},
+                "config": {
+                    "market_type": "volatile",
+                    "volatility": 0.8,
+                    "duration_days": 10,
+                },
                 "expected_performance": {"min_score": 50, "target_score": 70},
             },
             {
@@ -410,8 +426,10 @@ class CommunityContributionExample:
             },
         ]
 
-        benchmark_results = await self.contribution_manager.benchmark_plugin_performance(
-            plugin_path=str(plugin_path), scenarios=benchmark_scenarios
+        benchmark_results = (
+            await self.contribution_manager.benchmark_plugin_performance(
+                plugin_path=str(plugin_path), scenarios=benchmark_scenarios
+            )
         )
 
         logger.info("Performance Benchmark Results:")
@@ -457,7 +475,10 @@ class CommunityContributionExample:
                 "Educational demonstrations",
             ],
             "dependencies": ["numpy", "pandas"],
-            "compatibility": {"fba_bench_version": ">=3.0.0", "python_version": ">=3.8"},
+            "compatibility": {
+                "fba_bench_version": ">=3.0.0",
+                "python_version": ">=3.8",
+            },
         }
 
         # Submit plugin
@@ -468,8 +489,12 @@ class CommunityContributionExample:
         logger.info("Submission Results:")
         logger.info(f"  Submission ID: {submission_result['submission_id']}")
         logger.info(f"  Status: {submission_result['status']}")
-        logger.info(f"  Estimated Review Time: {submission_result['estimated_review_days']} days")
-        logger.info(f"  Submission URL: {submission_result.get('submission_url', 'N/A')}")
+        logger.info(
+            f"  Estimated Review Time: {submission_result['estimated_review_days']} days"
+        )
+        logger.info(
+            f"  Submission URL: {submission_result.get('submission_url', 'N/A')}"
+        )
 
         if submission_result.get("next_steps"):
             logger.info("  Next Steps:")
@@ -532,7 +557,9 @@ class CommunityContributionExample:
             if stage.get("feedback"):
                 logger.info(f"    Feedback: {stage['feedback']}")
 
-        logger.info(f"  Total Review Time: {total_hours} hours ({total_hours/24:.1f} days)")
+        logger.info(
+            f"  Total Review Time: {total_hours} hours ({total_hours/24:.1f} days)"
+        )
 
     async def _step_7_publication(self) -> None:
         """Step 7: Publication and community sharing."""

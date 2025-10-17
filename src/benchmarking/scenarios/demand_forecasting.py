@@ -23,16 +23,19 @@ class DemandForecastingScenarioConfig(ScenarioConfig):
     """Configuration for the Demand Forecasting Scenario."""
 
     product_asin: str = Field(
-        "B0CPRODUCTDEMAND", description="ASIN of the product for which demand is to be forecasted."
+        "B0CPRODUCTDEMAND",
+        description="ASIN of the product for which demand is to be forecasted.",
     )
     forecast_horizon_ticks: PositiveInt = Field(
-        5, description="Number of future ticks for which the agent needs to forecast demand."
+        5,
+        description="Number of future ticks for which the agent needs to forecast demand.",
     )
     historical_data_points: PositiveInt = Field(
         10, description="Number of historical data points to provide to the agent."
     )
     demand_variability: confloat(ge=0.0, le=1.0) = Field(
-        0.1, description="Factor for random variation in demand generation (0.0 to 1.0)."
+        0.1,
+        description="Factor for random variation in demand generation (0.0 to 1.0).",
     )  # Added for more realistic demand generation
 
 
@@ -44,8 +47,8 @@ class DemandForecastingScenario(BaseScenario):
     def __init__(self, config: ScenarioConfig):
         super().__init__(config)
         # Ensure config is of the correct type or convert it
-        self.scenario_config: DemandForecastingScenarioConfig = DemandForecastingScenarioConfig(
-            **config.model_dump()
+        self.scenario_config: DemandForecastingScenarioConfig = (
+            DemandForecastingScenarioConfig(**config.model_dump())
         )
 
         self.product_asin: str = self.scenario_config.product_asin
@@ -54,8 +57,12 @@ class DemandForecastingScenario(BaseScenario):
         self.demand_variability: float = self.scenario_config.demand_variability
 
         self.current_tick: int = 0
-        self.historical_sales: List[Dict[str, Any]] = []  # Stores {'tick': int, 'sales': int}
-        self.actual_sales_future: List[int] = []  # Stores actual sales for the forecast horizon
+        self.historical_sales: List[Dict[str, Any]] = (
+            []
+        )  # Stores {'tick': int, 'sales': int}
+        self.actual_sales_future: List[int] = (
+            []
+        )  # Stores actual sales for the forecast horizon
 
     async def setup(self, *args, **kwargs) -> None:
         """
@@ -71,7 +78,11 @@ class DemandForecastingScenario(BaseScenario):
         # Generate some hypothetical historical sales data with variability
         for i in range(self.historical_data_points):
             sales_val = int(
-                base_sales * (1 + random.uniform(-self.demand_variability, self.demand_variability))
+                base_sales
+                * (
+                    1
+                    + random.uniform(-self.demand_variability, self.demand_variability)
+                )
             )
             self.historical_sales.append(
                 {"tick": i, "sales": max(10, sales_val)}  # Ensure sales are at least 10
@@ -80,9 +91,15 @@ class DemandForecastingScenario(BaseScenario):
         # Generate future actual sales that the agent needs to forecast with similar variability
         for i in range(self.forecast_horizon_ticks):
             sales_val = int(
-                base_sales * (1 + random.uniform(-self.demand_variability, self.demand_variability))
+                base_sales
+                * (
+                    1
+                    + random.uniform(-self.demand_variability, self.demand_variability)
+                )
             )
-            self.actual_sales_future.append(max(10, sales_val))  # Ensure sales are at least 10
+            self.actual_sales_future.append(
+                max(10, sales_val)
+            )  # Ensure sales are at least 10
 
         logger.info(
             f"Demand forecasting scenario initialized for ASIN {self.product_asin}. Generated {len(self.historical_sales)} historical data points and {len(self.actual_sales_future)} future data points."
@@ -91,7 +108,9 @@ class DemandForecastingScenario(BaseScenario):
         logger.debug(f"Historical Sales: {self.historical_sales}")
         logger.debug(f"Actual Sales Future: {self.actual_sales_future}")
 
-    async def run(self, agent: BaseAgent, run_number: int, *args, **kwargs) -> AgentRunResult:
+    async def run(
+        self, agent: BaseAgent, run_number: int, *args, **kwargs
+    ) -> AgentRunResult:
         """
         Execute a single iteration (tick) of the demand forecasting scenario.
         An agent will provide a forecast and its accuracy will be measured.
@@ -152,20 +171,28 @@ class DemandForecastingScenario(BaseScenario):
             )
             success = False
             errors.append(str(e))
-            agent_forecast = [0] * self.forecast_horizon_ticks  # Default to zero forecast on error
+            agent_forecast = [
+                0
+            ] * self.forecast_horizon_ticks  # Default to zero forecast on error
 
         end_time = datetime.now()
         duration = (end_time - start_time).total_seconds()
 
         # Evaluate forecast accuracy (e.g., Mean Absolute Error)
         mae = 0.0
-        if self.actual_sales_future and len(agent_forecast) == len(self.actual_sales_future):
-            abs_diffs = [abs(f - a) for f, a in zip(agent_forecast, self.actual_sales_future)]
+        if self.actual_sales_future and len(agent_forecast) == len(
+            self.actual_sales_future
+        ):
+            abs_diffs = [
+                abs(f - a) for f, a in zip(agent_forecast, self.actual_sales_future)
+            ]
             mae = sum(abs_diffs) / len(abs_diffs)
         elif (
             self.actual_sales_future
         ):  # Mismatch in lengths, or empty agent_forecast but actual data exists
-            mae = float("inf")  # Indicate a very poor forecast due to mismatch/missing forecast
+            mae = float(
+                "inf"
+            )  # Indicate a very poor forecast due to mismatch/missing forecast
             if not errors:  # Only add this error if no other exception occurred
                 errors.append("Forecast length mismatch or empty forecast.")
                 success = False
@@ -173,7 +200,9 @@ class DemandForecastingScenario(BaseScenario):
         metrics = {
             "mean_absolute_error": mae,
             "forecast_length": len(agent_forecast),
-            "actual_sales_sum": sum(self.actual_sales_future) if self.actual_sales_future else 0,
+            "actual_sales_sum": (
+                sum(self.actual_sales_future) if self.actual_sales_future else 0
+            ),
             "forecast_sum": sum(agent_forecast),
         }
 

@@ -2,7 +2,6 @@ import asyncio
 import uuid
 
 import pytest
-
 from api.dependencies import ConnectionManager, ExperimentManager, SimulationManager
 
 
@@ -98,8 +97,16 @@ def test_connection_manager_stats_dynamic_categories():
 
     # Simulate active connections list and metadata
     cm.active_connections.extend([ws1, ws2])
-    cm.connection_metadata[ws1] = {"client_id": "c1", "connected_at": "t1", "last_activity": "t1"}
-    cm.connection_metadata[ws2] = {"client_id": "c2", "connected_at": "t2", "last_activity": "t2"}
+    cm.connection_metadata[ws1] = {
+        "client_id": "c1",
+        "connected_at": "t1",
+        "last_activity": "t1",
+    }
+    cm.connection_metadata[ws2] = {
+        "client_id": "c2",
+        "connected_at": "t2",
+        "last_activity": "t2",
+    }
 
     # Add dynamic subscriptions (no hardcoded categories)
     cm.connection_subscriptions[ws1] = {"alpha", "beta"}

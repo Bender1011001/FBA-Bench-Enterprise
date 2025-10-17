@@ -17,9 +17,10 @@ except Exception:
     logger = logging.getLogger(__name__)
 
 # External, already in your repo (lifespan populates these)
+from services.dashboard_api_service import DashboardAPIService
+
 from fba_bench_api.core.redis_client import get_redis
 from fba_events.bus import EventBus  # type: ignore
-from services.dashboard_api_service import DashboardAPIService
 
 # --------------------------------------------------------------------------------------
 # Backward-compat in-memory dicts (DO NOT REMOVE without refactoring callers)
@@ -83,7 +84,9 @@ def _to_json_compatible(value: Any) -> Any:
 
 def _dumps(value: Any) -> str:
     try:
-        return json.dumps(_to_json_compatible(value), ensure_ascii=False, separators=(",", ":"))
+        return json.dumps(
+            _to_json_compatible(value), ensure_ascii=False, separators=(",", ":")
+        )
     except Exception as exc:
         logger.error("State serialization error: %s", exc, exc_info=True)
         raise StateError(f"Failed to serialize value to JSON: {exc}") from exc
@@ -135,7 +138,9 @@ class StateManager:
 
     # ------------- CRUD -------------
 
-    async def set(self, key: str, value: Any, ttl_seconds: Optional[int] = None) -> None:
+    async def set(
+        self, key: str, value: Any, ttl_seconds: Optional[int] = None
+    ) -> None:
         k = self._k(key)
         payload = _dumps(value)
         try:
@@ -146,7 +151,11 @@ class StateManager:
                 await r.set(k, payload)
         except Exception as exc:
             logger.error(
-                "Redis set failed key=%s ns=%s: %s", key, self.namespace, exc, exc_info=True
+                "Redis set failed key=%s ns=%s: %s",
+                key,
+                self.namespace,
+                exc,
+                exc_info=True,
             )
             raise StateError(f"Failed to set key '{key}': {exc}") from exc
 
@@ -163,7 +172,11 @@ class StateManager:
             return default
         except Exception as exc:
             logger.error(
-                "Redis get failed key=%s ns=%s: %s", key, self.namespace, exc, exc_info=True
+                "Redis get failed key=%s ns=%s: %s",
+                key,
+                self.namespace,
+                exc,
+                exc_info=True,
             )
             return default
 
@@ -175,7 +188,11 @@ class StateManager:
             return bool(res == 1)
         except Exception as exc:
             logger.error(
-                "Redis delete failed key=%s ns=%s: %s", key, self.namespace, exc, exc_info=True
+                "Redis delete failed key=%s ns=%s: %s",
+                key,
+                self.namespace,
+                exc,
+                exc_info=True,
             )
             raise StateError(f"Failed to delete key '{key}': {exc}") from exc
 
@@ -207,7 +224,9 @@ class StateManager:
                 exc,
                 exc_info=True,
             )
-            raise StateError(f"Failed to scan keys for pattern '{pattern}': {exc}") from exc
+            raise StateError(
+                f"Failed to scan keys for pattern '{pattern}': {exc}"
+            ) from exc
 
     async def exists(self, key: str) -> bool:
         try:
@@ -215,7 +234,11 @@ class StateManager:
             return bool(await r.exists(self._k(key)))
         except Exception as exc:
             logger.error(
-                "Redis exists failed key=%s ns=%s: %s", key, self.namespace, exc, exc_info=True
+                "Redis exists failed key=%s ns=%s: %s",
+                key,
+                self.namespace,
+                exc,
+                exc_info=True,
             )
             raise StateError(f"Failed to check existence for '{key}': {exc}") from exc
 
@@ -228,7 +251,9 @@ class StateManager:
             cursor = 0
             to_delete: list[str] = []
             while True:
-                cursor, batch = await r.scan(cursor=cursor, match=f"{ns_prefix}*", count=500)
+                cursor, batch = await r.scan(
+                    cursor=cursor, match=f"{ns_prefix}*", count=500
+                )
                 to_delete.extend(batch)
                 # Delete in chunks to avoid large payloads
                 if len(to_delete) >= 500 or (cursor == 0 and to_delete):
@@ -241,13 +266,20 @@ class StateManager:
             return total_deleted
         except Exception as exc:
             logger.error(
-                "Redis clear namespace failed ns=%s: %s", self.namespace, exc, exc_info=True
+                "Redis clear namespace failed ns=%s: %s",
+                self.namespace,
+                exc,
+                exc_info=True,
             )
-            raise StateError(f"Failed to clear namespace '{self.namespace}': {exc}") from exc
+            raise StateError(
+                f"Failed to clear namespace '{self.namespace}': {exc}"
+            ) from exc
 
     # ------------- Counters -------------
 
-    async def incr(self, key: str, amount: int = 1, ttl_seconds: Optional[int] = None) -> int:
+    async def incr(
+        self, key: str, amount: int = 1, ttl_seconds: Optional[int] = None
+    ) -> int:
         """Atomically increment an integer counter. If newly created and ttl provided, set expire."""
         k = self._k(key)
         try:
@@ -262,7 +294,11 @@ class StateManager:
             return int(val)
         except Exception as exc:
             logger.error(
-                "Redis incr failed key=%s ns=%s: %s", key, self.namespace, exc, exc_info=True
+                "Redis incr failed key=%s ns=%s: %s",
+                key,
+                self.namespace,
+                exc,
+                exc_info=True,
             )
             raise StateError(f"Failed to increment key '{key}': {exc}") from exc
 
@@ -283,7 +319,11 @@ class StateManager:
             return int(count or 0)
         except Exception as exc:
             logger.error(
-                "Redis notify failed ns=%s event=%s: %s", self.namespace, event, exc, exc_info=True
+                "Redis notify failed ns=%s event=%s: %s",
+                self.namespace,
+                event,
+                exc,
+                exc_info=True,
             )
             # Notifications are optional; do not raise unless caller depends on it
             return 0
@@ -293,7 +333,9 @@ class StateManager:
 # Utility: bulk set helper (optional)
 # --------------------------------------------------------------------------------------
 async def set_many(
-    sm: StateManager, items: Iterable[tuple[str, Any]], ttl_seconds: Optional[int] = None
+    sm: StateManager,
+    items: Iterable[tuple[str, Any]],
+    ttl_seconds: Optional[int] = None,
 ) -> None:
     """Best-effort bulk setter using pipelining."""
     try:

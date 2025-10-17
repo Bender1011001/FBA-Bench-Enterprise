@@ -40,8 +40,12 @@ class TestAlertSystem(unittest.TestCase):
 
         self.assertIsNotNone(rule_id)
         self.assertIn(rule_id, self.alert_system._alert_rules)
-        self.assertEqual(self.alert_system._alert_rules[rule_id]["name"], "High CPU Usage")
-        self.assertEqual(self.alert_system._alert_rules[rule_id]["condition"], "cpu_usage > 90")
+        self.assertEqual(
+            self.alert_system._alert_rules[rule_id]["name"], "High CPU Usage"
+        )
+        self.assertEqual(
+            self.alert_system._alert_rules[rule_id]["condition"], "cpu_usage > 90"
+        )
         self.assertEqual(self.alert_system._alert_rules[rule_id]["severity"], "high")
         self.assertTrue(self.alert_system._alert_rules[rule_id]["enabled"])
 
@@ -68,13 +72,19 @@ class TestAlertSystem(unittest.TestCase):
 
         self.alert_system.update_alert_rule(rule_id, updated_data)
 
-        self.assertEqual(self.alert_system._alert_rules[rule_id]["name"], "Very High CPU Usage")
+        self.assertEqual(
+            self.alert_system._alert_rules[rule_id]["name"], "Very High CPU Usage"
+        )
         self.assertEqual(
             self.alert_system._alert_rules[rule_id]["description"],
             "Alert when CPU usage exceeds 95%",
         )
-        self.assertEqual(self.alert_system._alert_rules[rule_id]["condition"], "cpu_usage > 95")
-        self.assertEqual(self.alert_system._alert_rules[rule_id]["severity"], "critical")
+        self.assertEqual(
+            self.alert_system._alert_rules[rule_id]["condition"], "cpu_usage > 95"
+        )
+        self.assertEqual(
+            self.alert_system._alert_rules[rule_id]["severity"], "critical"
+        )
         self.assertFalse(self.alert_system._alert_rules[rule_id]["enabled"])
 
     def test_delete_alert_rule(self):
@@ -128,7 +138,9 @@ class TestAlertSystem(unittest.TestCase):
 
         self.assertIsNotNone(subscription_id)
         self.assertIn(subscription_id, self.alert_system._alert_subscribers)
-        self.assertEqual(self.alert_system._alert_subscribers[subscription_id], subscriber)
+        self.assertEqual(
+            self.alert_system._alert_subscribers[subscription_id], subscriber
+        )
 
     def test_unsubscribe_from_alerts(self):
         """Test unsubscribing from alerts."""
@@ -258,7 +270,11 @@ class TestObservabilityConfig(unittest.TestCase):
 
     def test_set_tracing_config(self):
         """Test setting the tracing configuration."""
-        new_tracing_config = {"enabled": True, "sampling_rate": 0.5, "exporter": "jaeger"}
+        new_tracing_config = {
+            "enabled": True,
+            "sampling_rate": 0.5,
+            "exporter": "jaeger",
+        }
 
         self.observability_config.set_tracing_config(new_tracing_config)
 
@@ -440,7 +456,9 @@ class TestTraceAnalyzer(unittest.TestCase):
 
         self.assertEqual(trace_id, "trace1")
         self.assertIn("trace1", self.trace_analyzer._traces)
-        self.assertEqual(self.trace_analyzer._traces["trace1"]["operation_name"], "operation1")
+        self.assertEqual(
+            self.trace_analyzer._traces["trace1"]["operation_name"], "operation1"
+        )
         self.assertEqual(self.trace_analyzer._traces["trace1"]["duration"], 100)
 
     def test_get_trace(self):
@@ -821,13 +839,17 @@ class TestTraceAnalyzer(unittest.TestCase):
         self.assertEqual(len(patterns), 2)
         self.assertTrue(
             any(
-                p["operation"] == "operation1" and p["tag"] == "pattern" and p["value"] == "A"
+                p["operation"] == "operation1"
+                and p["tag"] == "pattern"
+                and p["value"] == "A"
                 for p in patterns
             )
         )
         self.assertTrue(
             any(
-                p["operation"] == "operation2" and p["tag"] == "pattern" and p["value"] == "B"
+                p["operation"] == "operation2"
+                and p["tag"] == "pattern"
+                and p["value"] == "B"
                 for p in patterns
             )
         )

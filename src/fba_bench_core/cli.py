@@ -239,7 +239,9 @@ def check_docker_available() -> tuple[bool, Optional[str]]:
     Returns (ok, error_message_if_any).
     """
     # Is docker CLI present?
-    if not _is_command_available("docker") and not _is_command_available("docker-compose"):
+    if not _is_command_available("docker") and not _is_command_available(
+        "docker-compose"
+    ):
         return False, (
             "Docker is not installed or not on PATH. "
             "Install Docker Desktop (Windows/Mac) or Docker Engine (Linux): https://docs.docker.com/get-docker/"
@@ -250,7 +252,10 @@ def check_docker_available() -> tuple[bool, Optional[str]]:
         # Prefer 'docker info'
         if _is_command_available("docker"):
             proc = subprocess.run(
-                ["docker", "info"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+                ["docker", "info"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
             )
             if proc.returncode != 0:
                 return False, (
@@ -262,7 +267,10 @@ def check_docker_available() -> tuple[bool, Optional[str]]:
             if base is None:
                 return False, "Neither 'docker' nor 'docker-compose' is available."
             proc = subprocess.run(
-                base + ["version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+                base + ["version"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
             )
             if proc.returncode != 0:
                 return False, (
@@ -289,7 +297,10 @@ def start_docker_compose(compose_file: Path) -> bool:
     # Confirm 'docker compose' vs 'docker-compose' works
     try:
         version_proc = subprocess.run(
-            base + ["version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+            base + ["version"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
         )
         if version_proc.returncode != 0 and base == ["docker", "compose"]:
             # Fall back to docker-compose if 'docker compose' isn't supported
@@ -308,7 +319,9 @@ def start_docker_compose(compose_file: Path) -> bool:
         proc = subprocess.run(cmd, check=False)
         if proc.returncode != 0:
             LOG.error("Failed to start ClearML stack (exit code %s).", proc.returncode)
-            LOG.error("You can inspect logs with: %s -f %s logs", " ".join(base), compose_file)
+            LOG.error(
+                "You can inspect logs with: %s -f %s logs", " ".join(base), compose_file
+            )
             return False
     except FileNotFoundError:
         LOG.error(
@@ -331,9 +344,9 @@ def start_api_server():
     try:
         # Set environment variables for CORS and development
         env = os.environ.copy()
-        env[
-            "FBA_CORS_ALLOW_ORIGINS"
-        ] = "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000"
+        env["FBA_CORS_ALLOW_ORIGINS"] = (
+            "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000"
+        )
         env["FBA_BENCH_HOST"] = "0.0.0.0"
         env["FBA_BENCH_PORT"] = "8000"
         env["FBA_BENCH_RELOAD"] = "false"  # Don't use reload in production-like mode
@@ -353,7 +366,10 @@ def start_api_server():
             if proc.poll() is None:
                 return proc
             else:
-                LOG.warning("API server module execution failed with return code: %s", proc.poll())
+                LOG.warning(
+                    "API server module execution failed with return code: %s",
+                    proc.poll(),
+                )
         except Exception as e:
             LOG.debug("Method 1 failed: %s", e)
 
@@ -375,7 +391,8 @@ def start_api_server():
                         return proc
                     else:
                         LOG.warning(
-                            "API server script execution failed with return code: %s", proc.poll()
+                            "API server script execution failed with return code: %s",
+                            proc.poll(),
                         )
                 except Exception as e:
                     LOG.debug("Method 2 failed: %s", e)
@@ -402,7 +419,10 @@ def start_api_server():
             if proc.poll() is None:
                 return proc
             else:
-                LOG.warning("API server uvicorn execution failed with return code: %s", proc.poll())
+                LOG.warning(
+                    "API server uvicorn execution failed with return code: %s",
+                    proc.poll(),
+                )
         except Exception as e:
             LOG.debug("Method 3 failed: %s", e)
 
@@ -449,7 +469,9 @@ def run_simulation_orchestrator() -> int:
                 fn = getattr(sim_mod, attr, None)
                 if callable(fn):
                     LOG.info(
-                        "Running orchestrator via in-process call: %s.%s()", sim_mod.__name__, attr
+                        "Running orchestrator via in-process call: %s.%s()",
+                        sim_mod.__name__,
+                        attr,
                     )
                     rc = fn()  # type: ignore[misc]
                     return int(rc) if isinstance(rc, int) else 0
@@ -500,9 +522,9 @@ def start_api_server():
     try:
         # Set environment variables for CORS and development
         env = os.environ.copy()
-        env[
-            "FBA_CORS_ALLOW_ORIGINS"
-        ] = "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000"
+        env["FBA_CORS_ALLOW_ORIGINS"] = (
+            "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000"
+        )
         env["FBA_BENCH_HOST"] = "0.0.0.0"
         env["FBA_BENCH_PORT"] = "8000"
         env["FBA_BENCH_RELOAD"] = "false"  # Don't use reload in production-like mode
@@ -606,7 +628,9 @@ def run_template_command(args: argparse.Namespace) -> int:
             print(f"Selected {template.name}")
 
             # Simple adjustment
-            adjustments = input("Any adjustments? (e.g., max_ticks=200, press Enter for none): ")
+            adjustments = input(
+                "Any adjustments? (e.g., max_ticks=200, press Enter for none): "
+            )
             if adjustments:
                 data = yaml.safe_load(template.read_text())
                 for adj in adjustments.split(","):
@@ -622,7 +646,12 @@ def run_template_command(args: argparse.Namespace) -> int:
             # Run the template
             print("Running simulation...")
             # Call simulation_orchestrator via subprocess (align with existing module)
-            cmd = [sys.executable, "-m", "fba_bench.simulation_orchestrator", str(template)]
+            cmd = [
+                sys.executable,
+                "-m",
+                "fba_bench.simulation_orchestrator",
+                str(template),
+            ]
             proc = subprocess.run(cmd, check=False)
             return proc.returncode
         else:
@@ -689,7 +718,10 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser("leaderboard", help="Display official leaderboard scores.")
 
     # run subcommand
-    subparsers.add_parser("run", help="Start essential services (backend, frontend, database) for local development using docker-compose up.")
+    subparsers.add_parser(
+        "run",
+        help="Start essential services (backend, frontend, database) for local development using docker-compose up.",
+    )
 
     return parser
 
@@ -737,15 +769,29 @@ def handle_launch(with_server: bool, game_mode: bool = False) -> int:
                 return 3
 
             # Set local ClearML env vars for orchestrator
-            os.environ["CLEARML_API_HOST"] = f"http://localhost:{_SETTINGS.clearml_api_port}"
-            os.environ["CLEARML_WEB_HOST"] = f"http://localhost:{_SETTINGS.clearml_web_port}"
-            os.environ["CLEARML_FILES_HOST"] = f"http://localhost:{_SETTINGS.clearml_file_port}"
+            os.environ["CLEARML_API_HOST"] = (
+                f"http://localhost:{_SETTINGS.clearml_api_port}"
+            )
+            os.environ["CLEARML_WEB_HOST"] = (
+                f"http://localhost:{_SETTINGS.clearml_web_port}"
+            )
+            os.environ["CLEARML_FILES_HOST"] = (
+                f"http://localhost:{_SETTINGS.clearml_file_port}"
+            )
 
             # Prompt for credentials if not set (local defaults)
             if not os.getenv("CLEARML_ACCESS_KEY"):
-                print("Local ClearML credentials (default: admin@clearml.com / clearml123):")
-                key = input("Access Key (press Enter for default): ").strip() or "admin@clearml.com"
-                secret = input("Secret Key (press Enter for default): ").strip() or "clearml123"
+                print(
+                    "Local ClearML credentials (default: admin@clearml.com / clearml123):"
+                )
+                key = (
+                    input("Access Key (press Enter for default): ").strip()
+                    or "admin@clearml.com"
+                )
+                secret = (
+                    input("Secret Key (press Enter for default): ").strip()
+                    or "clearml123"
+                )
                 os.environ["CLEARML_ACCESS_KEY"] = key
                 os.environ["CLEARML_SECRET_KEY"] = secret
                 print(f"Set CLEARML_ACCESS_KEY={key}, CLEARML_SECRET_KEY=***")
@@ -788,7 +834,8 @@ def handle_launch(with_server: bool, game_mode: bool = False) -> int:
                 api_process.kill()
         if started_stack and compose_file:
             LOG.info(
-                "ClearML server remains running. Stop it with:\n" '  docker compose -f "%s" down',
+                "ClearML server remains running. Stop it with:\n"
+                '  docker compose -f "%s" down',
                 compose_file,
             )
         return 130
@@ -867,7 +914,10 @@ def handle_run(args: argparse.Namespace) -> int:
     # Confirm base works (fallback if needed, as in start_docker_compose)
     try:
         version_proc = subprocess.run(
-            base + ["version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+            base + ["version"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
         )
         if version_proc.returncode != 0 and base == ["docker", "compose"]:
             if _is_command_available("docker-compose"):
@@ -879,7 +929,9 @@ def handle_run(args: argparse.Namespace) -> int:
             base = ["docker-compose"]
 
     cmd = base + ["-f", str(compose_file), "up"]
-    LOG.info("Starting development services (backend, frontend, database): %s", " ".join(cmd))
+    LOG.info(
+        "Starting development services (backend, frontend, database): %s", " ".join(cmd)
+    )
     LOG.info("Services will run in foreground. Press Ctrl+C to stop.")
 
     try:

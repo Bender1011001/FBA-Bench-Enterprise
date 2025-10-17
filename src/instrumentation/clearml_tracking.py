@@ -5,9 +5,9 @@ Provides init_clearml function to initialize ClearML task for experiment trackin
 Handles optional ClearML installation and API key configuration.
 """
 
+import logging
 import os
 from typing import Optional
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +44,10 @@ def init_clearml(
 
     try:
         task = Task.init(
-            project_name=project_name, task_name=task_name, auto_push=True, output_uri=True
+            project_name=project_name,
+            task_name=task_name,
+            auto_push=True,
+            output_uri=True,
         )
         logger.info(f"ClearML task initialized: {task_name} in project {project_name}")
         return task

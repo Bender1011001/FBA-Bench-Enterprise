@@ -20,7 +20,10 @@ LLM_RESPONSE_SCHEMA = {
             },
             "minItems": 1,
         },
-        "reasoning": {"type": "string", "description": "Brief explanation of the agent's decision"},
+        "reasoning": {
+            "type": "string",
+            "description": "Brief explanation of the agent's decision",
+        },
         "confidence": {
             "type": "number",
             "minimum": 0.0,
@@ -54,7 +57,9 @@ ACTION_SCHEMAS = {
 }
 
 
-def validate_llm_response(response_json: Dict[str, Any]) -> Tuple[bool, Optional[Dict[str, Any]]]:
+def validate_llm_response(
+    response_json: Dict[str, Any]
+) -> Tuple[bool, Optional[Dict[str, Any]]]:
     """
     Validates the LLM's response against the predefined schema and action-specific schemas.
 
@@ -95,7 +100,9 @@ def validate_llm_response(response_json: Dict[str, Any]) -> Tuple[bool, Optional
                     "validator_value": e.validator_value,
                     "invalid_value": e.instance,
                     "suggested_fix": f"Ensure '{last_key}' field is correctly formatted for '{action_type}' action. Expected: {e.validator_value}",
-                    "validation_error": str(e),  # Keep original error for deeper debugging
+                    "validation_error": str(
+                        e
+                    ),  # Keep original error for deeper debugging
                 }
 
     except ValidationError as e:

@@ -3,10 +3,9 @@ Agents module for FBA-Bench.
 
 This module provides agent-related classes, configurations, and utilities.
 """
+
 # mypy: ignore-errors
 
-from .base import AgentConfig, BaseAgent
-from .registry import AgentRegistry, registry as agent_registry
 from benchmarking.agents.unified_agent import (
     AgentAction,
     AgentCapability,
@@ -20,6 +19,9 @@ from benchmarking.agents.unified_agent import (
     UnifiedAgentRunner,
     agent_factory,
 )
+
+from .base import AgentConfig, BaseAgent
+from .registry import AgentRegistry, registry as agent_registry
 
 __all__ = [
     # Legacy agents

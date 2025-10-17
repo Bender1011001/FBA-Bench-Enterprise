@@ -63,7 +63,9 @@ def test_langchain_runner_instantiation_path(monkeypatch):
     - If installed, create a valid runner instance.
     """
     try:
-        runner = create_runner("langchain", {"agent_id": "lc-1", "model": "gpt-4o-mini"})
+        runner = create_runner(
+            "langchain", {"agent_id": "lc-1", "model": "gpt-4o-mini"}
+        )
         assert isinstance(runner, AgentRunner)
     except AgentRunnerInitializationError as exc:
         txt = str(exc).lower()

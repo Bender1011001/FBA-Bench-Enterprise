@@ -8,13 +8,11 @@ from money import Money
 
 from .models import (
     Account,
-    FinancialStatement,
+    AccountType,
     LedgerEntry,
     Transaction,
     TransactionType,
-    AccountType,
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -202,7 +200,9 @@ class LedgerCore:
         try:
             # Validate transaction
             if not transaction.is_balanced():
-                raise ValueError(f"Transaction {transaction.transaction_id} is not balanced")
+                raise ValueError(
+                    f"Transaction {transaction.transaction_id} is not balanced"
+                )
 
             # Update account balances
             for entry in transaction.debits:
@@ -265,7 +265,9 @@ class LedgerCore:
 
     def get_all_account_balances(self) -> Dict[str, Money]:
         """Get balances for all accounts."""
-        return {account_id: account.balance for account_id, account in self.accounts.items()}
+        return {
+            account_id: account.balance for account_id, account in self.accounts.items()
+        }
 
     def trial_balance(self) -> Dict[str, Money]:
         """Generate a trial balance of all accounts."""
@@ -312,7 +314,9 @@ class LedgerCore:
 
         return sorted_transactions[:limit]
 
-    def get_transactions_by_type(self, transaction_type: TransactionType) -> List[Transaction]:
+    def get_transactions_by_type(
+        self, transaction_type: TransactionType
+    ) -> List[Transaction]:
         """Get all transactions of a specific type."""
         return [
             transaction
@@ -326,7 +330,8 @@ class LedgerCore:
             transaction
             for transaction in self.transactions.values()
             if any(
-                entry.account_id == account_id for entry in transaction.debits + transaction.credits
+                entry.account_id == account_id
+                for entry in transaction.debits + transaction.credits
             )
         ]
 
@@ -339,7 +344,9 @@ class LedgerCore:
             "trial_balance_balanced": self.is_trial_balance_balanced(),
             "trial_balance_difference": str(self.get_trial_balance_difference()),
             "last_transaction_time": (
-                max(t.timestamp for t in self.transactions.values()) if self.transactions else None
+                max(t.timestamp for t in self.transactions.values())
+                if self.transactions
+                else None
             ),
         }
 

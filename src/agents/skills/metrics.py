@@ -2,12 +2,13 @@
 Performance metrics tracking for skill coordination.
 """
 
-from typing import Any, Dict, List, Tuple
 from datetime import datetime
+from typing import Any, Dict, List, Tuple
 
-from .models import SkillPerformanceMetrics, ResourceAllocation
-from ..skill_modules.base_skill import SkillAction
 from fba_events.base import BaseEvent
+
+from ..skill_modules.base_skill import SkillAction
+from .models import ResourceAllocation, SkillPerformanceMetrics
 
 
 class MetricsTracker:
@@ -21,7 +22,7 @@ class MetricsTracker:
         coordination_history: List[Dict[str, Any]],
         conflict_log: List[Dict[str, Any]],
         resource_allocation: ResourceAllocation,
-        skill_subscriptions: Dict[str, 'SkillSubscription'],  # Forward ref
+        skill_subscriptions: Dict[str, "SkillSubscription"],  # Forward ref
     ):
         """
         Initialize the MetricsTracker.
@@ -82,8 +83,12 @@ class MetricsTracker:
 
             # Update success rate based on action confidence
             if actions:
-                avg_confidence = sum(action.confidence for action in actions) / len(actions)
-                metrics.success_rate = (metrics.success_rate * 0.9) + (avg_confidence * 0.1)
+                avg_confidence = sum(action.confidence for action in actions) / len(
+                    actions
+                )
+                metrics.success_rate = (metrics.success_rate * 0.9) + (
+                    avg_confidence * 0.1
+                )
 
     def get_skill_performance_metrics(self) -> Dict[str, Dict[str, Any]]:
         """
@@ -117,19 +122,22 @@ class MetricsTracker:
         total_coordinations = len(self.coordination_history)
         recent_coordinations = len(recent_history)
         avg_actions_per_coordination = (
-            sum(entry["coordinated_actions_count"] for entry in recent_history) / recent_coordinations
+            sum(entry["coordinated_actions_count"] for entry in recent_history)
+            / recent_coordinations
             if recent_coordinations > 0
             else 0
         )
 
         # Resource utilization
         budget_utilization = (
-            self.resource_allocation.allocated_budget.cents / self.resource_allocation.total_budget.cents
+            self.resource_allocation.allocated_budget.cents
+            / self.resource_allocation.total_budget.cents
             if self.resource_allocation.total_budget.cents > 0
             else 0
         )
         token_utilization = (
-            self.resource_allocation.allocated_tokens / self.resource_allocation.token_budget
+            self.resource_allocation.allocated_tokens
+            / self.resource_allocation.token_budget
             if self.resource_allocation.token_budget > 0
             else 0
         )
@@ -138,7 +146,9 @@ class MetricsTracker:
         skill_participation = {}
         for skill_name in self.skill_subscriptions.keys():
             participation_count = sum(
-                1 for entry in recent_history if skill_name in entry["participating_skills"]
+                1
+                for entry in recent_history
+                if skill_name in entry["participating_skills"]
             )
             skill_participation[skill_name] = participation_count
 

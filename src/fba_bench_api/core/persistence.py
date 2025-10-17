@@ -23,7 +23,9 @@ class ConfigPersistenceManager:
         logger.info("ConfigPersistenceManager storage: %s", config_dir)
 
     # ---- Experiments ----
-    def save_experiment_config(self, experiment_id: str, config_data: Dict[str, Any]) -> bool:
+    def save_experiment_config(
+        self, experiment_id: str, config_data: Dict[str, Any]
+    ) -> bool:
         try:
             file_path = os.path.join(self.experiments_dir, f"{experiment_id}.json")
             now = datetime.now().isoformat()
@@ -70,7 +72,9 @@ class ConfigPersistenceManager:
 
     def list_experiment_configs(self) -> List[str]:
         try:
-            return [f[:-5] for f in os.listdir(self.experiments_dir) if f.endswith(".json")]
+            return [
+                f[:-5] for f in os.listdir(self.experiments_dir) if f.endswith(".json")
+            ]
         except Exception as e:
             logger.exception("list_experiment_configs failed: %s", e)
             return []
@@ -81,7 +85,9 @@ class ConfigPersistenceManager:
             p = os.path.join(self.templates_dir, f"{template_name}.json")
             now = datetime.now().isoformat()
             with open(p, "w") as f:
-                json.dump({**template_data, "created_at": now, "updated_at": now}, f, indent=2)
+                json.dump(
+                    {**template_data, "created_at": now, "updated_at": now}, f, indent=2
+                )
             templates_db[template_name] = template_data
             return True
         except Exception as e:
@@ -114,13 +120,17 @@ class ConfigPersistenceManager:
 
     def list_templates(self) -> List[str]:
         try:
-            return [f[:-5] for f in os.listdir(self.templates_dir) if f.endswith(".json")]
+            return [
+                f[:-5] for f in os.listdir(self.templates_dir) if f.endswith(".json")
+            ]
         except Exception as e:
             logger.exception("list_templates failed: %s", e)
             return []
 
     # ---- Simulations ----
-    def save_simulation_config(self, config_id: str, config_data: Dict[str, Any]) -> bool:
+    def save_simulation_config(
+        self, config_id: str, config_data: Dict[str, Any]
+    ) -> bool:
         try:
             p = os.path.join(self.simulations_dir, f"{config_id}.json")
             now = datetime.now().isoformat()
@@ -167,7 +177,9 @@ class ConfigPersistenceManager:
 
     def list_simulation_configs(self) -> List[str]:
         try:
-            return [f[:-5] for f in os.listdir(self.simulations_dir) if f.endswith(".json")]
+            return [
+                f[:-5] for f in os.listdir(self.simulations_dir) if f.endswith(".json")
+            ]
         except Exception as e:
             logger.exception("list_simulation_configs failed: %s", e)
             return []

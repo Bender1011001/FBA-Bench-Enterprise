@@ -304,8 +304,14 @@ class StatisticalAnalysisFramework(BaseMetric):
         # If two arrays provided, compute Pearson correlation
         if data2 is not None:
             r, p = stats.pearsonr(data1, data2)
-            strength = "strong" if abs(r) >= 0.7 else "moderate" if abs(r) >= 0.4 else "weak"
-            return {"correlation_coefficient": float(r), "p_value": float(p), "strength": strength}
+            strength = (
+                "strong" if abs(r) >= 0.7 else "moderate" if abs(r) >= 0.4 else "weak"
+            )
+            return {
+                "correlation_coefficient": float(r),
+                "p_value": float(p),
+                "strength": strength,
+            }
         # Fallback to score API with dict data
         return self.calculate_correlation_analysis_score(data1)
 
@@ -340,7 +346,10 @@ class StatisticalAnalysisFramework(BaseMetric):
             # Derive simple 95% confidence intervals based on residual std error
             residuals = y - train_preds
             std_error = float(math.sqrt((residuals**2).mean())) if len(y) > 0 else 0.0
-            ci = [(float(p - 1.96 * std_error), float(p + 1.96 * std_error)) for p in preds_arr]
+            ci = [
+                (float(p - 1.96 * std_error), float(p + 1.96 * std_error))
+                for p in preds_arr
+            ]
             return {
                 "predictions": preds_arr.tolist(),
                 "confidence_intervals": ci,
@@ -382,7 +391,11 @@ class StatisticalAnalysisFramework(BaseMetric):
             model.fit(x, y)
             slope = float(model.coef_[0])
             r2 = float(r2_score(y, model.predict(x)))
-            trend = "stable" if abs(slope) < 1e-6 else ("increasing" if slope > 0 else "decreasing")
+            trend = (
+                "stable"
+                if abs(slope) < 1e-6
+                else ("increasing" if slope > 0 else "decreasing")
+            )
             return {"trend": trend, "slope": slope, "r_squared": r2}
         return self.calculate_trend_analysis_score(data)
 
@@ -409,10 +422,16 @@ class StatisticalAnalysisFramework(BaseMetric):
             precision_score = interval_info.get("precision_score", 0.0)
 
             # Calculate weighted interval score
-            weights = {"interval_width": 0.3, "coverage_rate": 0.4, "precision_score": 0.3}
+            weights = {
+                "interval_width": 0.3,
+                "coverage_rate": 0.4,
+                "precision_score": 0.3,
+            }
 
             # Normalize scores
-            width_score = max(0.0, 1.0 - interval_width / 2.0)  # Narrower intervals are better
+            width_score = max(
+                0.0, 1.0 - interval_width / 2.0
+            )  # Narrower intervals are better
             coverage_score = coverage_rate  # Higher coverage is better
             precision_normalized = precision_score  # Higher precision is better
 
@@ -449,7 +468,11 @@ class StatisticalAnalysisFramework(BaseMetric):
             assumption_validity = result.get("assumption_validity", 0.0)
 
             # Calculate weighted test score
-            weights = {"test_power": 0.4, "p_value_accuracy": 0.3, "assumption_validity": 0.3}
+            weights = {
+                "test_power": 0.4,
+                "p_value_accuracy": 0.3,
+                "assumption_validity": 0.3,
+            }
 
             test_score = (
                 test_power * weights["test_power"]
@@ -487,8 +510,12 @@ class StatisticalAnalysisFramework(BaseMetric):
             weights = {"cohen_d": 0.4, "eta_squared": 0.3, "odds_ratio": 0.3}
 
             # Normalize scores
-            d_score = min(1.0, abs(cohen_d) / 2.0)  # Cohen's d of 2.0 is considered large
-            eta_score = min(1.0, eta_squared * 5)  # Eta squared of 0.2 is considered large
+            d_score = min(
+                1.0, abs(cohen_d) / 2.0
+            )  # Cohen's d of 2.0 is considered large
+            eta_score = min(
+                1.0, eta_squared * 5
+            )  # Eta squared of 0.2 is considered large
             odds_score = min(
                 1.0, abs(math.log(odds_ratio)) / 2.0
             )  # Log odds ratio of 2.0 is considered large
@@ -605,7 +632,11 @@ class StatisticalAnalysisFramework(BaseMetric):
             anomaly_severity = result.get("anomaly_severity", 0.0)
 
             # Calculate weighted anomaly score
-            weights = {"detection_rate": 0.5, "false_positive_rate": 0.3, "anomaly_severity": 0.2}
+            weights = {
+                "detection_rate": 0.5,
+                "false_positive_rate": 0.3,
+                "anomaly_severity": 0.2,
+            }
 
             # Normalize scores
             detection_score = detection_rate  # Higher detection rate is better
@@ -653,8 +684,12 @@ class StatisticalAnalysisFramework(BaseMetric):
 
             # Normalize scores
             accuracy_score = model_accuracy  # Higher accuracy is better
-            generalization_normalized = generalization_score  # Higher generalization is better
-            importance_score = len(feature_importance) / 10.0  # More features considered is better
+            generalization_normalized = (
+                generalization_score  # Higher generalization is better
+            )
+            importance_score = (
+                len(feature_importance) / 10.0
+            )  # More features considered is better
             importance_score = min(1.0, importance_score)
 
             model_score = (
@@ -769,7 +804,10 @@ class StatisticalAnalysisFramework(BaseMetric):
                 critical_value = stats.t.ppf(1 - self.alpha / 2, n - 1)
 
             margin_of_error = critical_value * std_diff
-            confidence_interval = (mean_diff - margin_of_error, mean_diff + margin_of_error)
+            confidence_interval = (
+                mean_diff - margin_of_error,
+                mean_diff + margin_of_error,
+            )
         else:
             confidence_interval = None
 
@@ -818,7 +856,10 @@ class StatisticalAnalysisFramework(BaseMetric):
                 critical_value = stats.t.ppf(1 - self.alpha / 2, n - 1)
 
             margin_of_error = critical_value * (std_diff / math.sqrt(n))
-            confidence_interval = (mean_diff - margin_of_error, mean_diff + margin_of_error)
+            confidence_interval = (
+                mean_diff - margin_of_error,
+                mean_diff + margin_of_error,
+            )
         else:
             confidence_interval = None
 
@@ -847,7 +888,9 @@ class StatisticalAnalysisFramework(BaseMetric):
         if not sample1 or not sample2:
             raise ValueError("Sample lists cannot be empty")
 
-        statistic, p_value = stats.mannwhitneyu(sample1, sample2, alternative="two-sided")
+        statistic, p_value = stats.mannwhitneyu(
+            sample1, sample2, alternative="two-sided"
+        )
 
         # Calculate effect size (r = Z / sqrt(N))
         n1, n2 = len(sample1), len(sample2)
@@ -887,7 +930,9 @@ class StatisticalAnalysisFramework(BaseMetric):
         statistic, p_value = stats.f_oneway(*samples)
 
         # Calculate effect size (eta-squared)
-        total_variance = statistics.variance([val for sample in samples for val in sample])
+        total_variance = statistics.variance(
+            [val for sample in samples for val in sample]
+        )
         between_group_variance = sum(
             len(sample)
             * (
@@ -898,14 +943,20 @@ class StatisticalAnalysisFramework(BaseMetric):
             for sample in samples
         ) / sum(len(sample) for sample in samples)
 
-        effect_size = between_group_variance / total_variance if total_variance > 0 else 0.0
+        effect_size = (
+            between_group_variance / total_variance if total_variance > 0 else 0.0
+        )
 
         # Interpret result
         significant = p_value < self.alpha
         if significant:
-            interpretation = f"Significant difference detected between groups (p={p_value:.4f})"
+            interpretation = (
+                f"Significant difference detected between groups (p={p_value:.4f})"
+            )
         else:
-            interpretation = f"No significant difference detected between groups (p={p_value:.4f})"
+            interpretation = (
+                f"No significant difference detected between groups (p={p_value:.4f})"
+            )
 
         return StatisticalResult(
             test_name=StatisticalTest.ANOVA.value,
@@ -940,7 +991,9 @@ class StatisticalAnalysisFramework(BaseMetric):
         # Interpret result
         significant = p_value < self.alpha
         if significant:
-            interpretation = f"Significant deviation from expected distribution (p={p_value:.4f})"
+            interpretation = (
+                f"Significant deviation from expected distribution (p={p_value:.4f})"
+            )
         else:
             interpretation = (
                 f"No significant deviation from expected distribution (p={p_value:.4f})"
@@ -978,9 +1031,7 @@ class StatisticalAnalysisFramework(BaseMetric):
                 f"Significant correlation detected (r={statistic:.4f}, p={p_value:.4f})"
             )
         else:
-            interpretation = (
-                f"No significant correlation detected (r={statistic:.4f}, p={p_value:.4f})"
-            )
+            interpretation = f"No significant correlation detected (r={statistic:.4f}, p={p_value:.4f})"
 
         return StatisticalResult(
             test_name=StatisticalTest.PEARSON_CORRELATION.value,
@@ -1010,13 +1061,9 @@ class StatisticalAnalysisFramework(BaseMetric):
         # Interpret result
         significant = p_value < self.alpha
         if significant:
-            interpretation = (
-                f"Significant correlation detected (rho={statistic:.4f}, p={p_value:.4f})"
-            )
+            interpretation = f"Significant correlation detected (rho={statistic:.4f}, p={p_value:.4f})"
         else:
-            interpretation = (
-                f"No significant correlation detected (rho={statistic:.4f}, p={p_value:.4f})"
-            )
+            interpretation = f"No significant correlation detected (rho={statistic:.4f}, p={p_value:.4f})"
 
         return StatisticalResult(
             test_name=StatisticalTest.SPEARMAN_CORRELATION.value,
@@ -1043,7 +1090,9 @@ class StatisticalAnalysisFramework(BaseMetric):
         # Interpret result
         significant = p_value < self.alpha
         if significant:
-            interpretation = f"Significant difference in distributions detected (p={p_value:.4f})"
+            interpretation = (
+                f"Significant difference in distributions detected (p={p_value:.4f})"
+            )
         else:
             interpretation = (
                 f"No significant difference in distributions detected (p={p_value:.4f})"
@@ -1059,7 +1108,9 @@ class StatisticalAnalysisFramework(BaseMetric):
             alpha=self.alpha,
         )
 
-    def analyze_trend(self, data: List[float], timestamps: List[datetime] = None) -> TrendAnalysis:
+    def analyze_trend(
+        self, data: List[float], timestamps: List[datetime] = None
+    ) -> TrendAnalysis:
         """
         Analyze trend in time series data.
 
@@ -1086,7 +1137,9 @@ class StatisticalAnalysisFramework(BaseMetric):
         else:
             # Convert timestamps to numeric values
             base_time = timestamps[0]
-            x = np.array([(t - base_time).total_seconds() for t in timestamps]).reshape(-1, 1)
+            x = np.array([(t - base_time).total_seconds() for t in timestamps]).reshape(
+                -1, 1
+            )
 
         y = np.array(data)
 
@@ -1157,7 +1210,10 @@ class StatisticalAnalysisFramework(BaseMetric):
         )
 
     def detect_anomalies(
-        self, data: List[float], contamination: float = 0.1, method: str = "isolation_forest"
+        self,
+        data: List[float],
+        contamination: float = 0.1,
+        method: str = "isolation_forest",
     ) -> AnomalyDetection:
         """
         Detect anomalies in data.
@@ -1189,7 +1245,9 @@ class StatisticalAnalysisFramework(BaseMetric):
             anomaly_scores = model.decision_function(x)
 
             # Identify anomalies
-            anomaly_indices = [i for i, label in enumerate(anomaly_labels) if label == -1]
+            anomaly_indices = [
+                i for i, label in enumerate(anomaly_labels) if label == -1
+            ]
             anomaly_threshold = np.percentile(anomaly_scores, contamination * 100)
 
             # Calculate anomaly severity
@@ -1273,7 +1331,8 @@ class StatisticalAnalysisFramework(BaseMetric):
             residuals = y - all_predictions
             std_error = math.sqrt(mean_squared_error(y, all_predictions))
             confidence_intervals = [
-                (pred - 1.96 * std_error, pred + 1.96 * std_error) for pred in all_predictions
+                (pred - 1.96 * std_error, pred + 1.96 * std_error)
+                for pred in all_predictions
             ]
 
             return PredictionModel(

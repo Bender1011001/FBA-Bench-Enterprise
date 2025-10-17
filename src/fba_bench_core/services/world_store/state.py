@@ -4,9 +4,8 @@ Handles canonical product state, supplier catalog, and related queries/mutations
 """
 
 import logging
-from typing import Any, Dict, Optional
-
 from datetime import datetime
+from typing import Any, Dict, Optional
 
 from money import Money
 
@@ -18,7 +17,7 @@ logger = logging.getLogger(__name__)
 class WorldStateManager:
     """
     Manages canonical state for products and suppliers in WorldStore.
-    
+
     Encapsulates storage, queries, and mutations for product states and supplier catalog.
     Ensures consistency and provides back-compat helpers for tests.
     """

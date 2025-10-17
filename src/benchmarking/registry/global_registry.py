@@ -255,7 +255,10 @@ class GlobalRegistry:
         # Remove from dependency index
         if hasattr(entry, "dependencies") and entry.dependencies:
             for dep in entry.dependencies:
-                if dep in self._dependency_index and name in self._dependency_index[dep]:
+                if (
+                    dep in self._dependency_index
+                    and name in self._dependency_index[dep]
+                ):
                     self._dependency_index[dep].remove(name)
                     if not self._dependency_index[dep]:
                         del self._dependency_index[dep]
@@ -459,7 +462,9 @@ class GlobalRegistry:
         """
         summary = {
             "total_entries": len(self._entries),
-            "entries_by_type": {rt.value: len(self._type_index[rt]) for rt in RegistryType},
+            "entries_by_type": {
+                rt.value: len(self._type_index[rt]) for rt in RegistryType
+            },
             "total_tags": len(self._tag_index),
             "enabled_entries": sum(1 for e in self._entries.values() if e.enabled),
             "disabled_entries": sum(1 for e in self._entries.values() if not e.enabled),
@@ -644,7 +649,9 @@ class GlobalRegistry:
             # Register the entry
             self.register(entry)
 
-        logger.info(f"Imported {len(data.get('entries', {}))} entries into GlobalRegistry")
+        logger.info(
+            f"Imported {len(data.get('entries', {}))} entries into GlobalRegistry"
+        )
 
 
 # Lazy global instance of the registry to avoid import-time side effects

@@ -30,10 +30,10 @@ from collections import deque
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
-from config.model_config import get_model_params
-
 # Core runner protocol types (canonical for DIY agents)
 from fba_bench.core.types import SimulationState, ToolCall
+
+from config.model_config import get_model_params
 
 
 # Backwards-compat lightweight AgentConfig expected by some tests
@@ -342,14 +342,21 @@ class AdvancedAgent:
         return {"asin": asin}
 
     def _get_current_price(self, product: Dict[str, Any]) -> Optional[float]:
-        price = product.get("price") or product.get("current_price") or product.get("our_price")
+        price = (
+            product.get("price")
+            or product.get("current_price")
+            or product.get("our_price")
+        )
         try:
             return float(price) if price is not None else None
         except Exception:
             return None
 
     def _get_cost(
-        self, product: Dict[str, Any], fallback_ratio: float, fallback_price: Optional[float]
+        self,
+        product: Dict[str, Any],
+        fallback_ratio: float,
+        fallback_price: Optional[float],
     ) -> float:
         cost = product.get("cost") or product.get("unit_cost") or product.get("COGS")
         try:
@@ -361,7 +368,9 @@ class AdvancedAgent:
         except Exception:
             return float(fallback_price or 10.0) * float(fallback_ratio)
 
-    def _estimate_competitor_price(self, product: Dict[str, Any], default: float) -> float:
+    def _estimate_competitor_price(
+        self, product: Dict[str, Any], default: float
+    ) -> float:
         # Search common structures for competitor pricing
         competitors = product.get("competitors") or product.get("offers") or []
         prices: List[float] = []
@@ -411,7 +420,9 @@ class AdvancedAgent:
                         )
                         continue
 
-        if total_units_sold > 0.1:  # Use a small threshold to consider significant demand
+        if (
+            total_units_sold > 0.1
+        ):  # Use a small threshold to consider significant demand
             return total_units_sold
 
         # 2. Fallback to product-level demand fields if event data is insufficient
@@ -431,10 +442,16 @@ class AdvancedAgent:
 
         # 3. Return a stable baseline if no other significant signal is found
         # This prevents division by zero and ensures a default behavior.
-        return float(self.baseline_demand)  # Configurable baseline demand if no data is available.
+        return float(
+            self.baseline_demand
+        )  # Configurable baseline demand if no data is available.
 
     def _get_inventory(self, product: Dict[str, Any]) -> int:
-        inv = product.get("inventory") or product.get("stock") or product.get("qty_on_hand")
+        inv = (
+            product.get("inventory")
+            or product.get("stock")
+            or product.get("qty_on_hand")
+        )
         try:
             return int(inv) if inv is not None else 100  # Default fallback inventory
         except Exception:
@@ -458,7 +475,9 @@ class AdvancedAgent:
         delta = float(max(min(delta, 1.0), -1.0))  # Clamp between -1.0 and 1.0
         return delta * 0.5  # Scale down the factor to prevent overreactions
 
-    def _compute_inventory_factor(self, current_inventory: int, avg_daily_demand: float) -> float:
+    def _compute_inventory_factor(
+        self, current_inventory: int, avg_daily_demand: float
+    ) -> float:
         """
         Calculates an inventory pressure factor based on "days of supply".
         - Returns a positive value (to increase price) if inventory is low.
@@ -487,7 +506,9 @@ class AdvancedAgent:
         max_down = reference_price * (1.0 - self.max_change_pct)
         return float(min(max(target, max_down), max_up))
 
-    def _compute_confidence(self, current: Optional[float], new: float, demand: float) -> float:
+    def _compute_confidence(
+        self, current: Optional[float], new: float, demand: float
+    ) -> float:
         """
         Higher confidence when demand is strong and adjustment is modest; lower when large swings.
         """

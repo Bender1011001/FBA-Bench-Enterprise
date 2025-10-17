@@ -4,6 +4,8 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Protocol
 
+from money import USD_ZERO, Money  # Assuming Money class and USD_ZERO are implemented
+
 from fba_events import (
     AdClickEvent,
     AdSpendEvent,
@@ -12,7 +14,6 @@ from fba_events import (
     SaleOccurred,
     VisitEvent,
 )
-from money import USD_ZERO, Money  # Assuming Money class and USD_ZERO are implemented
 
 logger = logging.getLogger(__name__)
 
@@ -21,8 +22,7 @@ logger = logging.getLogger(__name__)
 class AbstractSalesService(Protocol):
     """Protocol for a sales service."""
 
-    def get_status_summary(self) -> Dict[str, Any]:
-        ...
+    def get_status_summary(self) -> Dict[str, Any]: ...
 
 
 @dataclass
@@ -38,10 +38,14 @@ class CampaignPerformance:
     def to_dict(self) -> Dict[str, Any]:
         data = asdict(self)
         data["revenue"] = (
-            self.revenue.to_dict() if hasattr(self.revenue, "to_dict") else str(self.revenue)
+            self.revenue.to_dict()
+            if hasattr(self.revenue, "to_dict")
+            else str(self.revenue)
         )
         data["ad_spend"] = (
-            self.ad_spend.to_dict() if hasattr(self.ad_spend, "to_dict") else str(self.ad_spend)
+            self.ad_spend.to_dict()
+            if hasattr(self.ad_spend, "to_dict")
+            else str(self.ad_spend)
         )
         return data
 
@@ -73,11 +77,13 @@ class MarketingMetrics:
         sales_service: Optional[AbstractSalesService] = None,
         config: Optional[MarketingMetricsConfig] = None,
     ):
-        if sales_service is not None and not isinstance(sales_service, AbstractSalesService):
-            raise TypeError("sales_service must implement AbstractSalesService protocol.")
-        self.sales_service = (
-            sales_service  # Dependency injection for sales data (optional for unit tests)
-        )
+        if sales_service is not None and not isinstance(
+            sales_service, AbstractSalesService
+        ):
+            raise TypeError(
+                "sales_service must implement AbstractSalesService protocol."
+            )
+        self.sales_service = sales_service  # Dependency injection for sales data (optional for unit tests)
         self.config = config if config else MarketingMetricsConfig()
 
         self.total_revenue: Money = USD_ZERO
@@ -102,7 +108,9 @@ class MarketingMetrics:
         for event in events:
             if isinstance(event, SaleOccurred):
                 # Assuming SaleOccurred has .unit_price (Money) and .units_sold (int)
-                if isinstance(event.unit_price, Money) and isinstance(event.units_sold, int):
+                if isinstance(event.unit_price, Money) and isinstance(
+                    event.units_sold, int
+                ):
                     sale_amount = event.unit_price * event.units_sold
                     self.total_revenue += sale_amount
                     self.total_conversions += 1  # A sale is a conversion
@@ -111,8 +119,8 @@ class MarketingMetrics:
                     campaign_id = getattr(event, "campaign_id", None)
                     if isinstance(campaign_id, str) and campaign_id:
                         if campaign_id not in self.campaign_performance:
-                            self.campaign_performance[campaign_id] = CampaignPerformance(
-                                campaign_id=campaign_id
+                            self.campaign_performance[campaign_id] = (
+                                CampaignPerformance(campaign_id=campaign_id)
                             )
                         self.campaign_performance[campaign_id].revenue += sale_amount
                         self.campaign_performance[campaign_id].conversions += 1
@@ -128,8 +136,8 @@ class MarketingMetrics:
                     campaign_id = getattr(event, "campaign_id", None)
                     if isinstance(campaign_id, str) and campaign_id:
                         if campaign_id not in self.campaign_performance:
-                            self.campaign_performance[campaign_id] = CampaignPerformance(
-                                campaign_id=campaign_id
+                            self.campaign_performance[campaign_id] = (
+                                CampaignPerformance(campaign_id=campaign_id)
                             )
                         self.campaign_performance[campaign_id].ad_spend += event.cost
                     elif campaign_id is not None:
@@ -156,7 +164,9 @@ class MarketingMetrics:
         total_revenue_float = self.total_revenue.to_float()
         if total_ad_spend_float > 0:
             return total_revenue_float / total_ad_spend_float
-        logger.warning("Total Ad Spend is zero, cannot calculate ROAS. Returning default.")
+        logger.warning(
+            "Total Ad Spend is zero, cannot calculate ROAS. Returning default."
+        )
         return self.config.default_on_zero_division
 
     def calculate_acos(self) -> float:
@@ -165,7 +175,9 @@ class MarketingMetrics:
         total_ad_spend_float = self.total_ad_spend.to_float()
         if total_revenue_float > 0:
             return (total_ad_spend_float / total_revenue_float) * 100
-        logger.warning("Total Revenue is zero, cannot calculate ACoS. Returning default.")
+        logger.warning(
+            "Total Revenue is zero, cannot calculate ACoS. Returning default."
+        )
         return self.config.default_on_zero_division
 
     def calculate_weighted_roas_acos(self) -> float:
@@ -193,7 +205,9 @@ class MarketingMetrics:
             )
             return 0.0
 
-        total_contributing_revenue = sum(cp.revenue.to_float() for cp in contributing_campaigns)
+        total_contributing_revenue = sum(
+            cp.revenue.to_float() for cp in contributing_campaigns
+        )
 
         if total_contributing_revenue == 0:
             logger.warning(
@@ -251,7 +265,10 @@ class MarketingMetrics:
 
     def generate_marketing_report(self, data: Dict[str, float]) -> Dict[str, float]:
         conversion_rate = self.calculate_conversion_rate(
-            {"conversions": data.get("conversions", 0.0), "visitors": data.get("visitors", 0.0)}
+            {
+                "conversions": data.get("conversions", 0.0),
+                "visitors": data.get("visitors", 0.0),
+            }
         )
         cac = self.calculate_customer_acquisition_cost(
             {
@@ -277,7 +294,9 @@ class MarketingMetrics:
             "market_share": market_share,
         }
 
-    def calculate_conversion_rate(self, data: Optional[Dict[str, float]] = None) -> float:
+    def calculate_conversion_rate(
+        self, data: Optional[Dict[str, float]] = None
+    ) -> float:
         """
         Calculates the conversion rate.
         - If data is provided: conversions / visitors (fraction, not percentage) to match unit tests.
@@ -291,7 +310,9 @@ class MarketingMetrics:
             return (self.total_conversions / self.total_opportunities) * 100.0
         return 0.0
 
-    def calculate_customer_acquisition_cost(self, data: Optional[Dict[str, float]] = None) -> float:
+    def calculate_customer_acquisition_cost(
+        self, data: Optional[Dict[str, float]] = None
+    ) -> float:
         """
         Calculates Customer Acquisition Cost (CAC).
         - If data is provided: marketing_cost / new_customers.
@@ -307,7 +328,9 @@ class MarketingMetrics:
             )
         if self.total_customer_acquisitions > 0:
             return self.total_ad_spend.to_float() / self.total_customer_acquisitions
-        logger.warning("No customer acquisitions, cannot calculate CAC. Returning default.")
+        logger.warning(
+            "No customer acquisitions, cannot calculate CAC. Returning default."
+        )
         return self.config.default_on_zero_division
 
     def get_metrics_breakdown(self) -> Dict[str, Any]:

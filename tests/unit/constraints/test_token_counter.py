@@ -25,7 +25,9 @@ def test_estimate_ratio_uses_substring_model_matching():
     text = "Hello World!" * 10  # 120 chars
     # gpt-4o family should map to 0.24 ratio via substring
     counter = TokenCounter(default_model="gpt-4o-mini")
-    result: TokenCountResult = counter.count_tokens(text, model="gpt-4o-mini", method="estimate")
+    result: TokenCountResult = counter.count_tokens(
+        text, model="gpt-4o-mini", method="estimate"
+    )
     expected_ratio = 0.24
     assert result.estimated is True
     assert result.method == "estimate"
@@ -55,7 +57,9 @@ def test_tiktoken_exact_with_alias_and_fallback(monkeypatch):
             return list(s)
 
     fake_tiktoken = types.SimpleNamespace(
-        encoding_for_model=lambda model: (_ for _ in ()).throw(KeyError("unknown model")),  # raises
+        encoding_for_model=lambda model: (_ for _ in ()).throw(
+            KeyError("unknown model")
+        ),  # raises
         get_encoding=lambda name: _FakeEncoding(),
     )
 
@@ -74,13 +78,20 @@ def test_tiktoken_exact_with_alias_and_fallback(monkeypatch):
     assert result.count == len(text)
 
     # Messages path under tiktoken as well
-    messages = [{"role": "user", "content": "hi"}, {"role": "assistant", "content": "there"}]
-    msg_result = counter.count_messages(messages, model="gpt-4o-mini", method="tiktoken")
+    messages = [
+        {"role": "user", "content": "hi"},
+        {"role": "assistant", "content": "there"},
+    ]
+    msg_result = counter.count_messages(
+        messages, model="gpt-4o-mini", method="tiktoken"
+    )
     # With our fake encoding, role/content tokens equal their string lengths.
     # Count format overhead (approx from implementation): per-message +4, final +2.
     per_message_overhead = 4 * len(messages)
     final_overhead = 2
-    tokenized_lengths = sum(len(m.get("content", "")) + len(m.get("role", "")) for m in messages)
+    tokenized_lengths = sum(
+        len(m.get("content", "")) + len(m.get("role", "")) for m in messages
+    )
     expected = tokenized_lengths + per_message_overhead + final_overhead
     assert msg_result.estimated is False
     assert msg_result.count == expected
@@ -93,7 +104,9 @@ def test_provider_hint_guides_alias_resolution_tiktoken(monkeypatch):
             return list(s)
 
     fake_tiktoken = types.SimpleNamespace(
-        encoding_for_model=lambda model: (_ for _ in ()).throw(KeyError("unknown model")),
+        encoding_for_model=lambda model: (_ for _ in ()).throw(
+            KeyError("unknown model")
+        ),
         get_encoding=lambda name: _FakeEncoding(),
     )
     monkeypatch.setattr(tc_mod, "TIKTOKEN_AVAILABLE", True, raising=True)
@@ -120,7 +133,9 @@ def test_unknown_model_falls_back_to_cl100k_in_tiktoken(monkeypatch):
         return _FakeEncoding()
 
     fake_tiktoken = types.SimpleNamespace(
-        encoding_for_model=lambda model: (_ for _ in ()).throw(KeyError("unknown model")),
+        encoding_for_model=lambda model: (_ for _ in ()).throw(
+            KeyError("unknown model")
+        ),
         get_encoding=_get_encoding,
     )
     monkeypatch.setattr(tc_mod, "TIKTOKEN_AVAILABLE", True, raising=True)

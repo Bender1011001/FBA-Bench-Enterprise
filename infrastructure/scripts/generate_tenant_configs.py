@@ -19,6 +19,7 @@ import sys
 from pathlib import Path
 from typing import Dict
 
+
 def main() -> int:
     here = Path(__file__).resolve()
     infra_dir = here.parent.parent

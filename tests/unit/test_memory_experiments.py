@@ -42,9 +42,14 @@ class TestDualMemoryManager(unittest.TestCase):
         self.assertEqual(memory_id, "mem1")
         self.assertIn("mem1", self.dual_memory_manager._working_memory)
         self.assertEqual(
-            self.dual_memory_manager._working_memory["mem1"]["content"]["data"]["price"], 10.0
+            self.dual_memory_manager._working_memory["mem1"]["content"]["data"][
+                "price"
+            ],
+            10.0,
         )
-        self.assertEqual(self.dual_memory_manager._working_memory["mem1"]["importance"], 0.8)
+        self.assertEqual(
+            self.dual_memory_manager._working_memory["mem1"]["importance"], 0.8
+        )
 
     def test_retrieve_working_memory(self):
         """Test retrieving data from working memory."""
@@ -80,10 +85,14 @@ class TestDualMemoryManager(unittest.TestCase):
         self.assertEqual(memory_id, "mem1")
         self.assertIn("mem1", self.dual_memory_manager._long_term_memory)
         self.assertEqual(
-            self.dual_memory_manager._long_term_memory["mem1"]["content"]["data"]["rule"],
+            self.dual_memory_manager._long_term_memory["mem1"]["content"]["data"][
+                "rule"
+            ],
             "price_elasticity",
         )
-        self.assertEqual(self.dual_memory_manager._long_term_memory["mem1"]["importance"], 0.9)
+        self.assertEqual(
+            self.dual_memory_manager._long_term_memory["mem1"]["importance"], 0.9
+        )
 
     def test_retrieve_long_term_memory(self):
         """Test retrieving data from long-term memory."""
@@ -156,7 +165,9 @@ class TestDualMemoryManager(unittest.TestCase):
         self.dual_memory_manager.store_long_term_memory(mem2_data)
 
         # Search by tag
-        results = self.dual_memory_manager.search_long_term_memory({"tags": ["pricing"]})
+        results = self.dual_memory_manager.search_long_term_memory(
+            {"tags": ["pricing"]}
+        )
 
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0]["memory_id"], "mem1")
@@ -176,7 +187,9 @@ class TestDualMemoryManager(unittest.TestCase):
         self.dual_memory_manager.store_working_memory(mem_data)
 
         # Consolidate memory
-        consolidated_ids = self.dual_memory_manager.consolidate_memory(importance_threshold=0.8)
+        consolidated_ids = self.dual_memory_manager.consolidate_memory(
+            importance_threshold=0.8
+        )
 
         self.assertIn("mem1", consolidated_ids)
         self.assertNotIn("mem1", self.dual_memory_manager._working_memory)
@@ -257,7 +270,11 @@ class TestExperimentProtocols(unittest.TestCase):
             "description": "Test the retention of memories over time",
             "memory_types": ["working_memory", "long_term_memory"],
             "experiment_duration": timedelta(hours=24),
-            "test_intervals": [timedelta(hours=1), timedelta(hours=6), timedelta(hours=24)],
+            "test_intervals": [
+                timedelta(hours=1),
+                timedelta(hours=6),
+                timedelta(hours=24),
+            ],
             "metrics": ["retention_rate", "recall_accuracy", "retrieval_time"],
             "parameters": {
                 "memory_count": 100,
@@ -271,7 +288,8 @@ class TestExperimentProtocols(unittest.TestCase):
         self.assertEqual(protocol_id, "protocol1")
         self.assertIn("protocol1", self.experiment_protocols._protocols)
         self.assertEqual(
-            self.experiment_protocols._protocols["protocol1"]["name"], "Memory Retention Test"
+            self.experiment_protocols._protocols["protocol1"]["name"],
+            "Memory Retention Test",
         )
         self.assertEqual(
             len(self.experiment_protocols._protocols["protocol1"]["test_intervals"]), 3
@@ -285,7 +303,11 @@ class TestExperimentProtocols(unittest.TestCase):
             "description": "Test the retention of memories over time",
             "memory_types": ["working_memory", "long_term_memory"],
             "experiment_duration": timedelta(hours=24),
-            "test_intervals": [timedelta(hours=1), timedelta(hours=6), timedelta(hours=24)],
+            "test_intervals": [
+                timedelta(hours=1),
+                timedelta(hours=6),
+                timedelta(hours=24),
+            ],
             "metrics": ["retention_rate", "recall_accuracy", "retrieval_time"],
             "parameters": {
                 "memory_count": 100,
@@ -312,7 +334,11 @@ class TestExperimentProtocols(unittest.TestCase):
             "description": "Test the retention of memories over time",
             "memory_types": ["working_memory", "long_term_memory"],
             "experiment_duration": timedelta(hours=24),
-            "test_intervals": [timedelta(hours=1), timedelta(hours=6), timedelta(hours=24)],
+            "test_intervals": [
+                timedelta(hours=1),
+                timedelta(hours=6),
+                timedelta(hours=24),
+            ],
             "metrics": ["retention_rate", "recall_accuracy", "retrieval_time"],
             "parameters": {
                 "memory_count": 100,
@@ -347,14 +373,19 @@ class TestExperimentProtocols(unittest.TestCase):
         )
 
         # Run experiment
-        experiment_id = self.experiment_protocols.run_experiment("protocol1", memory_manager)
+        experiment_id = self.experiment_protocols.run_experiment(
+            "protocol1", memory_manager
+        )
 
         self.assertIsNotNone(experiment_id)
         self.assertIn(experiment_id, self.experiment_protocols._experiments)
         self.assertEqual(
-            self.experiment_protocols._experiments[experiment_id]["protocol_id"], "protocol1"
+            self.experiment_protocols._experiments[experiment_id]["protocol_id"],
+            "protocol1",
         )
-        self.assertIn("start_time", self.experiment_protocols._experiments[experiment_id])
+        self.assertIn(
+            "start_time", self.experiment_protocols._experiments[experiment_id]
+        )
 
     def test_get_experiment(self):
         """Test getting an experiment."""
@@ -365,7 +396,11 @@ class TestExperimentProtocols(unittest.TestCase):
             "description": "Test the retention of memories over time",
             "memory_types": ["working_memory", "long_term_memory"],
             "experiment_duration": timedelta(hours=24),
-            "test_intervals": [timedelta(hours=1), timedelta(hours=6), timedelta(hours=24)],
+            "test_intervals": [
+                timedelta(hours=1),
+                timedelta(hours=6),
+                timedelta(hours=24),
+            ],
             "metrics": ["retention_rate", "recall_accuracy", "retrieval_time"],
             "parameters": {
                 "memory_count": 100,
@@ -400,7 +435,9 @@ class TestExperimentProtocols(unittest.TestCase):
         )
 
         # Run experiment
-        experiment_id = self.experiment_protocols.run_experiment("protocol1", memory_manager)
+        experiment_id = self.experiment_protocols.run_experiment(
+            "protocol1", memory_manager
+        )
 
         # Get experiment
         experiment = self.experiment_protocols.get_experiment(experiment_id)
@@ -419,7 +456,11 @@ class TestExperimentProtocols(unittest.TestCase):
             "description": "Test the retention of memories over time",
             "memory_types": ["working_memory", "long_term_memory"],
             "experiment_duration": timedelta(hours=24),
-            "test_intervals": [timedelta(hours=1), timedelta(hours=6), timedelta(hours=24)],
+            "test_intervals": [
+                timedelta(hours=1),
+                timedelta(hours=6),
+                timedelta(hours=24),
+            ],
             "metrics": ["retention_rate", "recall_accuracy", "retrieval_time"],
             "parameters": {
                 "memory_count": 100,
@@ -454,7 +495,9 @@ class TestExperimentProtocols(unittest.TestCase):
         )
 
         # Run experiment
-        experiment_id = self.experiment_protocols.run_experiment("protocol1", memory_manager)
+        experiment_id = self.experiment_protocols.run_experiment(
+            "protocol1", memory_manager
+        )
 
         # Mock results
         self.experiment_protocols._experiments[experiment_id]["results"] = {
@@ -480,7 +523,11 @@ class TestExperimentProtocols(unittest.TestCase):
             "description": "Test the retention of memories over time",
             "memory_types": ["working_memory", "long_term_memory"],
             "experiment_duration": timedelta(hours=24),
-            "test_intervals": [timedelta(hours=1), timedelta(hours=6), timedelta(hours=24)],
+            "test_intervals": [
+                timedelta(hours=1),
+                timedelta(hours=6),
+                timedelta(hours=24),
+            ],
             "metrics": ["retention_rate", "recall_accuracy", "retrieval_time"],
             "parameters": {
                 "memory_count": 100,
@@ -495,7 +542,11 @@ class TestExperimentProtocols(unittest.TestCase):
             "description": "Test the capacity of memory systems",
             "memory_types": ["working_memory", "long_term_memory"],
             "experiment_duration": timedelta(hours=12),
-            "test_intervals": [timedelta(hours=1), timedelta(hours=6), timedelta(hours=12)],
+            "test_intervals": [
+                timedelta(hours=1),
+                timedelta(hours=6),
+                timedelta(hours=12),
+            ],
             "metrics": ["capacity", "utilization", "efficiency"],
             "parameters": {
                 "memory_count": 200,
@@ -523,7 +574,11 @@ class TestExperimentProtocols(unittest.TestCase):
             "description": "Test the retention of memories over time",
             "memory_types": ["working_memory", "long_term_memory"],
             "experiment_duration": timedelta(hours=24),
-            "test_intervals": [timedelta(hours=1), timedelta(hours=6), timedelta(hours=24)],
+            "test_intervals": [
+                timedelta(hours=1),
+                timedelta(hours=6),
+                timedelta(hours=24),
+            ],
             "metrics": ["retention_rate", "recall_accuracy", "retrieval_time"],
             "parameters": {
                 "memory_count": 100,
@@ -558,8 +613,12 @@ class TestExperimentProtocols(unittest.TestCase):
         )
 
         # Run multiple experiments
-        experiment_id1 = self.experiment_protocols.run_experiment("protocol1", memory_manager)
-        experiment_id2 = self.experiment_protocols.run_experiment("protocol1", memory_manager)
+        experiment_id1 = self.experiment_protocols.run_experiment(
+            "protocol1", memory_manager
+        )
+        experiment_id2 = self.experiment_protocols.run_experiment(
+            "protocol1", memory_manager
+        )
 
         # List experiments
         experiments = self.experiment_protocols.list_experiments()
@@ -617,7 +676,9 @@ class TestMemoryMetrics(unittest.TestCase):
 
         recall_accuracy = self.memory_metrics.calculate_recall_accuracy(memory_data)
 
-        self.assertEqual(recall_accuracy, 2 / 3)  # 2 out of 3 memories correctly recalled
+        self.assertEqual(
+            recall_accuracy, 2 / 3
+        )  # 2 out of 3 memories correctly recalled
 
     def test_calculate_retrieval_time(self):
         """Test calculating retrieval time."""
@@ -663,7 +724,9 @@ class TestMemoryMetrics(unittest.TestCase):
             ]
         }
 
-        distribution = self.memory_metrics.calculate_memory_importance_distribution(memory_data)
+        distribution = self.memory_metrics.calculate_memory_importance_distribution(
+            memory_data
+        )
 
         self.assertIsNotNone(distribution)
         self.assertIn("mean", distribution)
@@ -687,7 +750,9 @@ class TestMemoryMetrics(unittest.TestCase):
             ]
         }
 
-        distribution = self.memory_metrics.calculate_memory_tag_distribution(memory_data)
+        distribution = self.memory_metrics.calculate_memory_tag_distribution(
+            memory_data
+        )
 
         self.assertIsNotNone(distribution)
         self.assertEqual(distribution["pricing"], 3)
@@ -709,7 +774,9 @@ class TestMemoryMetrics(unittest.TestCase):
             ]
         }
 
-        distribution = self.memory_metrics.calculate_memory_age_distribution(memory_data)
+        distribution = self.memory_metrics.calculate_memory_age_distribution(
+            memory_data
+        )
 
         self.assertIsNotNone(distribution)
         self.assertIn("mean_age", distribution)

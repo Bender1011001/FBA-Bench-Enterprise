@@ -111,7 +111,10 @@ class TestBenchmarkEngine(unittest.TestCase):
     def test_validate_configuration_invalid(self):
         """Test configuration validation with invalid configuration."""
         # Mock config manager validation with errors
-        self.config_manager.validate_config.return_value = (False, ["Invalid configuration"])
+        self.config_manager.validate_config.return_value = (
+            False,
+            ["Invalid configuration"],
+        )
 
         is_valid, errors = self.engine._validate_configuration(self.test_config)
 
@@ -230,7 +233,9 @@ class TestBenchmarkEngine(unittest.TestCase):
 
             # Execute scenario
             result = asyncio.run(
-                self.engine._execute_scenario(scenario_config, agent_config, self.test_config, 1)
+                self.engine._execute_scenario(
+                    scenario_config, agent_config, self.test_config, 1
+                )
             )
 
             # Verify result
@@ -253,7 +258,9 @@ class TestBenchmarkEngine(unittest.TestCase):
 
             # Execute scenario and expect failure
             result = asyncio.run(
-                self.engine._execute_scenario(scenario_config, agent_config, self.test_config, 1)
+                self.engine._execute_scenario(
+                    scenario_config, agent_config, self.test_config, 1
+                )
             )
 
             # Verify failure result
@@ -318,7 +325,9 @@ class TestBenchmarkEngine(unittest.TestCase):
         self.assertIn("average_execution_time", aggregated)
         self.assertIn("success_rate", aggregated)
         self.assertEqual(aggregated["overall_score"], 0.875)  # Average of 0.85 and 0.9
-        self.assertEqual(aggregated["average_execution_time"], 11.0)  # Average of 10.0 and 12.0
+        self.assertEqual(
+            aggregated["average_execution_time"], 11.0
+        )  # Average of 10.0 and 12.0
         self.assertEqual(aggregated["success_rate"], 1.0)  # Both runs successful
 
     def test_get_benchmark_status(self):
@@ -362,7 +371,9 @@ class TestBenchmarkEngine(unittest.TestCase):
         # Verify list
         self.assertEqual(len(benchmarks), 2)
         self.assertTrue(any(b["benchmark_id"] == "test_benchmark" for b in benchmarks))
-        self.assertTrue(any(b["benchmark_id"] == "test_benchmark_2" for b in benchmarks))
+        self.assertTrue(
+            any(b["benchmark_id"] == "test_benchmark_2" for b in benchmarks)
+        )
 
     def test_stop_benchmark(self):
         """Test stopping a benchmark."""
@@ -455,7 +466,9 @@ class TestBenchmarkRun(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
-        self.run = BenchmarkRun(benchmark_id="test_benchmark", config={"test": "config"})
+        self.run = BenchmarkRun(
+            benchmark_id="test_benchmark", config={"test": "config"}
+        )
 
     def test_init(self):
         """Test BenchmarkRun initialization."""

@@ -104,7 +104,11 @@ class MultiAgentCoordinator:
         """
         if not all_actions:
             return (0, 0)
-        types = [a.get("action_type") or a.get("type") for a in all_actions if isinstance(a, dict)]
+        types = [
+            a.get("action_type") or a.get("type")
+            for a in all_actions
+            if isinstance(a, dict)
+        ]
         distinct = len(set(types))
         cooperation_success = 1 if distinct > 1 else 0
 
@@ -115,9 +119,13 @@ class MultiAgentCoordinator:
     def _update_effectiveness(self) -> None:
         # Effectiveness = (cooperation_successes - conflicts) normalized by total_events (>=1)
         denom = max(1, self._stats.total_events)
-        raw = (self._stats.cooperation_successes - self._stats.competitive_conflicts) / denom
+        raw = (
+            self._stats.cooperation_successes - self._stats.competitive_conflicts
+        ) / denom
         # clamp to [0,1]
-        self._stats.coordination_effectiveness = max(0.0, min(1.0, raw + 0.5))  # center 0 at 0.5
+        self._stats.coordination_effectiveness = max(
+            0.0, min(1.0, raw + 0.5)
+        )  # center 0 at 0.5
 
     # ------------------------ Public API used by tests ------------------------
 
@@ -175,7 +183,9 @@ class MultiAgentCoordinator:
             "coordination_metrics": {...}
           }
         """
-        actions = await self.coordinate_responses(market_events, skill_coordinators_by_agent)
+        actions = await self.coordinate_responses(
+            market_events, skill_coordinators_by_agent
+        )
 
         # Apply simple prioritization based on mode and agent roles
         if self.coordination_mode == CoordinationMode.COMPETITIVE:
@@ -187,7 +197,9 @@ class MultiAgentCoordinator:
         else:  # ADAPTIVE
             # If external volatility high, prefer platform/analyst stabilization; else seller/supplier
             volatility = float(
-                external_factors.get("market_volatility", 0.0) if external_factors else 0.0
+                external_factors.get("market_volatility", 0.0)
+                if external_factors
+                else 0.0
             )
             priority_roles = (
                 {AgentRole.PLATFORM, AgentRole.ANALYST}

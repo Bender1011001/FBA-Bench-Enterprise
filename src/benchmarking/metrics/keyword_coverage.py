@@ -29,21 +29,26 @@ _PUNCT_RE = re.compile(r"[^\w\s]", flags=re.UNICODE)
 
 class KeywordCoverageInput(BaseModel):
     # run.output is expected to be dict or str; for summarization, we look at "summary" in dict
-    output: Any = Field(description="Scenario output; dict with 'summary' or a raw string")
+    output: Any = Field(
+        description="Scenario output; dict with 'summary' or a raw string"
+    )
 
     class Config:
         frozen = False
 
 
 class KeywordCoverageContext(BaseModel):
-    keywords: List[str] = Field(default_factory=list, description="List of focus keywords to check")
+    keywords: List[str] = Field(
+        default_factory=list, description="List of focus keywords to check"
+    )
     field_path: Optional[str] = Field(
         default="summary", description="If output is dict, the field to read"
     )
     case_insensitive: bool = Field(default=True)
     strip_punctuation: bool = Field(default=True)
     unique_match: bool = Field(
-        default=True, description="Count keyword present at least once (unique) or by frequency"
+        default=True,
+        description="Count keyword present at least once (unique) or by frequency",
     )
 
     class Config:
@@ -91,7 +96,9 @@ def _extract_field(output: Any, field_path: Optional[str]) -> Any:
     return cur
 
 
-def evaluate(run: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def evaluate(
+    run: Dict[str, Any], context: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
     """
     Keyword coverage for summarization scenarios.
 
@@ -129,7 +136,12 @@ def evaluate(run: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> D
         kw_list = [k for k in (ctx.keywords or []) if isinstance(k, str) and k.strip()]
         total = len(kw_list)
         if total == 0:
-            return {"keyword_hits": 0, "keyword_total": 0, "coverage": 0.0, "reason": "no_keywords"}
+            return {
+                "keyword_hits": 0,
+                "keyword_total": 0,
+                "coverage": 0.0,
+                "reason": "no_keywords",
+            }
 
         field_val = _extract_field(inp.output, ctx.field_path)
         text = _to_text(field_val)
@@ -138,7 +150,9 @@ def evaluate(run: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> D
         hits = 0
         if ctx.unique_match:
             for k in kw_list:
-                k_norm = _normalize_text(k, ctx.case_insensitive, ctx.strip_punctuation).strip()
+                k_norm = _normalize_text(
+                    k, ctx.case_insensitive, ctx.strip_punctuation
+                ).strip()
                 if not k_norm:
                     continue
                 if k_norm in text:
@@ -146,7 +160,9 @@ def evaluate(run: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> D
         else:
             # frequency-based: count occurrences
             for k in kw_list:
-                k_norm = _normalize_text(k, ctx.case_insensitive, ctx.strip_punctuation).strip()
+                k_norm = _normalize_text(
+                    k, ctx.case_insensitive, ctx.strip_punctuation
+                ).strip()
                 if not k_norm:
                     continue
                 # naive frequency count

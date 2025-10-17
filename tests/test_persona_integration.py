@@ -11,14 +11,14 @@ from decimal import Decimal
 from typing import Dict, List
 
 import pytest
+from models.competitor import Competitor
+from money import Money
+from services.competitor_manager import CompetitorManager
+from services.sales_service import SalesService
 
 from event_bus import EventBus
 from events import CompetitorPricesUpdated, TickEvent
-from models.competitor import Competitor
-from money import Money
 from personas import IrrationalSlasher, SlowFollower
-from services.competitor_manager import CompetitorManager
-from services.sales_service import SalesService
 
 
 class MockCompetitor(Competitor):
@@ -69,7 +69,11 @@ class TestPersonaIntegration:
     def competitor_manager_config(self):
         """Configuration for competitor manager."""
         return {
-            "persona_distribution": {"IrrationalSlasher": 0.5, "SlowFollower": 0.5, "Default": 0.0},
+            "persona_distribution": {
+                "IrrationalSlasher": 0.5,
+                "SlowFollower": 0.5,
+                "Default": 0.0,
+            },
             "market_sensitivity": 0.8,
             "sales_velocity_window": 5,
         }
@@ -122,8 +126,12 @@ class TestPersonaIntegration:
         competitor_manager.add_competitor(mock_competitors[2])  # Auto-assign
 
         # Verify persona assignments
-        assert isinstance(competitor_manager.get_competitor_persona("comp_1"), IrrationalSlasher)
-        assert isinstance(competitor_manager.get_competitor_persona("comp_2"), SlowFollower)
+        assert isinstance(
+            competitor_manager.get_competitor_persona("comp_1"), IrrationalSlasher
+        )
+        assert isinstance(
+            competitor_manager.get_competitor_persona("comp_2"), SlowFollower
+        )
         assert competitor_manager.get_competitor_persona("comp_3") is not None
 
         # Check persona statistics
@@ -133,7 +141,9 @@ class TestPersonaIntegration:
         assert "SlowFollower" in stats["persona_distribution"]
 
     @pytest.mark.asyncio
-    async def test_irrational_slasher_behavior(self, competitor_manager, mock_competitors):
+    async def test_irrational_slasher_behavior(
+        self, competitor_manager, mock_competitors
+    ):
         """Test IrrationalSlasher persona behavior."""
         # Create slasher with high slash probability for testing
         slasher = IrrationalSlasher("comp_1", Money.from_dollars(14.00))
@@ -165,8 +175,12 @@ class TestPersonaIntegration:
         # Price should be slashed to near cost basis when slashing
         if slasher._get_state_value("is_slashing", False):
             expected_min_price = slasher._calculate_minimum_price()
-            assert updated_state.price <= expected_min_price * Decimal("1.1")  # Allow small margin
-            print(f"Slasher price: {updated_state.price}, min price: {expected_min_price}")
+            assert updated_state.price <= expected_min_price * Decimal(
+                "1.1"
+            )  # Allow small margin
+            print(
+                f"Slasher price: {updated_state.price}, min price: {expected_min_price}"
+            )
 
     @pytest.mark.asyncio
     async def test_slow_follower_behavior(self, competitor_manager, mock_competitors):
@@ -199,7 +213,9 @@ class TestPersonaIntegration:
 
         # The price may or may not have changed depending on evaluation schedule
         print(f"SlowFollower initial: {initial_price}, final: {updated_state.price}")
-        print(f"Next evaluation tick: {slow_follower._get_state_value('next_evaluation_tick', 0)}")
+        print(
+            f"Next evaluation tick: {slow_follower._get_state_value('next_evaluation_tick', 0)}"
+        )
 
     @pytest.mark.asyncio
     async def test_persona_event_flow_integration(
@@ -316,7 +332,9 @@ class TestPersonaIntegration:
         # Create a diverse set of competitors with different personas
         competitors = []
         for i in range(6):
-            competitor = MockCompetitor(f"comp_{i}", f"ASIN{i:03d}", Money.from_dollars(20.0 + i))
+            competitor = MockCompetitor(
+                f"comp_{i}", f"ASIN{i:03d}", Money.from_dollars(20.0 + i)
+            )
             competitors.append(competitor)
 
         # Add with specific persona distribution
@@ -343,7 +361,8 @@ class TestPersonaIntegration:
                 metadata={
                     "market_conditions": {
                         "our_price": Money.from_dollars(19.00),
-                        "sales_velocity": 0.8 + (tick_num % 3) * 0.2,  # Varying conditions
+                        "sales_velocity": 0.8
+                        + (tick_num % 3) * 0.2,  # Varying conditions
                         "market_trend": ["stable", "rising", "falling"][tick_num % 3],
                     }
                 },
@@ -359,7 +378,9 @@ class TestPersonaIntegration:
 
         # Analyze chaos metrics
         price_volatility = self._calculate_price_volatility(price_history)
-        behavior_diversity = self._analyze_behavior_diversity(competitor_manager, price_history)
+        behavior_diversity = self._analyze_behavior_diversity(
+            competitor_manager, price_history
+        )
 
         print("Market Chaos Metrics:")
         print(f"  Price Volatility: {price_volatility:.3f}")
@@ -453,7 +474,9 @@ if __name__ == "__main__":
 
         try:
             # Create competitor manager
-            config = {"persona_distribution": {"IrrationalSlasher": 0.5, "SlowFollower": 0.5}}
+            config = {
+                "persona_distribution": {"IrrationalSlasher": 0.5, "SlowFollower": 0.5}
+            }
 
             manager = CompetitorManager(config)
             manager.event_bus = event_bus
@@ -470,8 +493,12 @@ if __name__ == "__main__":
             manager.add_competitor(comp2, follower)
 
             print("Added competitors with personas:")
-            print(f"  test_1: {type(manager.get_competitor_persona('test_1')).__name__}")
-            print(f"  test_2: {type(manager.get_competitor_persona('test_2')).__name__}")
+            print(
+                f"  test_1: {type(manager.get_competitor_persona('test_1')).__name__}"
+            )
+            print(
+                f"  test_2: {type(manager.get_competitor_persona('test_2')).__name__}"
+            )
 
             # Run a few ticks
             for tick in range(1, 4):

@@ -1,7 +1,7 @@
 """LLM Configuration for OpenRouter and other providers."""
+import os
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
-import os
 
 
 @dataclass

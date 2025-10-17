@@ -1,104 +1,139 @@
 # Contributing to FBA-Bench Enterprise
 
-We appreciate your interest in contributing to FBA-Bench Enterprise! To ensure a smooth and consistent development process, please follow these guidelines.
+Thank you for considering contributing to FBA-Bench Enterprise! We value contributions that improve the codebase, documentation, or features while adhering to our standards for quality, security, and maintainability. All contributors must follow these guidelines.
 
-## Prerequisites
+## Code of Conduct
 
-Before you begin, ensure you have the following installed on your system:
-*   **Python**: Version 3.12 or higher.
-*   **Node.js**: Version 20.x or higher.
-*   **npm**: Or Yarn, for managing Node.js packages.
-*   **Git**: For version control.
-*   **Docker**: For containerized development and testing.
+This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md). By participating, you agree to uphold it. Reports of unacceptable behavior can be sent to conduct@fba-bench.com.
 
-## Setup
+## Getting Started
 
-1.  **Fork the Repository**: Fork the main FBA-Bench Enterprise repository to your GitHub account.
-2.  **Clone Your Fork**: Clone your forked repository locally:
-    ```bash
-    git clone https://github.com/YOUR_USERNAME/FBA-Bench-Enterprise.git
-    cd FBA-Bench-Enterprise
-    ```
-    Replace `YOUR_USERNAME` with your GitHub username.
-3.  **Set Upstream Remote**: Add the original repository as an upstream remote to keep your fork updated:
-    ```bash
-    git remote add upstream https://github.com/original_owner/FBA-Bench-Enterprise.git
-    ```
-    Replace `original_owner` with the actual owner of the repository.
-4.  **Create a Virtual Environment**:
-    ```bash
-    python -m venv .venv
-    source .venv/bin/activate  # On Windows use `.\.venv\Scripts\activate`
-    ```
-5.  **Install Backend Dependencies**:
-    ```bash
-    pip install -r requirements.txt
-    pip install -e . # Install editable mode
-    ```
-6.  **Install Frontend Dependencies**: Navigate to each frontend directory (`frontend/`, `web/`) and install dependencies:
-    ```bash
-    cd frontend
-    npm ci # or yarn install
-    cd ..
+### Prerequisites
+- Python 3.9–3.12
+- Poetry (install: `curl -sSL https://install.python-poetry.org | python3 -`)
+- Git
+- Make (or Git Bash/WSL on Windows)
+- Docker (recommended for integration and deployment testing)
 
-    cd web
-    npm ci # or yarn install
-    cd ..
-    ```
-7.  **Set Up Environment Variables**: Copy the example environment file and populate it with your settings:
-    ```bash
-    cp .env.example .env
-    # Edit .env with your specific configurations, especially SECRET_KEY and database URL.
-    ```
+### Setup Development Environment
+Follow [DEV_SETUP.md](DEV_SETUP.md) for detailed instructions:
+1. Clone/fork the repo.
+2. `poetry install && poetry shell`
+3. Copy `.env.example` to `.env` and configure.
+4. `make be-migrate`
+5. Verify: `make ci-local`
 
-## Running Tests
+This ensures your environment matches production standards.
 
-### Backend Tests
-Run all backend tests using pytest:
-```bash
-pytest
-```
-For more detailed output or specific files/markers, refer to pytest documentation.
+## Development Workflow
 
-### Frontend Tests
-Run tests for each frontend application:
-```bash
-cd frontend
-npm run test --if-present -- --run
-cd ..
+### Branching
+- Use feature branches: `git checkout -b feat/your-feature-name`
+- Base on `main` for new features; `develop` if exists for ongoing work.
+- Keep branches small and focused.
 
-cd web
-npm run test --if-present -- --run
-cd ..
-```
-Ensure you have run `npm ci` in each frontend directory first.
+### Making Changes
+1. **Identify Issue**: Use or create a GitHub issue for your work.
+2. **Code**: Implement in `src/` packages. Use absolute imports (e.g., `from src.fba_bench_core import ...`).
+3. **Test Locally**: 
+   - Unit/Contracts: `poetry run pytest -q`
+   - Full: `make test-all`
+   - Integration: `poetry run pytest -m integration -v`
+4. **Lint and Format**: `make lint && make format-fix`
+5. **Type Check**: `make type-check`
+6. **CI Parity**: `make ci-local` (must pass before push).
+
+### Commit Messages
+Use [Conventional Commits](https://www.conventionalcommits.org/):
+- `feat(scope): add new feature` – New functionality.
+- `fix(scope): resolve bug` – Bug fixes.
+- `docs(scope): update documentation` – Docs only.
+- `style(scope): formatting changes` – No functional changes.
+- `refactor(scope): code restructuring` – No behavior change.
+- `test(scope): add tests` – Testing only.
+- `chore(scope): misc (e.g., deps)` – Maintenance.
+- `ci(scope): workflow updates`.
+
+Example: `feat(benchmarking): add OpenRouter model support`
+
+Keep messages concise (<72 chars subject); body for details.
 
 ## Coding Standards
 
-We strive for a clean, maintainable, and readable codebase. Please adhere to the following standards:
+Align with [AGENTS.md](AGENTS.md) and project tools:
 
-*   **Linting**: Use `ruff` for linting. It automatically formats code according to `black` and `isort` standards.
-    ```bash
-    ruff check .
-    ruff format .
-    ```
-*   **Type Checking**: Use `mypy` for static type checking.
-    ```bash
-    mypy .
-    ```
-Code that does not pass linting or type checking may be rejected.
+- **Structure**: Code in `src/` packages. Small, focused modules. Avoid cyclic imports.
+- **Naming**:
+  - Modules/functions: `snake_case`
+  - Classes: `PascalCase`
+  - Constants: `UPPER_SNAKE_CASE`
+- **Formatting**: 4-space indent, 100-char lines. Use black, ruff-format, isort (profile=black).
+- **Linting**: Ruff for checks (pre-commit enforces).
+- **Typing**: Mypy strict on `src/`. All public APIs typed; use `typing` or `pydantic`.
+- **Imports**: Absolute from `src/` (pytest importlib mode). Group: stdlib, third-party, local.
+- **Security**: No secrets in code. Use Pydantic Settings for configs. Sanitize inputs.
+- **Dependencies**: Add via Poetry (`poetry add package` for prod, `--group dev` for tools). Pin in `pyproject.toml`.
+- **Async**: Use async where beneficial (e.g., API, LLM calls); pytest-asyncio for tests.
 
-## Commit Message Style
+Review [Coding Style](AGENTS.md#coding-style--naming-conventions) for details.
 
-Please follow the Conventional Commits specification for your commit messages. This helps in automatically generating changelogs and understanding the nature of changes.
-Example: `feat: Add user authentication endpoint`
+## Testing Requirements
 
-## Pull Request (PR) Checklist
+All changes must include tests:
+- **Unit**: Cover new/changed logic (80%+ coverage).
+- **Integration**: For cross-module interactions.
+- **Contracts**: Schema/API validation if affected.
 
-Before submitting a Pull Request, please ensure:
-*   [ ] Your code adheres to all coding standards (linting, type checking).
-*   [ ] All tests (backend and frontend) are passing.
-*   [ ] Your changes address the intended issue or feature.
-*   [ ] Your commit messages are clear and follow conventional commits.
-*   [ ] You have updated or added relevant documentation.
-*   [ ] You have reviewed your own changes for clarity and correctness.
+See [Testing Strategy](docs/testing.md) for types and commands. Tests must pass `make test-all`.
+
+## Documentation
+
+- Update inline docs (docstrings) for new public APIs.
+- Add examples in `examples/` or `docs/guides/`.
+- For major changes, update [architecture.md](docs/architecture.md), [api.md](docs/api.md), or README.
+- Use Markdown with consistent headers, code blocks (```python), and links.
+
+## Pull Requests (PRs)
+
+### Preparation
+1. Push branch: `git push origin feat/your-feature`
+2. Create PR from GitHub (base: `main`).
+3. Ensure `make ci-local` passes locally.
+
+### PR Template
+PRs must include:
+- **Description**: What/why (link issue).
+- **Rationale**: Problem solved, alternatives considered.
+- **Changes**: Key diffs.
+- **Screenshots/Logs**: For UI/API/behavior changes.
+- **Tests**: Added/updated.
+- **Checklist**:
+  - [ ] `make ci-local` passes
+  - [ ] Tests added/updated
+  - [ ] Docs updated
+  - [ ] No breaking changes (or noted)
+  - [ ] Security review (no secrets, sanitized inputs)
+
+### Review Process
+- Assign reviewers (or self if minor).
+- Address feedback iteratively.
+- Squash commits if needed; rebase for clean history.
+- Merge via GitHub (squash/rebase preferred; require approvals).
+
+### Post-Merge
+- Update branch: `git checkout main && git pull upstream main`
+- Delete branch.
+
+## Security and Sensitive Contributions
+
+- **Vulnerabilities**: Report privately via [SECURITY.md](SECURITY.md).
+- **Sensitive Code**: Flag in PR (e.g., crypto, auth); review by security lead.
+- **No Secrets**: Never commit keys; use `.env` or mocks.
+
+## Additional Guidelines
+
+- **Scope**: Contributions should align with project goals (AI benchmarking, e-commerce sims). Off-topic proposals via issues/discussions.
+- **Releases**: Follow Semantic Versioning; changelog updates in PRs.
+- **Community**: Join discussions for ideas; credits in CHANGELOG for significant contribs.
+
+For questions, open an issue or discuss on GitHub. We appreciate your efforts to make FBA-Bench Enterprise better!

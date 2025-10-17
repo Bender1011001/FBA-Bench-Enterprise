@@ -209,7 +209,9 @@ class BaseSkill(ABC):
             "skill_name": self.skill_name,
             "agent_id": self.agent_id,
             "status": self.status.value,
-            "last_activation": self.last_activation.isoformat() if self.last_activation else None,
+            "last_activation": (
+                self.last_activation.isoformat() if self.last_activation else None
+            ),
             "activation_count": self.activation_count,
             "error_count": self.error_count,
             "success_rate": round(self.success_rate, 3),
@@ -281,7 +283,9 @@ class BaseSkill(ABC):
                     f"{resolved if isinstance(resolved, str) else resolved.__name__}"
                 )
             except Exception as e:
-                logger.error(f"Failed to subscribe {self.skill_name} to {event_type}: {e}")
+                logger.error(
+                    f"Failed to subscribe {self.skill_name} to {event_type}: {e}"
+                )
 
     async def _handle_event(self, event: BaseEvent) -> None:
         """
@@ -301,7 +305,9 @@ class BaseSkill(ABC):
 
             # Update response time
             processing_time = (end_time - start_time).total_seconds()
-            self.response_time = (self.response_time * 0.8) + (processing_time * 0.2)  # EMA
+            self.response_time = (self.response_time * 0.8) + (
+                processing_time * 0.2
+            )  # EMA
 
             self.status = SkillStatus.ACTIVE if actions else SkillStatus.IDLE
 
@@ -330,13 +336,19 @@ class BaseSkill(ABC):
         # Update resource efficiency
         if outcome.resource_cost and outcome.impact_metrics:
             # Simple efficiency calculation - can be overridden by subclasses
-            cost_sum = sum(v for v in outcome.resource_cost.values() if isinstance(v, (int, float)))
+            cost_sum = sum(
+                v for v in outcome.resource_cost.values() if isinstance(v, (int, float))
+            )
             impact_sum = sum(
-                v for v in outcome.impact_metrics.values() if isinstance(v, (int, float))
+                v
+                for v in outcome.impact_metrics.values()
+                if isinstance(v, (int, float))
             )
             if cost_sum > 0:
                 efficiency = max(0.1, min(2.0, impact_sum / cost_sum))
-                self.resource_efficiency = (self.resource_efficiency * 0.9) + (efficiency * 0.1)
+                self.resource_efficiency = (self.resource_efficiency * 0.9) + (
+                    efficiency * 0.1
+                )
 
     def _learn_from_outcome(self, outcome: SkillOutcome) -> None:
         """Learn patterns from action outcomes."""
@@ -366,9 +378,9 @@ class BaseSkill(ABC):
             return  # Need sufficient data for adaptation
 
         recent_outcomes = self.historical_outcomes[-10:]  # Last 10 outcomes
-        recent_success_rate = sum(1 for outcome in recent_outcomes if outcome.success) / len(
-            recent_outcomes
-        )
+        recent_success_rate = sum(
+            1 for outcome in recent_outcomes if outcome.success
+        ) / len(recent_outcomes)
 
         # Adapt confidence threshold based on recent performance
         if recent_success_rate > 0.8:

@@ -1,9 +1,9 @@
 import json
 import os
+import statistics as stats  # Use stdlib statistics instead of numpy for portability
 from datetime import datetime
 from typing import Any, Dict
 
-import statistics as stats  # Use stdlib statistics instead of numpy for portability
 import yaml  # YAML is required for reading bot configs
 
 from leaderboard.leaderboard_renderer import LeaderboardRenderer

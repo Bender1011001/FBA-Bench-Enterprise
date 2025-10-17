@@ -17,12 +17,13 @@ from datetime import datetime
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from agents.advanced_agent import AdvancedAgent, AgentConfig
-from event_bus import AsyncioQueueBackend, EventBus
-from events import SetPriceCommand
 from money import Money
 from services.sales_service import SalesService
 from services.world_store import WorldStore
+
+from agents.advanced_agent import AdvancedAgent, AgentConfig
+from event_bus import AsyncioQueueBackend, EventBus
+from events import SetPriceCommand
 
 
 class MultiAgentLoopTest:
@@ -122,7 +123,9 @@ class MultiAgentLoopTest:
             reason="Test price increase",
         )
 
-        print(f"   🤖 Agent publishing SetPriceCommand: {initial_world_price} -> {new_price}")
+        print(
+            f"   🤖 Agent publishing SetPriceCommand: {initial_world_price} -> {new_price}"
+        )
         await self.event_bus.publish(command)
 
         # Wait for event processing
@@ -220,7 +223,9 @@ class MultiAgentLoopTest:
         final_stats = self.world_store.get_statistics()
         final_price = self.world_store.get_product_price(test_asin)
 
-        commands_rejected = final_stats["commands_rejected"] - initial_stats["commands_rejected"]
+        commands_rejected = (
+            final_stats["commands_rejected"] - initial_stats["commands_rejected"]
+        )
 
         print("   🌍 WorldStore arbitration result:")
         print(f"      Price unchanged: {final_price}")
@@ -231,7 +236,9 @@ class MultiAgentLoopTest:
 
         if final_price != initial_price:
             success = False
-            errors.append(f"Price should not have changed: {initial_price} -> {final_price}")
+            errors.append(
+                f"Price should not have changed: {initial_price} -> {final_price}"
+            )
 
         if commands_rejected != 1:
             success = False
@@ -274,7 +281,9 @@ class MultiAgentLoopTest:
         try:
             initial_price = self.world_store.get_product_price(test_asin)
             print(f"   📊 Initial price: {initial_price}")
-            print(f"   🤖 Agent 1: {self.agent.config.agent_id} ({self.agent.config.strategy})")
+            print(
+                f"   🤖 Agent 1: {self.agent.config.agent_id} ({self.agent.config.strategy})"
+            )
             print(f"   🤖 Agent 2: {agent2.config.agent_id} ({agent2.config.strategy})")
 
             # Both agents submit commands simultaneously
@@ -307,7 +316,9 @@ class MultiAgentLoopTest:
 
             print("   🌍 WorldStore arbitration result:")
             print(f"      Final price: {final_price}")
-            print(f"      Total commands processed: {final_stats['commands_processed']}")
+            print(
+                f"      Total commands processed: {final_stats['commands_processed']}"
+            )
 
             # At least one command should be processed
             success = final_price != initial_price
@@ -354,7 +365,9 @@ class MultiAgentLoopTest:
 
         print()
         if passed_tests == total_tests:
-            print("🎉 ALL TESTS PASSED! Multi-agent infrastructure is working correctly.")
+            print(
+                "🎉 ALL TESTS PASSED! Multi-agent infrastructure is working correctly."
+            )
         else:
             print("⚠️  Some tests failed. Check implementation for issues.")
 

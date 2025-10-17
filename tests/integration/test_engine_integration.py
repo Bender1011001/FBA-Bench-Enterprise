@@ -1,6 +1,12 @@
 import pytest
 
-from benchmarking.core.engine import Engine, EngineConfig, EngineReport, RunnerSpec, ScenarioSpec
+from benchmarking.core.engine import (
+    Engine,
+    EngineConfig,
+    EngineReport,
+    RunnerSpec,
+    ScenarioSpec,
+)
 from benchmarking.scenarios.registry import scenario_registry
 
 
@@ -53,7 +59,11 @@ async def test_engine_integration_end_to_end(monkeypatch):
             self.metadata = {"note": "ok"}
 
         def to_dict(self):
-            return {"is_valid": self.is_valid, "errors": self.errors, "metadata": self.metadata}
+            return {
+                "is_valid": self.is_valid,
+                "errors": self.errors,
+                "metadata": self.metadata,
+            }
 
     class TestValidator:
         def __init__(self, cfg=None):
@@ -70,11 +80,15 @@ async def test_engine_integration_end_to_end(monkeypatch):
             return TestValidator()
         return None
 
-    monkeypatch.setattr(ValidatorRegistry, "create_validator", create_validator, raising=True)
+    monkeypatch.setattr(
+        ValidatorRegistry, "create_validator", create_validator, raising=True
+    )
 
     cfg = EngineConfig(
         scenarios=[
-            ScenarioSpec(key=scen_key, repetitions=2, seeds=[11, 22], timeout_seconds=3),
+            ScenarioSpec(
+                key=scen_key, repetitions=2, seeds=[11, 22], timeout_seconds=3
+            ),
         ],
         runners=[RunnerSpec(key="diy", config={"agent_id": "test"})],
         metrics=["dummy_metric"],

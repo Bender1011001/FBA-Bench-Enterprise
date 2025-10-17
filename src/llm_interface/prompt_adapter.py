@@ -2,6 +2,8 @@ import json
 from datetime import datetime
 from typing import Any, Dict, List
 
+from services.world_store import WorldStore  # Assuming WorldStore is accessible
+
 from constraints.budget_enforcer import BudgetEnforcer  # For budget details
 from fba_events import (
     BaseEvent,
@@ -10,11 +12,12 @@ from fba_events import (
     ConstraintViolation,
 )
 from fba_events.competitor import CompetitorPricesUpdated
-from fba_events.pricing import ProductPriceUpdated
+from fba_events.pricing import (
+    ProductPriceUpdated,
+    SetPriceCommand,  # Moved import to correct location
+)
 from fba_events.sales import SaleOccurred
 from fba_events.time_events import TickEvent
-from fba_events.pricing import SetPriceCommand  # Moved import to correct location
-from services.world_store import WorldStore  # Assuming WorldStore is accessible
 
 
 class PromptAdapter:

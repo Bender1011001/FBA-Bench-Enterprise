@@ -101,13 +101,19 @@ class Tracer:
     # The following helpers are intentionally minimal; unit tests will patch them.
     # They exist so patch.object(self.tracer, '_export_to_json') finds the attributes.
 
-    def _export_to_json(self, data: Dict[str, Any]) -> bool:  # pragma: no cover - patched in tests
+    def _export_to_json(
+        self, data: Dict[str, Any]
+    ) -> bool:  # pragma: no cover - patched in tests
         return True
 
-    def _export_to_csv(self, data: Dict[str, Any]) -> bool:  # pragma: no cover - patched in tests
+    def _export_to_csv(
+        self, data: Dict[str, Any]
+    ) -> bool:  # pragma: no cover - patched in tests
         return True
 
-    def _export_to_xml(self, data: Dict[str, Any]) -> bool:  # pragma: no cover - patched in tests
+    def _export_to_xml(
+        self, data: Dict[str, Any]
+    ) -> bool:  # pragma: no cover - patched in tests
         return True
 
     def _export_to_parquet(

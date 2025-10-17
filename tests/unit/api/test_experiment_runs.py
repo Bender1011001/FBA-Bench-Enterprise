@@ -85,7 +85,9 @@ def sample_scenario():
 @pytest.fixture
 def sample_participant():
     """Sample experiment participant."""
-    return ExperimentParticipant(agent_id="agent-456", role="primary", config_override={})
+    return ExperimentParticipant(
+        agent_id="agent-456", role="primary", config_override={}
+    )
 
 
 @pytest.fixture
@@ -122,7 +124,9 @@ class TestExperimentRunModels:
     def test_experiment_run_create_validation(self, sample_participant):
         """Test experiment run create model validation."""
         run_create = ExperimentRunCreate(
-            scenario_id="test_scenario", participants=[sample_participant], params={"key": "value"}
+            scenario_id="test_scenario",
+            participants=[sample_participant],
+            params={"key": "value"},
         )
 
         assert run_create.scenario_id == "test_scenario"
@@ -132,7 +136,9 @@ class TestExperimentRunModels:
     def test_experiment_run_create_empty_scenario(self, sample_participant):
         """Test experiment run create with empty scenario ID."""
         with pytest.raises(ValueError, match="scenario_id must be non-empty"):
-            ExperimentRunCreate(scenario_id="", participants=[sample_participant], params={})
+            ExperimentRunCreate(
+                scenario_id="", participants=[sample_participant], params={}
+            )
 
     def test_experiment_run_create_no_participants(self):
         """Test experiment run create with no participants."""
@@ -142,12 +148,20 @@ class TestExperimentRunModels:
     def test_experiment_run_create_duplicate_agents(self):
         """Test experiment run create with duplicate agent IDs."""
         participants = [
-            ExperimentParticipant(agent_id="agent-123", role="primary", config_override={}),
-            ExperimentParticipant(agent_id="agent-123", role="secondary", config_override={}),
+            ExperimentParticipant(
+                agent_id="agent-123", role="primary", config_override={}
+            ),
+            ExperimentParticipant(
+                agent_id="agent-123", role="secondary", config_override={}
+            ),
         ]
 
-        with pytest.raises(ValueError, match="Agent IDs must be unique among participants"):
-            ExperimentRunCreate(scenario_id="test_scenario", participants=participants, params={})
+        with pytest.raises(
+            ValueError, match="Agent IDs must be unique among participants"
+        ):
+            ExperimentRunCreate(
+                scenario_id="test_scenario", participants=participants, params={}
+            )
 
     def test_experiment_run_model(self, sample_participant):
         """Test experiment run model."""
@@ -243,7 +257,8 @@ class TestExperimentRunsAPI:
         mock_persistence_manager.agents.return_value = mock_agent_repo
 
         with patch(
-            "fba_bench_api.api.routes.experiments.get_pm", return_value=mock_persistence_manager
+            "fba_bench_api.api.routes.experiments.get_pm",
+            return_value=mock_persistence_manager,
         ):
             response = client.post(
                 "/api/v1/experiments/exp-123/start", json=sample_run_create.model_dump()
@@ -259,7 +274,11 @@ class TestExperimentRunsAPI:
 
     @patch("fba_bench_api.api.routes.experiments.get_scenario_service")
     def test_start_experiment_not_found(
-        self, mock_get_scenario_service, client, mock_persistence_manager, sample_run_create
+        self,
+        mock_get_scenario_service,
+        client,
+        mock_persistence_manager,
+        sample_run_create,
     ):
         """Test starting experiment when experiment not found."""
         mock_exp_repo = Mock()
@@ -267,10 +286,12 @@ class TestExperimentRunsAPI:
         mock_persistence_manager.experiments.return_value = mock_exp_repo
 
         with patch(
-            "fba_bench_api.api.routes.experiments.get_pm", return_value=mock_persistence_manager
+            "fba_bench_api.api.routes.experiments.get_pm",
+            return_value=mock_persistence_manager,
         ):
             response = client.post(
-                "/api/v1/experiments/nonexistent/start", json=sample_run_create.model_dump()
+                "/api/v1/experiments/nonexistent/start",
+                json=sample_run_create.model_dump(),
             )
 
         assert response.status_code == 404
@@ -293,7 +314,8 @@ class TestExperimentRunsAPI:
         mock_persistence_manager.experiments.return_value = mock_exp_repo
 
         with patch(
-            "fba_bench_api.api.routes.experiments.get_pm", return_value=mock_persistence_manager
+            "fba_bench_api.api.routes.experiments.get_pm",
+            return_value=mock_persistence_manager,
         ):
             response = client.post(
                 "/api/v1/experiments/exp-123/start", json=sample_run_create.model_dump()
@@ -321,7 +343,8 @@ class TestExperimentRunsAPI:
         mock_persistence_manager.experiments.return_value = mock_exp_repo
 
         with patch(
-            "fba_bench_api.api.routes.experiments.get_pm", return_value=mock_persistence_manager
+            "fba_bench_api.api.routes.experiments.get_pm",
+            return_value=mock_persistence_manager,
         ):
             response = client.post(
                 "/api/v1/experiments/exp-123/start", json=sample_run_create.model_dump()
@@ -354,7 +377,8 @@ class TestExperimentRunsAPI:
         mock_persistence_manager.agents.return_value = mock_agent_repo
 
         with patch(
-            "fba_bench_api.api.routes.experiments.get_pm", return_value=mock_persistence_manager
+            "fba_bench_api.api.routes.experiments.get_pm",
+            return_value=mock_persistence_manager,
         ):
             response = client.post(
                 "/api/v1/experiments/exp-123/start", json=sample_run_create.model_dump()
@@ -386,10 +410,12 @@ class TestExperimentRunsAPI:
         mock_persistence_manager.experiments.return_value = mock_exp_repo
 
         with patch(
-            "fba_bench_api.api.routes.experiments.get_pm", return_value=mock_persistence_manager
+            "fba_bench_api.api.routes.experiments.get_pm",
+            return_value=mock_persistence_manager,
         ):
             with patch(
-                "fba_bench_api.api.routes.experiments._experiment_runs", {"run-123": active_run}
+                "fba_bench_api.api.routes.experiments._experiment_runs",
+                {"run-123": active_run},
             ):
                 response = client.get("/api/v1/experiments/exp-123/status")
 
@@ -402,14 +428,17 @@ class TestExperimentRunsAPI:
         assert data["current_tick"] == 25
         assert data["total_ticks"] == 100
 
-    def test_get_experiment_status_experiment_not_found(self, client, mock_persistence_manager):
+    def test_get_experiment_status_experiment_not_found(
+        self, client, mock_persistence_manager
+    ):
         """Test experiment status when experiment not found."""
         mock_exp_repo = Mock()
         mock_exp_repo.get = AsyncMock(return_value=None)
         mock_persistence_manager.experiments.return_value = mock_exp_repo
 
         with patch(
-            "fba_bench_api.api.routes.experiments.get_pm", return_value=mock_persistence_manager
+            "fba_bench_api.api.routes.experiments.get_pm",
+            return_value=mock_persistence_manager,
         ):
             response = client.get("/api/v1/experiments/nonexistent/status")
 
@@ -425,7 +454,8 @@ class TestExperimentRunsAPI:
         mock_persistence_manager.experiments.return_value = mock_exp_repo
 
         with patch(
-            "fba_bench_api.api.routes.experiments.get_pm", return_value=mock_persistence_manager
+            "fba_bench_api.api.routes.experiments.get_pm",
+            return_value=mock_persistence_manager,
         ):
             with patch("fba_bench_api.api.routes.experiments._experiment_runs", {}):
                 response = client.get("/api/v1/experiments/exp-123/status")
@@ -442,7 +472,9 @@ class TestExperimentRunsAPI:
             experiment_id="exp-123",
             scenario_id="tier_0_baseline",
             participants=[
-                ExperimentParticipant(agent_id="agent-456", role="primary", config_override={})
+                ExperimentParticipant(
+                    agent_id="agent-456", role="primary", config_override={}
+                )
             ],
             status="running",
             current_tick=30,
@@ -458,10 +490,12 @@ class TestExperimentRunsAPI:
         mock_persistence_manager.experiments.return_value = mock_exp_repo
 
         with patch(
-            "fba_bench_api.api.routes.experiments.get_pm", return_value=mock_persistence_manager
+            "fba_bench_api.api.routes.experiments.get_pm",
+            return_value=mock_persistence_manager,
         ):
             with patch(
-                "fba_bench_api.api.routes.experiments._experiment_runs", {"run-123": active_run}
+                "fba_bench_api.api.routes.experiments._experiment_runs",
+                {"run-123": active_run},
             ):
                 response = client.get("/api/v1/experiments/exp-123/progress")
 
@@ -485,7 +519,8 @@ class TestExperimentRunsAPI:
         mock_persistence_manager.experiments.return_value = mock_exp_repo
 
         with patch(
-            "fba_bench_api.api.routes.experiments.get_pm", return_value=mock_persistence_manager
+            "fba_bench_api.api.routes.experiments.get_pm",
+            return_value=mock_persistence_manager,
         ):
             with patch("fba_bench_api.api.routes.experiments._experiment_runs", {}):
                 response = client.get("/api/v1/experiments/exp-123/progress")
@@ -525,10 +560,12 @@ class TestExperimentRunsAPI:
         mock_persistence_manager.experiments.return_value = mock_exp_repo
 
         with patch(
-            "fba_bench_api.api.routes.experiments.get_pm", return_value=mock_persistence_manager
+            "fba_bench_api.api.routes.experiments.get_pm",
+            return_value=mock_persistence_manager,
         ):
             with patch(
-                "fba_bench_api.api.routes.experiments._experiment_runs", {"run-123": active_run}
+                "fba_bench_api.api.routes.experiments._experiment_runs",
+                {"run-123": active_run},
             ):
                 response = client.post("/api/v1/experiments/exp-123/stop")
 
@@ -548,7 +585,8 @@ class TestExperimentRunsAPI:
         mock_persistence_manager.experiments.return_value = mock_exp_repo
 
         with patch(
-            "fba_bench_api.api.routes.experiments.get_pm", return_value=mock_persistence_manager
+            "fba_bench_api.api.routes.experiments.get_pm",
+            return_value=mock_persistence_manager,
         ):
             with patch("fba_bench_api.api.routes.experiments._experiment_runs", {}):
                 response = client.post("/api/v1/experiments/exp-123/stop")
@@ -742,7 +780,8 @@ class TestExperimentRunIntegration:
         mock_get_redis.return_value = mock_redis
 
         with patch(
-            "fba_bench_api.api.routes.experiments.get_pm", return_value=mock_persistence_manager
+            "fba_bench_api.api.routes.experiments.get_pm",
+            return_value=mock_persistence_manager,
         ):
             # 1. Start experiment
             response = client.post(
@@ -767,7 +806,8 @@ class TestExperimentRunIntegration:
             )
 
             with patch(
-                "fba_bench_api.api.routes.experiments._experiment_runs", {run_id: active_run}
+                "fba_bench_api.api.routes.experiments._experiment_runs",
+                {run_id: active_run},
             ):
                 # 2. Check status
                 response = client.get("/api/v1/experiments/exp-123/status")

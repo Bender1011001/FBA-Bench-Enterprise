@@ -44,7 +44,9 @@ class DependencyResolver:
         # - Fetch versions and perform compatibility checks
         return {
             "plugin": plugin_name,
-            "resolved": list(dict.fromkeys(dependencies)),  # stable de-dupe preserving order
+            "resolved": list(
+                dict.fromkeys(dependencies)
+            ),  # stable de-dupe preserving order
             "conflicts": [],
         }
 
@@ -92,12 +94,17 @@ class PluginLoader:
                     discovered[name] = meta
             except Exception as e:
                 logger.error(
-                    "Failed to inspect plugin module %s: %s", module_path, e, exc_info=True
+                    "Failed to inspect plugin module %s: %s",
+                    module_path,
+                    e,
+                    exc_info=True,
                 )
 
         return discovered
 
-    async def load_plugin_instance(self, module_path: str, class_name: Optional[str] = None) -> Any:
+    async def load_plugin_instance(
+        self, module_path: str, class_name: Optional[str] = None
+    ) -> Any:
         """
         Load and instantiate a plugin class from a module file path.
 
@@ -110,7 +117,9 @@ class PluginLoader:
         if class_name:
             cls = getattr(mod, class_name, None)
             if cls is None or not inspect.isclass(cls):
-                raise ImportError(f"Class {class_name} not found in module {module_name}")
+                raise ImportError(
+                    f"Class {class_name} not found in module {module_name}"
+                )
             return cls()
 
         # Fallback: find first plugin-marked class
@@ -151,7 +160,9 @@ class PluginLoader:
                     pass
 
                 # Class-level fallback
-                name = getattr(obj, "plugin_id", getattr(obj, "__name__", "unknown_plugin"))
+                name = getattr(
+                    obj, "plugin_id", getattr(obj, "__name__", "unknown_plugin")
+                )
                 version = getattr(obj, "version", "0.0.0")
                 return {
                     "name": str(name),

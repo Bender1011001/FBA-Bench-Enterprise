@@ -12,13 +12,13 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI
+from money import Money
 
 from fba_bench_core.event_bus import EventBus
 from fba_events.competitor import CompetitorPricesUpdated
 from fba_events.pricing import ProductPriceUpdated, SetPriceCommand
 from fba_events.sales import SaleOccurred
 from fba_events.time_events import TickEvent
-from money import Money
 
 
 class DashboardAPIService:
@@ -123,7 +123,9 @@ class DashboardAPIService:
         await self.event_bus.subscribe(
             CompetitorPricesUpdated, self._handle_competitor_prices_updated
         )
-        await self.event_bus.subscribe(ProductPriceUpdated, self._handle_product_price_updated)
+        await self.event_bus.subscribe(
+            ProductPriceUpdated, self._handle_product_price_updated
+        )
         await self.event_bus.subscribe(SetPriceCommand, self._handle_set_price_command)
 
         # Start fee aggregator if provided (it subscribes to SaleOccurred itself)
@@ -194,7 +196,9 @@ class DashboardAPIService:
 
         # Apply tick filtering if specified
         if since_tick is not None:
-            events = [event for event in events if event.get("tick_number", 0) >= since_tick]
+            events = [
+                event for event in events if event.get("tick_number", 0) >= since_tick
+            ]
 
         # Apply limit
         return events[-limit:] if events else []
@@ -204,7 +208,9 @@ class DashboardAPIService:
         self.simulation_state["current_tick"] = event.tick_number
         self.simulation_state["simulation_time"] = event.simulation_time.isoformat()
         self.events_processed_count += 1
-        self.simulation_state["event_stats"]["events_processed"] = self.events_processed_count
+        self.simulation_state["event_stats"][
+            "events_processed"
+        ] = self.events_processed_count
         self.simulation_state["event_stats"]["last_event_time"] = datetime.now(
             timezone.utc
         ).isoformat()
@@ -233,9 +239,9 @@ class DashboardAPIService:
 
         # Maintain circular buffer
         if len(self.simulation_state["sales_history"]) > self.max_sales_history:
-            self.simulation_state["sales_history"] = self.simulation_state["sales_history"][
-                -self.max_sales_history :
-            ]
+            self.simulation_state["sales_history"] = self.simulation_state[
+                "sales_history"
+            ][-self.max_sales_history :]
 
         # Update financial summary
         financial = self.simulation_state["financial_summary"]
@@ -265,12 +271,16 @@ class DashboardAPIService:
                 financial["conversion_rate"] = round(total_sold / total_demanded, 3)
 
         self.events_processed_count += 1
-        self.simulation_state["event_stats"]["events_processed"] = self.events_processed_count
+        self.simulation_state["event_stats"][
+            "events_processed"
+        ] = self.events_processed_count
         self.simulation_state["event_stats"]["last_event_time"] = datetime.now(
             timezone.utc
         ).isoformat()
 
-    async def _handle_competitor_prices_updated(self, event: CompetitorPricesUpdated) -> None:
+    async def _handle_competitor_prices_updated(
+        self, event: CompetitorPricesUpdated
+    ) -> None:
         """Process CompetitorPricesUpdated event to update market landscape."""
         # Update competitor states
         for competitor in event.competitors:
@@ -303,7 +313,9 @@ class DashboardAPIService:
             )
 
         self.events_processed_count += 1
-        self.simulation_state["event_stats"]["events_processed"] = self.events_processed_count
+        self.simulation_state["event_stats"][
+            "events_processed"
+        ] = self.events_processed_count
         self.simulation_state["event_stats"]["last_event_time"] = datetime.now(
             timezone.utc
         ).isoformat()
@@ -331,7 +343,9 @@ class DashboardAPIService:
             product["arbitration_notes"] = event.arbitration_notes
 
         self.events_processed_count += 1
-        self.simulation_state["event_stats"]["events_processed"] = self.events_processed_count
+        self.simulation_state["event_stats"][
+            "events_processed"
+        ] = self.events_processed_count
         self.simulation_state["event_stats"]["last_event_time"] = datetime.now(
             timezone.utc
         ).isoformat()
@@ -353,9 +367,9 @@ class DashboardAPIService:
 
         # Maintain circular buffer
         if len(self.simulation_state["command_history"]) > self.max_command_history:
-            self.simulation_state["command_history"] = self.simulation_state["command_history"][
-                -self.max_command_history :
-            ]
+            self.simulation_state["command_history"] = self.simulation_state[
+                "command_history"
+            ][-self.max_command_history :]
 
         # Update agent tracking
         if event.agent_id not in self.simulation_state["agents"]:
@@ -375,7 +389,9 @@ class DashboardAPIService:
         self.simulation_state["command_stats"]["total_commands"] += 1
 
         self.events_processed_count += 1
-        self.simulation_state["event_stats"]["events_processed"] = self.events_processed_count
+        self.simulation_state["event_stats"][
+            "events_processed"
+        ] = self.events_processed_count
         self.simulation_state["event_stats"]["last_event_time"] = datetime.now(
             timezone.utc
         ).isoformat()
@@ -461,7 +477,9 @@ class DashboardAPIService:
                 "total_assets": m(pos.get("total_assets")),
                 "total_liabilities": m(pos.get("total_liabilities")),
                 "total_equity": m(pos.get("total_equity")),
-                "accounting_identity_valid": bool(pos.get("accounting_identity_valid", True)),
+                "accounting_identity_valid": bool(
+                    pos.get("accounting_identity_valid", True)
+                ),
                 "identity_difference": m(pos.get("identity_difference")),
                 "timestamp": ts_iso,
             }
@@ -573,7 +591,9 @@ class FeeMetricsAggregatorService:
     def get_summary_by_type(self) -> Dict[str, Dict[str, Any]]:
         """Return fee summary by type with Money values serialized as strings."""
         summary: Dict[str, Dict[str, Any]] = {}
-        for fee_type in sorted(set(list(self._totals.keys()) + list(self._counts.keys()))):
+        for fee_type in sorted(
+            set(list(self._totals.keys()) + list(self._counts.keys()))
+        ):
             total = self._totals.get(fee_type, Money.zero())
             count = int(self._counts.get(fee_type, 0))
             avg = Money.zero() if count == 0 else Money(total.cents // count)
@@ -663,7 +683,9 @@ class FeeMetricsAggregatorService:
                 "total_assets": m(pos.get("total_assets")),
                 "total_liabilities": m(pos.get("total_liabilities")),
                 "total_equity": m(pos.get("total_equity")),
-                "accounting_identity_valid": bool(pos.get("accounting_identity_valid", True)),
+                "accounting_identity_valid": bool(
+                    pos.get("accounting_identity_valid", True)
+                ),
                 "identity_difference": m(pos.get("identity_difference")),
                 "timestamp": ts_iso,
             }

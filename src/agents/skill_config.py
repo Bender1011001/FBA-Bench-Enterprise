@@ -64,7 +64,9 @@ class SkillConfig:
     conflict_resolution_strategy: ConflictResolutionStrategy = (
         ConflictResolutionStrategy.STRATEGIC_ALIGNMENT
     )
-    resource_allocation_method: ResourceAllocationMethod = ResourceAllocationMethod.PROPORTIONAL
+    resource_allocation_method: ResourceAllocationMethod = (
+        ResourceAllocationMethod.PROPORTIONAL
+    )
     performance_tracking_enabled: bool = True
     auto_adjustment_enabled: bool = True
     coordination_timeout_seconds: float = 5.0
@@ -136,7 +138,9 @@ class SkillConfig:
         """Get configuration for a specific skill."""
         return self.skill_configurations.get(skill_name, {})
 
-    def update_skill_config(self, skill_name: str, config_updates: Dict[str, Any]) -> None:
+    def update_skill_config(
+        self, skill_name: str, config_updates: Dict[str, Any]
+    ) -> None:
         """Update configuration for a specific skill."""
         if skill_name not in self.skill_configurations:
             self.skill_configurations[skill_name] = {}
@@ -371,7 +375,9 @@ class SkillConfigurationManager:
                 "response_time": 2.0,
                 "resource_efficiency": 0.9,  # High efficiency target
             },
-            activation_conditions={"operational_efficiency": {"operator": "<", "value": 0.7}},
+            activation_conditions={
+                "operational_efficiency": {"operator": "<", "value": 0.7}
+            },
         )
 
         return modes
@@ -407,7 +413,9 @@ class SkillConfigurationManager:
         self.current_mode = mode_name
         self.current_config = self.operational_modes[mode_name].skill_config
 
-        logger.info(f"Switched from {previous_mode} to {mode_name} mode (reason: {reason})")
+        logger.info(
+            f"Switched from {previous_mode} to {mode_name} mode (reason: {reason})"
+        )
 
         # Keep history manageable
         if len(self.configuration_history) > 100:
@@ -430,7 +438,9 @@ class SkillConfigurationManager:
             if mode_name == self.current_mode:
                 continue  # Skip current mode
 
-            if self._check_activation_conditions(business_state, mode.activation_conditions):
+            if self._check_activation_conditions(
+                business_state, mode.activation_conditions
+            ):
                 if self.switch_mode(mode_name, "auto_adjustment"):
                     return mode_name
 
@@ -475,9 +485,9 @@ class SkillConfigurationManager:
 
                 # Keep recent history only
                 if len(self.performance_history[metric_name]) > 50:
-                    self.performance_history[metric_name] = self.performance_history[metric_name][
-                        -25:
-                    ]
+                    self.performance_history[metric_name] = self.performance_history[
+                        metric_name
+                    ][-25:]
 
     def get_performance_analysis(self) -> Dict[str, Any]:
         """Get analysis of recent performance trends."""
@@ -496,14 +506,14 @@ class SkillConfigurationManager:
                     if len(recent_values) > 1 and recent_values[-1] > recent_values[0]
                     else "declining"
                 ),
-                "target": self.operational_modes[self.current_mode].performance_targets.get(
-                    metric_name, 0.0
-                ),
+                "target": self.operational_modes[
+                    self.current_mode
+                ].performance_targets.get(metric_name, 0.0),
                 "target_met": (
                     recent_values[-1]
-                    >= self.operational_modes[self.current_mode].performance_targets.get(
-                        metric_name, 0.0
-                    )
+                    >= self.operational_modes[
+                        self.current_mode
+                    ].performance_targets.get(metric_name, 0.0)
                     if recent_values
                     else False
                 ),
@@ -522,7 +532,8 @@ class SkillConfigurationManager:
             "strategic_alignment_threshold": self.current_config.strategic_alignment_threshold,
             "performance_tracking_enabled": self.current_config.performance_tracking_enabled,
             "skill_priority_weights": self.current_config.skill_priority_weights,
-            "total_budget": self.current_config.total_budget_cents / 100.0,  # Convert to dollars
+            "total_budget": self.current_config.total_budget_cents
+            / 100.0,  # Convert to dollars
             "available_modes": list(self.operational_modes.keys()),
             "configuration_changes": len(self.configuration_history),
         }
@@ -564,9 +575,13 @@ class SkillConfigurationManager:
             skill_config_data = config_data["skill_config"]
             imported_config = SkillConfig(
                 max_concurrent_skills=skill_config_data.get("max_concurrent_skills", 3),
-                skill_priority_weights=skill_config_data.get("skill_priority_weights", {}),
+                skill_priority_weights=skill_config_data.get(
+                    "skill_priority_weights", {}
+                ),
                 conflict_resolution_strategy=ConflictResolutionStrategy(
-                    skill_config_data.get("conflict_resolution_strategy", "strategic_alignment")
+                    skill_config_data.get(
+                        "conflict_resolution_strategy", "strategic_alignment"
+                    )
                 ),
                 resource_allocation_method=ResourceAllocationMethod(
                     skill_config_data.get("resource_allocation_method", "proportional")
@@ -595,7 +610,9 @@ class SkillConfigurationManager:
             if "performance_history" in config_data:
                 self.performance_history = config_data["performance_history"]
 
-            logger.info(f"Successfully imported configuration for mode: {self.current_mode}")
+            logger.info(
+                f"Successfully imported configuration for mode: {self.current_mode}"
+            )
             return True
 
         except Exception as e:

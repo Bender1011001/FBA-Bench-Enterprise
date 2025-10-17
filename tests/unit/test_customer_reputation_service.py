@@ -1,8 +1,10 @@
 from unittest.mock import MagicMock
 
 import pytest
-
-from services.customer_reputation_service import CustomerReputationService, ReputationEvent
+from services.customer_reputation_service import (
+    CustomerReputationService,
+    ReputationEvent,
+)
 
 
 @pytest.mark.parametrize(

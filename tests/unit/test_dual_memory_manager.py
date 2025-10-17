@@ -9,8 +9,6 @@ from datetime import datetime
 from unittest.mock import Mock, patch
 
 import pytest
-
-from constraints.constraint_config import ConstraintConfig
 from memory_experiments.dual_memory_manager import DualMemoryManager, InMemoryStore
 from memory_experiments.memory_config import (
     DecayFunction,
@@ -18,6 +16,8 @@ from memory_experiments.memory_config import (
     MemoryMode,
     MemoryStoreType,
 )
+
+from constraints.constraint_config import ConstraintConfig
 
 
 class TestDualMemoryManager:
@@ -144,7 +144,9 @@ class TestDualMemoryManager:
     @pytest.mark.asyncio
     async def test_store_event_with_memory_disabled(self, base_config, agent_id):
         """Test storing an event when memory is disabled."""
-        memory_config = MemoryConfig(base_config=base_config, memory_mode=MemoryMode.MEMORY_FREE)
+        memory_config = MemoryConfig(
+            base_config=base_config, memory_mode=MemoryMode.MEMORY_FREE
+        )
 
         memory_manager = DualMemoryManager(memory_config, agent_id)
 
@@ -186,7 +188,9 @@ class TestDualMemoryManager:
     @pytest.mark.asyncio
     async def test_retrieve_memories_with_memory_disabled(self, base_config, agent_id):
         """Test retrieving memories when memory is disabled."""
-        memory_config = MemoryConfig(base_config=base_config, memory_mode=MemoryMode.MEMORY_FREE)
+        memory_config = MemoryConfig(
+            base_config=base_config, memory_mode=MemoryMode.MEMORY_FREE
+        )
 
         memory_manager = DualMemoryManager(memory_config, agent_id)
 

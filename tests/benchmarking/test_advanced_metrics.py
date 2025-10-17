@@ -779,7 +779,9 @@ class TestStatisticalAnalysisFramework(unittest.TestCase):
         historical_data = [1.0, 2.0, 3.0, 4.0, 5.0]
         future_points = 3
 
-        result = self.framework.calculate_predictive_modeling(historical_data, future_points)
+        result = self.framework.calculate_predictive_modeling(
+            historical_data, future_points
+        )
 
         self.assertIsInstance(result, dict)
         self.assertIn("predictions", result)
@@ -853,10 +855,22 @@ class TestComparativeAnalysisEngine(unittest.TestCase):
 
     def test_calculate_strength_weakness_profiling(self):
         """Test strength/weakness profiling calculation."""
-        agent_data = {"accuracy": 0.9, "efficiency": 0.7, "reliability": 0.85, "speed": 0.6}
-        benchmark_data = {"accuracy": 0.8, "efficiency": 0.8, "reliability": 0.8, "speed": 0.8}
+        agent_data = {
+            "accuracy": 0.9,
+            "efficiency": 0.7,
+            "reliability": 0.85,
+            "speed": 0.6,
+        }
+        benchmark_data = {
+            "accuracy": 0.8,
+            "efficiency": 0.8,
+            "reliability": 0.8,
+            "speed": 0.8,
+        }
 
-        result = self.engine.calculate_strength_weakness_profiling(agent_data, benchmark_data)
+        result = self.engine.calculate_strength_weakness_profiling(
+            agent_data, benchmark_data
+        )
 
         self.assertIsInstance(result, dict)
         self.assertIn("strengths", result)
@@ -884,7 +898,9 @@ class TestComparativeAnalysisEngine(unittest.TestCase):
         raw_scores = [70.0, 80.0, 90.0, 85.0, 75.0]
         benchmark_scores = [75.0, 85.0, 95.0, 90.0, 80.0]
 
-        result = self.engine.calculate_benchmark_standardization(raw_scores, benchmark_scores)
+        result = self.engine.calculate_benchmark_standardization(
+            raw_scores, benchmark_scores
+        )
 
         self.assertIsInstance(result, dict)
         self.assertIn("standardized_scores", result)

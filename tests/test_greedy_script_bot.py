@@ -1,11 +1,11 @@
 from datetime import datetime
 
 import pytest
+from models.product import Product  # Import the actual Product model
+from money import Money
 
 from baseline_bots.greedy_script_bot import GreedyScriptBot, SimulationState
 from events import SetPriceCommand  # Import the actual SetPriceCommand
-from models.product import Product  # Import the actual Product model
-from money import Money
 
 
 @pytest.fixture
@@ -82,7 +82,9 @@ class TestGreedyScriptBot:
 
         # Check actions for basic product
         set_price_actions = [
-            a for a in actions if isinstance(a, SetPriceCommand) and a.asin == "B0TEST00A"
+            a
+            for a in actions
+            if isinstance(a, SetPriceCommand) and a.asin == "B0TEST00A"
         ]
         assert len(set_price_actions) == 1
         action = set_price_actions[0]
@@ -107,13 +109,17 @@ class TestGreedyScriptBot:
             },
         )
         sim_state = SimulationState(
-            products=[product_low_cost], current_tick=1, simulation_time=datetime.utcnow()
+            products=[product_low_cost],
+            current_tick=1,
+            simulation_time=datetime.utcnow(),
         )
         bot = GreedyScriptBot()
         actions = bot.decide(sim_state)
 
         set_price_actions = [
-            a for a in actions if isinstance(a, SetPriceCommand) and a.asin == "B0TEST00D"
+            a
+            for a in actions
+            if isinstance(a, SetPriceCommand) and a.asin == "B0TEST00D"
         ]
         assert len(set_price_actions) == 1
         action = set_price_actions[0]
@@ -132,20 +138,28 @@ class TestGreedyScriptBot:
             base_demand=10.0,
             inventory_units=10,
             metadata={
-                "competitor_prices": [("B0COMP05", Money.from_dollars(19.0))]  # Lowest comp is 19.0
+                "competitor_prices": [
+                    ("B0COMP05", Money.from_dollars(19.0))
+                ]  # Lowest comp is 19.0
             },
         )
         sim_state_very_low = SimulationState(
-            products=[product_very_low_cost], current_tick=1, simulation_time=datetime.utcnow()
+            products=[product_very_low_cost],
+            current_tick=1,
+            simulation_time=datetime.utcnow(),
         )
         actions_very_low = bot.decide(sim_state_very_low)
         set_price_actions_very_low = [
-            a for a in actions_very_low if isinstance(a, SetPriceCommand) and a.asin == "B0TEST00E"
+            a
+            for a in actions_very_low
+            if isinstance(a, SetPriceCommand) and a.asin == "B0TEST00E"
         ]
         assert len(set_price_actions_very_low) == 1
         action_very_low = set_price_actions_very_low[0]
         # Expected new price: 19.0 * 0.99 = 18.81. This is < cost (20.0). So it should set cost * 1.05 = 20.0 * 1.05 = 21.0
-        assert action_very_low.new_price.to_float() == pytest.approx(20.0 * 1.05, abs=0.001)
+        assert action_very_low.new_price.to_float() == pytest.approx(
+            20.0 * 1.05, abs=0.001
+        )
 
     def test_decide_no_competitors(self, sample_simulation_state):
         bot = GreedyScriptBot()
@@ -153,7 +167,9 @@ class TestGreedyScriptBot:
 
         # No SetPriceCommand should be generated for the product without competitors
         set_price_actions_no_comp = [
-            a for a in actions if isinstance(a, SetPriceCommand) and a.asin == "B0TEST00C"
+            a
+            for a in actions
+            if isinstance(a, SetPriceCommand) and a.asin == "B0TEST00C"
         ]
         assert len(set_price_actions_no_comp) == 0
 
@@ -192,9 +208,13 @@ class TestGreedyScriptBot:
 
     def test_decide_price_insignificant_change(self, sample_product_state_basic):
         # Set current price such that new price is very close
-        sample_product_state_basic.price = Money.from_dollars(18.815)  # Very close to 18.81
+        sample_product_state_basic.price = Money.from_dollars(
+            18.815
+        )  # Very close to 18.81
         sim_state = SimulationState(
-            products=[sample_product_state_basic], current_tick=1, simulation_time=datetime.utcnow()
+            products=[sample_product_state_basic],
+            current_tick=1,
+            simulation_time=datetime.utcnow(),
         )
         bot = GreedyScriptBot()
         actions = bot.decide(sim_state)
@@ -203,7 +223,9 @@ class TestGreedyScriptBot:
         # 0.005 / 18.815 is approx 0.00026, which is less than 0.001 threshold.
         # So no price change action should be generated.
         set_price_actions = [
-            a for a in actions if isinstance(a, SetPriceCommand) and a.asin == "B0TEST00A"
+            a
+            for a in actions
+            if isinstance(a, SetPriceCommand) and a.asin == "B0TEST00A"
         ]
         assert len(set_price_actions) == 0
 

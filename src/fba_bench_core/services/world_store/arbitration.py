@@ -4,15 +4,14 @@ Handles SetPriceCommand processing, conflict resolution, and state application.
 """
 
 import logging
-from typing import Any, List, Dict, Optional
-
 from datetime import datetime
+from typing import Any, Dict, List
 from uuid import uuid4
 
-from fba_events.bus import EventBus
-from fba_events.pricing import SetPriceCommand, ProductPriceUpdated
-
 from money import Money
+
+from fba_events.bus import EventBus
+from fba_events.pricing import ProductPriceUpdated, SetPriceCommand
 
 from .models import CommandArbitrationResult, SimpleArbitrationResult
 from .state import WorldStateManager
@@ -23,7 +22,7 @@ logger = logging.getLogger(__name__)
 class CommandArbitrator:
     """
     Manages command arbitration and processing for WorldStore.
-    
+
     Handles validation, conflict resolution, and application of price commands.
     Tracks per-tick state and statistics.
     """
@@ -31,7 +30,9 @@ class CommandArbitrator:
     def __init__(self, event_bus: EventBus, state_manager: WorldStateManager):
         # Command processing state for enhanced conflict resolution
         self._pending_commands_by_asin_this_tick: Dict[str, List[SetPriceCommand]] = {}
-        self._processed_command_ids_this_tick: set[str] = set()  # To avoid re-processing exact duplicates within a tick
+        self._processed_command_ids_this_tick: set[str] = (
+            set()
+        )  # To avoid re-processing exact duplicates within a tick
         self._command_history: List[SetPriceCommand] = []
 
         # Arbitration configuration
@@ -93,7 +94,10 @@ class CommandArbitrator:
             else:
                 # Reject the command
                 self.commands_rejected += 1
-                if "already accepted for this ASIN in the current tick" in result.reason:
+                if (
+                    "already accepted for this ASIN in the current tick"
+                    in result.reason
+                ):
                     self.conflicts_arbitrated += 1
                 logger.warning(
                     f"SetPriceCommand rejected: agent={event.agent_id}, asin={event.asin}, reason={result.reason}, command_id={event.event_id}"
@@ -103,10 +107,14 @@ class CommandArbitrator:
             self._command_history.append(event)
 
         except Exception as e:
-            logger.error(f"Error processing SetPriceCommand {event.event_id}: {e}", exc_info=True)
+            logger.error(
+                f"Error processing SetPriceCommand {event.event_id}: {e}", exc_info=True
+            )
             self.commands_rejected += 1
 
-    async def _arbitrate_price_command(self, command: SetPriceCommand) -> CommandArbitrationResult:
+    async def _arbitrate_price_command(
+        self, command: SetPriceCommand
+    ) -> CommandArbitrationResult:
         """
         Arbitrate a price change command with enhanced conflict resolution.
 
@@ -140,7 +148,9 @@ class CommandArbitrator:
             current_price = current_state.price
             # Avoid division by zero if current_price is zero, though unlikely for Money type unless explicitly set.
             if current_price.cents > 0:
-                price_change_ratio = abs((command.new_price.cents / current_price.cents) - 1.0)
+                price_change_ratio = abs(
+                    (command.new_price.cents / current_price.cents) - 1.0
+                )
                 if price_change_ratio > self.max_price_change_per_tick:
                     return CommandArbitrationResult(
                         accepted=False,
@@ -163,7 +173,9 @@ class CommandArbitrator:
                 # So, if we find it here during a new call, it means a previous one succeeded.
                 # This check is now effectively: "has a command for this ASIN already been accepted in this tick?"
                 # The list `_pending_commands_by_asin_this_tick[command.asin]` holds commands that were accepted.
-                if self._pending_commands_by_asin_this_tick[command.asin]:  # If the list is not empty
+                if self._pending_commands_by_asin_this_tick[
+                    command.asin
+                ]:  # If the list is not empty
                     return CommandArbitrationResult(
                         accepted=False,
                         reason=f"Another price command for ASIN {command.asin} was already accepted for this tick.",
@@ -182,7 +194,9 @@ class CommandArbitrator:
             arbitration_notes=f"Processed by CommandArbitrator at {datetime.now().isoformat()}",
         )
 
-    async def _apply_price_change(self, command: SetPriceCommand, result: CommandArbitrationResult) -> None:
+    async def _apply_price_change(
+        self, command: SetPriceCommand, result: CommandArbitrationResult
+    ) -> None:
         """
         Apply validated price change to canonical state and publish update event.
         """
@@ -190,7 +204,9 @@ class CommandArbitrator:
         new_price = result.final_price
         current_state = self.state_manager.get_product_state(asin)
 
-        previous_price = current_state.price if current_state else Money(2000)  # Default $20.00
+        previous_price = (
+            current_state.price if current_state else Money(2000)
+        )  # Default $20.00
 
         if current_state:
             current_state.price = new_price
@@ -234,7 +250,9 @@ class CommandArbitrator:
         await self.event_bus.publish(update_event)
         logger.info(f"Published ProductPriceUpdated: asin={asin}, price={new_price}")
 
-    def arbitrate_commands(self, commands: List[Dict[str, Any]]) -> SimpleArbitrationResult:
+    def arbitrate_commands(
+        self, commands: List[Dict[str, Any]]
+    ) -> SimpleArbitrationResult:
         """
         Back-compat simple arbitration for dict-based commands.
 

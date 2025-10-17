@@ -11,23 +11,20 @@ from typing import Any, Dict, List, Tuple
 
 from money import Money
 
-from ..skills import SkillCoordinator
+from agents.skill_modules.base_skill import SkillAction
 
+from ..skills import SkillCoordinator
+from .coordination import CoordinationManager
+from .crisis import CrisisManager
 from .models import (
     BusinessPriority,
-    StrategicObjective,
     BusinessState,
     ResourceAllocationPlan,
     StrategicDecision,
+    StrategicObjective,
 )
-
-from .coordination import CoordinationManager
-from .resources import ResourceManager
-from .crisis import CrisisManager
 from .performance import PerformanceManager
-
-from agents.skill_modules.base_skill import SkillAction
-
+from .resources import ResourceManager
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +37,10 @@ class MultiDomainController:
     """
 
     def __init__(
-        self, agent_id: str, skill_coordinator: SkillCoordinator, config: Dict[str, Any] = None
+        self,
+        agent_id: str,
+        skill_coordinator: SkillCoordinator,
+        config: Dict[str, Any] = None,
     ):
         """
         Initialize the Multi-Domain Controller.
@@ -54,7 +54,9 @@ class MultiDomainController:
         self.skill_coordinator = skill_coordinator
         self.config = config or {}
         # Cooldown is configurable; default 60s; sourced from config if provided.
-        self.crisis_cooldown_seconds: int = int(self.config.get("crisis_cooldown_seconds", 60))
+        self.crisis_cooldown_seconds: int = int(
+            self.config.get("crisis_cooldown_seconds", 60)
+        )
 
         # Strategic configuration
         self.business_objectives = [
@@ -67,7 +69,9 @@ class MultiDomainController:
 
         # Resource management
         self.resource_plan = ResourceAllocationPlan(
-            total_budget=Money(self.config.get("total_budget_cents", 1000000))  # $10,000
+            total_budget=Money(
+                self.config.get("total_budget_cents", 1000000)
+            )  # $10,000
         )
 
         # Business state tracking
@@ -95,7 +99,9 @@ class MultiDomainController:
 
         logger.info(f"MultiDomainController initialized for agent {agent_id}")
 
-    async def arbitrate_actions(self, competing_actions: List[SkillAction]) -> List[SkillAction]:
+    async def arbitrate_actions(
+        self, competing_actions: List[SkillAction]
+    ) -> List[SkillAction]:
         """
         Arbitrate between competing actions from different skills.
 
@@ -107,7 +113,9 @@ class MultiDomainController:
         """
         return await self.coordination.arbitrate_actions(competing_actions)
 
-    async def evaluate_business_priorities(self, current_state: Dict[str, Any]) -> BusinessPriority:
+    async def evaluate_business_priorities(
+        self, current_state: Dict[str, Any]
+    ) -> BusinessPriority:
         """
         Evaluate current business priorities based on state and context.
 
@@ -119,7 +127,9 @@ class MultiDomainController:
         """
         return await self.coordination.evaluate_business_priorities(current_state)
 
-    async def allocate_resources(self, skill_requests: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def allocate_resources(
+        self, skill_requests: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """
         Allocate resources across skill requests based on strategic priorities.
 
@@ -131,7 +141,9 @@ class MultiDomainController:
         """
         return await self.resources.allocate_resources(skill_requests)
 
-    async def handle_crisis_mode(self, crisis_type: str, severity: str) -> List[SkillAction]:
+    async def handle_crisis_mode(
+        self, crisis_type: str, severity: str
+    ) -> List[SkillAction]:
         """Handle crisis situations with emergency protocols."""
         return await self.crisis.handle_crisis_mode(crisis_type, severity)
 

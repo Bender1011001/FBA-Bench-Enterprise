@@ -17,10 +17,10 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any, Dict, Optional
 
-from fba_events.competitor import CompetitorState  # Fixed import for CompetitorState
-
 # Use project-local money implementation explicitly to avoid third-party shadowing
 from money import Money, max_money, min_money  # Fixed import for Money
+
+from fba_events.competitor import CompetitorState  # Fixed import for CompetitorState
 
 # Issue deprecation warning should be externalized, not hardcoded in the file
 # warnings.warn( # Removed hardcoded deprecation warning
@@ -92,7 +92,9 @@ class CompetitorPersona(ABC):
         self.rng = random.Random(seed)  # Seed control for reproducibility
 
     @abstractmethod
-    async def act(self, market_conditions: MarketConditions) -> Optional[CompetitorState]:
+    async def act(
+        self, market_conditions: MarketConditions
+    ) -> Optional[CompetitorState]:
         """
         Evaluate market conditions and decide on competitor actions.
 
@@ -149,7 +151,9 @@ class IrrationalSlasher(CompetitorPersona):
         slash_sales_velocity_boost: Decimal = Decimal("1.5"),
         seed: Optional[int] = None,  # Added seed
     ):
-        super().__init__(competitor_id, cost_basis, currency, seed=seed)  # Pass seed to super()
+        super().__init__(
+            competitor_id, cost_basis, currency, seed=seed
+        )  # Pass seed to super()
 
         # Input validation for IrrationalSlasher specific parameters
         if not (0.0 <= slash_probability <= 1.0):
@@ -165,8 +169,13 @@ class IrrationalSlasher(CompetitorPersona):
                 "slash_duration_range must be a tuple of two positive integers (min, max) where min <= max."
             )
         if not (0.0 <= low_sales_velocity_threshold <= 1.0):
-            raise ValueError("low_sales_velocity_threshold must be between 0.0 and 1.0.")
-        if not isinstance(market_avg_price_threshold, Decimal) or market_avg_price_threshold <= 0:
+            raise ValueError(
+                "low_sales_velocity_threshold must be between 0.0 and 1.0."
+            )
+        if (
+            not isinstance(market_avg_price_threshold, Decimal)
+            or market_avg_price_threshold <= 0
+        ):
             raise ValueError("market_avg_price_threshold must be a positive Decimal.")
         if not (0.0 <= max_slash_probability <= 1.0):
             raise ValueError("max_slash_probability must be between 0.0 and 1.0.")
@@ -176,7 +185,10 @@ class IrrationalSlasher(CompetitorPersona):
             raise ValueError(
                 "rational_price_discount must be a Decimal between 0 and 1 (exclusive)."
             )
-        if not isinstance(slash_sales_velocity_boost, Decimal) or slash_sales_velocity_boost <= 0:
+        if (
+            not isinstance(slash_sales_velocity_boost, Decimal)
+            or slash_sales_velocity_boost <= 0
+        ):
             raise ValueError("slash_sales_velocity_boost must be a positive Decimal.")
 
         # Core slashing behavior parameters (configurable)
@@ -188,7 +200,9 @@ class IrrationalSlasher(CompetitorPersona):
         self.rational_price_discount = rational_price_discount
         self.slash_sales_velocity_boost = slash_sales_velocity_boost
 
-    async def act(self, market_conditions: MarketConditions) -> Optional[CompetitorState]:
+    async def act(
+        self, market_conditions: MarketConditions
+    ) -> Optional[CompetitorState]:
         """
         Implement irrational slashing behavior.
 
@@ -249,7 +263,9 @@ class IrrationalSlasher(CompetitorPersona):
 
         return self.rng.random() < final_probability  # Use persona's rng
 
-    async def _slash_pricing(self, market_conditions: MarketConditions) -> CompetitorState:
+    async def _slash_pricing(
+        self, market_conditions: MarketConditions
+    ) -> CompetitorState:
         """
         Set destructively low pricing during slash mode.
 
@@ -270,7 +286,9 @@ class IrrationalSlasher(CompetitorPersona):
             ),  # Boost sales
         )
 
-    async def _rational_pricing(self, market_conditions: MarketConditions) -> CompetitorState:
+    async def _rational_pricing(
+        self, market_conditions: MarketConditions
+    ) -> CompetitorState:
         """
         Implement rational competitive pricing when not in slash mode.
 
@@ -280,7 +298,9 @@ class IrrationalSlasher(CompetitorPersona):
         market_avg = market_conditions.market_average_price
 
         # Price slightly below market average for competitiveness
-        rational_price = market_avg * Decimal(str(self.rational_price_discount))  # returns Money
+        rational_price = market_avg * Decimal(
+            str(self.rational_price_discount)
+        )  # returns Money
 
         # Ensure we don't price below cost basis
         final_price = max_money(rational_price, self._calculate_minimum_price())
@@ -322,7 +342,9 @@ class SlowFollower(CompetitorPersona):
         velocity_up_reduction: Decimal = Decimal("0.95"),
         seed: Optional[int] = None,  # Added seed
     ):
-        super().__init__(competitor_id, cost_basis, currency, seed=seed)  # Pass seed to super()
+        super().__init__(
+            competitor_id, cost_basis, currency, seed=seed
+        )  # Pass seed to super()
 
         # Input validation for SlowFollower specific parameters
         if not (
@@ -338,7 +360,9 @@ class SlowFollower(CompetitorPersona):
         if not isinstance(max_price_change_percent, Decimal) or not (
             Decimal("0") <= max_price_change_percent <= Decimal("1")
         ):
-            raise ValueError("max_price_change_percent must be a Decimal between 0 and 1.")
+            raise ValueError(
+                "max_price_change_percent must be a Decimal between 0 and 1."
+            )
         if not isinstance(target_price_bias, Decimal) or target_price_bias <= 0:
             raise ValueError("target_price_bias must be a positive Decimal.")
         if not isinstance(velocity_down_boost, Decimal) or velocity_down_boost <= 0:
@@ -346,11 +370,15 @@ class SlowFollower(CompetitorPersona):
         if not isinstance(velocity_up_reduction, Decimal) or velocity_up_reduction <= 0:
             raise ValueError("velocity_up_reduction must be a positive Decimal.")
 
-        self.evaluation_interval_range = evaluation_interval_range  # Ticks between evaluations
+        self.evaluation_interval_range = (
+            evaluation_interval_range  # Ticks between evaluations
+        )
         self.max_price_change_percent = (
             max_price_change_percent  # Maximum fractional price change per evaluation
         )
-        self.target_price_bias = target_price_bias  # Conservative bias above market average
+        self.target_price_bias = (
+            target_price_bias  # Conservative bias above market average
+        )
         self.velocity_down_boost = (
             velocity_down_boost  # Sales velocity multiplier when price decreases
         )
@@ -358,7 +386,9 @@ class SlowFollower(CompetitorPersona):
             velocity_up_reduction  # Sales velocity multiplier when price increases
         )
 
-    async def act(self, market_conditions: MarketConditions) -> Optional[CompetitorState]:
+    async def act(
+        self, market_conditions: MarketConditions
+    ) -> Optional[CompetitorState]:
         """
         Implement slow, lagged market following behavior.
 
@@ -371,7 +401,9 @@ class SlowFollower(CompetitorPersona):
 
         # Initialize evaluation schedule on first run
         if next_evaluation_tick == 0:
-            interval = self.rng.randint(*self.evaluation_interval_range)  # Use persona's rng
+            interval = self.rng.randint(
+                *self.evaluation_interval_range
+            )  # Use persona's rng
             self._set_state_value("next_evaluation_tick", current_tick + interval)
             return None  # No action on first tick
 
@@ -383,7 +415,9 @@ class SlowFollower(CompetitorPersona):
         self._set_state_value("last_evaluation_tick", current_tick)
 
         # Schedule next evaluation
-        interval = self.rng.randint(*self.evaluation_interval_range)  # Use persona's rng
+        interval = self.rng.randint(
+            *self.evaluation_interval_range
+        )  # Use persona's rng
         self._set_state_value("next_evaluation_tick", current_tick + interval)
 
         # Perform conservative market following
@@ -423,13 +457,19 @@ class SlowFollower(CompetitorPersona):
         # Conservative sales velocity adjustment (slow to respond)
         velocity_adjustment = Decimal("1.0")
         if final_price < current_price:
-            velocity_adjustment = self.velocity_down_boost  # Modest boost for price reduction
+            velocity_adjustment = (
+                self.velocity_down_boost
+            )  # Modest boost for price reduction
         elif final_price > current_price:
-            velocity_adjustment = self.velocity_up_reduction  # Modest reduction for price increase
+            velocity_adjustment = (
+                self.velocity_up_reduction
+            )  # Modest reduction for price increase
 
         return CompetitorState(
             asin=current_state.asin,
             price=final_price,
             bsr=current_state.bsr,
-            sales_velocity=float(Decimal(str(current_state.sales_velocity)) * velocity_adjustment),
+            sales_velocity=float(
+                Decimal(str(current_state.sales_velocity)) * velocity_adjustment
+            ),
         )

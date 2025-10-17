@@ -5,9 +5,10 @@ Factory for creating AgentRunner instances based on configuration or framework.
 Resolves lazy import in __init__.py for RunnerFactory.
 """
 
-from typing import Type, Dict
-from .base_runner import AgentRunner
+from typing import Dict, Type
+
 from ..agents.base import AgentConfig  # type: ignore[import-not-found]
+from .base_runner import AgentRunner
 
 
 class RunnerFactory:

@@ -65,7 +65,9 @@ def outlier_detection_validate(
                 continue
         if isinstance(seeds_list, list):
             try:
-                seeds = [int(s) if s is not None else idx for idx, s in enumerate(seeds_list)]
+                seeds = [
+                    int(s) if s is not None else idx for idx, s in enumerate(seeds_list)
+                ]
             except Exception:
                 seeds = []
     # Fallback: pull directly from runs[*]
@@ -125,7 +127,9 @@ def outlier_detection_validate(
                     "mad": 0.0,
                     "k": k,
                     "outliers": [idx],
-                    "outlier_details": [{"index": idx, "seed": seed_val, "duration_ms": None}],
+                    "outlier_details": [
+                        {"index": idx, "seed": seed_val, "duration_ms": None}
+                    ],
                 }
             )
             return normalize_output(out)

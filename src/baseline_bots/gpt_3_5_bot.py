@@ -1,3 +1,5 @@
+import hashlib
+import json
 import logging
 import uuid
 
@@ -7,19 +9,19 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from constraints.agent_gateway import AgentGateway
-from fba_events.pricing import SetPriceCommand  # Assuming SetPriceCommand is the primary action
-from llm_interface.contract import BaseLLMClient
-from llm_interface.prompt_adapter import PromptAdapter
-from llm_interface.response_parser import LLMResponseParser
-import hashlib
-import json
-from fba_bench_api.core.redis_client import get_redis
-
 # Placeholder imports for types that might be needed for SimulationState or for type hints
 # In a full simulation, these would come from models/, services/, etc.
 from models.product import Product  # For products in SimulationState
 from money import Money
+
+from constraints.agent_gateway import AgentGateway
+from fba_bench_api.core.redis_client import get_redis
+from fba_events.pricing import (
+    SetPriceCommand,
+)  # Assuming SetPriceCommand is the primary action
+from llm_interface.contract import BaseLLMClient
+from llm_interface.prompt_adapter import PromptAdapter
+from llm_interface.response_parser import LLMResponseParser
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +35,9 @@ class SimulationState:
     products: List[Product]
     # This bot also needs competitor data, which for now is assumed to be embedded in Product.competitor_prices
     # Add other fields as needed for LLM context, e.g., recent_events, financial performance, etc.
-    recent_events: List[Any] = field(default_factory=list)  # Placeholder for events from event bus
+    recent_events: List[Any] = field(
+        default_factory=list
+    )  # Placeholder for events from event bus
 
     def get_product(self, asin: str) -> Optional[Product]:
         for product in self.products:
@@ -88,7 +92,9 @@ class GPT35Bot:
             # We also need `WorldStore` and `BudgetEnforcer` injected into PromptAdapter.
             # This implies `PromptAdapter` should be initialized with `WorldStore` and `BudgetEnforcer` when the bot is created.
             # For now, we will create a mock scenario_context.
-            scenario_context = "The primary goal is to maximize profit while managing inventory."
+            scenario_context = (
+                "The primary goal is to maximize profit while managing inventory."
+            )
 
             raw_prompt = self.prompt_adapter.generate_prompt(
                 current_tick=state.current_tick,
@@ -103,7 +109,9 @@ class GPT35Bot:
                 agent_id=self.agent_id,
                 prompt=raw_prompt,
                 action_type="decide_action",  # More specific action
-                model_name=getattr(self.llm_client, "model_name", "unknown"),  # Robust to mocks
+                model_name=getattr(
+                    self.llm_client, "model_name", "unknown"
+                ),  # Robust to mocks
             )
 
             modified_prompt = gateway_response["modified_prompt"]
@@ -135,12 +143,16 @@ class GPT35Bot:
                         top_p=self.model_params.get("top_p", 1.0),
                         # other model specific parameters from self.model_params
                     )
-                    await redis.setex(llm_cache_key, 1800, json.dumps(llm_raw_response_data))
+                    await redis.setex(
+                        llm_cache_key, 1800, json.dumps(llm_raw_response_data)
+                    )
                 except Exception as cache_miss_exc:
                     logger.warning(f"LLM cache miss handling failed: {cache_miss_exc}")
                     if not llm_raw_response_data:
                         raise
-            llm_response_content = llm_raw_response_data["choices"][0]["message"]["content"]
+            llm_response_content = llm_raw_response_data["choices"][0]["message"][
+                "content"
+            ]
 
             # 4. Postprocess response through AgentGateway (for actual token usage recording)
             await self.agent_gateway.postprocess_response(
@@ -152,8 +164,10 @@ class GPT35Bot:
             )
 
             # 5. Parse and validate the LLM response
-            parsed_response, error_details = await self.response_parser.parse_and_validate(
-                llm_response_content, self.agent_id
+            parsed_response, error_details = (
+                await self.response_parser.parse_and_validate(
+                    llm_response_content, self.agent_id
+                )
             )
 
             if error_details:
@@ -204,7 +218,9 @@ class GPT35Bot:
                             f"[{self.agent_id}] Error creating SetPriceCommand: {e} with data {params}"
                         )
                 else:
-                    logger.warning(f"[{self.agent_id}] Unknown action type received: {action_type}")
+                    logger.warning(
+                        f"[{self.agent_id}] Unknown action type received: {action_type}"
+                    )
 
             return agent_commands
 

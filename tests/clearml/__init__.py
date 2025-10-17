@@ -5,11 +5,13 @@ that allow import statements to succeed without side effects or errors. Actual f
 requires the real ClearML package.
 """
 
+
 class Task:
     """
     No-op placeholder for clearml.Task.
     Supports common init patterns but performs no actual tracking or logging.
     """
+
     def __init__(self, project_name=None, task_name=None, **kwargs):
         self.project_name = project_name or "default_project"
         self.task_name = task_name or "default_task"
@@ -25,7 +27,7 @@ class Task:
         output_uri=None,
         reuse_last_task_id=False,
         auto_connect=True,
-        **kwargs
+        **kwargs,
     ):
         """
         Class method to create/init a Task instance. Returns a no-op instance.
@@ -68,6 +70,7 @@ class Logger:
     No-op placeholder for clearml.Logger.
     Supports report_scalar and other common logging methods without side effects.
     """
+
     @staticmethod
     def current_logger():
         """Returns a no-op Logger instance."""
@@ -102,14 +105,10 @@ class Dataset:
     No-op placeholder for clearml.Dataset.
     Supports get and create patterns but returns None or empty structures.
     """
+
     @classmethod
     def get(
-        cls,
-        dataset_name,
-        project=None,
-        dataset_id=None,
-        output_folder=None,
-        **kwargs
+        cls, dataset_name, project=None, dataset_id=None, output_folder=None, **kwargs
     ):
         """
         Class method to retrieve a dataset. Returns None (no-op).
@@ -118,12 +117,7 @@ class Dataset:
 
     @classmethod
     def create(
-        cls,
-        project_name,
-        dataset_name,
-        output_folder=None,
-        version=None,
-        **kwargs
+        cls, project_name, dataset_name, output_folder=None, version=None, **kwargs
     ):
         """
         Class method to create a dataset. Returns a no-op instance.
@@ -155,9 +149,11 @@ class Dataset:
         """No-op close."""
         pass
 
+
 # Additional top-level no-ops if directly imported
 def get_logger():
     return Logger()
+
 
 def TaskInit(project_name=None, task_name=None, **kwargs):
     return Task.init(project_name=project_name, task_name=task_name, **kwargs)

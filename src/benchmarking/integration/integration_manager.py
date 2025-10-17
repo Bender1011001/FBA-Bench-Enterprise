@@ -133,7 +133,9 @@ class IntegrationManager:
         # Initialize services based on global configuration
         if global_variables.database.db_type:
             # Database service would be initialized here
-            logger.debug(f"Database service configured: {global_variables.database.db_type}")
+            logger.debug(
+                f"Database service configured: {global_variables.database.db_type}"
+            )
 
         if global_variables.cache.cache_type == "redis":
             # Redis service would be initialized here
@@ -245,7 +247,11 @@ class IntegrationManager:
             priority: Event priority (higher = more important)
         """
         event = IntegrationEvent(
-            event_type=event_type, source=source, target=target, data=data or {}, priority=priority
+            event_type=event_type,
+            source=source,
+            target=target,
+            data=data or {},
+            priority=priority,
         )
 
         with self.event_lock:
@@ -253,7 +259,9 @@ class IntegrationManager:
 
         logger.debug(f"Emitted event: {event_type} from {source}")
 
-    def register_integration_callback(self, callback_type: str, handler: Callable) -> None:
+    def register_integration_callback(
+        self, callback_type: str, handler: Callable
+    ) -> None:
         """
         Register an integration callback.
 
@@ -303,7 +311,9 @@ class IntegrationManager:
         """
         return self.external_service_manager.get_service(name)
 
-    def create_agent(self, agent_id: str, framework: str, config: Dict[str, Any]) -> str:
+    def create_agent(
+        self, agent_id: str, framework: str, config: Dict[str, Any]
+    ) -> str:
         """
         Create an agent through the agent manager.
 
@@ -350,7 +360,9 @@ class IntegrationManager:
         """
         return self.agent_manager.remove_agent(agent_id)
 
-    def validate_configuration(self, schema_name: str, config: Dict[str, Any]) -> Dict[str, Any]:
+    def validate_configuration(
+        self, schema_name: str, config: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Validate a configuration against a schema.
 
@@ -448,7 +460,9 @@ class IntegrationManager:
             "components": {
                 "total": len(self.component_status),
                 "ready": sum(1 for s in self.component_status.values() if s == "ready"),
-                "error": sum(1 for s in self.component_status.values() if s.startswith("error")),
+                "error": sum(
+                    1 for s in self.component_status.values() if s.startswith("error")
+                ),
             },
             "registry": self.registry.get_registry_summary(),
             "schema_manager": self.schema_manager.get_manager_summary(),
@@ -465,7 +479,8 @@ class IntegrationManager:
                     [
                         a
                         for a in self.list_agents()
-                        if self.get_agent(a) and self.get_agent(a).status.value == "ready"
+                        if self.get_agent(a)
+                        and self.get_agent(a).status.value == "ready"
                     ]
                 ),
             },
@@ -487,7 +502,9 @@ class IntegrationManager:
             Benchmark results
         """
         # Validate benchmark configuration
-        validated_config = self.validate_configuration("benchmark_config", benchmark_config)
+        validated_config = self.validate_configuration(
+            "benchmark_config", benchmark_config
+        )
 
         # Emit benchmark start event
         self.emit_event("benchmark_start", "integration_manager", validated_config)
@@ -497,7 +514,9 @@ class IntegrationManager:
             agents = []
             for agent_config in validated_config.get("agents", []):
                 agent_id = self.create_agent(
-                    agent_config["id"], agent_config["framework"], agent_config["config"]
+                    agent_config["id"],
+                    agent_config["framework"],
+                    agent_config["config"],
                 )
                 agents.append(agent_id)
 

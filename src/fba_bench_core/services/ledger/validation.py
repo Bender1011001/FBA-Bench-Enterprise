@@ -3,10 +3,7 @@
 import logging
 from typing import Dict, List
 
-from money import Money
-
 from .models import LedgerEntry, Transaction
-
 
 logger = logging.getLogger(__name__)
 
@@ -16,10 +13,12 @@ class LedgerValidator:
     Validates transactions and accounting rules before posting.
     """
 
-    def validate_transaction(self, transaction: Transaction, accounts: Dict[str, 'Account']) -> None:
+    def validate_transaction(
+        self, transaction: Transaction, accounts: Dict[str, "Account"]
+    ) -> None:
         """
         Validate a transaction before posting.
-        
+
         Checks:
         - Transaction is balanced (debits == credits)
         - All referenced accounts exist
@@ -27,7 +26,9 @@ class LedgerValidator:
         """
         # Check if transaction is balanced
         if not transaction.is_balanced():
-            raise ValueError(f"Transaction {transaction.transaction_id} is not balanced")
+            raise ValueError(
+                f"Transaction {transaction.transaction_id} is not balanced"
+            )
 
         # Collect all account IDs
         account_ids = set()
@@ -49,7 +50,7 @@ class LedgerValidator:
         logger.debug(f"Validated transaction {transaction.transaction_id}")
 
     def validate_account_normal_balance(
-        self, account_id: str, entry_type: str, accounts: Dict[str, 'Account']
+        self, account_id: str, entry_type: str, accounts: Dict[str, "Account"]
     ) -> None:
         """
         Validate that the entry type matches the account's normal balance.
@@ -72,12 +73,12 @@ class LedgerValidator:
         """Validate that debit and credit amounts are positive and match totals."""
         total_debits = sum(entry.amount for entry in debits)
         total_credits = sum(entry.amount for entry in credits)
-        
+
         if total_debits != total_credits:
             raise ValueError(
                 f"Debit total {total_debits} does not match credit total {total_credits}"
             )
-        
+
         for entry in debits + credits:
             if entry.amount.cents <= 0:
                 raise ValueError(

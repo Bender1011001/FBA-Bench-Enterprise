@@ -6,9 +6,6 @@ import uuid
 from collections import defaultdict
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-import aiohttp
-from aiohttp import ClientTimeout
-
 from infrastructure.openrouter_client import OpenRouterClient
 
 logger = logging.getLogger(__name__)

@@ -4,8 +4,9 @@ import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from fba_events.bus import EventBus
 from money import Money
+
+from fba_events.bus import EventBus
 
 from .core import LedgerCore
 from .events import EventsHandler
@@ -21,21 +22,20 @@ from .statements import StatementsGenerator
 from .utils import FEE_ACCOUNT_MAP
 from .validation import LedgerValidator
 
-
 logger = logging.getLogger(__name__)
 
 
 class DoubleEntryLedgerService:
     """
     Double-Entry Ledger Service for FBA-Bench v3.
-    
+
     Implements a complete double-entry accounting system with:
     - Chart of accounts management
     - Transaction recording and validation
     - Financial statement generation
     - Audit trail maintenance
     - Integration with event bus for real-time updates
-    
+
     Critical Requirements:
     - Enforces double-entry rules (debits = credits)
     - Maintains proper account balances
@@ -71,10 +71,10 @@ class DoubleEntryLedgerService:
         """Post a transaction to the ledger and update account balances."""
         # Validate before posting
         self.validator.validate_transaction(transaction, self.core.accounts)
-        
+
         # Invalidate cache before posting (in case of changes)
         self.statements.invalidate_cache()
-        
+
         await self.core.post_transaction(transaction)
 
     async def post_all_unposted_transactions(self) -> None:
@@ -122,7 +122,9 @@ class DoubleEntryLedgerService:
         """Get the transaction history, limited to the specified number of transactions."""
         return self.core.get_transaction_history(limit=limit)
 
-    def get_transactions_by_type(self, transaction_type: TransactionType) -> List[Transaction]:
+    def get_transactions_by_type(
+        self, transaction_type: TransactionType
+    ) -> List[Transaction]:
         """Get all transactions of a specific type."""
         return self.core.get_transactions_by_type(transaction_type)
 

@@ -59,7 +59,9 @@ class LLMCacheConfig:
         issues = []
 
         if self.max_memory_entries < 100:
-            issues.append("max_memory_entries should be at least 100 for reasonable performance")
+            issues.append(
+                "max_memory_entries should be at least 100 for reasonable performance"
+            )
 
         if self.auto_export_interval_hours < 1:
             issues.append("auto_export_interval_hours should be at least 1")
@@ -95,7 +97,9 @@ class SeedManagementConfig:
             issues.append("master_seed must be between 0 and 2^32 - 1")
 
         if self.audit_trail_size < 1000:
-            issues.append("audit_trail_size should be at least 1000 for meaningful tracking")
+            issues.append(
+                "audit_trail_size should be at least 1000 for meaningful tracking"
+            )
 
         return issues
 
@@ -112,7 +116,9 @@ class GoldenMasterConfig:
     event_tolerance: int = 0
     timestamp_tolerance_ms: float = 1.0
     floating_point_epsilon: float = 1e-12
-    ignore_fields: List[str] = field(default_factory=lambda: ["timestamp", "last_update"])
+    ignore_fields: List[str] = field(
+        default_factory=lambda: ["timestamp", "last_update"]
+    )
     ignore_patterns: List[str] = field(default_factory=lambda: ["_metadata", "_debug"])
     auto_baseline_recording: bool = False
     baseline_retention_days: int = 30
@@ -244,24 +250,36 @@ class ReproducibilityConfig:
 
         # Validate component configurations
         issues.extend([f"LLM Cache: {issue}" for issue in self.llm_cache.validate()])
-        issues.extend([f"Seed Management: {issue}" for issue in self.seed_management.validate()])
-        issues.extend([f"Golden Master: {issue}" for issue in self.golden_master.validate()])
-        issues.extend([f"Event Snapshot: {issue}" for issue in self.event_snapshot.validate()])
-        issues.extend([f"Performance: {issue}" for issue in self.performance.validate()])
+        issues.extend(
+            [f"Seed Management: {issue}" for issue in self.seed_management.validate()]
+        )
+        issues.extend(
+            [f"Golden Master: {issue}" for issue in self.golden_master.validate()]
+        )
+        issues.extend(
+            [f"Event Snapshot: {issue}" for issue in self.event_snapshot.validate()]
+        )
+        issues.extend(
+            [f"Performance: {issue}" for issue in self.performance.validate()]
+        )
 
         # Cross-component validation
         if self.simulation_mode == SimulationMode.DETERMINISTIC:
             if not self.llm_cache.enabled:
                 issues.append("Deterministic mode requires LLM cache to be enabled")
             if not self.seed_management.enabled:
-                issues.append("Deterministic mode requires seed management to be enabled")
+                issues.append(
+                    "Deterministic mode requires seed management to be enabled"
+                )
             if self.llm_cache.allow_cache_misses:
                 issues.append("Deterministic mode should not allow cache misses")
 
         # Validation level consistency
         if self.validation_level == ValidationLevel.DISABLED:
             if self.fail_fast_on_validation_error:
-                issues.append("Cannot fail fast on validation errors when validation is disabled")
+                issues.append(
+                    "Cannot fail fast on validation errors when validation is disabled"
+                )
 
         # Directory validation
         if not self.output_dir:
@@ -373,7 +391,9 @@ class ReproducibilityConfig:
             return False
 
     @classmethod
-    def load_from_file(cls, filepath: Union[str, Path]) -> Optional["ReproducibilityConfig"]:
+    def load_from_file(
+        cls, filepath: Union[str, Path]
+    ) -> Optional["ReproducibilityConfig"]:
         """
         Load configuration from file.
 
@@ -398,7 +418,9 @@ class ReproducibilityConfig:
                 with open(filepath) as f:
                     data = yaml.safe_load(f)
             else:
-                logger.error(f"Unsupported configuration file format: {filepath.suffix}")
+                logger.error(
+                    f"Unsupported configuration file format: {filepath.suffix}"
+                )
                 return None
 
             config = cls.from_dict(data)
@@ -516,7 +538,10 @@ def create_deterministic_config(
         simulation_mode=SimulationMode.DETERMINISTIC,
         validation_level=ValidationLevel.STRICT,
         llm_cache=LLMCacheConfig(
-            enabled=True, cache_file=cache_file, enable_validation=True, allow_cache_misses=False
+            enabled=True,
+            cache_file=cache_file,
+            enable_validation=True,
+            allow_cache_misses=False,
         ),
         seed_management=SeedManagementConfig(
             enabled=True,
@@ -550,7 +575,10 @@ def create_research_config(
         validation_level=ValidationLevel.BASIC,
         llm_cache=LLMCacheConfig(enabled=True, allow_cache_misses=True),
         seed_management=SeedManagementConfig(
-            enabled=True, master_seed=master_seed, component_isolation=True, strict_validation=False
+            enabled=True,
+            master_seed=master_seed,
+            component_isolation=True,
+            strict_validation=False,
         ),
         research_mode_config={
             "controlled_randomness_probability": variability_probability,

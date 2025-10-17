@@ -81,7 +81,9 @@ class TestDistributedEventBus(unittest.TestCase):
 
         # Verify the partition was created
         self.assertIn("test_partition", self.event_bus._partitions)
-        self.assertEqual(self.event_bus._partitions["test_partition"], ["agent1", "agent2"])
+        self.assertEqual(
+            self.event_bus._partitions["test_partition"], ["agent1", "agent2"]
+        )
 
         await self.event_bus.stop()
 
@@ -108,7 +110,9 @@ class TestDistributedCoordinator(unittest.TestCase):
         """Set up test fixtures before each test method."""
         self.event_bus = Mock()
         self.simulation_config = Mock()
-        self.coordinator = DistributedCoordinator(self.event_bus, self.simulation_config)
+        self.coordinator = DistributedCoordinator(
+            self.event_bus, self.simulation_config
+        )
 
     @pytest.mark.asyncio
     async def test_coordinator_initialization(self):

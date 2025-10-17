@@ -3,6 +3,7 @@ Experiment manager module.
 Coordinates experiment lifecycle, state, and results.
 """
 
+
 class ExperimentManager:
     def __init__(self):
         self.experiments = {}

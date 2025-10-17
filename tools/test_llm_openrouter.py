@@ -1,6 +1,6 @@
 import json
-import urllib.request
 import urllib.error
+import urllib.request
 
 API = "http://127.0.0.1:8000/api/v1/llm/test"
 

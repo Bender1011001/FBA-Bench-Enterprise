@@ -5,13 +5,19 @@ from pydantic import ValidationError
 
 # Import scenario modules to ensure registration happens on import
 from benchmarking.scenarios import registry as sc_reg  # noqa: F401
-from benchmarking.scenarios.complex_marketplace import ComplexMarketplaceConfig
-from benchmarking.scenarios.complex_marketplace import generate_input as cm_generate_input
-from benchmarking.scenarios.complex_marketplace import postprocess as cm_postprocess
-from benchmarking.scenarios.multiturn_tool_use import MultiTurnToolUseConfig
-from benchmarking.scenarios.multiturn_tool_use import generate_input as mt_generate_input
-from benchmarking.scenarios.research_summarization import ResearchSummarizationConfig
-from benchmarking.scenarios.research_summarization import generate_input as rs_generate_input
+from benchmarking.scenarios.complex_marketplace import (
+    ComplexMarketplaceConfig,
+    generate_input as cm_generate_input,
+    postprocess as cm_postprocess,
+)
+from benchmarking.scenarios.multiturn_tool_use import (
+    MultiTurnToolUseConfig,
+    generate_input as mt_generate_input,
+)
+from benchmarking.scenarios.research_summarization import (
+    ResearchSummarizationConfig,
+    generate_input as rs_generate_input,
+)
 
 
 def test_complex_marketplace_generate_input_determinism():

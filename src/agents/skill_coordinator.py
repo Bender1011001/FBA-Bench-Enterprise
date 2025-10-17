@@ -6,14 +6,17 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
+from agents.skill_modules.base_skill import (
+    SkillAction,
+)  # Assuming base_skill defines SkillAction
 from fba_bench_core.event_bus import EventBus
-from agents.skill_modules.base_skill import SkillAction  # Assuming base_skill defines SkillAction
 
 logger = logging.getLogger(__name__)
 
 
 class CoordinationStrategy(Enum):
     """Enumeration of supported coordination strategies for skill execution."""
+
     PRIORITY_BASED = "priority_based"
     ROUND_ROBIN = "round_robin"
     # Add more strategies as needed, e.g., LOAD_BALANCED = "load_balanced"
@@ -22,6 +25,7 @@ class CoordinationStrategy(Enum):
 @dataclass
 class SkillSubscription:
     """Represents a registered skill subscription."""
+
     skill: Any
     event_types: List[str]
     priority: float
@@ -57,12 +61,22 @@ class SkillCoordinator:
         self.agent_id = agent_id
         self.event_bus = event_bus
         self.config = config or {}
-        self.coordination_strategy = self.config.get("coordination_strategy", CoordinationStrategy.PRIORITY_BASED.value)
-        self.max_concurrent_skills = self.config.get("max_concurrent_skills", 5)  # Default limit to prevent overload
-        self.skill_subscriptions: Dict[str, SkillSubscription] = {}  # skill_name -> SkillSubscription
+        self.coordination_strategy = self.config.get(
+            "coordination_strategy", CoordinationStrategy.PRIORITY_BASED.value
+        )
+        self.max_concurrent_skills = self.config.get(
+            "max_concurrent_skills", 5
+        )  # Default limit to prevent overload
+        self.skill_subscriptions: Dict[str, SkillSubscription] = (
+            {}
+        )  # skill_name -> SkillSubscription
         self._subscription_handles: List[Any] = []  # For cleanup if subscribing to bus
-        self._semaphore = asyncio.Semaphore(self.max_concurrent_skills)  # Limit concurrent executions
-        logger.info(f"SkillCoordinator initialized for agent {agent_id} with strategy '{self.coordination_strategy}' and max concurrent skills {self.max_concurrent_skills}")
+        self._semaphore = asyncio.Semaphore(
+            self.max_concurrent_skills
+        )  # Limit concurrent executions
+        logger.info(
+            f"SkillCoordinator initialized for agent {agent_id} with strategy '{self.coordination_strategy}' and max concurrent skills {self.max_concurrent_skills}"
+        )
 
     async def register_skill(
         self,
@@ -89,14 +103,18 @@ class SkillCoordinator:
 
         skill_name = skill_name or skill.__class__.__name__
         if skill_name in self.skill_subscriptions:
-            logger.warning(f"Skill '{skill_name}' already registered for agent {self.agent_id}; overwriting.")
+            logger.warning(
+                f"Skill '{skill_name}' already registered for agent {self.agent_id}; overwriting."
+            )
             # Optional: unsubscribe previous if needed
 
         # Validate skill interface
         required_methods = ["process_event", "get_supported_event_types"]
         for method in required_methods:
             if not callable(getattr(skill, method, None)):
-                raise RuntimeError(f"Skill '{skill_name}' missing required method: {method}")
+                raise RuntimeError(
+                    f"Skill '{skill_name}' missing required method: {method}"
+                )
 
         # Base priority (e.g., 1.0) multiplied
         priority = 1.0 * priority_multiplier
@@ -114,11 +132,15 @@ class SkillCoordinator:
             try:
                 handle = await skill.subscribe_to_bus(self.event_bus)
                 self._subscription_handles.append(handle)
-                logger.debug(f"Skill '{skill_name}' subscribed to EventBus for agent {self.agent_id}")
+                logger.debug(
+                    f"Skill '{skill_name}' subscribed to EventBus for agent {self.agent_id}"
+                )
             except Exception as e:
                 logger.warning(f"Failed to subscribe skill '{skill_name}': {e}")
 
-        logger.info(f"Registered skill '{skill_name}' (priority {priority:.2f}) for {len(event_types)} event types on agent {self.agent_id}")
+        logger.info(
+            f"Registered skill '{skill_name}' (priority {priority:.2f}) for {len(event_types)} event types on agent {self.agent_id}"
+        )
 
     async def unregister_skill(self, skill_name: str) -> bool:
         """
@@ -167,12 +189,15 @@ class SkillCoordinator:
 
         # Find matching skills
         matching_skills = [
-            (name, sub) for name, sub in self.skill_subscriptions.items()
+            (name, sub)
+            for name, sub in self.skill_subscriptions.items()
             if event_type in sub.event_types
         ]
 
         if not matching_skills:
-            logger.debug(f"No skills registered for event type '{event_type}' on agent {self.agent_id}")
+            logger.debug(
+                f"No skills registered for event type '{event_type}' on agent {self.agent_id}"
+            )
             return []
 
         # Execute matching skills concurrently with semaphore limit
@@ -186,13 +211,20 @@ class SkillCoordinator:
         for skill_name, task in tasks:
             try:
                 async with self._semaphore:
-                    result = await asyncio.wait_for(task, timeout=30.0)  # 30s timeout per skill
+                    result = await asyncio.wait_for(
+                        task, timeout=30.0
+                    )  # 30s timeout per skill
                     if result:
                         results.append((skill_name, result))
             except asyncio.TimeoutError:
-                logger.warning(f"Skill '{skill_name}' timed out processing {event_type} for agent {self.agent_id}")
+                logger.warning(
+                    f"Skill '{skill_name}' timed out processing {event_type} for agent {self.agent_id}"
+                )
             except Exception as e:
-                logger.error(f"Skill '{skill_name}' failed processing {event_type}: {e}", exc_info=True)
+                logger.error(
+                    f"Skill '{skill_name}' failed processing {event_type}: {e}",
+                    exc_info=True,
+                )
 
         if not results:
             return []
@@ -203,7 +235,9 @@ class SkillCoordinator:
             if isinstance(skill_result, list):
                 for action in skill_result:
                     if isinstance(action, SkillAction):
-                        action.skill_source = skill_name  # Annotate source for arbitration
+                        action.skill_source = (
+                            skill_name  # Annotate source for arbitration
+                        )
                         actions.append(action)
             elif isinstance(skill_result, SkillAction):
                 skill_result.skill_source = skill_name
@@ -214,17 +248,23 @@ class SkillCoordinator:
             actions.sort(key=lambda a: a.priority or 0, reverse=True)
             max_actions = self.config.get("max_actions_per_dispatch", len(actions))
             actions = actions[:max_actions]
-            logger.debug(f"Applied priority_based strategy: {len(actions)} actions selected from {len(results)} skills")
+            logger.debug(
+                f"Applied priority_based strategy: {len(actions)} actions selected from {len(results)} skills"
+            )
 
         # Optional: Publish aggregated actions or metrics to event_bus
         if self.event_bus and actions:
             # Example: Publish SkillActionsDispatched event (implement if needed)
             pass
 
-        logger.info(f"Dispatched {event_type} to {len(matching_skills)} skills; generated {len(actions)} actions for agent {self.agent_id}")
+        logger.info(
+            f"Dispatched {event_type} to {len(matching_skills)} skills; generated {len(actions)} actions for agent {self.agent_id}"
+        )
         return actions
 
-    async def _execute_skill_async(self, skill: Any, event: Any, skill_name: str) -> List[SkillAction]:
+    async def _execute_skill_async(
+        self, skill: Any, event: Any, skill_name: str
+    ) -> List[SkillAction]:
         """
         Executes a skill's process_event method asynchronously.
 
@@ -244,10 +284,14 @@ class SkillCoordinator:
             elif isinstance(result, list):
                 return [a for a in result if isinstance(a, SkillAction)]
             else:
-                logger.warning(f"Skill '{skill_name}' returned unexpected type: {type(result)}")
+                logger.warning(
+                    f"Skill '{skill_name}' returned unexpected type: {type(result)}"
+                )
                 return []
         except Exception as e:
-            logger.error(f"Error in skill '{skill_name}.process_event': {e}", exc_info=True)
+            logger.error(
+                f"Error in skill '{skill_name}.process_event': {e}", exc_info=True
+            )
             return []
 
     async def cleanup(self) -> None:
@@ -271,5 +315,8 @@ class SkillCoordinator:
             "total_skills": len(self.skill_subscriptions),
             "strategy": self.coordination_strategy,
             "max_concurrent": self.max_concurrent_skills,
-            "subscriptions": {name: {"event_types": sub.event_types, "priority": sub.priority} for name, sub in self.skill_subscriptions.items()},
+            "subscriptions": {
+                name: {"event_types": sub.event_types, "priority": sub.priority}
+                for name, sub in self.skill_subscriptions.items()
+            },
         }

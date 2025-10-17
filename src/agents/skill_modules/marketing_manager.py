@@ -11,12 +11,13 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
+from money import Money
+
 from fba_events import BaseEvent
 from fba_events.competitor import CompetitorPricesUpdated
 from fba_events.pricing import ProductPriceUpdated
 from fba_events.sales import SaleOccurred
 from fba_events.time_events import TickEvent
-from money import Money
 
 from .base_skill import BaseSkill, SkillAction, SkillContext, SkillOutcome
 
@@ -134,9 +135,15 @@ class MarketingManagerSkill(BaseSkill):
         # Configuration parameters
         self.config = config or {}
         self.target_profit_margin = self.config.get("target_profit_margin", 0.20)  # 20%
-        self.max_advertising_budget = Money(self.config.get("max_ad_budget_cents", 200000))  # $2000
-        self.price_change_threshold = self.config.get("price_change_threshold", 0.05)  # 5%
-        self.competitor_response_delay = self.config.get("competitor_response_delay", 2)  # ticks
+        self.max_advertising_budget = Money(
+            self.config.get("max_ad_budget_cents", 200000)
+        )  # $2000
+        self.price_change_threshold = self.config.get(
+            "price_change_threshold", 0.05
+        )  # 5%
+        self.competitor_response_delay = self.config.get(
+            "competitor_response_delay", 2
+        )  # ticks
 
         # Market tracking
         self.competitor_prices: Dict[str, List[Tuple[datetime, Money]]] = {}
@@ -184,9 +191,13 @@ class MarketingManagerSkill(BaseSkill):
                 actions.extend(await self._handle_tick_event(event))
 
             # Filter actions by confidence threshold
-            confidence_threshold = self.adaptation_parameters.get("confidence_threshold", 0.6)
+            confidence_threshold = self.adaptation_parameters.get(
+                "confidence_threshold", 0.6
+            )
             filtered_actions = [
-                action for action in actions if action.confidence >= confidence_threshold
+                action
+                for action in actions
+                if action.confidence >= confidence_threshold
             ]
 
             return filtered_actions if filtered_actions else None
@@ -232,7 +243,9 @@ class MarketingManagerSkill(BaseSkill):
         if asin not in self.sales_performance:
             self.sales_performance[asin] = []
 
-        self.sales_performance[asin].append((datetime.now(), event.units_sold, event.unit_price))
+        self.sales_performance[asin].append(
+            (datetime.now(), event.units_sold, event.unit_price)
+        )
 
         # Keep only recent history
         if len(self.sales_performance[asin]) > 100:
@@ -258,14 +271,18 @@ class MarketingManagerSkill(BaseSkill):
             # Simple adaptation: adjust confidence threshold based on ROI and success
             if outcome.success and roi > 0:
                 self.adaptation_parameters["confidence_threshold"] = max(
-                    0.4, self.adaptation_parameters.get("confidence_threshold", 0.6) * 0.98
+                    0.4,
+                    self.adaptation_parameters.get("confidence_threshold", 0.6) * 0.98,
                 )
             elif not outcome.success:
                 self.adaptation_parameters["confidence_threshold"] = min(
-                    0.9, self.adaptation_parameters.get("confidence_threshold", 0.6) * 1.02
+                    0.9,
+                    self.adaptation_parameters.get("confidence_threshold", 0.6) * 1.02,
                 )
             # Persist a learned insight
-            lesson = f"Units={units}, Rev={revenue:.2f}, Profit={profit:.2f}, ROI={roi:.3f}"
+            lesson = (
+                f"Units={units}, Rev={revenue:.2f}, Profit={profit:.2f}, ROI={roi:.3f}"
+            )
             self.update_skill_state(
                 SkillOutcome(
                     action_id=outcome.action_id,
@@ -280,7 +297,9 @@ class MarketingManagerSkill(BaseSkill):
         except Exception as e:
             logger.warning(f"MarketingManagerSkill.learn failed: {e}")
 
-    async def _handle_product_price_updated(self, event: ProductPriceUpdated) -> List[SkillAction]:
+    async def _handle_product_price_updated(
+        self, event: ProductPriceUpdated
+    ) -> List[SkillAction]:
         """Handle price updates for tracking and analysis."""
         actions = []
 
@@ -341,7 +360,9 @@ class MarketingManagerSkill(BaseSkill):
 
         try:
             # Get budget constraints
-            marketing_budget = constraints.get("marketing_budget", self.max_advertising_budget)
+            marketing_budget = constraints.get(
+                "marketing_budget", self.max_advertising_budget
+            )
             if isinstance(marketing_budget, (int, float)):
                 marketing_budget = Money(int(marketing_budget))
 
@@ -425,7 +446,9 @@ class MarketingManagerSkill(BaseSkill):
         """Create detailed pricing analysis for decision making."""
         try:
             # Calculate price difference
-            price_diff_pct = (current_price.cents - competitor_avg.cents) / competitor_avg.cents
+            price_diff_pct = (
+                current_price.cents - competitor_avg.cents
+            ) / competitor_avg.cents
 
             # Estimate price elasticity (simplified)
             elasticity = self.pricing_elasticity.get(asin, -1.5)  # Default elasticity
@@ -444,7 +467,9 @@ class MarketingManagerSkill(BaseSkill):
                 position = "competitive"
 
             # Calculate profit margin
-            profit_margin = (current_price.cents - cost_estimate.cents) / current_price.cents
+            profit_margin = (
+                current_price.cents - cost_estimate.cents
+            ) / current_price.cents
 
             # Determine recommended action
             if abs(price_diff_pct) > self.price_change_threshold:
@@ -459,9 +484,13 @@ class MarketingManagerSkill(BaseSkill):
 
             # Estimate revenue impact
             demand_change = (
-                elasticity * (optimal_price.cents - current_price.cents) / current_price.cents
+                elasticity
+                * (optimal_price.cents - current_price.cents)
+                / current_price.cents
             )
-            revenue_impact = Money(int(current_price.cents * demand_change * 0.1))  # Simplified
+            revenue_impact = Money(
+                int(current_price.cents * demand_change * 0.1)
+            )  # Simplified
 
             return PricingAnalysis(
                 asin=asin,
@@ -480,7 +509,9 @@ class MarketingManagerSkill(BaseSkill):
             logger.error(f"Error creating pricing analysis: {e}")
             return None
 
-    async def _create_pricing_action(self, analysis: PricingAnalysis) -> Optional[SkillAction]:
+    async def _create_pricing_action(
+        self, analysis: PricingAnalysis
+    ) -> Optional[SkillAction]:
         """Create pricing action based on analysis."""
         try:
             # Calculate confidence based on data quality and market conditions
@@ -528,7 +559,8 @@ class MarketingManagerSkill(BaseSkill):
                 priority=priority,
                 resource_requirements={"pricing_authority": True},
                 expected_outcome={
-                    "price_change": new_price.to_float() - analysis.current_price.to_float(),
+                    "price_change": new_price.to_float()
+                    - analysis.current_price.to_float(),
                     "demand_impact": analysis.demand_forecast - 1.0,
                     "revenue_impact": analysis.revenue_impact.cents,
                 },
@@ -549,7 +581,9 @@ class MarketingManagerSkill(BaseSkill):
         for competitor in event.competitors:
             # If competitor raised prices significantly, opportunity for increased advertising
             if len(self.competitor_prices.get(competitor.asin, [])) >= 2:
-                recent_prices = [p[1] for p in self.competitor_prices[competitor.asin][-2:]]
+                recent_prices = [
+                    p[1] for p in self.competitor_prices[competitor.asin][-2:]
+                ]
                 if len(recent_prices) == 2:
                     price_increase_pct = (
                         recent_prices[1].cents - recent_prices[0].cents
@@ -569,7 +603,9 @@ class MarketingManagerSkill(BaseSkill):
         """Create advertising action based on competitive opportunity."""
         try:
             # Calculate campaign budget based on opportunity strength
-            base_budget = min(self.max_advertising_budget.cents // 10, 50000)  # Max $500
+            base_budget = min(
+                self.max_advertising_budget.cents // 10, 50000
+            )  # Max $500
             campaign_budget = Money(int(base_budget * (1 + opportunity_strength)))
 
             # Generate campaign parameters
@@ -595,7 +631,10 @@ class MarketingManagerSkill(BaseSkill):
                 confidence=0.7 + min(0.2, opportunity_strength),
                 reasoning=reasoning,
                 priority=0.6 + min(0.3, opportunity_strength),
-                resource_requirements={"budget": campaign_budget.cents, "campaign_slots": 1},
+                resource_requirements={
+                    "budget": campaign_budget.cents,
+                    "campaign_slots": 1,
+                },
                 expected_outcome={
                     "sales_lift": opportunity_strength * 0.5,
                     "market_share_gain": opportunity_strength * 0.3,
@@ -616,9 +655,12 @@ class MarketingManagerSkill(BaseSkill):
         for asin in self.price_history.keys():
             if self.competitor_prices.get(asin):
                 current_price = self.price_history[asin][-1][1]
-                recent_competitor_prices = [p[1] for p in self.competitor_prices[asin][-3:]]
+                recent_competitor_prices = [
+                    p[1] for p in self.competitor_prices[asin][-3:]
+                ]
                 avg_competitor_price = Money(
-                    sum(p.cents for p in recent_competitor_prices) // len(recent_competitor_prices)
+                    sum(p.cents for p in recent_competitor_prices)
+                    // len(recent_competitor_prices)
                 )
 
                 analysis = await self._create_pricing_analysis(
@@ -701,7 +743,9 @@ class MarketingManagerSkill(BaseSkill):
         base_confidence = 0.7
 
         # Adjust based on data quality
-        data_quality = 0.9 if len(self.price_history.get(analysis.asin, [])) > 10 else 0.6
+        data_quality = (
+            0.9 if len(self.price_history.get(analysis.asin, [])) > 10 else 0.6
+        )
 
         # Adjust based on market volatility
         volatility_penalty = (
@@ -711,7 +755,9 @@ class MarketingManagerSkill(BaseSkill):
         # Adjust based on profit margin safety
         margin_confidence = min(1.0, analysis.profit_margin / self.target_profit_margin)
 
-        confidence = base_confidence * data_quality * margin_confidence - volatility_penalty
+        confidence = (
+            base_confidence * data_quality * margin_confidence - volatility_penalty
+        )
         return max(0.3, min(0.95, confidence))
 
     async def _update_price_elasticity(self, asin: str):
@@ -731,7 +777,9 @@ class MarketingManagerSkill(BaseSkill):
                     prev_sale = recent_sales[i - 1]
                     curr_sale = recent_sales[i]
 
-                    price_change = (curr_sale[2].cents - prev_sale[2].cents) / prev_sale[2].cents
+                    price_change = (
+                        curr_sale[2].cents - prev_sale[2].cents
+                    ) / prev_sale[2].cents
                     qty_change = (curr_sale[1] - prev_sale[1]) / max(prev_sale[1], 1)
 
                     if abs(price_change) > 0.01:  # Only if significant price change
@@ -812,7 +860,9 @@ class MarketingManagerSkill(BaseSkill):
                             time_horizon="short_term",
                             impact_assessment=f"Market prices trending {direction} by {abs(price_change):.1%}",
                             recommended_response=(
-                                "adjust_pricing_strategy" if strength > 0.7 else "monitor"
+                                "adjust_pricing_strategy"
+                                if strength > 0.7
+                                else "monitor"
                             ),
                         )
                         trends.append(trend)
@@ -822,7 +872,9 @@ class MarketingManagerSkill(BaseSkill):
 
         return trends
 
-    async def _create_trend_response_action(self, trend: MarketTrend) -> Optional[SkillAction]:
+    async def _create_trend_response_action(
+        self, trend: MarketTrend
+    ) -> Optional[SkillAction]:
         """Create action to respond to identified market trend."""
         try:
             if (
@@ -866,7 +918,9 @@ class MarketingManagerSkill(BaseSkill):
         for asin in target_asins:
             if asin in self.price_history and asin in self.competitor_prices:
                 current_price = self.price_history[asin][-1][1]
-                recent_competitor_prices = [p[1] for p in self.competitor_prices[asin][-3:]]
+                recent_competitor_prices = [
+                    p[1] for p in self.competitor_prices[asin][-3:]
+                ]
                 if recent_competitor_prices:
                     avg_competitor_price = Money(
                         sum(p.cents for p in recent_competitor_prices)
@@ -901,18 +955,24 @@ class MarketingManagerSkill(BaseSkill):
             if asin in self.sales_performance:
                 recent_sales = self.sales_performance[asin][-5:]
                 if recent_sales:
-                    avg_daily_sales = sum(sale[1] for sale in recent_sales) / len(recent_sales)
+                    avg_daily_sales = sum(sale[1] for sale in recent_sales) / len(
+                        recent_sales
+                    )
                     if avg_daily_sales < 5:  # Low sales volume
                         campaign_budget = Money(
                             min(remaining_budget.cents // 2, 50000)
                         )  # Max $500 per campaign
 
-                        campaign_action = await self._create_advertising_campaign_action(
-                            asin, campaign_budget
+                        campaign_action = (
+                            await self._create_advertising_campaign_action(
+                                asin, campaign_budget
+                            )
                         )
                         if campaign_action:
                             actions.append(campaign_action)
-                            remaining_budget = Money(remaining_budget.cents - campaign_budget.cents)
+                            remaining_budget = Money(
+                                remaining_budget.cents - campaign_budget.cents
+                            )
 
         return actions
 
@@ -921,7 +981,9 @@ class MarketingManagerSkill(BaseSkill):
     ) -> Optional[SkillAction]:
         """Create advertising campaign action for specific product."""
         try:
-            campaign_id = f"performance_boost_{asin}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            campaign_id = (
+                f"performance_boost_{asin}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            )
 
             return SkillAction(
                 action_type="run_marketing_campaign",
@@ -951,7 +1013,9 @@ class MarketingManagerSkill(BaseSkill):
             logger.error(f"Error creating advertising campaign action: {e}")
             return None
 
-    async def _create_price_impact_analysis_action(self, event: ProductPriceUpdated) -> SkillAction:
+    async def _create_price_impact_analysis_action(
+        self, event: ProductPriceUpdated
+    ) -> SkillAction:
         """Create action to analyze price change impact."""
         return SkillAction(
             action_type="analyze_price_impact",
@@ -968,7 +1032,9 @@ class MarketingManagerSkill(BaseSkill):
             skill_source=self.skill_name,
         )
 
-    async def _analyze_campaign_performance(self, event: SaleOccurred) -> List[SkillAction]:
+    async def _analyze_campaign_performance(
+        self, event: SaleOccurred
+    ) -> List[SkillAction]:
         """Analyze if sale was influenced by active campaigns."""
         actions = []
 
@@ -984,7 +1050,9 @@ class MarketingManagerSkill(BaseSkill):
 
             # Simple attribution - assume sale was influenced by campaign
             self.campaign_performance[campaign.campaign_id]["attributed_sales"] = (
-                self.campaign_performance[campaign.campaign_id].get("attributed_sales", 0)
+                self.campaign_performance[campaign.campaign_id].get(
+                    "attributed_sales", 0
+                )
                 + event.units_sold
             )
 
@@ -1019,7 +1087,9 @@ class MarketingManagerSkill(BaseSkill):
 
         return optimization_results
 
-    async def adjust_pricing_strategy(self, market_conditions: Dict[str, Any]) -> Dict[str, Money]:
+    async def adjust_pricing_strategy(
+        self, market_conditions: Dict[str, Any]
+    ) -> Dict[str, Money]:
         """Adjust pricing strategy based on market conditions."""
         price_adjustments = {}
 
@@ -1030,7 +1100,9 @@ class MarketingManagerSkill(BaseSkill):
                     sum(p[1].cents for p in self.competitor_prices[asin][-3:]) // 3
                 )
 
-                analysis = await self._create_pricing_analysis(asin, current_price, competitor_avg)
+                analysis = await self._create_pricing_analysis(
+                    asin, current_price, competitor_avg
+                )
                 if analysis and analysis.recommended_action != "maintain":
                     price_adjustments[asin] = analysis.optimal_price
 

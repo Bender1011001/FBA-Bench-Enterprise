@@ -139,7 +139,14 @@ class InMemoryEventBus(EventBus):
         # Pre-compiled redaction configuration
         self._redact_key_patterns: List[re.Pattern] = [
             re.compile(pat, re.IGNORECASE)
-            for pat in ["password", "api_key", "token", "secret", "authorization", "cookie"]
+            for pat in [
+                "password",
+                "api_key",
+                "token",
+                "secret",
+                "authorization",
+                "cookie",
+            ]
         ]
 
         self._started: bool = False
@@ -158,7 +165,9 @@ class InMemoryEventBus(EventBus):
         if self._queue is None:
             self._queue = asyncio.Queue()
         # use create_task within the currently running loop
-        self._runner_task = loop.create_task(self._runner(), name="InMemoryEventBusRunner")
+        self._runner_task = loop.create_task(
+            self._runner(), name="InMemoryEventBusRunner"
+        )
         self._started = True
         logger.debug("InMemoryEventBus started")
 
@@ -307,7 +316,11 @@ class InMemoryEventBus(EventBus):
                         summary = self._event_to_summary(event)
                         safe_summary = self._redact_sensitive(summary)
                         self._recorded.append(
-                            {"event_type": event_type, "timestamp": ts, "data": safe_summary}
+                            {
+                                "event_type": event_type,
+                                "timestamp": ts,
+                                "data": safe_summary,
+                            }
                         )
                     else:
                         if not self._recording_truncated:
@@ -327,7 +340,8 @@ class InMemoryEventBus(EventBus):
             if handlers:
                 try:
                     await asyncio.gather(
-                        *(self._safe_invoke(h, event) for h in handlers), return_exceptions=True
+                        *(self._safe_invoke(h, event) for h in handlers),
+                        return_exceptions=True,
                     )
                 except Exception:
                     # Swallow to keep publish resilient
@@ -401,7 +415,9 @@ class InMemoryEventBus(EventBus):
             return selector
         if isinstance(selector, str):
             return selector
-        raise TypeError(f"Unsupported event selector type: {type(selector)}. Use type or str.")
+        raise TypeError(
+            f"Unsupported event selector type: {type(selector)}. Use type or str."
+        )
 
     async def unsubscribe(self, handle: SubscriptionHandle) -> None:
         """
@@ -614,7 +630,9 @@ class InMemoryEventBus(EventBus):
                                 self._recording_truncated = True
                     except Exception as rec_e:
                         # Defensive: never crash the bus due to recording failure
-                        logger.warning("Failed to record event %s: %s", event_type, rec_e)
+                        logger.warning(
+                            "Failed to record event %s: %s", event_type, rec_e
+                        )
                         try:
                             # Append minimal error record if capacity allows
                             if len(self._recorded) < self._recording_max:
@@ -653,7 +671,9 @@ class InMemoryEventBus(EventBus):
                 loop = asyncio.get_running_loop()
                 if self._started and loop.is_running():
                     await asyncio.sleep(0.01)
-                    asyncio.create_task(self._runner(), name="InMemoryEventBusRunner-Restarted")
+                    asyncio.create_task(
+                        self._runner(), name="InMemoryEventBusRunner-Restarted"
+                    )
             except Exception:
                 # If we cannot confirm a healthy loop, exit
                 return
@@ -693,7 +713,10 @@ class InMemoryEventBus(EventBus):
             await handler(event)
         except Exception as e:
             logger.error(
-                "Event handler error for %s: %s", self._event_type_name(event), e, exc_info=True
+                "Event handler error for %s: %s",
+                self._event_type_name(event),
+                e,
+                exc_info=True,
             )
 
     def _wrap_handler(self, handler: Any) -> Handler:
@@ -778,7 +801,10 @@ class InMemoryEventBus(EventBus):
             return v.isoformat()
         # Dict
         if isinstance(v, dict):
-            return {str(self._to_jsonable(k)): self._to_jsonable(val) for k, val in v.items()}
+            return {
+                str(self._to_jsonable(k)): self._to_jsonable(val)
+                for k, val in v.items()
+            }
         # List/Tuple
         if isinstance(v, (list, tuple)):
             return [self._to_jsonable(i) for i in v]
@@ -832,7 +858,12 @@ class InMemoryEventBus(EventBus):
         }
 
     def _redact_sensitive(
-        self, data: Any, *, max_depth: int = 20, _depth: int = 0, _seen: Optional[Set[int]] = None
+        self,
+        data: Any,
+        *,
+        max_depth: int = 20,
+        _depth: int = 0,
+        _seen: Optional[Set[int]] = None,
     ) -> Any:
         """
         Return a deep-copied, redacted version of data.
@@ -873,7 +904,9 @@ class InMemoryEventBus(EventBus):
         # List/Tuple
         if isinstance(data, (list, tuple)):
             return [
-                self._redact_sensitive(i, max_depth=max_depth, _depth=_depth + 1, _seen=_seen)
+                self._redact_sensitive(
+                    i, max_depth=max_depth, _depth=_depth + 1, _seen=_seen
+                )
                 for i in data
             ]
 
@@ -895,7 +928,9 @@ class InMemoryEventBus(EventBus):
     def get_stats(self) -> Dict[str, Any]:
         """Basic bus stats for introspection."""
         try:
-            pending = len([t for t in getattr(self, "_handler_tasks", set()) if not t.done()])
+            pending = len(
+                [t for t in getattr(self, "_handler_tasks", set()) if not t.done()]
+            )
         except Exception:
             pending = 0
         return {

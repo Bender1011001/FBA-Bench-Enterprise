@@ -24,10 +24,11 @@ import requests
 # Add project root to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+from memory_experiments.dual_memory_manager import DualMemoryManager
+
 from agents.hierarchical_planner import StrategicPlanner
 from agents.skill_coordinator import SkillCoordinator
 from event_bus import EventBus
-from memory_experiments.dual_memory_manager import DualMemoryManager
 
 logger = logging.getLogger(__name__)
 
@@ -134,7 +135,9 @@ class DocumentationAndExamplesTestSuite:
 
         return environment
 
-    async def _extract_code_blocks_from_markdown(self, markdown_content: str) -> List[str]:
+    async def _extract_code_blocks_from_markdown(
+        self, markdown_content: str
+    ) -> List[str]:
         """Extracts Python code blocks from markdown content."""
         code_blocks = []
         in_code_block = False
@@ -198,7 +201,11 @@ class DocumentationAndExamplesTestSuite:
                             spec=StrategicPlanner,
                             create_strategic_plan=lambda *a, **kw: asyncio.sleep(0.01)
                             or [{"objective": "improve"}],
-                            validate_action_alignment=lambda *a, **kw: (True, 0.9, "reasoning"),
+                            validate_action_alignment=lambda *a, **kw: (
+                                True,
+                                0.9,
+                                "reasoning",
+                            ),
                         ),
                     ),
                     patch(
@@ -268,21 +275,27 @@ class DocumentationAndExamplesTestSuite:
                                     code_content = f.read()
 
                                 # Execute the file
-                                success, error_msg = await self._execute_python_code_snippet(
-                                    code_content, file_name
+                                success, error_msg = (
+                                    await self._execute_python_code_snippet(
+                                        code_content, file_name
+                                    )
                                 )
                                 example_execution_results[str(file_path)] = {
                                     "success": success,
                                     "error": error_msg,
                                 }
                                 if not success:
-                                    logger.error(f"Example {file_path} failed: {error_msg}")
+                                    logger.error(
+                                        f"Example {file_path} failed: {error_msg}"
+                                    )
                             except Exception as e:
                                 example_execution_results[str(file_path)] = {
                                     "success": False,
                                     "error": str(e),
                                 }
-                                logger.error(f"Failed to read or execute example {file_path}: {e}")
+                                logger.error(
+                                    f"Failed to read or execute example {file_path}: {e}"
+                                )
 
             # Extract code blocks from markdown files as well
             for doc_file_path in environment["doc_files"]:
@@ -301,8 +314,10 @@ class DocumentationAndExamplesTestSuite:
                                 f"Executing code block from {doc_file_path.name}: Block {i}"
                             )
 
-                            success, error_msg = await self._execute_python_code_snippet(
-                                code_block, temp_file_name
+                            success, error_msg = (
+                                await self._execute_python_code_snippet(
+                                    code_block, temp_file_name
+                                )
                             )
                             example_execution_results[f"{doc_file_path!s}:Block{i}"] = {
                                 "success": success,
@@ -313,10 +328,14 @@ class DocumentationAndExamplesTestSuite:
                                     f"Code block from {doc_file_path.name} (Block {i}) failed: {error_msg}"
                                 )
                     except Exception as e:
-                        logger.error(f"Error processing markdown file {doc_file_path}: {e}")
+                        logger.error(
+                            f"Error processing markdown file {doc_file_path}: {e}"
+                        )
 
             # Calculate overall success
-            passed_examples = sum(1 for r in example_execution_results.values() if r["success"])
+            passed_examples = sum(
+                1 for r in example_execution_results.values() if r["success"]
+            )
             overall_success = passed_examples == total_examples and total_examples > 0
 
             details = {
@@ -363,7 +382,9 @@ class DocumentationAndExamplesTestSuite:
 
             # Example: Check if API version in LLM_contract.md matches a hardcoded or derived version
             llm_contract_file = Path(
-                os.path.join(Path(__file__).parent.parent.parent, "docs", "LLM_contract.md")
+                os.path.join(
+                    Path(__file__).parent.parent.parent, "docs", "LLM_contract.md"
+                )
             )
             if llm_contract_file.exists():
                 with open(llm_contract_file, encoding="utf-8") as f:
@@ -375,7 +396,9 @@ class DocumentationAndExamplesTestSuite:
 
                 # Check for "Core LLM API Endpoints" section
                 has_api_endpoints_section = "## Core LLM API Endpoints" in content
-                consistency_checks["LLM_contract_api_endpoints_section"] = has_api_endpoints_section
+                consistency_checks["LLM_contract_api_endpoints_section"] = (
+                    has_api_endpoints_section
+                )
 
                 if not (has_version_1_0 and has_api_endpoints_section):
                     overall_consistent = False
@@ -389,7 +412,8 @@ class DocumentationAndExamplesTestSuite:
             # Example: Check if key issues documented in Key-Issues-and-Proposed-Changes-Ver.txt are consistently referenced
             key_issues_file = Path(
                 os.path.join(
-                    Path(__file__).parent.parent.parent, "Key-Issues-and-Proposed-Changes-Ver.txt"
+                    Path(__file__).parent.parent.parent,
+                    "Key-Issues-and-Proposed-Changes-Ver.txt",
                 )
             )
             if key_issues_file.exists():
@@ -406,8 +430,12 @@ class DocumentationAndExamplesTestSuite:
                     "Missing Features",
                 ]
 
-                all_issues_referenced = all(issue in content for issue in expected_issues)
-                consistency_checks["Key_Issues_document_completeness"] = all_issues_referenced
+                all_issues_referenced = all(
+                    issue in content for issue in expected_issues
+                )
+                consistency_checks["Key_Issues_document_completeness"] = (
+                    all_issues_referenced
+                )
                 if not all_issues_referenced:
                     overall_consistent = False
             else:
@@ -467,8 +495,15 @@ class DocumentationAndExamplesTestSuite:
 
             # Map example files to components
             component_examples_found = {
-                "agents": ["advanced_agent.py", "hierarchical_planner.py", "skill_coordinator.py"],
-                "memory_experiments": ["dual_memory_manager.py", "reflection_module.py"],
+                "agents": [
+                    "advanced_agent.py",
+                    "hierarchical_planner.py",
+                    "skill_coordinator.py",
+                ],
+                "memory_experiments": [
+                    "dual_memory_manager.py",
+                    "reflection_module.py",
+                ],
                 "reproducibility": ["llm_cache.py", "sim_seed.py"],
                 "infrastructure": ["llm_batcher.py", "performance_monitor.py"],
                 "observability": ["trace_analyzer.py", "alert_system.py"],
@@ -500,7 +535,9 @@ class DocumentationAndExamplesTestSuite:
                         break
                 major_components_with_examples[comp] = found_for_comp
 
-            completeness_status["major_components_covered"] = major_components_with_examples
+            completeness_status["major_components_covered"] = (
+                major_components_with_examples
+            )
 
             # Overall completeness check
             overall_complete = all(major_components_with_examples.values())
@@ -559,7 +596,8 @@ class DocumentationAndExamplesTestSuite:
 
             except Exception as e:
                 logger.error(
-                    f"Execution of test method {test_method.__name__} crashed: {e}", exc_info=True
+                    f"Execution of test method {test_method.__name__} crashed: {e}",
+                    exc_info=True,
                 )
                 results.append(
                     DocExampleTestResult(
@@ -606,7 +644,9 @@ class DocumentationAndExamplesTestSuite:
         try:
             if self.temp_dir and os.path.exists(self.temp_dir):
                 shutil.rmtree(self.temp_dir)
-                logger.info("Documentation and examples test environment cleanup completed")
+                logger.info(
+                    "Documentation and examples test environment cleanup completed"
+                )
         except Exception as e:
             logger.error(f"Cleanup error: {e}")
 
@@ -615,7 +655,8 @@ class DocumentationAndExamplesTestSuite:
 async def main():
     """Run documentation and examples testing suite."""
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     test_suite = DocumentationAndExamplesTestSuite()

@@ -23,7 +23,9 @@ class SimulationNotFoundError(AppError):
     Raised when a simulation cannot be found.
     """
 
-    def __init__(self, simulation_id: str, detail: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(
+        self, simulation_id: str, detail: Optional[Dict[str, Any]] = None
+    ) -> None:
         data: Dict[str, Any] = {"simulation_id": simulation_id}
         if isinstance(detail, dict):
             data.update(detail)

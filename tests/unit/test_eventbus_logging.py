@@ -115,7 +115,11 @@ async def test_log_event_redacts_sensitive_fields(caplog, monkeypatch):
 
     # Redaction occurs over the summary; metadata should be redacted
     # Depending on summary path, metadata could be nested under 'metadata'
-    meta = logged_event.get("metadata") if isinstance(logged_event.get("metadata"), dict) else None
+    meta = (
+        logged_event.get("metadata")
+        if isinstance(logged_event.get("metadata"), dict)
+        else None
+    )
     assert meta is not None, "Expected metadata in logged event summary"
     assert meta.get("api_key") == "[redacted]", "api_key should be redacted"
     assert isinstance(meta.get("nested"), dict)

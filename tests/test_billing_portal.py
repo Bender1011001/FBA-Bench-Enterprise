@@ -1,25 +1,21 @@
 """Tests for the Stripe Billing Portal endpoint."""
 
-import os
-from unittest.mock import MagicMock, patch
 from datetime import datetime
+from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest
+from api.db import Base, get_db
+from api.models import User
+from api.routers.billing import stripe
+from api.security.jwt import create_access_token
+from api.security.passwords import hash_password
+from api.server import app
 from fastapi.testclient import TestClient
-from fastapi import FastAPI, Depends
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 from stripe.error import StripeError
-
-from api.server import app
-from api.db import get_db, Base
-from api.models import User
-from api.security.passwords import hash_password
-from api.security.jwt import create_access_token
-from api.routers.billing import stripe
-
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 
@@ -74,10 +70,7 @@ def create_test_user(db, email: str, password: str, active: bool = True):
 
 def get_auth_token(db, user):
     """Helper to create an access token for the user."""
-    claims = {
-        "sub": user.id,
-        "email": user.email
-    }
+    claims = {"sub": user.id, "email": user.email}
     return create_access_token(claims)
 
 
@@ -119,7 +112,9 @@ class TestPortalSession:
         # Mock stripe.Customer.list to return empty
         mock_customers = MagicMock()
         mock_customers.data = []
-        monkeypatch.setattr(stripe.Customer, "list", MagicMock(return_value=mock_customers))
+        monkeypatch.setattr(
+            stripe.Customer, "list", MagicMock(return_value=mock_customers)
+        )
 
         # Create user and token
         db = TestingSessionLocal(bind=engine.connect())
@@ -149,12 +144,18 @@ class TestPortalSession:
         mock_customer.id = "cus_test"
         mock_customers = MagicMock()
         mock_customers.data = [mock_customer]
-        monkeypatch.setattr(stripe.Customer, "list", MagicMock(return_value=mock_customers))
+        monkeypatch.setattr(
+            stripe.Customer, "list", MagicMock(return_value=mock_customers)
+        )
 
         # Mock stripe.billing_portal.Session.create
         mock_session = MagicMock()
         mock_session.url = "https://stripe.test/portal"
-        monkeypatch.setattr(stripe.billing_portal.Session, "create", MagicMock(return_value=mock_session))
+        monkeypatch.setattr(
+            stripe.billing_portal.Session,
+            "create",
+            MagicMock(return_value=mock_session),
+        )
 
         # Create user and token
         db = TestingSessionLocal(bind=engine.connect())
@@ -174,8 +175,7 @@ class TestPortalSession:
 
             # Assert Session.create called with customer="cus_test" and return_url "http://localhost:5173/account"
             stripe.billing_portal.Session.create.assert_called_once_with(
-                customer="cus_test",
-                return_url="http://localhost:5173/account"
+                customer="cus_test", return_url="http://localhost:5173/account"
             )
         finally:
             db.close()
@@ -192,12 +192,18 @@ class TestPortalSession:
         mock_customer.id = "cus_test"
         mock_customers = MagicMock()
         mock_customers.data = [mock_customer]
-        monkeypatch.setattr(stripe.Customer, "list", MagicMock(return_value=mock_customers))
+        monkeypatch.setattr(
+            stripe.Customer, "list", MagicMock(return_value=mock_customers)
+        )
 
         # Mock stripe.billing_portal.Session.create
         mock_session = MagicMock()
         mock_session.url = "https://stripe.test/portal"
-        monkeypatch.setattr(stripe.billing_portal.Session, "create", MagicMock(return_value=mock_session))
+        monkeypatch.setattr(
+            stripe.billing_portal.Session,
+            "create",
+            MagicMock(return_value=mock_session),
+        )
 
         # Create user and token
         db = TestingSessionLocal(bind=engine.connect())
@@ -215,8 +221,7 @@ class TestPortalSession:
 
             # Assert used custom return_url
             stripe.billing_portal.Session.create.assert_called_once_with(
-                customer="cus_test",
-                return_url="https://custom.return/url"
+                customer="cus_test", return_url="https://custom.return/url"
             )
         finally:
             db.close()
@@ -232,10 +237,16 @@ class TestPortalSession:
         mock_customer.id = "cus_test"
         mock_customers = MagicMock()
         mock_customers.data = [mock_customer]
-        monkeypatch.setattr(stripe.Customer, "list", MagicMock(return_value=mock_customers))
+        monkeypatch.setattr(
+            stripe.Customer, "list", MagicMock(return_value=mock_customers)
+        )
 
         # Mock Session.create to raise StripeError
-        monkeypatch.setattr(stripe.billing_portal.Session, "create", MagicMock(side_effect=StripeError("test stripe error")))
+        monkeypatch.setattr(
+            stripe.billing_portal.Session,
+            "create",
+            MagicMock(side_effect=StripeError("test stripe error")),
+        )
 
         # Create user and token
         db = TestingSessionLocal(bind=engine.connect())

@@ -24,8 +24,9 @@ import sys
 import uuid
 from datetime import datetime
 
-from events import ProductPriceUpdated, SetPriceCommand
 from money import Money
+
+from events import ProductPriceUpdated, SetPriceCommand
 
 
 # Simplified classes for demo (adapted from test_worldstore_standalone.py for standalone run)

@@ -14,11 +14,12 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
+from money import Money
+
 from config.model_config import get_model_params
 from fba_events.base import BaseEvent
 from fba_events.sales import SaleOccurred
 from fba_events.time_events import TickEvent
-from money import Money
 
 from .base_skill import BaseSkill, SkillAction, SkillContext
 
@@ -177,7 +178,9 @@ class FinancialAnalystSkill(BaseSkill):
     and optimize resource allocation.
     """
 
-    def __init__(self, agent_id: str, event_bus, config: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, agent_id: str, event_bus, config: Optional[Dict[str, Any]] = None
+    ):
         """
         Initialize the Financial Analyst Skill.
 
@@ -203,7 +206,9 @@ class FinancialAnalystSkill(BaseSkill):
             self.config.get("critical_threshold", self._mp.critical_threshold)
         )
         self.min_cash_reserve = Money(
-            self.config.get("min_cash_reserve_cents", int(self._mp.min_cash_reserve_cents))
+            self.config.get(
+                "min_cash_reserve_cents", int(self._mp.min_cash_reserve_cents)
+            )
         )
         self.adaptation_parameters = self.config.get(
             "adaptation_parameters", {}
@@ -285,9 +290,13 @@ class FinancialAnalystSkill(BaseSkill):
                 actions.extend(await self._handle_tick_event(event))
 
             # Filter actions by confidence threshold
-            confidence_threshold = self.adaptation_parameters.get("confidence_threshold", 0.6)
+            confidence_threshold = self.adaptation_parameters.get(
+                "confidence_threshold", 0.6
+            )
             filtered_actions = [
-                action for action in actions if action.confidence >= confidence_threshold
+                action
+                for action in actions
+                if action.confidence >= confidence_threshold
             ]
 
             return filtered_actions if filtered_actions else None
@@ -374,7 +383,9 @@ class FinancialAnalystSkill(BaseSkill):
 
         try:
             # Analyze current financial position
-            current_financial_state = await self._analyze_current_financial_state(context)
+            current_financial_state = await self._analyze_current_financial_state(
+                context
+            )
 
             # Generate budget recommendations
             budget_actions = await self._generate_budget_recommendations(
@@ -383,7 +394,10 @@ class FinancialAnalystSkill(BaseSkill):
             actions.extend(budget_actions)
 
             # Generate cost optimization recommendations
-            if current_financial_state.get("cash_position", "healthy") in ["warning", "critical"]:
+            if current_financial_state.get("cash_position", "healthy") in [
+                "warning",
+                "critical",
+            ]:
                 cost_actions = await self._generate_cost_reduction_actions(constraints)
                 actions.extend(cost_actions)
 
@@ -396,7 +410,8 @@ class FinancialAnalystSkill(BaseSkill):
 
             # Sort by financial impact and urgency
             actions.sort(
-                key=lambda x: x.priority * self._calculate_financial_impact_score(x), reverse=True
+                key=lambda x: x.priority * self._calculate_financial_impact_score(x),
+                reverse=True,
             )
 
             return actions
@@ -507,7 +522,9 @@ class FinancialAnalystSkill(BaseSkill):
             )
 
         except Exception:
-            logger.exception(f"Error creating budget alert action for agent {self.agent_id}")
+            logger.exception(
+                f"Error creating budget alert action for agent {self.agent_id}"
+            )
             return None
 
     async def _assess_financial_health(self) -> List[SkillAction]:
@@ -520,15 +537,21 @@ class FinancialAnalystSkill(BaseSkill):
         burn_rate = self._calculate_burn_rate()
 
         # Generate health assessment
-        health_score = self._calculate_financial_health_score(profit_margin, cash_runway, burn_rate)
+        health_score = self._calculate_financial_health_score(
+            profit_margin, cash_runway, burn_rate
+        )
 
         # Generate recommendations based on health score
         if health_score < 0.5:  # Poor financial health
-            health_action = await self._create_financial_health_action(health_score, "poor")
+            health_action = await self._create_financial_health_action(
+                health_score, "poor"
+            )
             if health_action:
                 actions.append(health_action)
         elif health_score < 0.7:  # Moderate financial health
-            health_action = await self._create_financial_health_action(health_score, "moderate")
+            health_action = await self._create_financial_health_action(
+                health_score, "moderate"
+            )
             if health_action:
                 actions.append(health_action)
 
@@ -573,12 +596,17 @@ class FinancialAnalystSkill(BaseSkill):
                 reasoning=f"Financial health assessment: {health_level} (score: {health_score:.2f})",
                 priority=priority,
                 resource_requirements={"financial_planning_authority": True},
-                expected_outcome={"financial_stability_improvement": 0.3, "risk_mitigation": 0.4},
+                expected_outcome={
+                    "financial_stability_improvement": 0.3,
+                    "risk_mitigation": 0.4,
+                },
                 skill_source=self.skill_name,
             )
 
         except Exception:
-            logger.exception(f"Error creating financial health action for agent {self.agent_id}")
+            logger.exception(
+                f"Error creating financial health action for agent {self.agent_id}"
+            )
             return None
 
     async def _identify_cost_optimizations(self) -> List[SkillAction]:
@@ -587,9 +615,13 @@ class FinancialAnalystSkill(BaseSkill):
 
         # Analyze each expense category for optimization potential
         for category, allocation in self.budget_allocations.items():
-            optimization = await self._analyze_category_optimization(category, allocation)
+            optimization = await self._analyze_category_optimization(
+                category, allocation
+            )
             if optimization and optimization.potential_savings.cents > 0:
-                optimization_action = await self._create_cost_optimization_action(optimization)
+                optimization_action = await self._create_cost_optimization_action(
+                    optimization
+                )
                 if optimization_action:
                     actions.append(optimization_action)
 
@@ -605,13 +637,17 @@ class FinancialAnalystSkill(BaseSkill):
                 return None
 
             # Simplified optimization analysis
-            optimization_potential = self._calculate_optimization_potential(category, allocation)
+            optimization_potential = self._calculate_optimization_potential(
+                category, allocation
+            )
 
             if optimization_potential > 0.1:  # At least 10% savings potential
                 potential_savings = Money(
                     int(allocation.spent_amount.cents * optimization_potential)
                 )
-                optimized_spend = Money(allocation.spent_amount.cents - potential_savings.cents)
+                optimized_spend = Money(
+                    allocation.spent_amount.cents - potential_savings.cents
+                )
 
                 return CostOptimization(
                     optimization_id=f"{category.value}_opt_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
@@ -629,7 +665,9 @@ class FinancialAnalystSkill(BaseSkill):
             return None
 
         except Exception:
-            logger.exception(f"Error analyzing category optimization for agent {self.agent_id}")
+            logger.exception(
+                f"Error analyzing category optimization for agent {self.agent_id}"
+            )
             return None
 
     def _calculate_optimization_potential(
@@ -696,7 +734,9 @@ class FinancialAnalystSkill(BaseSkill):
             )
 
         except Exception:
-            logger.exception(f"Error creating cost optimization action for agent {self.agent_id}")
+            logger.exception(
+                f"Error creating cost optimization action for agent {self.agent_id}"
+            )
             return None
 
     async def _forecast_cashflow(self) -> List[SkillAction]:
@@ -717,7 +757,9 @@ class FinancialAnalystSkill(BaseSkill):
 
         return actions
 
-    async def _generate_financial_forecast(self, period: str) -> Optional[FinancialForecast]:
+    async def _generate_financial_forecast(
+        self, period: str
+    ) -> Optional[FinancialForecast]:
         """Generate financial forecast for specified period using Holt-Winters if available, else MA fallback."""
         try:
             # Need some historical revenue data to forecast
@@ -775,7 +817,11 @@ class FinancialAnalystSkill(BaseSkill):
             ):
                 # Use Holt-Winters additive trend/seasonal if enough data, otherwise trend-only
                 try:
-                    seasonal = "add" if len(y) >= int(self._mp.hw_seasonal_period) * 2 else None
+                    seasonal = (
+                        "add"
+                        if len(y) >= int(self._mp.hw_seasonal_period) * 2
+                        else None
+                    )
                     model = ExponentialSmoothing(  # type: ignore
                         y,
                         trend="add",
@@ -785,7 +831,9 @@ class FinancialAnalystSkill(BaseSkill):
                     fit = model.fit(optimized=True, use_brute=True)
                     forecast_vals = fit.forecast(days)
                     # Sum forecasted daily revenues
-                    revenue_projection_cents = int(sum(max(0.0, float(v)) for v in forecast_vals))
+                    revenue_projection_cents = int(
+                        sum(max(0.0, float(v)) for v in forecast_vals)
+                    )
                     # Confidence based on in-sample MAPE
                     import numpy as np  # type: ignore
 
@@ -795,7 +843,11 @@ class FinancialAnalystSkill(BaseSkill):
                     mape = float(
                         np.mean(
                             np.abs(
-                                (np.array(y, dtype=float) - np.array(fitted, dtype=float)) / denom
+                                (
+                                    np.array(y, dtype=float)
+                                    - np.array(fitted, dtype=float)
+                                )
+                                / denom
                             )
                         )
                     )
@@ -821,8 +873,12 @@ class FinancialAnalystSkill(BaseSkill):
             expense_projection = Money(int(daily_burn.cents * days))
 
             # Profit and cashflow
-            profit_projection = Money(revenue_projection.cents - expense_projection.cents)
-            current_cash_projection = Money(self.current_cash.cents + profit_projection.cents)
+            profit_projection = Money(
+                revenue_projection.cents - expense_projection.cents
+            )
+            current_cash_projection = Money(
+                self.current_cash.cents + profit_projection.cents
+            )
 
             return FinancialForecast(
                 forecast_period=period,
@@ -848,7 +904,9 @@ class FinancialAnalystSkill(BaseSkill):
                 ],
             )
         except Exception:
-            logger.exception(f"Error generating financial forecast for agent {self.agent_id}")
+            logger.exception(
+                f"Error generating financial forecast for agent {self.agent_id}"
+            )
             return None
 
     async def _create_cashflow_alert_action(
@@ -890,7 +948,9 @@ class FinancialAnalystSkill(BaseSkill):
             )
 
         except Exception:
-            logger.exception(f"Error creating cashflow alert action for agent {self.agent_id}")
+            logger.exception(
+                f"Error creating cashflow alert action for agent {self.agent_id}"
+            )
             return None
 
     def _calculate_profit_margin(self) -> float:
@@ -917,7 +977,9 @@ class FinancialAnalystSkill(BaseSkill):
             return Money(int(self._mp.default_burn_rate_cents))
 
         # Calculate average daily expenses from recent history
-        recent_expenses = self.expense_history[-int(self._mp.burn_rate_history_window) :]
+        recent_expenses = self.expense_history[
+            -int(self._mp.burn_rate_history_window) :
+        ]
         total_expenses = sum(exp.get("amount", 0) for exp in recent_expenses)
         total_days = len(recent_expenses)
 
@@ -937,17 +999,23 @@ class FinancialAnalystSkill(BaseSkill):
         # Cash runway component
         runway_score = min(
             self._mp.runway_score_weight,
-            cash_runway / self._mp.target_cash_runway_days * self._mp.runway_score_weight,
+            cash_runway
+            / self._mp.target_cash_runway_days
+            * self._mp.runway_score_weight,
         )
 
         # Burn rate efficiency component
         if self.total_revenue.cents > 0:
             burn_efficiency = 1.0 - min(
-                1.0, (burn_rate.cents * self._mp.budget_period_days) / self.total_revenue.cents
+                1.0,
+                (burn_rate.cents * self._mp.budget_period_days)
+                / self.total_revenue.cents,
             )
             burn_score = burn_efficiency * self._mp.burn_score_weight
         else:
-            burn_score = self._mp.burn_score_weight / 2.0  # Neutral score if no revenue yet
+            burn_score = (
+                self._mp.burn_score_weight / 2.0
+            )  # Neutral score if no revenue yet
 
         total_score = margin_score + runway_score + burn_score
         return min(1.0, total_score)
@@ -967,7 +1035,9 @@ class FinancialAnalystSkill(BaseSkill):
 
         return min(1.0, impact_score)
 
-    async def _analyze_current_financial_state(self, context: SkillContext) -> Dict[str, Any]:
+    async def _analyze_current_financial_state(
+        self, context: SkillContext
+    ) -> Dict[str, Any]:
         """Analyze current financial state for planning."""
         profit_margin = self._calculate_profit_margin()
         cash_runway = self._calculate_cash_runway()
@@ -1001,7 +1071,9 @@ class FinancialAnalystSkill(BaseSkill):
 
         # Check for budget reallocation opportunities
         if financial_state["cash_position"] in ["warning", "critical"]:
-            reallocation_action = await self._create_budget_reallocation_action(financial_state)
+            reallocation_action = await self._create_budget_reallocation_action(
+                financial_state
+            )
             if reallocation_action:
                 actions.append(reallocation_action)
 
@@ -1026,11 +1098,19 @@ class FinancialAnalystSkill(BaseSkill):
                 return SkillAction(
                     action_type="reallocate_budget",
                     parameters={
-                        "underutilized_categories": [cat.value for cat, _ in underutilized],
-                        "overutilized_categories": [cat.value for cat, _ in overutilized],
+                        "underutilized_categories": [
+                            cat.value for cat, _ in underutilized
+                        ],
+                        "overutilized_categories": [
+                            cat.value for cat, _ in overutilized
+                        ],
                         "reallocation_amount": min(
                             int(self._mp.max_reallocation_cents),
-                            sum(alloc.remaining_amount.cents for _, alloc in underutilized) // 2,
+                            sum(
+                                alloc.remaining_amount.cents
+                                for _, alloc in underutilized
+                            )
+                            // 2,
                         ),
                         "justification": "Optimize budget allocation based on actual utilization patterns",
                     },
@@ -1063,7 +1143,9 @@ class FinancialAnalystSkill(BaseSkill):
                 "reduction_target": self._mp.default_cost_reduction_target,
                 "priority_categories": ["marketing", "operations"],
                 "timeframe": "immediate",
-                "preservation_categories": ["inventory"],  # Don't cut inventory unless critical
+                "preservation_categories": [
+                    "inventory"
+                ],  # Don't cut inventory unless critical
                 "reduction_strategies": [
                     "defer_non_critical_expenses",
                     "renegotiate_supplier_terms",
@@ -1103,7 +1185,11 @@ class FinancialAnalystSkill(BaseSkill):
                         int(self._mp.max_investment_cents),
                         (self.current_cash.cents - self.min_cash_reserve.cents) // 2,
                     ),
-                    "investment_categories": ["marketing", "inventory", "product_development"],
+                    "investment_categories": [
+                        "marketing",
+                        "inventory",
+                        "product_development",
+                    ],
                     "expected_roi": self._mp.default_expected_roi,
                     "risk_level": self._mp.default_investment_risk_level,
                     "timeframe": "3_months",
@@ -1120,7 +1206,9 @@ class FinancialAnalystSkill(BaseSkill):
 
         return actions
 
-    async def _analyze_profitability(self, event: SaleOccurred) -> Optional[SkillAction]:
+    async def _analyze_profitability(
+        self, event: SaleOccurred
+    ) -> Optional[SkillAction]:
         """Analyze profitability of sale and generate recommendations."""
         try:
             # Calculate profitability metrics
@@ -1137,7 +1225,8 @@ class FinancialAnalystSkill(BaseSkill):
                     parameters={
                         "asin": event.asin,
                         "profit_margin": profit_margin,
-                        "unit_profit": event.total_profit.cents // max(1, event.units_sold),
+                        "unit_profit": event.total_profit.cents
+                        // max(1, event.units_sold),
                         "concern_level": "low_margin",
                         "recommended_actions": [
                             "review_pricing_strategy",
@@ -1149,7 +1238,10 @@ class FinancialAnalystSkill(BaseSkill):
                     reasoning=f"Low profit margin detected: {profit_margin:.1%} for {event.asin}",
                     priority=0.6,
                     resource_requirements={"profitability_analysis": True},
-                    expected_outcome={"margin_improvement": 0.05, "cost_optimization": 0.1},
+                    expected_outcome={
+                        "margin_improvement": 0.05,
+                        "cost_optimization": 0.1,
+                    },
                     skill_source=self.skill_name,
                 )
 
@@ -1168,7 +1260,9 @@ class FinancialAnalystSkill(BaseSkill):
             )
 
             # Track fee in expenses
-            self.total_expenses = Money(self.total_expenses.cents + event.total_fees.cents)
+            self.total_expenses = Money(
+                self.total_expenses.cents + event.total_fees.cents
+            )
             self.expense_history.append(
                 {
                     "timestamp": datetime.now(),
@@ -1229,7 +1323,9 @@ class FinancialAnalystSkill(BaseSkill):
         profit_margin = self._calculate_profit_margin()
         cash_runway = self._calculate_cash_runway()
         burn_rate = self._calculate_burn_rate()
-        health_score = self._calculate_financial_health_score(profit_margin, cash_runway, burn_rate)
+        health_score = self._calculate_financial_health_score(
+            profit_margin, cash_runway, burn_rate
+        )
 
         return {
             "health_score": health_score,
@@ -1239,7 +1335,9 @@ class FinancialAnalystSkill(BaseSkill):
             "current_cash": self.current_cash.to_float(),
         }
 
-    async def recommend_cost_cuts(self, target_reduction: float) -> List[Dict[str, Any]]:
+    async def recommend_cost_cuts(
+        self, target_reduction: float
+    ) -> List[Dict[str, Any]]:
         """Public method to recommend cost cuts for external use."""
         recommendations = []
 

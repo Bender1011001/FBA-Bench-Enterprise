@@ -146,7 +146,9 @@ def test_parameter_combinations(config: MockExperimentConfig):
         print("   Parameter coverage validation:")
         print(f"     Prices: {sorted(prices_seen)} (expected: [29.99, 39.99, 49.99])")
         print(f"     Markets: {sorted(personas_seen)} (expected: 3 types)")
-        print(f"     Sensitivities: {sorted(sensitivities_seen)} (expected: [0.6, 0.8, 1.0])")
+        print(
+            f"     Sensitivities: {sorted(sensitivities_seen)} (expected: [0.6, 0.8, 1.0])"
+        )
 
         return True
 

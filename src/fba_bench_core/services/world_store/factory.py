@@ -9,7 +9,7 @@ import logging
 from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
-    from . import WorldStore
+    from .models import WorldStore
 
 from .persistence import JsonFileStorageBackend, PersistenceBackend
 

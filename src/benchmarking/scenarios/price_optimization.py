@@ -9,10 +9,11 @@ import logging
 from datetime import datetime
 from typing import Any, Dict, List
 
+from money import Money  # Assuming Money class is available
+
 from benchmarking.agents.base import BaseAgent
 from benchmarking.core.results import AgentRunResult
 from benchmarking.scenarios.base import BaseScenario, ScenarioConfig
-from money import Money  # Assuming Money class is available
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,9 @@ class PriceOptimizationScenario(BaseScenario):
         self.initial_product_price: Money = Money(
             config.parameters.get("initial_product_price", 25.00)
         )
-        self.simulation_duration_ticks: int = config.parameters.get("simulation_duration_ticks", 10)
+        self.simulation_duration_ticks: int = config.parameters.get(
+            "simulation_duration_ticks", 10
+        )
         self.product_asin: str = config.parameters.get("product_asin", "B0CPRODUCTOPT")
         self.demand_elasticity: float = config.parameters.get(
             "demand_elasticity", 1.5
@@ -63,7 +66,9 @@ class PriceOptimizationScenario(BaseScenario):
             f"Price optimization scenario initialized for ASIN {self.product_asin} with initial price {self.initial_product_price}"
         )
 
-    async def run(self, agent: BaseAgent, run_number: int, *args, **kwargs) -> AgentRunResult:
+    async def run(
+        self, agent: BaseAgent, run_number: int, *args, **kwargs
+    ) -> AgentRunResult:
         """
         Execute a single iteration (tick) of the price optimization scenario.
         New orchestration:
@@ -87,10 +92,14 @@ class PriceOptimizationScenario(BaseScenario):
         try:
             world_store = kwargs.get("world_store")
             event_bus = kwargs.get("event_bus")
-            market_simulator = kwargs.get("market_simulator")  # Optional direct service reference
+            market_simulator = kwargs.get(
+                "market_simulator"
+            )  # Optional direct service reference
 
             current_product_state = (
-                world_store.get_product_state(self.product_asin) if world_store else None
+                world_store.get_product_state(self.product_asin)
+                if world_store
+                else None
             )
 
             # Ask agent for price
@@ -107,7 +116,9 @@ class PriceOptimizationScenario(BaseScenario):
             agent_decision_output = await agent.decide(agent_input)
 
             prev_inventory = (
-                world_store.get_product_inventory_quantity(self.product_asin) if world_store else 0
+                world_store.get_product_inventory_quantity(self.product_asin)
+                if world_store
+                else 0
             )
 
             # Publish SetPriceCommand
@@ -136,10 +147,16 @@ class PriceOptimizationScenario(BaseScenario):
                 await market_simulator.process_for_asin(self.product_asin)
 
             # Read metrics from world state
-            latest_state = world_store.get_product_state(self.product_asin) if world_store else None
+            latest_state = (
+                world_store.get_product_state(self.product_asin)
+                if world_store
+                else None
+            )
             if latest_state:
                 self.current_price = latest_state.price
-                new_inventory = world_store.get_product_inventory_quantity(self.product_asin)
+                new_inventory = world_store.get_product_inventory_quantity(
+                    self.product_asin
+                )
                 sold = max(0, prev_inventory - new_inventory)
                 units_sold = sold
                 revenue_this_tick = self.current_price * units_sold

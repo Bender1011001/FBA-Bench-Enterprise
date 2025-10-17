@@ -17,25 +17,21 @@ class AgentPlugin(Protocol):
     description: str
     agent_type: str  # e.g., "rule_based", "learning_agent", "llm_agent"
 
-    def initialize(self, config: Dict[str, Any]) -> None:
-        ...
+    def initialize(self, config: Dict[str, Any]) -> None: ...
 
     async def decide_action(
         self, current_state: Dict[str, Any], context: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        ...
+    ) -> Dict[str, Any]: ...
 
-    async def learn_from_experience(self, episode_experience: Dict[str, Any]) -> None:
-        ...
+    async def learn_from_experience(
+        self, episode_experience: Dict[str, Any]
+    ) -> None: ...
 
-    def get_plugin_info(self) -> Dict[str, Any]:
-        ...
+    def get_plugin_info(self) -> Dict[str, Any]: ...
 
-    def get_performance_benchmarks(self) -> Dict[str, Any]:
-        ...
+    def get_performance_benchmarks(self) -> Dict[str, Any]: ...
 
-    def get_sharing_mechanism_info(self) -> Dict[str, Any]:
-        ...
+    def get_sharing_mechanism_info(self) -> Dict[str, Any]: ...
 
 
 class BaseAgentPlugin:
@@ -70,7 +66,9 @@ class BaseAgentPlugin:
         current_inventory = current_state.get("inventory", 100)
         if current_inventory < 20:
             logger.info(
-                "Agent %s: Low inventory (%s), ordering more.", self.name, current_inventory
+                "Agent %s: Low inventory (%s), ordering more.",
+                self.name,
+                current_inventory,
             )
             return {"type": "adjust_inventory", "value": 50}
         if current_state.get("demand", 0) > 80 and current_price < 20.0:
@@ -87,11 +85,13 @@ class BaseAgentPlugin:
         outcomes = episode_experience.get("outcomes", {})
         if outcomes.get("profit") and outcomes["profit"] < 0:
             logger.warning(
-                "Agent %s: Learned from negative profit episode. Adjusting strategy.", self.name
+                "Agent %s: Learned from negative profit episode. Adjusting strategy.",
+                self.name,
             )
         else:
             logger.info(
-                "Agent %s: Episode was neutral or positive. Reinforcing strategy.", self.name
+                "Agent %s: Episode was neutral or positive. Reinforcing strategy.",
+                self.name,
             )
 
     def get_plugin_info(self) -> Dict[str, Any]:

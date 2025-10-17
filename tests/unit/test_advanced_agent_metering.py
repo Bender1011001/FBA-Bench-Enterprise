@@ -19,7 +19,9 @@ async def test_advanced_agent_forwarding_and_usage():
     await enforcer.start(bus)
 
     agent = AdvancedAgent(agent_id="agent-42", budget_enforcer=enforcer, event_bus=bus)
-    res = await agent.meter_api_call("toolx", tokens_prompt=10, tokens_completion=5, cost_cents=12)
+    res = await agent.meter_api_call(
+        "toolx", tokens_prompt=10, tokens_completion=5, cost_cents=12
+    )
     assert res["exceeded"] is False
 
     await asyncio.sleep(0.05)

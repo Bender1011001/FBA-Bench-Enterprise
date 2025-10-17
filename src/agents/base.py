@@ -1,8 +1,8 @@
+import importlib
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List
 
 from src.fba_events.base import EventBus
-import importlib
 
 
 def get_registry():
@@ -33,7 +33,11 @@ class AgentConfig:
     """Configuration for an agent."""
 
     def __init__(
-        self, agent_id: str, model_name: str, temperature: float = 0.7, max_tokens: int = 1000
+        self,
+        agent_id: str,
+        model_name: str,
+        temperature: float = 0.7,
+        max_tokens: int = 1000,
     ):
         self.agent_id = agent_id
         self.model_name = model_name

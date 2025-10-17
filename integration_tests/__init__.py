@@ -68,19 +68,16 @@ import os
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Dict
 
-from event_bus import get_event_bus, EventBus
+# Agent framework imports
+# Baseline bot imports
+# Constraints imports
+from constraints.agent_gateway import AgentGateway
+from constraints.budget_enforcer import BudgetEnforcer
+from event_bus import EventBus, get_event_bus
 from metrics.metric_suite import STANDARD_WEIGHTS, MetricSuite
 
 # Core imports for integration testing
 from simulation_orchestrator import SimulationConfig, SimulationOrchestrator
-
-# Agent framework imports
-
-# Baseline bot imports
-
-# Constraints imports
-from constraints.agent_gateway import AgentGateway
-from constraints.budget_enforcer import BudgetEnforcer
 
 # Financial audit is optional in this environment; provide a resilient fallback
 try:

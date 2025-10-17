@@ -110,7 +110,9 @@ class SimulationRunner:
         Returns:
           Snapshot dictionary from get_snapshot().
         """
-        while not self._stopped and (max_ticks is None or self.current_tick < max_ticks):
+        while not self._stopped and (
+            max_ticks is None or self.current_tick < max_ticks
+        ):
             if stop_condition and stop_condition(self.current_tick):
                 break
             self.step_once()

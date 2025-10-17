@@ -48,7 +48,10 @@ class TechnicalPerformanceOutput(BaseModel):
     fast_enough: bool
 
     def as_dict(self) -> Dict[str, Any]:
-        return {"latency_ms": int(self.latency_ms), "fast_enough": bool(self.fast_enough)}
+        return {
+            "latency_ms": int(self.latency_ms),
+            "fast_enough": bool(self.fast_enough),
+        }
 
 
 # -----------------------------
@@ -61,7 +64,9 @@ def _safe_int(value: Any, default: int) -> int:
         return default
 
 
-def evaluate(run: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def evaluate(
+    run: Dict[str, Any], context: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
     """
     Compute technical performance values.
 
@@ -77,7 +82,10 @@ def evaluate(run: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> D
     """
     try:
         if not isinstance(run, dict):
-            return {"error": "invalid_run_type", "reason": "run must be a dict-like RunResult"}
+            return {
+                "error": "invalid_run_type",
+                "reason": "run must be a dict-like RunResult",
+            }
 
         data = {
             "status": run.get("status", "success"),
@@ -106,8 +114,17 @@ def evaluate(run: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> D
         return out.as_dict()
     except Exception as e:  # Non-fatal by design
         logger.exception("technical_performance metric failed")
-        latency = _safe_int((run or {}).get("duration_ms", 0), 0) if isinstance(run, dict) else 0
-        return {"latency_ms": latency, "fast_enough": False, "error": "exception", "reason": str(e)}
+        latency = (
+            _safe_int((run or {}).get("duration_ms", 0), 0)
+            if isinstance(run, dict)
+            else 0
+        )
+        return {
+            "latency_ms": latency,
+            "fast_enough": False,
+            "error": "exception",
+            "reason": str(e),
+        }
 
 
 # -----------------------------

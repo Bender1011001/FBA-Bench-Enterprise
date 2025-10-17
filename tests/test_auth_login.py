@@ -1,21 +1,18 @@
 """Tests for the auth login endpoint and JWT dependency."""
 
-import pytest
 from datetime import datetime, timezone
 from uuid import uuid4
 
+import pytest
+from api.db import Base, get_db
+from api.models import User
+from api.security.jwt import decode_token
+from api.security.passwords import hash_password
+from api.server import app
 from fastapi.testclient import TestClient
-from fastapi import FastAPI, Depends, Header
-from sqlalchemy import create_engine, func
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
-
-from api.server import app
-from api.db import get_db, Base
-from api.models import User
-from api.security.passwords import hash_password, verify_password
-from api.security.jwt import decode_token, get_current_user
-
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 
@@ -75,26 +72,26 @@ class TestLoginEndpoint:
         db = TestingSessionLocal(bind=engine.connect())
         try:
             user = create_test_user(db, "test@example.com", "Password123!")
-            
+
             response = client.post(
                 "/auth/login",
                 json={"email": "test@example.com", "password": "Password123!"},
             )
-            
+
             assert response.status_code == 200
             data = response.json()
             assert "access_token" in data
             assert data["token_type"] == "bearer"
             assert "expires_in" in data
             assert data["expires_in"] == 900  # 15 minutes
-            
+
             # Verify access token payload
             payload = decode_token(data["access_token"])
             assert payload["sub"] == user.id
             assert payload["email"] == user.email
             assert payload["token_type"] == "access"
             assert payload["iss"] == "fba-bench-enterprise"
-            
+
             # Check expiration is within expected range
             exp = payload["exp"]
             now = datetime.now(timezone.utc).timestamp()
@@ -107,12 +104,12 @@ class TestLoginEndpoint:
         db = TestingSessionLocal(bind=engine.connect())
         try:
             create_test_user(db, "valid@example.com", "Password123!")
-            
+
             response = client.post(
                 "/auth/login",
                 json={"email": "invalid@example.com", "password": "Password123!"},
             )
-            
+
             assert response.status_code == 401
             assert response.json()["detail"] == "Invalid credentials"
         finally:
@@ -123,12 +120,12 @@ class TestLoginEndpoint:
         db = TestingSessionLocal(bind=engine.connect())
         try:
             create_test_user(db, "test@example.com", "Password123!")
-            
+
             response = client.post(
                 "/auth/login",
                 json={"email": "test@example.com", "password": "wrongpass"},
             )
-            
+
             assert response.status_code == 401
             assert response.json()["detail"] == "Invalid credentials"
         finally:
@@ -139,12 +136,12 @@ class TestLoginEndpoint:
         db = TestingSessionLocal(bind=engine.connect())
         try:
             create_test_user(db, "inactive@example.com", "Password123!", active=False)
-            
+
             response = client.post(
                 "/auth/login",
                 json={"email": "inactive@example.com", "password": "Password123!"},
             )
-            
+
             assert response.status_code == 401
             assert response.json()["detail"] == "Inactive account"
         finally:
@@ -152,13 +149,15 @@ class TestLoginEndpoint:
 
 
 class TestJWTDependency:
-    def test_get_current_user_dependency_rejects_invalid_token(self, client, test_user, auth_token):
+    def test_get_current_user_dependency_rejects_invalid_token(
+        self, client, test_user, auth_token
+    ):
         """Dependency rejects requests without or with invalid token."""
         # No token
         response = client.get("/protected/test")
         assert response.status_code == 401
         assert response.json()["detail"] == "Could not validate credentials"
-        
+
         # Invalid token (malformed)
         response = client.get(
             "/protected/test",
@@ -166,7 +165,7 @@ class TestJWTDependency:
         )
         assert response.status_code == 401
         assert response.json()["detail"] == "Could not validate credentials"
-        
+
         # Valid token
         response = client.get(
             "/protected/test",

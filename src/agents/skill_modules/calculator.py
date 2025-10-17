@@ -56,9 +56,7 @@ class CalculatorSkill(Skill):
     """
 
     name = "calculator"
-    description = (
-        "Deterministic arithmetic evaluator supporting +, -, *, /, //, %, ** and parentheses."
-    )
+    description = "Deterministic arithmetic evaluator supporting +, -, *, /, //, %, ** and parentheses."
     input_model = CalculatorInput
     output_model = CalculatorOutput
 

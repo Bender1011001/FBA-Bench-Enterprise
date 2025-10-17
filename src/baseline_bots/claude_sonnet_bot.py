@@ -1,19 +1,20 @@
+import hashlib
+import json
 import logging
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
+from models.product import Product
+from money import Money
+
 from constraints.agent_gateway import AgentGateway
+from fba_bench_api.core.redis_client import get_redis
 from fba_events.pricing import SetPriceCommand
 from llm_interface.contract import BaseLLMClient
 from llm_interface.prompt_adapter import PromptAdapter
 from llm_interface.response_parser import LLMResponseParser
-from models.product import Product
-from money import Money
-import hashlib
-import json
-from fba_bench_api.core.redis_client import get_redis
 
 logger = logging.getLogger(__name__)
 
@@ -107,14 +108,20 @@ class ClaudeSonnetBot:
                         prompt=modified_prompt,
                         temperature=self.model_params.get("temperature", 0.7),
                         max_tokens=self.model_params.get("max_tokens_per_action", 1000),
-                        top_p=self.model_params.get("top_p", 0.9),  # Claude often uses top_p
+                        top_p=self.model_params.get(
+                            "top_p", 0.9
+                        ),  # Claude often uses top_p
                     )
-                    await redis.setex(llm_cache_key, 1800, json.dumps(llm_raw_response_data))
+                    await redis.setex(
+                        llm_cache_key, 1800, json.dumps(llm_raw_response_data)
+                    )
                 except Exception as cache_miss_exc:
                     logger.warning(f"LLM cache miss handling failed: {cache_miss_exc}")
                     if not llm_raw_response_data:
                         raise
-            llm_response_content = llm_raw_response_data["choices"][0]["message"]["content"]
+            llm_response_content = llm_raw_response_data["choices"][0]["message"][
+                "content"
+            ]
 
             # Postprocess response through AgentGateway (for actual token usage recording)
             await self.agent_gateway.postprocess_response(
@@ -127,7 +134,9 @@ class ClaudeSonnetBot:
 
             # Ensure parser method is mock-observable in unit tests
             parser_method = getattr(self.response_parser, "parse_and_validate", None)
-            if callable(parser_method) and not hasattr(parser_method, "assert_called_once"):
+            if callable(parser_method) and not hasattr(
+                parser_method, "assert_called_once"
+            ):
                 try:
                     from unittest.mock import AsyncMock
 
@@ -185,7 +194,9 @@ class ClaudeSonnetBot:
                             f"[{self.agent_id}] Error creating SetPriceCommand: {e} with data {params}"
                         )
                 else:
-                    logger.warning(f"[{self.agent_id}] Unknown action type received: {action_type}")
+                    logger.warning(
+                        f"[{self.agent_id}] Unknown action type received: {action_type}"
+                    )
 
             return agent_commands
 

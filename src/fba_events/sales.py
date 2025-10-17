@@ -99,7 +99,13 @@ class SaleOccurred(BaseEvent):
         # - our Money type
         # - duck-typed objects exposing `.cents: int` (e.g., external money.Money)
         # - numeric values (interpreted as cents) which will be coerced to Money
-        money_fields = ["unit_price", "total_revenue", "total_fees", "total_profit", "cost_basis"]
+        money_fields = [
+            "unit_price",
+            "total_revenue",
+            "total_fees",
+            "total_profit",
+            "cost_basis",
+        ]
         for field_name in money_fields:
             value = getattr(self, field_name)
             if isinstance(value, Money):
@@ -161,7 +167,9 @@ class SaleOccurred(BaseEvent):
         # Auto-calculate `conversion_rate` if not provided (0.0) and demand was present.
         if self.conversion_rate == 0.0 and self.units_demanded > 0:
             # Use object.__setattr__ for dataclasses if setting default values post-init.
-            object.__setattr__(self, "conversion_rate", self.units_sold / self.units_demanded)
+            object.__setattr__(
+                self, "conversion_rate", self.units_sold / self.units_demanded
+            )
 
     def get_profit_margin_percentage(self) -> float:
         """

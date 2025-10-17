@@ -42,7 +42,9 @@ class MemoryModeStrategy(ABC):
         """Store an event according to this mode's strategy."""
 
     @abstractmethod
-    async def retrieve_memories(self, query: str, max_memories: int = 10) -> List[MemoryEvent]:
+    async def retrieve_memories(
+        self, query: str, max_memories: int = 10
+    ) -> List[MemoryEvent]:
         """Retrieve memories according to this mode's strategy."""
 
     @abstractmethod
@@ -95,7 +97,9 @@ class MemoryFreeMode(MemoryModeStrategy):
         self.stats["events_ignored"] += 1
         return True
 
-    async def retrieve_memories(self, query: str, max_memories: int = 10) -> List[MemoryEvent]:
+    async def retrieve_memories(
+        self, query: str, max_memories: int = 10
+    ) -> List[MemoryEvent]:
         """
         Return an empty list as this mode is 'memory-free'.
         This explicitly contradicts its previous behavior of returning current_tick_events for a true baseline.
@@ -143,7 +147,9 @@ class ShortTermOnlyMode(MemoryModeStrategy):
         """Store event in short-term memory only."""
         return await self.memory_manager.store_event(event, domain)
 
-    async def retrieve_memories(self, query: str, max_memories: int = 10) -> List[MemoryEvent]:
+    async def retrieve_memories(
+        self, query: str, max_memories: int = 10
+    ) -> List[MemoryEvent]:
         """Retrieve from short-term memory only."""
         # Only retrieve from short-term store
         return await self.memory_manager.short_term_store.retrieve(query, max_memories)
@@ -158,7 +164,9 @@ class ShortTermOnlyMode(MemoryModeStrategy):
     async def _cleanup_old_memories(self):
         """Remove old memories that exceed retention period."""
         current_time = datetime.now()
-        cutoff_time = current_time - timedelta(days=self.config.short_term_retention_days)
+        cutoff_time = current_time - timedelta(
+            days=self.config.short_term_retention_days
+        )
 
         all_memories = await self.memory_manager.short_term_store.get_all()
         memories_to_remove = [
@@ -167,7 +175,9 @@ class ShortTermOnlyMode(MemoryModeStrategy):
 
         if memories_to_remove:
             await self.memory_manager.short_term_store.remove(memories_to_remove)
-            logger.debug(f"Removed {len(memories_to_remove)} old memories from short-term store")
+            logger.debug(
+                f"Removed {len(memories_to_remove)} old memories from short-term store"
+            )
 
     async def get_statistics(self) -> Dict[str, Any]:
         """Get short-term only mode statistics."""
@@ -207,14 +217,16 @@ class LongTermOnlyMode(MemoryModeStrategy):
         memory_event = MemoryEvent.from_event(
             event, self.agent_id, self.memory_manager.current_tick, domain
         )
-        memory_event.importance_score = await self.memory_manager._calculate_importance_score(
-            memory_event
+        memory_event.importance_score = (
+            await self.memory_manager._calculate_importance_score(memory_event)
         )
 
         # Store directly in long-term memory
         return await self.memory_manager.long_term_store.store(memory_event)
 
-    async def retrieve_memories(self, query: str, max_memories: int = 10) -> List[MemoryEvent]:
+    async def retrieve_memories(
+        self, query: str, max_memories: int = 10
+    ) -> List[MemoryEvent]:
         """Retrieve from long-term memory only."""
         return await self.memory_manager.long_term_store.retrieve(query, max_memories)
 
@@ -260,7 +272,9 @@ class ReflectionEnabledMode(MemoryModeStrategy):
         """Store event using full memory system."""
         return await self.memory_enforcer.store_event_in_memory(event, domain)
 
-    async def retrieve_memories(self, query: str, max_memories: int = 10) -> List[MemoryEvent]:
+    async def retrieve_memories(
+        self, query: str, max_memories: int = 10
+    ) -> List[MemoryEvent]:
         """Retrieve memories from both short-term and long-term stores."""
         return await self.memory_manager.retrieve_memories(query, max_memories)
 
@@ -289,7 +303,9 @@ class ConsolidationDisabledMode(MemoryModeStrategy):
     instead of reflection-based consolidation.
     """
 
-    def __init__(self, config: MemoryConfig, agent_id: str, event_bus: EventBus, **kwargs):
+    def __init__(
+        self, config: MemoryConfig, agent_id: str, event_bus: EventBus, **kwargs
+    ):
         super().__init__(config, agent_id, event_bus)
         # Disable reflection for this mode by creating a deep copy and modifying it
         from copy import (
@@ -315,7 +331,9 @@ class ConsolidationDisabledMode(MemoryModeStrategy):
         """Store event in short-term memory."""
         return await self.memory_manager.store_event(event, domain)
 
-    async def retrieve_memories(self, query: str, max_memories: int = 10) -> List[MemoryEvent]:
+    async def retrieve_memories(
+        self, query: str, max_memories: int = 10
+    ) -> List[MemoryEvent]:
         """Retrieve from both memory stores."""
         return await self.memory_manager.retrieve_memories(query, max_memories)
 
@@ -345,7 +363,9 @@ class ConsolidationDisabledMode(MemoryModeStrategy):
         ]
 
         # Promote oldest memories up to consolidation percentage
-        max_promotions = int(len(memories_to_promote) * self.config.consolidation_percentage)
+        max_promotions = int(
+            len(memories_to_promote) * self.config.consolidation_percentage
+        )
 
         # Sort by timestamp (oldest first) and promote
         memories_to_promote.sort(key=lambda m: m.timestamp)
@@ -353,7 +373,9 @@ class ConsolidationDisabledMode(MemoryModeStrategy):
 
         if selected_memories:
             await self.memory_manager.promote_memories(selected_memories)
-            logger.info(f"Time-based promotion: {len(selected_memories)} memories promoted")
+            logger.info(
+                f"Time-based promotion: {len(selected_memories)} memories promoted"
+            )
 
     async def get_statistics(self) -> Dict[str, Any]:
         """Get consolidation-disabled mode statistics."""
@@ -363,7 +385,9 @@ class ConsolidationDisabledMode(MemoryModeStrategy):
             "mode": "consolidation_disabled",
             "promotion_method": "time_based",
             "last_promotion": (
-                self.last_promotion_time.isoformat() if self.last_promotion_time else None
+                self.last_promotion_time.isoformat()
+                if self.last_promotion_time
+                else None
             ),
             **memory_summary,
         }
@@ -387,8 +411,12 @@ class HybridReflectionMode(MemoryModeStrategy):
         self.reflection_module = ReflectionModule(self.memory_manager, config)
 
         # Hybrid-specific settings
-        self.adaptive_reflection = True  # Adjust reflection frequency based on memory load
-        self.reflection_threshold = 0.8  # Trigger reflection when short-term is 80% full
+        self.adaptive_reflection = (
+            True  # Adjust reflection frequency based on memory load
+        )
+        self.reflection_threshold = (
+            0.8  # Trigger reflection when short-term is 80% full
+        )
 
     async def initialize(self) -> bool:
         """Initialize hybrid reflection mode."""
@@ -405,7 +433,9 @@ class HybridReflectionMode(MemoryModeStrategy):
 
         return result
 
-    async def retrieve_memories(self, query: str, max_memories: int = 10) -> List[MemoryEvent]:
+    async def retrieve_memories(
+        self, query: str, max_memories: int = 10
+    ) -> List[MemoryEvent]:
         """Retrieve memories with hybrid strategy."""
         return await self.memory_manager.retrieve_memories(query, max_memories)
 
@@ -495,7 +525,10 @@ class SelectiveMemoryMode(MemoryModeStrategy):
             return True  # Silently ignore
 
         # Check event type filter
-        if self.allowed_event_types and event.event_type not in self.allowed_event_types:
+        if (
+            self.allowed_event_types
+            and event.event_type not in self.allowed_event_types
+        ):
             self.events_filtered += 1
             return True  # Silently ignore
 
@@ -506,15 +539,20 @@ class SelectiveMemoryMode(MemoryModeStrategy):
 
         return result
 
-    async def retrieve_memories(self, query: str, max_memories: int = 10) -> List[MemoryEvent]:
+    async def retrieve_memories(
+        self, query: str, max_memories: int = 10
+    ) -> List[MemoryEvent]:
         """Retrieve memories with selective filtering."""
         memories = await self.memory_manager.retrieve_memories(query, max_memories)
 
         # Additional filtering during retrieval if needed
         filtered_memories = []
         for memory in memories:
-            if ("all" in self.allowed_domains or memory.domain in self.allowed_domains) and (
-                not self.allowed_event_types or memory.event_type in self.allowed_event_types
+            if (
+                "all" in self.allowed_domains or memory.domain in self.allowed_domains
+            ) and (
+                not self.allowed_event_types
+                or memory.event_type in self.allowed_event_types
             ):
                 filtered_memories.append(memory)
 
@@ -590,7 +628,9 @@ class MemoryModeFactory:
 
         # All modes should be able to accept **kwargs in their __init__ if needed,
         # so we can simplify this logic.
-        return mode_class(config, agent_id, event_bus, **kwargs)  # Pass kwargs to all modes
+        return mode_class(
+            config, agent_id, event_bus, **kwargs
+        )  # Pass kwargs to all modes
 
     @staticmethod
     def get_available_modes() -> List[MemoryMode]:

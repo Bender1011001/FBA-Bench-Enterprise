@@ -2,8 +2,6 @@
 Resource management for skill coordination.
 """
 
-from typing import Optional
-
 from money import Money
 
 from .models import ResourceAllocation
@@ -37,7 +35,9 @@ class ResourceManager:
             True if update successful, False if insufficient resources
         """
         budget_delta_money = Money(cents=budget_delta)
-        new_budget: Money = self.resource_allocation.remaining_budget + budget_delta_money
+        new_budget: Money = (
+            self.resource_allocation.remaining_budget + budget_delta_money
+        )
         new_tokens = self.resource_allocation.remaining_tokens + token_delta
 
         if new_budget.cents < 0 or new_tokens < 0:

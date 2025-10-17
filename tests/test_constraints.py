@@ -125,7 +125,9 @@ def test_constraint_config_from_yaml(tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_budget_enforcer_initial_state(default_config, mock_event_bus, mock_metrics_tracker):
+async def test_budget_enforcer_initial_state(
+    default_config, mock_event_bus, mock_metrics_tracker
+):
     enforcer = BudgetEnforcer(default_config, mock_event_bus, mock_metrics_tracker)
     assert enforcer.current_tick_tokens_used == 0
     assert enforcer.total_simulation_tokens_used == 0
@@ -241,7 +243,9 @@ async def test_budget_enforcer_total_sim_hard_violation(
     with pytest.raises(SystemExit) as excinfo:
         can_continue, msg = enforcer.check_total_simulation_limit()
 
-    assert "HARD VIOLATION: Total simulation token budget exceeded" in str(excinfo.value)
+    assert "HARD VIOLATION: Total simulation token budget exceeded" in str(
+        excinfo.value
+    )
     assert enforcer.violation_triggered is True
     mock_metrics_tracker.apply_penalty.assert_called_once_with(
         "budget_violation", default_config.violation_penalty_weight
@@ -290,7 +294,10 @@ async def test_agent_gateway_preprocess_request_injects_budget(
     result = await gateway.preprocess_request("agent1", initial_prompt, "decision")
 
     assert "BUDGET STATUS:" in result["modified_prompt"]
-    assert "Your response must consider this budget constraint" in result["modified_prompt"]
+    assert (
+        "Your response must consider this budget constraint"
+        in result["modified_prompt"]
+    )
     assert result["estimated_tokens_for_prompt"] > 0
     assert result["can_proceed"] is True
 
@@ -327,7 +334,9 @@ async def test_agent_gateway_postprocess_response_records_usage(
     enforcer.current_tick_tokens_used = 0  # Reset for clear test
     enforcer.total_simulation_tokens_used = 0  # Reset for clear test
 
-    await gateway.postprocess_response("agent1", "observation", raw_prompt, llm_response)
+    await gateway.postprocess_response(
+        "agent1", "observation", raw_prompt, llm_response
+    )
 
     # Expected tokens: raw_prompt tokens + llm_response tokens
     expected_tokens_raw_prompt = TokenCounter().count_tokens(raw_prompt)
@@ -372,7 +381,9 @@ async def test_agent_gateway_postprocess_response_triggers_warnings(
         calls.append(event_type)
 
     assert calls.count("BudgetWarning") == 1  # Only for per-tick
-    assert not mock_metrics_tracker.apply_penalty.called  # No hard fail, no direct penalty here
+    assert (
+        not mock_metrics_tracker.apply_penalty.called
+    )  # No hard fail, no direct penalty here
 
 
 @pytest.mark.asyncio
@@ -383,7 +394,9 @@ async def test_agent_gateway_postprocess_response_hard_fail(
     gateway = AgentGateway(enforcer, mock_event_bus)
 
     raw_prompt = "Short"
-    llm_response = "Long response that pushes total tokens way over hard limit."  # many tokens
+    llm_response = (
+        "Long response that pushes total tokens way over hard limit."  # many tokens
+    )
 
     # Setup for total tokens to be just under grace, new response pushes it over
     # max_total_tokens=500, grace 10% (550)
@@ -393,7 +406,9 @@ async def test_agent_gateway_postprocess_response_hard_fail(
     )
 
     with pytest.raises(SystemExit):
-        await gateway.postprocess_response("agent1", "execution", raw_prompt, llm_response)
+        await gateway.postprocess_response(
+            "agent1", "execution", raw_prompt, llm_response
+        )
 
     mock_metrics_tracker.apply_penalty.assert_called_once()
     mock_event_bus.publish.assert_called_once_with("BudgetExceeded", ANY)

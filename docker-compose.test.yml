@@ -1,24 +1,54 @@
+# Test Docker Compose configuration for FBA-Bench Enterprise
+# - Optimized for testing and CI/CD environments
+# - Uses lightweight configurations
+# - Includes all necessary services for integration tests
+
 version: "3.9"
 
 services:
+  redis:
+    image: redis:7-alpine
+    container_name: fba-redis-test
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_test_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+    networks:
+      - backend
+
   api:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.api
     container_name: fba-api-test
     environment:
-      DATABASE_URL: "sqlite+aiosqlite:///./fba_bench.db"
-      REDIS_URL: "redis://redis:6379/0"
-      AUTH_ENABLED: "false"
-      LOG_LEVEL: "INFO"
+      # Test-specific settings
       ENVIRONMENT: "test"
+      DATABASE_URL: "sqlite+aiosqlite:///./test.db"
+      FBA_BENCH_REDIS_URL: "redis://redis:6379/0"
+      REDIS_URL: "redis://redis:6379/0"  # Legacy compatibility
+      AUTH_ENABLED: "false"
+      AUTH_TEST_BYPASS: "true"
+      LOG_LEVEL: "INFO"
+      PYTHONPATH: "/app/src"
+      # Disable rate limiting for tests
+      API_RATE_LIMIT: "10000/minute"
+      # Testing flags
+      TESTING: "true"
+      DB_AUTO_CREATE: "true"
     ports:
       - "8000:8000"
     volumes:
-      - api_data:/app/data
-    command: poetry run uvicorn api_server:app --host 0.0.0.0 --port 8000 --reload
+      - test_api_data:/data
+      - ./tests:/app/tests:ro
+    command: poetry run uvicorn api_server:app --host 0.0.0.0 --port 8000
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -29,32 +59,18 @@ services:
     networks:
       - backend
 
-  redis:
-    image: redis:7-alpine
-    container_name: fba-redis-test
-    command: ["redis-server", "--appendonly", "yes"]
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 30
-    restart: unless-stopped
-    networks:
-      - backend
-
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: fba-frontend-test
     environment:
-      - VITE_API_URL=http://localhost:8000
+      VITE_API_URL: "http://localhost:8000"
+      NODE_ENV: "test"
     ports:
       - "5173:5173"
     volumes:
-      - ./frontend:/app
+      - ./frontend:/app:ro
       - /app/node_modules
     depends_on:
       api:
@@ -63,9 +79,40 @@ services:
     networks:
       - backend
 
+  # Test runner service for CI/CD
+  test-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: fba-test-runner
+    environment:
+      ENVIRONMENT: "test"
+      DATABASE_URL: "sqlite+aiosqlite:///./test_runner.db"
+      FBA_BENCH_REDIS_URL: "redis://redis:6379/1"  # Different DB for isolation
+      PYTHONPATH: "/app/src"
+      LOG_LEVEL: "DEBUG"
+      TESTING: "true"
+    volumes:
+      - ./tests:/app/tests:ro
+      - test_results:/app/test-results
+    command: >
+      sh -c "poetry install --no-interaction --no-ansi &&
+             poetry run pytest tests/ -v --junitxml=/app/test-results/junit.xml --cov=src --cov-report=xml:/app/test-results/coverage.xml"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - backend
+    profiles:
+      - testing  # Only run when explicitly requested
+
 volumes:
-  redis_data:
-  api_data:
+  redis_test_data:
+    driver: local
+  test_api_data:
+    driver: local
+  test_results:
+    driver: local
 
 networks:
   backend:

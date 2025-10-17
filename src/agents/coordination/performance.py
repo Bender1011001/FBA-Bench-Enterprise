@@ -5,14 +5,12 @@ Handles decision logging, success metrics, and strategic dashboard generation.
 """
 
 import logging
-from typing import Dict, Any, List
-
 from datetime import datetime
-
-from .models import StrategicDecision, BusinessState
+from typing import Any, Dict, List
 
 from agents.skill_modules.base_skill import SkillAction
 
+from .models import StrategicDecision
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +41,8 @@ class PerformanceManager:
                 "operational_efficiency": self.controller.current_business_state.operational_efficiency,
                 "current_priority": self.controller.current_priority.value,
                 "strategic_focus": [
-                    obj.value for obj in self.controller.current_business_state.strategic_focus
+                    obj.value
+                    for obj in self.controller.current_business_state.strategic_focus
                 ],
             },
             "resource_allocation": {
@@ -53,14 +52,22 @@ class PerformanceManager:
                     for domain, allocation in self.controller.resource_plan.allocations.items()
                 },
                 "utilization": {
-                    domain: self.controller.resource_plan.priority_multipliers.get(domain, 1.0)
+                    domain: self.controller.resource_plan.priority_multipliers.get(
+                        domain, 1.0
+                    )
                     for domain in self.controller.resource_plan.allocations.keys()
                 },
             },
             "performance_metrics": {
-                "decision_success_rate": round(self.controller.decision_success_rate, 3),
-                "resource_utilization_efficiency": round(self.controller.resource_utilization_efficiency, 3),
-                "strategic_alignment_score": round(self.controller.strategic_alignment_score, 3),
+                "decision_success_rate": round(
+                    self.controller.decision_success_rate, 3
+                ),
+                "resource_utilization_efficiency": round(
+                    self.controller.resource_utilization_efficiency, 3
+                ),
+                "strategic_alignment_score": round(
+                    self.controller.strategic_alignment_score, 3
+                ),
                 "total_decisions": len(self.controller.strategic_decisions),
                 "pending_approvals": len(self.controller.pending_approvals),
             },
@@ -73,7 +80,9 @@ class PerformanceManager:
                     "actions_rejected": len(decision.actions_rejected),
                     "expected_impact": decision.expected_impact,
                 }
-                for decision in self.controller.strategic_decisions[-5:]  # Last 5 decisions
+                for decision in self.controller.strategic_decisions[
+                    -5:
+                ]  # Last 5 decisions
             ],
         }
 
@@ -85,11 +94,17 @@ class PerformanceManager:
             "strategic_alignment_score": self.controller.strategic_alignment_score,
             "total_decisions_made": len(self.controller.strategic_decisions),
             "avg_actions_per_decision": (
-                sum(len(d.actions_approved) for d in self.controller.strategic_decisions)
+                sum(
+                    len(d.actions_approved) for d in self.controller.strategic_decisions
+                )
                 / max(1, len(self.controller.strategic_decisions))
             ),
             "crisis_responses": len(
-                [d for d in self.controller.strategic_decisions if "crisis" in d.decision_type]
+                [
+                    d
+                    for d in self.controller.strategic_decisions
+                    if "crisis" in d.decision_type
+                ]
             ),
         }
 
@@ -100,7 +115,9 @@ class PerformanceManager:
         approved_actions: List[SkillAction],
     ):
         """Log strategic decision for tracking and analysis."""
-        rejected_actions = [action for action in all_actions if action not in approved_actions]
+        rejected_actions = [
+            action for action in all_actions if action not in approved_actions
+        ]
 
         # Calculate expected impact
         expected_impact = {}
@@ -126,7 +143,9 @@ class PerformanceManager:
 
         # Keep decision history manageable
         if len(self.controller.strategic_decisions) > 1000:
-            self.controller.strategic_decisions = self.controller.strategic_decisions[-500:]
+            self.controller.strategic_decisions = self.controller.strategic_decisions[
+                -500:
+            ]
 
         # Update decision success tracking
         self._update_decision_tracking(decision)
@@ -135,23 +154,32 @@ class PerformanceManager:
         """Update decision tracking metrics."""
         # Simple success rate calculation based on action confidence
         if decision.actions_approved:
-            avg_confidence = sum(action.confidence for action in decision.actions_approved) / len(
-                decision.actions_approved
-            )
+            avg_confidence = sum(
+                action.confidence for action in decision.actions_approved
+            ) / len(decision.actions_approved)
             # Update running average
-            self.controller.decision_success_rate = (self.controller.decision_success_rate * 0.9) + (avg_confidence * 0.1)
+            self.controller.decision_success_rate = (
+                self.controller.decision_success_rate * 0.9
+            ) + (avg_confidence * 0.1)
 
         # Update strategic alignment score
         alignment_scores = []
         for action in decision.actions_approved:
-            is_aligned, alignment_score, _ = self.controller.coordination.validate_strategic_alignment(
-                action,
-                {"objectives": [obj.value for obj in self.controller.current_business_state.strategic_focus]},
+            is_aligned, alignment_score, _ = (
+                self.controller.coordination.validate_strategic_alignment(
+                    action,
+                    {
+                        "objectives": [
+                            obj.value
+                            for obj in self.controller.current_business_state.strategic_focus
+                        ]
+                    },
+                )
             )
             alignment_scores.append(alignment_score)
 
         if alignment_scores:
             avg_alignment = sum(alignment_scores) / len(alignment_scores)
-            self.controller.strategic_alignment_score = (self.controller.strategic_alignment_score * 0.9) + (
-                avg_alignment * 0.1
-            )
+            self.controller.strategic_alignment_score = (
+                self.controller.strategic_alignment_score * 0.9
+            ) + (avg_alignment * 0.1)

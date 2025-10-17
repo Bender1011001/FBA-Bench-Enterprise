@@ -296,7 +296,9 @@ class TestAgentIntegration:
         assert len(benchmark_engine.results) == 0
 
     @pytest.mark.asyncio
-    async def test_benchmark_engine_agent_registration(self, benchmark_engine, mock_agent):
+    async def test_benchmark_engine_agent_registration(
+        self, benchmark_engine, mock_agent
+    ):
         """Test agent registration with benchmark engine."""
         await mock_agent.initialize()
 
@@ -306,7 +308,9 @@ class TestAgentIntegration:
         assert benchmark_engine.agents[mock_agent.config.agent_id] == mock_agent
 
     @pytest.mark.asyncio
-    async def test_benchmark_engine_scenario_registration(self, benchmark_engine, test_scenario):
+    async def test_benchmark_engine_scenario_registration(
+        self, benchmark_engine, test_scenario
+    ):
         """Test scenario registration with benchmark engine."""
         benchmark_engine.register_scenario(test_scenario)
 
@@ -314,7 +318,9 @@ class TestAgentIntegration:
         assert benchmark_engine.scenarios[test_scenario.config.name] == test_scenario
 
     @pytest.mark.asyncio
-    async def test_benchmark_engine_metric_registration(self, benchmark_engine, metric_config):
+    async def test_benchmark_engine_metric_registration(
+        self, benchmark_engine, metric_config
+    ):
         """Test metric registration with benchmark engine."""
 
         # Create a simple metric for testing
@@ -355,7 +361,9 @@ class TestAgentIntegration:
 
         # Run the benchmark
         result = await benchmark_engine.run_benchmark(
-            scenario_name="test_scenario", agent_ids=["test_agent"], metric_names=["test_metric"]
+            scenario_name="test_scenario",
+            agent_ids=["test_agent"],
+            metric_names=["test_metric"],
         )
 
         # Verify the result
@@ -374,8 +382,12 @@ class TestAgentIntegration:
     ):
         """Test benchmark engine with multiple agents."""
         # Create multiple mock agents
-        agent1_config = AgentConfig(agent_id="agent1", agent_type="mock", agent_class="MockAgent")
-        agent2_config = AgentConfig(agent_id="agent2", agent_type="mock", agent_class="MockAgent")
+        agent1_config = AgentConfig(
+            agent_id="agent1", agent_type="mock", agent_class="MockAgent"
+        )
+        agent2_config = AgentConfig(
+            agent_id="agent2", agent_type="mock", agent_class="MockAgent"
+        )
 
         agent1 = MockAgent(agent1_config)
         agent2 = MockAgent(agent2_config)
@@ -428,10 +440,16 @@ class TestAgentIntegration:
 
         # Create multiple test scenarios
         scenario1_config = ScenarioConfig(
-            name="scenario1", description="Test scenario 1", domain="test", duration_ticks=30
+            name="scenario1",
+            description="Test scenario 1",
+            domain="test",
+            duration_ticks=30,
         )
         scenario2_config = ScenarioConfig(
-            name="scenario2", description="Test scenario 2", domain="test", duration_ticks=30
+            name="scenario2",
+            description="Test scenario 2",
+            domain="test",
+            duration_ticks=30,
         )
 
         scenario1 = TestScenario(scenario1_config)
@@ -456,11 +474,15 @@ class TestAgentIntegration:
 
         # Run benchmarks for both scenarios
         result1 = await benchmark_engine.run_benchmark(
-            scenario_name="scenario1", agent_ids=["test_agent"], metric_names=["test_metric"]
+            scenario_name="scenario1",
+            agent_ids=["test_agent"],
+            metric_names=["test_metric"],
         )
 
         result2 = await benchmark_engine.run_benchmark(
-            scenario_name="scenario2", agent_ids=["test_agent"], metric_names=["test_metric"]
+            scenario_name="scenario2",
+            agent_ids=["test_agent"],
+            metric_names=["test_metric"],
         )
 
         # Verify the results
@@ -593,7 +615,9 @@ class TestAgentIntegration:
         benchmark_engine.register_metric(metric)
 
         # Create a temporary file for persistence
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".json") as temp_file:
+        with tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".json"
+        ) as temp_file:
             temp_filename = temp_file.name
 
         try:
@@ -635,18 +659,28 @@ class TestAgentIntegration:
     ):
         """Test benchmark engine concurrent execution."""
         # Create multiple mock agents
-        agent1_config = AgentConfig(agent_id="agent1", agent_type="mock", agent_class="MockAgent")
-        agent2_config = AgentConfig(agent_id="agent2", agent_type="mock", agent_class="MockAgent")
+        agent1_config = AgentConfig(
+            agent_id="agent1", agent_type="mock", agent_class="MockAgent"
+        )
+        agent2_config = AgentConfig(
+            agent_id="agent2", agent_type="mock", agent_class="MockAgent"
+        )
 
         agent1 = MockAgent(agent1_config)
         agent2 = MockAgent(agent2_config)
 
         # Create multiple test scenarios
         scenario1_config = ScenarioConfig(
-            name="scenario1", description="Test scenario 1", domain="test", duration_ticks=20
+            name="scenario1",
+            description="Test scenario 1",
+            domain="test",
+            duration_ticks=20,
         )
         scenario2_config = ScenarioConfig(
-            name="scenario2", description="Test scenario 2", domain="test", duration_ticks=20
+            name="scenario2",
+            description="Test scenario 2",
+            domain="test",
+            duration_ticks=20,
         )
 
         scenario1 = TestScenario(scenario1_config)
@@ -674,10 +708,14 @@ class TestAgentIntegration:
         # Run benchmarks concurrently
         tasks = [
             benchmark_engine.run_benchmark(
-                scenario_name="scenario1", agent_ids=["agent1"], metric_names=["test_metric"]
+                scenario_name="scenario1",
+                agent_ids=["agent1"],
+                metric_names=["test_metric"],
             ),
             benchmark_engine.run_benchmark(
-                scenario_name="scenario2", agent_ids=["agent2"], metric_names=["test_metric"]
+                scenario_name="scenario2",
+                agent_ids=["agent2"],
+                metric_names=["test_metric"],
             ),
         ]
 

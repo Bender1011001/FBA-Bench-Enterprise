@@ -33,9 +33,10 @@ from ..core.engine import BenchmarkEngine, BenchmarkResult
 
 # Import existing systems
 try:
+    from fba_bench.core.types import SimulationState, ToolCall
+
     from agent_runners.base_runner import AgentRunner
     from agent_runners.registry import create_runner, supported_runners
-    from fba_bench.core.types import SimulationState, ToolCall
 
     AGENT_RUNNERS_AVAILABLE = True
 except ImportError:
@@ -85,7 +86,11 @@ class SimpleEventBus:
             event_type: Type of event
             data: Event data
         """
-        event = {"type": event_type, "data": data, "timestamp": datetime.now().isoformat()}
+        event = {
+            "type": event_type,
+            "data": data,
+            "timestamp": datetime.now().isoformat(),
+        }
 
         self._event_history.append(event)
 
@@ -113,7 +118,9 @@ class SimpleEventBus:
 
         self._subscribers[event_type].append(handler)
 
-    def get_event_history(self, event_type: Optional[str] = None) -> List[Dict[str, Any]]:
+    def get_event_history(
+        self, event_type: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
         """
         Get event history.
 
@@ -238,7 +245,9 @@ class IntegrationManager:
 
     async def _initialize_agent_runners_integration(self) -> None:
         """Initialize integration with agent_runners system."""
-        status = IntegrationStatus(component="agent_runners", available=AGENT_RUNNERS_AVAILABLE)
+        status = IntegrationStatus(
+            component="agent_runners", available=AGENT_RUNNERS_AVAILABLE
+        )
 
         if AGENT_RUNNERS_AVAILABLE:
             try:
@@ -247,7 +256,9 @@ class IntegrationManager:
                     available_runners = RunnerFactory.list_runners()
                 else:
                     available_runners = supported_runners()
-                status.capabilities = [f"runner_{runner}" for runner in (available_runners or [])]
+                status.capabilities = [
+                    f"runner_{runner}" for runner in (available_runners or [])
+                ]
                 status.version = "integrated"
                 logger.info(
                     f"Agent runners integration successful. Available runners: {available_runners}"
@@ -263,7 +274,9 @@ class IntegrationManager:
 
     async def _initialize_legacy_metrics_integration(self) -> None:
         """Initialize integration with legacy metrics system."""
-        status = IntegrationStatus(component="legacy_metrics", available=METRICS_AVAILABLE)
+        status = IntegrationStatus(
+            component="legacy_metrics", available=METRICS_AVAILABLE
+        )
 
         if METRICS_AVAILABLE:
             try:
@@ -299,7 +312,9 @@ class IntegrationManager:
 
     async def _initialize_infrastructure_integration(self) -> None:
         """Initialize integration with infrastructure system."""
-        status = IntegrationStatus(component="infrastructure", available=INFRASTRUCTURE_AVAILABLE)
+        status = IntegrationStatus(
+            component="infrastructure", available=INFRASTRUCTURE_AVAILABLE
+        )
 
         if INFRASTRUCTURE_AVAILABLE:
             try:
@@ -307,7 +322,12 @@ class IntegrationManager:
 
                 self.deployment_manager = DeploymentManager()
 
-                status.capabilities = ["deployment", "scaling", "monitoring", "load_balancing"]
+                status.capabilities = [
+                    "deployment",
+                    "scaling",
+                    "monitoring",
+                    "load_balancing",
+                ]
                 status.version = "integrated"
 
                 logger.info("Infrastructure integration successful")
@@ -331,7 +351,11 @@ class IntegrationManager:
             # Create a simple event bus for integration
             self._event_bus = SimpleEventBus()
 
-            status.capabilities = ["publish_subscribe", "event_routing", "event_persistence"]
+            status.capabilities = [
+                "publish_subscribe",
+                "event_routing",
+                "event_persistence",
+            ]
             status.version = "integrated"
 
             logger.info("Event bus integration successful")
@@ -399,8 +423,13 @@ class IntegrationManager:
 
     async def _initialize_custom_integrations(self) -> None:
         """Initialize custom integrations."""
-        for integration_name, integration_config in self.config.custom_integrations.items():
-            status = IntegrationStatus(component=f"custom_{integration_name}", available=False)
+        for (
+            integration_name,
+            integration_config,
+        ) in self.config.custom_integrations.items():
+            status = IntegrationStatus(
+                component=f"custom_{integration_name}", available=False
+            )
 
             try:
                 # Try to load custom integration
@@ -417,15 +446,23 @@ class IntegrationManager:
                         if hasattr(module, "initialize_integration"):
                             await module.initialize_integration(integration_config)
                             status.available = True
-                            status.capabilities = integration_config.get("capabilities", [])
+                            status.capabilities = integration_config.get(
+                                "capabilities", []
+                            )
                             status.version = integration_config.get("version", "custom")
 
-                            logger.info(f"Custom integration {integration_name} successful")
+                            logger.info(
+                                f"Custom integration {integration_name} successful"
+                            )
                         else:
                             # Exact message expected by unit tests
-                            status.issues.append("missing initialize_integration function")
+                            status.issues.append(
+                                "missing initialize_integration function"
+                            )
                     else:
-                        status.issues.append("Missing type or module in custom integration config")
+                        status.issues.append(
+                            "Missing type or module in custom integration config"
+                        )
                 else:
                     status.issues.append("Invalid custom integration config format")
 
@@ -456,7 +493,9 @@ class IntegrationManager:
         Returns:
             True if integration is available
         """
-        return self.status.get(component, IntegrationStatus(component, available=False)).available
+        return self.status.get(
+            component, IntegrationStatus(component, available=False)
+        ).available
 
     def get_integration_capabilities(self, component: str) -> List[str]:
         """
@@ -497,7 +536,9 @@ class IntegrationManager:
                 logger.error(f"Failed to create agent runner via RunnerFactory: {e}")
                 return None
 
-        if not (self.is_integration_available("agent_runners") or AGENT_RUNNERS_AVAILABLE):
+        if not (
+            self.is_integration_available("agent_runners") or AGENT_RUNNERS_AVAILABLE
+        ):
             logger.error("Agent runners integration not available")
             return None
 
@@ -535,7 +576,9 @@ class IntegrationManager:
             for event in events:
                 event_type = event.get("type", "unknown")
                 # Create a simple event object for legacy system
-                legacy_event = type("LegacyEvent", (), {"tick_number": tick_number, **event})()
+                legacy_event = type(
+                    "LegacyEvent", (), {"tick_number": tick_number, **event}
+                )()
 
                 self.legacy_metric_suite._handle_general_event(event_type, legacy_event)
 
@@ -573,9 +616,13 @@ class IntegrationManager:
                     "storage": "10Gi",
                 },
                 "scaling": {
-                    "enabled": config.get("environment", {}).get("parallel_execution", False),
+                    "enabled": config.get("environment", {}).get(
+                        "parallel_execution", False
+                    ),
                     "min_instances": 1,
-                    "max_instances": config.get("environment", {}).get("max_workers", 1),
+                    "max_instances": config.get("environment", {}).get(
+                        "max_workers", 1
+                    ),
                 },
             }
 
@@ -646,7 +693,9 @@ class IntegrationManager:
         self.config_manager = manager
         logger.info("Set configuration manager for integration")
 
-    async def run_integrated_benchmark(self, config: Dict[str, Any]) -> Optional[BenchmarkResult]:
+    async def run_integrated_benchmark(
+        self, config: Dict[str, Any]
+    ) -> Optional[BenchmarkResult]:
         """
         Run a benchmark using all integrated systems.
 
@@ -675,7 +724,8 @@ class IntegrationManager:
             # Add integration metadata to result
             if result:
                 result.metadata["integration_status"] = {
-                    component: status.to_dict() for component, status in self.status.items()
+                    component: status.to_dict()
+                    for component, status in self.status.items()
                 }
                 result.metadata["deployment_id"] = deployment_id
 

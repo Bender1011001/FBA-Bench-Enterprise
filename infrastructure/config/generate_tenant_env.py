@@ -8,14 +8,13 @@ Zero external dependencies beyond Python standard library.
 """
 
 import argparse
-import os
 from pathlib import Path
 from string import Template
 
 
 def render_template(template_path: Path, substitutions: dict) -> str:
     """Render a template file with given substitutions."""
-    with open(template_path, 'r') as f:
+    with open(template_path) as f:
         template_content = f.read()
     template = Template(template_content)
     return template.safe_substitute(substitutions)

@@ -100,8 +100,12 @@ class TestAgentTracer(unittest.TestCase):
         self.assertIsNotNone(trace_id)
         self.assertIn(trace_id, self.agent_tracer._agent_spans)
         self.assertEqual(self.agent_tracer._agent_spans[trace_id]["agent_id"], "agent1")
-        self.assertEqual(self.agent_tracer._agent_spans[trace_id]["decision_type"], "pricing")
-        self.assertEqual(self.agent_tracer._agent_spans[trace_id]["decision_data"]["price"], 10.0)
+        self.assertEqual(
+            self.agent_tracer._agent_spans[trace_id]["decision_type"], "pricing"
+        )
+        self.assertEqual(
+            self.agent_tracer._agent_spans[trace_id]["decision_data"]["price"], 10.0
+        )
 
     def test_trace_agent_action(self):
         """Test tracing agent actions."""
@@ -115,8 +119,12 @@ class TestAgentTracer(unittest.TestCase):
         self.assertIsNotNone(trace_id)
         self.assertIn(trace_id, self.agent_tracer._agent_spans)
         self.assertEqual(self.agent_tracer._agent_spans[trace_id]["agent_id"], "agent1")
-        self.assertEqual(self.agent_tracer._agent_spans[trace_id]["action_type"], "purchase")
-        self.assertEqual(self.agent_tracer._agent_spans[trace_id]["action_data"]["quantity"], 100)
+        self.assertEqual(
+            self.agent_tracer._agent_spans[trace_id]["action_type"], "purchase"
+        )
+        self.assertEqual(
+            self.agent_tracer._agent_spans[trace_id]["action_data"]["quantity"], 100
+        )
         self.assertTrue(self.agent_tracer._agent_spans[trace_id]["result"]["success"])
 
     def test_trace_agent_learning(self):
@@ -131,9 +139,15 @@ class TestAgentTracer(unittest.TestCase):
         self.assertIsNotNone(trace_id)
         self.assertIn(trace_id, self.agent_tracer._agent_spans)
         self.assertEqual(self.agent_tracer._agent_spans[trace_id]["agent_id"], "agent1")
-        self.assertEqual(self.agent_tracer._agent_spans[trace_id]["learning_type"], "reinforcement")
-        self.assertEqual(self.agent_tracer._agent_spans[trace_id]["learning_data"]["reward"], 1.0)
-        self.assertEqual(self.agent_tracer._agent_spans[trace_id]["model_update"]["accuracy"], 0.85)
+        self.assertEqual(
+            self.agent_tracer._agent_spans[trace_id]["learning_type"], "reinforcement"
+        )
+        self.assertEqual(
+            self.agent_tracer._agent_spans[trace_id]["learning_data"]["reward"], 1.0
+        )
+        self.assertEqual(
+            self.agent_tracer._agent_spans[trace_id]["model_update"]["accuracy"], 0.85
+        )
 
     def test_get_agent_trace(self):
         """Test getting agent traces."""
@@ -194,52 +208,77 @@ class TestSimulationTracer(unittest.TestCase):
         self.assertIsNotNone(trace_id)
         self.assertIn(trace_id, self.simulation_tracer._simulation_spans)
         self.assertEqual(
-            self.simulation_tracer._simulation_spans[trace_id]["event_type"], "market_update"
+            self.simulation_tracer._simulation_spans[trace_id]["event_type"],
+            "market_update",
         )
         self.assertEqual(
-            self.simulation_tracer._simulation_spans[trace_id]["event_data"]["price"], 10.0
+            self.simulation_tracer._simulation_spans[trace_id]["event_data"]["price"],
+            10.0,
         )
-        self.assertEqual(self.simulation_tracer._simulation_spans[trace_id]["tick"], 100)
         self.assertEqual(
-            self.simulation_tracer._simulation_spans[trace_id]["scenario_id"], "scenario1"
+            self.simulation_tracer._simulation_spans[trace_id]["tick"], 100
+        )
+        self.assertEqual(
+            self.simulation_tracer._simulation_spans[trace_id]["scenario_id"],
+            "scenario1",
         )
 
     def test_trace_simulation_state(self):
         """Test tracing simulation state."""
         trace_id = self.simulation_tracer.trace_simulation_state(
-            state_data={"agents": 10, "market_price": 10.0}, tick=100, scenario_id="scenario1"
+            state_data={"agents": 10, "market_price": 10.0},
+            tick=100,
+            scenario_id="scenario1",
         )
 
         self.assertIsNotNone(trace_id)
         self.assertIn(trace_id, self.simulation_tracer._simulation_spans)
         self.assertEqual(
-            self.simulation_tracer._simulation_spans[trace_id]["state_data"]["agents"], 10
+            self.simulation_tracer._simulation_spans[trace_id]["state_data"]["agents"],
+            10,
         )
         self.assertEqual(
-            self.simulation_tracer._simulation_spans[trace_id]["state_data"]["market_price"], 10.0
+            self.simulation_tracer._simulation_spans[trace_id]["state_data"][
+                "market_price"
+            ],
+            10.0,
         )
-        self.assertEqual(self.simulation_tracer._simulation_spans[trace_id]["tick"], 100)
         self.assertEqual(
-            self.simulation_tracer._simulation_spans[trace_id]["scenario_id"], "scenario1"
+            self.simulation_tracer._simulation_spans[trace_id]["tick"], 100
+        )
+        self.assertEqual(
+            self.simulation_tracer._simulation_spans[trace_id]["scenario_id"],
+            "scenario1",
         )
 
     def test_trace_simulation_metrics(self):
         """Test tracing simulation metrics."""
         trace_id = self.simulation_tracer.trace_simulation_metrics(
-            metrics_data={"profit": 1000.0, "market_share": 0.25}, tick=100, scenario_id="scenario1"
+            metrics_data={"profit": 1000.0, "market_share": 0.25},
+            tick=100,
+            scenario_id="scenario1",
         )
 
         self.assertIsNotNone(trace_id)
         self.assertIn(trace_id, self.simulation_tracer._simulation_spans)
         self.assertEqual(
-            self.simulation_tracer._simulation_spans[trace_id]["metrics_data"]["profit"], 1000.0
+            self.simulation_tracer._simulation_spans[trace_id]["metrics_data"][
+                "profit"
+            ],
+            1000.0,
         )
         self.assertEqual(
-            self.simulation_tracer._simulation_spans[trace_id]["metrics_data"]["market_share"], 0.25
+            self.simulation_tracer._simulation_spans[trace_id]["metrics_data"][
+                "market_share"
+            ],
+            0.25,
         )
-        self.assertEqual(self.simulation_tracer._simulation_spans[trace_id]["tick"], 100)
         self.assertEqual(
-            self.simulation_tracer._simulation_spans[trace_id]["scenario_id"], "scenario1"
+            self.simulation_tracer._simulation_spans[trace_id]["tick"], 100
+        )
+        self.assertEqual(
+            self.simulation_tracer._simulation_spans[trace_id]["scenario_id"],
+            "scenario1",
         )
 
     def test_get_simulation_trace(self):
@@ -397,7 +436,9 @@ class TestExportUtils(unittest.TestCase):
             mock_gzip.return_value.__enter__ = Mock(return_value=Mock())
             mock_gzip.return_value.__exit__ = Mock(return_value=None)
 
-            result = self.export_utils.compress_export("test_trace.json", "test_trace.json.gz")
+            result = self.export_utils.compress_export(
+                "test_trace.json", "test_trace.json.gz"
+            )
 
             self.assertTrue(result)
             mock_file.assert_called_once_with("test_trace.json", "rb")

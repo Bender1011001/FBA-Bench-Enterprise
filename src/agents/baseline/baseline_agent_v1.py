@@ -5,6 +5,7 @@ from decimal import Decimal
 from typing import Optional
 
 from money import Money
+
 from src.fba_bench_core.services.toolbox_api_service import ToolboxAPIService
 from src.fba_bench_core.services.toolbox_schemas import (
     ObserveRequest,
@@ -81,7 +82,9 @@ class BaselineAgentV1:
 
         # Compute new price with deterministic rounding to cents
         factor = Decimal("1") + signed_change
-        new_price = current_price * factor  # Money * Decimal is supported with ROUND_HALF_UP
+        new_price = (
+            current_price * factor
+        )  # Money * Decimal is supported with ROUND_HALF_UP
 
         # Safety: ensure at least 1 cent
         if new_price.cents <= 0:
@@ -180,7 +183,9 @@ def _ensure_str_task(task: Union[str, Dict[str, Any]]) -> Tuple[str, Dict[str, A
     if not isinstance(task, dict):
         raise TypeError("task must be a string or a dict")
 
-    raw_text = str(task.get("prompt") or task.get("text") or task.get("objective") or "").strip()
+    raw_text = str(
+        task.get("prompt") or task.get("text") or task.get("objective") or ""
+    ).strip()
     meta = {
         "objective": task.get("objective"),
         "constraints": task.get("constraints"),
@@ -264,7 +269,9 @@ def _apply_constraints(output: str, limit_tokens: Optional[int]) -> Tuple[str, b
     # then apply a small safety margin to avoid borderline fluctuations.
     max_chars = max(0, (limit_tokens * 4) - 8)
     truncated = (
-        (output[:max_chars].rstrip() + "… [truncated to meet constraints]") if max_chars > 0 else ""
+        (output[:max_chars].rstrip() + "… [truncated to meet constraints]")
+        if max_chars > 0
+        else ""
     )
     return truncated, True
 
@@ -283,12 +290,18 @@ def _apply_safety_redaction(text: str) -> Tuple[str, bool]:
 
 
 def _get_session_id(context: Optional[Dict[str, Any]]) -> str:
-    if context and isinstance(context.get("session_id"), str) and context["session_id"].strip():
+    if (
+        context
+        and isinstance(context.get("session_id"), str)
+        and context["session_id"].strip()
+    ):
         return context["session_id"]
     return "__default_session__"
 
 
-def _get_memory(session_id: str, capacity: int = DEFAULT_MEMORY_CAPACITY) -> Deque[Dict[str, Any]]:
+def _get_memory(
+    session_id: str, capacity: int = DEFAULT_MEMORY_CAPACITY
+) -> Deque[Dict[str, Any]]:
     dq = _MEMORY.get(session_id)
     if dq is None:
         dq = deque(maxlen=capacity)
@@ -310,7 +323,9 @@ def _gather_keywords(text: str, limit: int = 20) -> List[str]:
     return out
 
 
-def _memory_retrieve_hint(session_id: str, current_text: str, enable_memory: bool) -> Optional[str]:
+def _memory_retrieve_hint(
+    session_id: str, current_text: str, enable_memory: bool
+) -> Optional[str]:
     if not enable_memory:
         return None
     dq = _get_memory(session_id)
@@ -407,9 +422,9 @@ def _pred_extract(text: str, meta: Dict[str, Any], ctx: Dict[str, Any]) -> bool:
     if re.search(r"\bextract\b.*\b(name|date|email|id|value|amount)\b", lower):
         return True
     # Generic key:value (avoid false positives where the "key" looks like a long instruction)
-    return bool(re.search(r"\b(?:name|date|email|id|value|amount)\b\s*:\s*[^,\n]+", lower)) or bool(
-        re.search(r"\b[A-Za-z][A-Za-z0-9_ ]{0,30}:\s*[^,\n]+", text)
-    )
+    return bool(
+        re.search(r"\b(?:name|date|email|id|value|amount)\b\s*:\s*[^,\n]+", lower)
+    ) or bool(re.search(r"\b[A-Za-z][A-Za-z0-9_ ]{0,30}:\s*[^,\n]+", text))
 
 
 def _handle_extract(text: str, meta: Dict[str, Any], ctx: Dict[str, Any]) -> str:
@@ -418,7 +433,9 @@ def _handle_extract(text: str, meta: Dict[str, Any], ctx: Dict[str, Any]) -> str
     m_name = re.search(r"\bName:\s*([^,\n]+)", text, flags=re.IGNORECASE)
     if m_name:
         result["name"] = m_name.group(1).strip()
-    m_date = re.search(r"\bDate:\s*([0-9]{4}-[0-9]{2}-[0-9]{2})", text, flags=re.IGNORECASE)
+    m_date = re.search(
+        r"\bDate:\s*([0-9]{4}-[0-9]{2}-[0-9]{2})", text, flags=re.IGNORECASE
+    )
     if m_date:
         result["date"] = m_date.group(1).strip()
 
@@ -490,7 +507,9 @@ def _handle_compute(text: str, meta: Dict[str, Any], ctx: Dict[str, Any]) -> str
                     formatted = str(result)
             except Exception:
                 formatted = str(result)
-        used.append({"name": "calculator", "args": args, "result": formatted, "error": err})
+        used.append(
+            {"name": "calculator", "args": args, "result": formatted, "error": err}
+        )
         if err is None and formatted is not None:
             ctx["compute_success"] = True
             return f"Result: {formatted}"
@@ -518,12 +537,16 @@ def _handle_lookup(text: str, meta: Dict[str, Any], ctx: Dict[str, Any]) -> str:
     return str(table.get(key, ""))
 
 
-def _pred_constraint_enforcer(_text: str, _meta: Dict[str, Any], ctx: Dict[str, Any]) -> bool:
+def _pred_constraint_enforcer(
+    _text: str, _meta: Dict[str, Any], ctx: Dict[str, Any]
+) -> bool:
     # Always applicable as a finalizing step when a limit exists; evaluated after body generation
     return bool(ctx.get("max_output_tokens") is not None)
 
 
-def _handle_constraint_enforcer(text: str, _meta: Dict[str, Any], ctx: Dict[str, Any]) -> str:
+def _handle_constraint_enforcer(
+    text: str, _meta: Dict[str, Any], ctx: Dict[str, Any]
+) -> str:
     limited, _ = _apply_constraints(text, ctx.get("max_output_tokens"))
     return limited
 
@@ -541,12 +564,27 @@ def _handle_safety(text: str, _meta: Dict[str, Any], ctx: Dict[str, Any]) -> str
 # Priority-ordered deterministic rules
 _RULES: List[Rule] = [
     Rule(id="RULE_PLAN", predicate=_pred_plan, handler=_handle_plan, terminal=False),
-    Rule(id="RULE_SUMMARIZE", predicate=_pred_summarize, handler=_handle_summarize, terminal=False),
     Rule(
-        id="RULE_EXTRACT", predicate=_pred_extract, handler=_handle_extract, terminal=True
+        id="RULE_SUMMARIZE",
+        predicate=_pred_summarize,
+        handler=_handle_summarize,
+        terminal=False,
+    ),
+    Rule(
+        id="RULE_EXTRACT",
+        predicate=_pred_extract,
+        handler=_handle_extract,
+        terminal=True,
     ),  # extraction is terminal
-    Rule(id="RULE_COMPUTE", predicate=_pred_compute, handler=_handle_compute, terminal=True),
-    Rule(id="RULE_LOOKUP", predicate=_pred_lookup, handler=_handle_lookup, terminal=True),
+    Rule(
+        id="RULE_COMPUTE",
+        predicate=_pred_compute,
+        handler=_handle_compute,
+        terminal=True,
+    ),
+    Rule(
+        id="RULE_LOOKUP", predicate=_pred_lookup, handler=_handle_lookup, terminal=True
+    ),
     # Finalization rules (post-processing)
     Rule(
         id="RULE_CONSTRAINT_ENFORCER",
@@ -554,7 +592,9 @@ _RULES: List[Rule] = [
         handler=_handle_constraint_enforcer,
         terminal=False,
     ),
-    Rule(id="RULE_SAFETY", predicate=_pred_safety, handler=_handle_safety, terminal=False),
+    Rule(
+        id="RULE_SAFETY", predicate=_pred_safety, handler=_handle_safety, terminal=False
+    ),
 ]
 
 # ---------------- Core engine ----------------
@@ -663,7 +703,9 @@ def decide(
                     applied_rules.append(rule.id)
                     reasoning.append(f"Applied {rule.id}")
                     # Handler transforms output; some rules are terminal (final answer chosen)
-                    candidate = rule.handler(raw_text if not output else output, meta, ctx)
+                    candidate = rule.handler(
+                        raw_text if not output else output, meta, ctx
+                    )
                     output = candidate
                     # Track compute success deterministically
                     if (
@@ -685,8 +727,9 @@ def decide(
                 continue
 
         # Finalization: constraint enforcer and safety always run
-        if "RULE_CONSTRAINT_ENFORCER" not in applied_rules and _pred_constraint_enforcer(
-            output, meta, ctx
+        if (
+            "RULE_CONSTRAINT_ENFORCER" not in applied_rules
+            and _pred_constraint_enforcer(output, meta, ctx)
         ):
             applied_rules.append("RULE_CONSTRAINT_ENFORCER")
             reasoning.append("Applied RULE_CONSTRAINT_ENFORCER")
@@ -702,7 +745,9 @@ def decide(
 
         # Edge case: enforce conflicting constraints (e.g., max_output_tokens = 0)
         if max_tokens is not None and max_tokens <= 0:
-            output = ""  # already enforced by constraint handler, but ensure determinism
+            output = (
+                ""  # already enforced by constraint handler, but ensure determinism
+            )
             if "RULE_CONSTRAINT_ENFORCER" not in applied_rules:
                 applied_rules.append("RULE_CONSTRAINT_ENFORCER")
                 reasoning.append("Applied RULE_CONSTRAINT_ENFORCER")
@@ -732,7 +777,9 @@ def decide(
         status = "success"
     # If calculator tool produced a result (even when other tools failed), prefer success
     if any(
-        isinstance(u, dict) and u.get("name") == "calculator" and u.get("result") not in (None, "")
+        isinstance(u, dict)
+        and u.get("name") == "calculator"
+        and u.get("result") not in (None, "")
         for u in used_tools
     ):
         status = "success"
@@ -741,7 +788,10 @@ def decide(
     memory_recent: List[Dict[str, Any]] = []
     if enable_memory:
         dq = _get_memory(session_id)
-        interaction = {"task": raw_text or str(meta.get("objective") or ""), "output": output}
+        interaction = {
+            "task": raw_text or str(meta.get("objective") or ""),
+            "output": output,
+        }
         dq.append(interaction)
         memory_recent = list(dq)
 

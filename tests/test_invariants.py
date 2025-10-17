@@ -14,7 +14,9 @@ def test_accounting_identity_every_tick(sim_factory, seed, days):
         assert t.assets == t.liabilities + t.equity, f"A=L+E broke on day {t.day}"
         # Change in equity should equal net income (since owner contributions are already in equity)
         delta_equity = t.equity - audit.initial_equity
-        assert delta_equity == t.net_income_to_date, f"Equity/NI mismatch on day {t.day}"
+        assert (
+            delta_equity == t.net_income_to_date
+        ), f"Equity/NI mismatch on day {t.day}"
 
 
 def test_no_negative_inventory_units(sim_factory):

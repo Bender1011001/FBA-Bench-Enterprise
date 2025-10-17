@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import uuid
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict, List
-from dataclasses import dataclass
 
 from fba_events.base import BaseEvent
 
@@ -41,9 +41,15 @@ class StrategicPlanUpdatedEvent(BaseEvent):
             "timestamp": self.timestamp.isoformat(),
             "agent_id": self.agent_id,
             "event_type": "StrategicPlanUpdated",
-            "objectives_modified_count": len(self.update_results.get("objectives_modified", [])),
-            "objectives_added_count": len(self.update_results.get("objectives_added", [])),
-            "objectives_cancelled_count": len(self.update_results.get("objectives_cancelled", [])),
+            "objectives_modified_count": len(
+                self.update_results.get("objectives_modified", [])
+            ),
+            "objectives_added_count": len(
+                self.update_results.get("objectives_added", [])
+            ),
+            "objectives_cancelled_count": len(
+                self.update_results.get("objectives_cancelled", [])
+            ),
         }
 
 
@@ -102,6 +108,7 @@ class TacticalActionCompletedEvent(BaseEvent):
             "action_type": self.action_type,
             "strategic_objective_id": self.strategic_objective_id,
         }
+
 
 import logging
 

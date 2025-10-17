@@ -7,11 +7,10 @@ and retrieving computational results with configurable policies.
 
 import hashlib
 import json
+import pickle
 import time
 from pathlib import Path
 from typing import Any, Dict, Optional, Union
-
-import pickle
 
 
 class CacheManager:
@@ -167,7 +166,7 @@ class CacheManager:
             cache_path = self._get_cache_path(key)
             if cache_path.exists():
                 try:
-                    with open(cache_path, "r") as f:
+                    with open(cache_path) as f:
                         entry = json.load(f)
 
                     if self._is_cache_entry_valid(entry):

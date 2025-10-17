@@ -11,8 +11,7 @@ class AbstractTrustScoreService(Protocol):
 
     def calculate_trust_score(
         self, violations_count: int, buyer_feedback_scores: List[float], total_days: int
-    ) -> float:
-        ...
+    ) -> float: ...
 
 
 @dataclass
@@ -50,7 +49,9 @@ class TrustMetrics:
 
         has_violation_today = False
         for event in events:
-            if event.get("type") == "ComplianceViolationEvent":  # Assuming such an event exists
+            if (
+                event.get("type") == "ComplianceViolationEvent"
+            ):  # Assuming such an event exists
                 self.violations_count += 1
                 has_violation_today = True
             # For buyer feedback, we would need events indicating new feedback
@@ -119,11 +120,18 @@ class TrustMetrics:
         uptime_pct = float(data.get("uptime", 0.0)) / 100.0  # convert to 0-1
         mtbf = float(data.get("mean_time_between_failures", 0.0))
         mttr = float(data.get("mean_time_to_repair", 0.0))
-        reliability = uptime_pct * (mtbf / (mtbf + mttr)) if (mtbf + mttr) > 0 else uptime_pct
+        reliability = (
+            uptime_pct * (mtbf / (mtbf + mttr)) if (mtbf + mttr) > 0 else uptime_pct
+        )
         return max(0.0, min(1.0, reliability))
 
     def calculate_transparency_score(self, data: Dict[str, float]) -> float:
-        fields = ["decision_explanations", "data_provenance", "model_documentation", "audit_trail"]
+        fields = [
+            "decision_explanations",
+            "data_provenance",
+            "model_documentation",
+            "audit_trail",
+        ]
         vals = [float(data.get(k, 0.0)) for k in fields]
         return max(0.0, min(1.0, sum(vals) / (len(vals) or 1)))
 

@@ -13,16 +13,14 @@ This script:
 Usage:
     python scripts/publish_leaderboard.py
 """
+import asyncio
 import os
 import re
-import json
-import asyncio
-from datetime import datetime
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
 
-from leaderboard.score_tracker import ScoreTracker
-from leaderboard.leaderboard_renderer import LeaderboardRenderer
 from leaderboard.leaderboard_manager import LeaderboardManager
+from leaderboard.leaderboard_renderer import LeaderboardRenderer
+from leaderboard.score_tracker import ScoreTracker
 
 ARTIFACTS_ROOT = "artifacts/year_runs"
 SCORE_FALLBACK_PASS = 100.0
@@ -54,7 +52,7 @@ def parse_summary_md(summary_path: str) -> List[Dict[str, Any]]:
     entries: List[Dict[str, Any]] = []
     if not os.path.exists(summary_path):
         return entries
-    with open(summary_path, "r", encoding="utf-8") as f:
+    with open(summary_path, encoding="utf-8") as f:
         lines = [l.strip() for l in f.readlines()]
 
     current_tier = None
@@ -99,7 +97,7 @@ def extract_score_from_log(log_path: str) -> Optional[float]:
         r"Score[:=]\s*([0-9]+(?:\.[0-9]+)?)",
     ]
     try:
-        with open(log_path, "r", encoding="utf-8", errors="ignore") as f:
+        with open(log_path, encoding="utf-8", errors="ignore") as f:
             text = f.read()
     except Exception:
         return None

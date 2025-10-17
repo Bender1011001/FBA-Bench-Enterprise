@@ -90,7 +90,9 @@ class ComplianceValidator:
                 if rule.critical:
                     critical_failures += 1
                 evaluations.append(
-                    RuleEvaluation(rule=rule, passed=False, message=msg or "Failed", value=value)
+                    RuleEvaluation(
+                        rule=rule, passed=False, message=msg or "Failed", value=value
+                    )
                 )
 
         failed = total - passed
@@ -123,7 +125,11 @@ class ComplianceValidator:
 
         # Required presence
         if rule.required and value is None:
-            return False, f"Required value missing at path '{rule.path or '<root>'}'", value
+            return (
+                False,
+                f"Required value missing at path '{rule.path or '<root>'}'",
+                value,
+            )
 
         # If not required and missing, count as pass (no constraint to check)
         if value is None:
@@ -147,9 +153,17 @@ class ComplianceValidator:
         # String constraints
         if isinstance(value, str):
             if rule.min_length is not None and len(value) < rule.min_length:
-                return False, f"Length {len(value)} < min_length {rule.min_length}", value
+                return (
+                    False,
+                    f"Length {len(value)} < min_length {rule.min_length}",
+                    value,
+                )
             if rule.max_length is not None and len(value) > rule.max_length:
-                return False, f"Length {len(value)} > max_length {rule.max_length}", value
+                return (
+                    False,
+                    f"Length {len(value)} > max_length {rule.max_length}",
+                    value,
+                )
             if rule.regex is not None:
                 if not re.fullmatch(rule.regex, value):
                     return False, f"Regex mismatch: pattern '{rule.regex}'", value
@@ -158,7 +172,11 @@ class ComplianceValidator:
         if rule.allowed_values is not None:
             allowed_set = set(rule.allowed_values)
             if value not in allowed_set:
-                return False, f"Value '{value}' not in allowed set {sorted(allowed_set)}", value
+                return (
+                    False,
+                    f"Value '{value}' not in allowed set {sorted(allowed_set)}",
+                    value,
+                )
 
         # Custom validator
         if rule.custom_validator is not None:

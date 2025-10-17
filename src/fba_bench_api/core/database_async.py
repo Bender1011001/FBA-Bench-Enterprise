@@ -98,7 +98,9 @@ async def create_db_tables_async() -> None:
             pass
 
     async with async_engine.begin() as conn:
-        await conn.run_sync(lambda sync_conn: Base.metadata.create_all(bind=sync_conn, checkfirst=True))
+        await conn.run_sync(
+            lambda sync_conn: Base.metadata.create_all(bind=sync_conn, checkfirst=True)
+        )
     _schema_initialized = True
 
 

@@ -41,7 +41,9 @@ class SalesResult:
         self.total_price: float = float(
             payload.get("total_price", self.quantity * self.unit_price) or 0.0
         )
-        self.discount: float = float(payload.get("discount", 0.0) or 0.0)  # percentage (0-100)
+        self.discount: float = float(
+            payload.get("discount", 0.0) or 0.0
+        )  # percentage (0-100)
 
         # Dates and channels (expose exact attributes expected by legacy tests)
         self.sale_date: Any = payload.get("sale_date")
@@ -56,7 +58,9 @@ class SalesResult:
 
         # Commission
         self.commission_rate: float = float(payload.get("commission_rate", 0.0) or 0.0)
-        self.commission_amount: float = float(payload.get("commission_amount", 0.0) or 0.0)
+        self.commission_amount: float = float(
+            payload.get("commission_amount", 0.0) or 0.0
+        )
 
         # Normalize initial totals if not explicitly provided
         if "total_price" not in payload:
@@ -107,7 +111,9 @@ class SalesResult:
         E.g., 10.0 means 10% off -> total_price *= 0.9
         """
         self.discount = float(percent)
-        self.total_price = round(self.total_price * max(0.0, 1.0 - self.discount / 100.0), 2)
+        self.total_price = round(
+            self.total_price * max(0.0, 1.0 - self.discount / 100.0), 2
+        )
 
     def update_order_status(self, new_status: str) -> None:
         self.order_status = new_status

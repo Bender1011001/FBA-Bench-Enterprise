@@ -17,6 +17,8 @@ from typing import Any, Dict
 
 import requests
 import websockets
+from money import Money
+from services.dashboard_api_service import DashboardAPIService
 
 from event_bus import EventBus
 from events import (
@@ -27,8 +29,6 @@ from events import (
     SetPriceCommand,
     TickEvent,
 )
-from money import Money
-from services.dashboard_api_service import DashboardAPIService
 
 
 class ResearchToolkitIntegrationTest:
@@ -125,7 +125,9 @@ class ResearchToolkitIntegrationTest:
 
         print("✅ Dashboard aggregation data validation passed")
         print(f"   📊 Current tick: {snapshot['current_tick']}")
-        print(f"   💰 Total revenue: ${snapshot['financial_summary']['total_revenue']/100:.2f}")
+        print(
+            f"   💰 Total revenue: ${snapshot['financial_summary']['total_revenue']/100:.2f}"
+        )
         print(f"   📦 Products tracked: {len(snapshot['products'])}")
         print(f"   🤖 Agents active: {len(snapshot['agents'])}")
 
@@ -153,11 +155,15 @@ class ResearchToolkitIntegrationTest:
                     self.test_results["rest_api_snapshot"] = True
 
                 # Test events endpoint
-                response = requests.get("http://localhost:8000/api/v1/simulation/events", timeout=2)
+                response = requests.get(
+                    "http://localhost:8000/api/v1/simulation/events", timeout=2
+                )
                 if response.status_code == 200:
                     events_data = response.json()
                     print("✅ Events endpoint working")
-                    print(f"   📝 Events returned: {len(events_data.get('events', []))}")
+                    print(
+                        f"   📝 Events returned: {len(events_data.get('events', []))}"
+                    )
                     self.test_results["rest_api_events"] = True
 
         except requests.exceptions.RequestException:
@@ -266,7 +272,9 @@ class ResearchToolkitIntegrationTest:
             raise AssertionError("Product price update not tracked")
 
         # Check sales data
-        recent_sales = [sale for sale in snapshot["sales_history"] if sale["asin"] == "B001FLOW"]
+        recent_sales = [
+            sale for sale in snapshot["sales_history"] if sale["asin"] == "B001FLOW"
+        ]
         if not recent_sales:
             raise AssertionError("Sale not recorded in dashboard")
 
@@ -298,8 +306,12 @@ class ResearchToolkitIntegrationTest:
 
         # Competitor update
         competitors = [
-            CompetitorState(asin="COMP001", price=Money(1800), bsr=2000, sales_velocity=5.5),
-            CompetitorState(asin="COMP002", price=Money(2200), bsr=1500, sales_velocity=7.2),
+            CompetitorState(
+                asin="COMP001", price=Money(1800), bsr=2000, sales_velocity=5.5
+            ),
+            CompetitorState(
+                asin="COMP002", price=Money(2200), bsr=1500, sales_velocity=7.2
+            ),
         ]
         events.append(
             CompetitorPricesUpdated(

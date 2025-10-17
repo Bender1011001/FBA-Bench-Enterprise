@@ -6,61 +6,62 @@ from typing import List
 
 from fastapi import FastAPI, Request  # type: ignore[reportMissingImports]
 from fastapi.middleware.cors import CORSMiddleware  # type: ignore[reportMissingImports]
-
 from fba_bench import __version__
 from fba_bench.core.logging import RequestIdMiddleware, setup_logging
+from opentelemetry import trace
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
 from fba_bench_api.api.exception_handlers import add_exception_handlers
-from fba_bench_api.api.routes import agents as agents_routes
-from fba_bench_api.api.routes import benchmarks as benchmarks_routes
-from fba_bench_api.api.routes import config as config_routes
-from fba_bench_api.api.routes import demo as demo_routes
-from fba_bench_api.api.routes import experiments as exp_routes
-from fba_bench_api.api.routes import golden as golden_routes, setup as setup_routes
-from fba_bench_api.api.routes import leaderboard as leaderboard_routes
-from fba_bench_api.api.routes import llm as llm_routes
-from fba_bench_api.api.routes import metrics as metrics_routes
-from fba_bench_api.api.routes import realtime as realtime_routes
-from fba_bench_api.api.routes import root as root_routes
-from fba_bench_api.api.routes import scenarios as scenarios_routes
-from fba_bench_api.api.routes import settings as settings_routes
-from fba_bench_api.api.routes import simulation as sim_routes
-from fba_bench_api.api.routes import stack as stack_routes
-from fba_bench_api.api.routes import templates as templates_routes
-from fba_bench_api.api.routes import medusa as medusa_router
+from fba_bench_api.api.routes import (
+    agents as agents_routes,
+    benchmarks as benchmarks_routes,
+    config as config_routes,
+    demo as demo_routes,
+    experiments as exp_routes,
+    golden as golden_routes,
+    leaderboard as leaderboard_routes,
+    llm as llm_routes,
+    medusa as medusa_router,
+    metrics as metrics_routes,
+    realtime as realtime_routes,
+    root as root_routes,
+    scenarios as scenarios_routes,
+    settings as settings_routes,
+    setup as setup_routes,
+    simulation as sim_routes,
+    stack as stack_routes,
+    templates as templates_routes,
+)
 from fba_bench_api.core.container import AppContainer
 from fba_bench_api.core.lifespan import lifespan
 from fba_bench_core.config import get_settings
-from opentelemetry import trace
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
 try:
     from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 except ImportError:
     SQLAlchemyInstrumentor = None
-from prometheus_client import Counter, Histogram, Gauge
-from fastapi import Request
-from starlette.middleware.base import BaseHTTPMiddleware
 import time
-import logging
+
+from starlette.middleware.base import BaseHTTPMiddleware
+
+from prometheus_client import Counter, Gauge, Histogram
 
 # Centralized, idempotent logging initialization
 setup_logging()
 logger = logging.getLogger("fba_bench_api")
 
 # JWT verification (RS256) middleware
-import time
 
-from starlette.middleware.base import BaseHTTPMiddleware  # type: ignore[reportMissingImports]
+import jwt  # PyJWT
 from starlette.middleware.httpsredirect import (
     HTTPSRedirectMiddleware,  # type: ignore[reportMissingImports]
 )
 from starlette.requests import Request  # type: ignore[reportMissingImports]
 from starlette.responses import JSONResponse  # type: ignore[reportMissingImports]
 
-import jwt  # PyJWT
 from fba_bench_api.core.redis_client import get_redis
 
 # Rate limiting (slowapi)
@@ -81,7 +82,11 @@ except ImportError:
             pass
 
         def limit(
-            self, limit_string, key_func=None, deduct_when_started=False, override_defaults=True
+            self,
+            limit_string,
+            key_func=None,
+            deduct_when_started=False,
+            override_defaults=True,
         ):
             # Returns a pass-through decorator (i.e., returns the original function without modification).
             def decorator(func):
@@ -134,7 +139,9 @@ def env_bool(name: str, default: bool) -> bool:
     """
     raw = os.getenv(name)
     if raw is None:
-        raw = os.getenv(f"FBA_{name}")  # maintain compatibility with prior FBA_AUTH_ENABLED, etc.
+        raw = os.getenv(
+            f"FBA_{name}"
+        )  # maintain compatibility with prior FBA_AUTH_ENABLED, etc.
     if raw is None:
         return bool(default)
     v = raw.strip().lower()
@@ -184,7 +191,9 @@ def _load_public_keys_from_env() -> List[str]:
                 keys.append(p)
 
     # 3) Load from file if provided
-    key_file = os.getenv("AUTH_JWT_PUBLIC_KEY_FILE") or os.getenv("FBA_AUTH_JWT_PUBLIC_KEY_FILE")
+    key_file = os.getenv("AUTH_JWT_PUBLIC_KEY_FILE") or os.getenv(
+        "FBA_AUTH_JWT_PUBLIC_KEY_FILE"
+    )
     if key_file:
         try:
             with open(key_file, encoding="utf-8") as fh:
@@ -243,7 +252,9 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
         if not AUTH_ENABLED or AUTH_TEST_BYPASS:
             return await call_next(request)
 
-        auth = request.headers.get("authorization") or request.headers.get("Authorization")
+        auth = request.headers.get("authorization") or request.headers.get(
+            "Authorization"
+        )
         if not auth or not auth.lower().startswith("bearer "):
             return JSONResponse({"detail": "Missing bearer token"}, status_code=401)
 
@@ -279,7 +290,9 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
                     raise last_err or Exception("JWT verification failed")
             else:
                 # If a JWKS URL were provided (not in current spec), add support here.
-                return JSONResponse({"detail": "JWT public key not configured"}, status_code=500)
+                return JSONResponse(
+                    {"detail": "JWT public key not configured"}, status_code=500
+                )
 
             # Blacklist check using Redis (for logout)
             jti = payload.get("jti")
@@ -288,7 +301,9 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
                     r = await get_redis()
                     if await r.sismember("blacklisted_tokens", jti):
                         logger.warning("Blacklisted token detected: %s", jti)
-                        return JSONResponse({"detail": "Token has been revoked"}, status_code=401)
+                        return JSONResponse(
+                            {"detail": "Token has been revoked"}, status_code=401
+                        )
                 except Exception as e:
                     logger.warning("Redis blacklist check failed: %s", e)
                     # Fail open: allow if Redis unavailable (better availability than strict)
@@ -317,7 +332,8 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         # HSTS for HTTPS
         if request.url.scheme == "https":
             response.headers.setdefault(
-                "Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload"
+                "Strict-Transport-Security",
+                "max-age=31536000; includeSubDomains; preload",
             )
         # Basic CSP
         response.headers.setdefault(
@@ -348,20 +364,26 @@ def create_app() -> FastAPI:
         "http_request_duration_seconds", "Duration of HTTP requests in seconds"
     )
     REQUEST_COUNT = Counter(
-        "http_requests_total", "Total number of HTTP requests", ["method", "endpoint", "status"]
+        "http_requests_total",
+        "Total number of HTTP requests",
+        ["method", "endpoint", "status"],
     )
-    ACTIVE_CONNECTIONS = Gauge("active_db_connections", "Number of active database connections")
+    ACTIVE_CONNECTIONS = Gauge(
+        "active_db_connections", "Number of active database connections"
+    )
 
     class MetricsMiddleware(BaseHTTPMiddleware):
         async def dispatch(self, request: Request, call_next):
             start_time = time.time()
             response = await call_next(request)
             process_time = time.time() - start_time
-            REQUEST_TIME.labels(method=request.method, endpoint=request.url.path).observe(
-                process_time
-            )
+            REQUEST_TIME.labels(
+                method=request.method, endpoint=request.url.path
+            ).observe(process_time)
             REQUEST_COUNT.labels(
-                method=request.method, endpoint=request.url.path, status=response.status_code
+                method=request.method,
+                endpoint=request.url.path,
+                status=response.status_code,
             ).inc()
             return response
 
@@ -429,7 +451,9 @@ def create_app() -> FastAPI:
                 # )
                 # Basic feature check for real PyJWT
                 if not hasattr(jwt, "__version__"):
-                    raise RuntimeError("Security error: PyJWT not available (missing __version__).")
+                    raise RuntimeError(
+                        "Security error: PyJWT not available (missing __version__)."
+                    )
     except Exception as _e:
         raise
 
@@ -507,12 +531,17 @@ def create_app() -> FastAPI:
 
     # Force CORS headers in development for Codespaces
     if not protected:
+
         class DevCORSForceMiddleware(BaseHTTPMiddleware):
             async def dispatch(self, request: Request, call_next):
                 response = await call_next(request)
                 response.headers["Access-Control-Allow-Origin"] = "*"
-                response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-                response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, Accept"
+                response.headers["Access-Control-Allow-Methods"] = (
+                    "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+                )
+                response.headers["Access-Control-Allow-Headers"] = (
+                    "Authorization, Content-Type, Accept"
+                )
                 if request.method == "OPTIONS":
                     response.status_code = 200
                 return response
@@ -541,7 +570,9 @@ def create_app() -> FastAPI:
     # JWT middleware (protects all but health/docs) - only if explicitly enabled and keys provided
     if AUTH_ENABLED and AUTH_JWT_PUBLIC_KEYS:
         app.add_middleware(JWTAuthMiddleware)
-        logger.info("JWTAuthMiddleware enabled (keys configured: %d)", len(AUTH_JWT_PUBLIC_KEYS))
+        logger.info(
+            "JWTAuthMiddleware enabled (keys configured: %d)", len(AUTH_JWT_PUBLIC_KEYS)
+        )
     else:
         logger.info(
             "JWTAuthMiddleware disabled (AUTH_ENABLED=%s, KEYS_CONFIGURED=%d)",
@@ -567,7 +598,9 @@ def create_app() -> FastAPI:
     # Logout route for token blacklisting
     @app.post("/logout")
     async def logout(request: Request):
-        auth = request.headers.get("authorization") or request.headers.get("Authorization")
+        auth = request.headers.get("authorization") or request.headers.get(
+            "Authorization"
+        )
         if not auth or not auth.lower().startswith("bearer "):
             return JSONResponse({"detail": "Missing bearer token"}, status_code=401)
 
@@ -578,7 +611,9 @@ def create_app() -> FastAPI:
             jti = payload.get("jti")
             exp = payload.get("exp")
             if not jti or not exp:
-                return JSONResponse({"detail": "Invalid token structure"}, status_code=400)
+                return JSONResponse(
+                    {"detail": "Invalid token structure"}, status_code=400
+                )
 
             if exp > time.time():
                 ttl = int(exp - time.time())
@@ -626,8 +661,12 @@ def create_app() -> FastAPI:
     async def options_handler(request: Request, path: str):
         response = Response(status_code=200)
         response.headers["Access-Control-Allow-Origin"] = "*"
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-        response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, Accept"
+        response.headers["Access-Control-Allow-Methods"] = (
+            "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+        )
+        response.headers["Access-Control-Allow-Headers"] = (
+            "Authorization, Content-Type, Accept"
+        )
         response.headers["Access-Control-Max-Age"] = "600"
         return response
 
@@ -664,7 +703,9 @@ def create_app() -> FastAPI:
 
         # Auto-detect if checks are needed based on configured URLs (production-ready)
         check_redis = bool(
-            os.getenv("REDIS_URL") or os.getenv("FBA_BENCH_REDIS_URL") or os.getenv("FBA_REDIS_URL")
+            os.getenv("REDIS_URL")
+            or os.getenv("FBA_BENCH_REDIS_URL")
+            or os.getenv("FBA_REDIS_URL")
         )
         check_db = bool(os.getenv("DATABASE_URL") or os.getenv("FBA_BENCH_DB_URL"))
         check_event_bus = os.getenv("CHECK_EVENT_BUS", "false").lower() in (
@@ -693,8 +734,11 @@ def create_app() -> FastAPI:
                     status["redis"] = "ok" if pong else "down"
                 except Exception as e:
                     import logging
+
                     logger = logging.getLogger(__name__)
-                    logger.error(f"Redis health check failed: {str(e)} - URL: {redis_url}")
+                    logger.error(
+                        f"Redis health check failed: {str(e)} - URL: {redis_url}"
+                    )
                     status["redis"] = f"down:{type(e).__name__}:{str(e)[:50]}..."
         else:
             status["redis"] = "skipped"
@@ -744,17 +788,23 @@ def create_app() -> FastAPI:
                         eng.dispose()
                         status["db"] = "ok"
                 except Exception as e:
-                    logger.error(f"DB health check failed: {type(e).__name__}: {str(e)}")
+                    logger.error(
+                        f"DB health check failed: {type(e).__name__}: {str(e)}"
+                    )
                     status["db"] = f"down:{type(e).__name__}:{str(e)[:50]}..."
         else:
             status["db"] = "skipped"
 
         # Return 200 OK by default for development, 503 only if explicitly configured checks fail
         # Only consider actual service checks (redis, event_bus, db) when determining health status
-        service_checks = {k: v for k, v in status.items() if k in ("redis", "event_bus", "db")}
+        service_checks = {
+            k: v for k, v in status.items() if k in ("redis", "event_bus", "db")
+        }
         checked_services = [v for k, v in service_checks.items() if v != "skipped"]
         # Health is degraded only if we have checked services and any of them failed
-        is_degraded = bool(checked_services) and any(v != "ok" for v in checked_services)
+        is_degraded = bool(checked_services) and any(
+            v != "ok" for v in checked_services
+        )
         http_status = 503 if is_degraded else 200
         status["status"] = "healthy" if not is_degraded else "degraded"
         return _JSON(status, status_code=http_status)
@@ -770,13 +820,21 @@ def create_app() -> FastAPI:
     @app.get("/system/stats")
     @limiter.exempt
     async def system_stats():
-        return {"stats": {"uptime_s": int(time.time() - getattr(app.state, "start_time", time.time())), "websocket_connections": 0}}
+        return {
+            "stats": {
+                "uptime_s": int(
+                    time.time() - getattr(app.state, "start_time", time.time())
+                ),
+                "websocket_connections": 0,
+            }
+        }
 
     # Readiness probe endpoint with full DB and Redis checks
     @app.get("/ready")
     @limiter.exempt
     async def ready(request: Request):
         import datetime
+
         from starlette.responses import JSONResponse as _JSON
 
         status = {
@@ -831,7 +889,9 @@ def create_app() -> FastAPI:
         # Determine overall readiness
         required_checks = ["redis", "db"]
         failed_checks = [
-            k for k, v in status.items() if k in required_checks and v.startswith("down")
+            k
+            for k, v in status.items()
+            if k in required_checks and v.startswith("down")
         ]
         if failed_checks:
             http_status = 503

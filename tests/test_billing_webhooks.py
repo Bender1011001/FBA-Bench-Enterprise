@@ -1,23 +1,17 @@
 """Unit tests for the Stripe webhook endpoint."""
 
 import os
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
-from fastapi.testclient import TestClient
-from alembic import command
-from alembic.config import Config
-from sqlalchemy import text, create_engine
-from sqlalchemy.orm import Session
-
-from api.server import app
 from api.db import get_db, get_engine
 from api.models import Base, User
-from api.routers.billing import resolve_user
+from api.server import app
+from fastapi.testclient import TestClient
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 from stripe.error import SignatureVerificationError
-
-from pathlib import Path
-
 
 # Configure test database URL before importing modules that depend on it
 TEST_DB = "enterprise_test_webhooks.db"
@@ -104,11 +98,10 @@ class MockWebhook:
 @pytest.fixture
 def patch_construct_event(monkeypatch):
     """Patch stripe.Webhook.construct_event to return provided event."""
+
     def _patch(event_dict):
-        monkeypatch.setattr(
-            "stripe.Webhook",
-            MockWebhook(event_dict)
-        )
+        monkeypatch.setattr("stripe.Webhook", MockWebhook(event_dict))
+
     return _patch
 
 
@@ -147,7 +140,9 @@ def test_webhook_400_on_invalid_signature(client: TestClient, monkeypatch):
     assert response.json()["detail"] == "Invalid signature"
 
 
-def test_checkout_session_completed_sets_active_by_email(client: TestClient, test_user, patch_construct_event):
+def test_checkout_session_completed_sets_active_by_email(
+    client: TestClient, test_user, patch_construct_event
+):
     """checkout.session.completed with customer_details.email → set "active"."""
     os.environ["STRIPE_WEBHOOK_SECRET"] = "whsec_test"
     event = create_mock_event(
@@ -175,7 +170,9 @@ def test_checkout_session_completed_sets_active_by_email(client: TestClient, tes
         assert updated.subscription_status == "active"
 
 
-def test_checkout_session_completed_sets_active_by_metadata(client: TestClient, test_user, patch_construct_event):
+def test_checkout_session_completed_sets_active_by_metadata(
+    client: TestClient, test_user, patch_construct_event
+):
     """checkout.session.completed with metadata.user_id → set "active"."""
     os.environ["STRIPE_WEBHOOK_SECRET"] = "whsec_test"
     event = create_mock_event(
@@ -203,7 +200,9 @@ def test_checkout_session_completed_sets_active_by_metadata(client: TestClient, 
         assert updated.subscription_status == "active"
 
 
-def test_checkout_session_completed_sets_active_by_client_ref(client: TestClient, test_user, patch_construct_event):
+def test_checkout_session_completed_sets_active_by_client_ref(
+    client: TestClient, test_user, patch_construct_event
+):
     """checkout.session.completed with client_reference_id → set "active"."""
     os.environ["STRIPE_WEBHOOK_SECRET"] = "whsec_test"
     event = create_mock_event(
@@ -231,7 +230,9 @@ def test_checkout_session_completed_sets_active_by_client_ref(client: TestClient
         assert updated.subscription_status == "active"
 
 
-def test_subscription_updated_maps_status_from_event(client: TestClient, test_user, patch_construct_event):
+def test_subscription_updated_maps_status_from_event(
+    client: TestClient, test_user, patch_construct_event
+):
     """customer.subscription.updated maps statuses per rules."""
     os.environ["STRIPE_WEBHOOK_SECRET"] = "whsec_test"
     statuses = [
@@ -264,7 +265,9 @@ def test_subscription_updated_maps_status_from_event(client: TestClient, test_us
             assert updated.subscription_status == expected
 
 
-def test_subscription_updated_ignores_unknown_status(client: TestClient, test_user, patch_construct_event):
+def test_subscription_updated_ignores_unknown_status(
+    client: TestClient, test_user, patch_construct_event
+):
     """customer.subscription.updated with unknown status → ignore (no change)."""
     os.environ["STRIPE_WEBHOOK_SECRET"] = "whsec_test"
     db = next(get_db())
@@ -292,7 +295,9 @@ def test_subscription_updated_ignores_unknown_status(client: TestClient, test_us
         assert updated.subscription_status == "active"  # Unchanged
 
 
-def test_subscription_deleted_sets_canceled(client: TestClient, test_user, patch_construct_event):
+def test_subscription_deleted_sets_canceled(
+    client: TestClient, test_user, patch_construct_event
+):
     """customer.subscription.deleted → "canceled"."""
     os.environ["STRIPE_WEBHOOK_SECRET"] = "whsec_test"
     event = create_mock_event(
@@ -316,7 +321,9 @@ def test_subscription_deleted_sets_canceled(client: TestClient, test_user, patch
         assert updated.subscription_status == "canceled"
 
 
-def test_invoice_payment_succeeded_sets_active(client: TestClient, test_user, patch_construct_event):
+def test_invoice_payment_succeeded_sets_active(
+    client: TestClient, test_user, patch_construct_event
+):
     """invoice.payment_succeeded → "active" via customer_email."""
     os.environ["STRIPE_WEBHOOK_SECRET"] = "whsec_test"
     event = create_mock_event(
@@ -340,7 +347,9 @@ def test_invoice_payment_succeeded_sets_active(client: TestClient, test_user, pa
         assert updated.subscription_status == "active"
 
 
-def test_invoice_payment_failed_sets_past_due(client: TestClient, test_user, patch_construct_event):
+def test_invoice_payment_failed_sets_past_due(
+    client: TestClient, test_user, patch_construct_event
+):
     """invoice.payment_failed → "past_due" via customer_email."""
     os.environ["STRIPE_WEBHOOK_SECRET"] = "whsec_test"
     event = create_mock_event(
@@ -370,7 +379,11 @@ def test_ignores_when_user_not_resolved(client: TestClient, patch_construct_even
     # No users in DB
     event = create_mock_event(
         "checkout.session.completed",
-        {"mode": "subscription", "payment_status": "paid", "customer_email": "unknown@example.com"},
+        {
+            "mode": "subscription",
+            "payment_status": "paid",
+            "customer_email": "unknown@example.com",
+        },
     )
     patch_construct_event(event)
 
@@ -396,7 +409,9 @@ def test_ignores_unknown_event(client: TestClient, test_user, patch_construct_ev
     existing_user = db.query(User).filter(User.id == test_user.id).first()
     existing_user.subscription_status = "active"
     db.commit()
-    event = create_mock_event("unknown.event", {"metadata": {"user_id": "test-uuid-123"}})
+    event = create_mock_event(
+        "unknown.event", {"metadata": {"user_id": "test-uuid-123"}}
+    )
     patch_construct_event(event)
 
     payload = b'{"type": "unknown.event"}'
@@ -414,7 +429,9 @@ def test_ignores_unknown_event(client: TestClient, test_user, patch_construct_ev
         assert updated.subscription_status == "active"  # Unchanged
 
 
-def test_idempotency_same_event_twice(client: TestClient, test_user, patch_construct_event):
+def test_idempotency_same_event_twice(
+    client: TestClient, test_user, patch_construct_event
+):
     """Send same event twice → status correct, no error."""
     os.environ["STRIPE_WEBHOOK_SECRET"] = "whsec_test"
     event = create_mock_event(

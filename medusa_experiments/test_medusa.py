@@ -1,12 +1,14 @@
-import unittest
-from unittest.mock import Mock, patch, MagicMock
 import json
+import unittest
 from pathlib import Path
+from unittest.mock import MagicMock, Mock, patch
+
 import yaml
-import os
-from medusa_trainer import MedusaTrainer
-from medusa_experiments.schema import validate_genome_yaml
+
 from medusa_experiments.medusa_analyzer import analyze_medusa_run
+from medusa_experiments.schema import validate_genome_yaml
+from medusa_trainer import MedusaTrainer
+
 
 class TestMedusaEvolution(unittest.TestCase):
     def setUp(self):
@@ -53,7 +55,7 @@ agent:
     def test_genesis_validation(self):
         """Test 3: Validate genesis genome."""
         genesis_path = self.genomes_dir / 'student_agent_gen_0.yaml'
-        with open(genesis_path, 'r') as f:
+        with open(genesis_path) as f:
             content = f.read()
         genome = validate_genome_yaml(content)
         self.assertEqual(genome.agent.name, 'Grok-4 Bot')
@@ -78,7 +80,7 @@ agent:
         elite_path = self.genomes_dir / 'student_agent_gen_0.yaml'
         results_path = self.trainer.run_benchmark(elite_path, 0, 'student_agent')
         self.assertTrue(results_path.exists())
-        with open(results_path, 'r') as f:
+        with open(results_path) as f:
             summary = json.load(f)
         self.assertIn('profitability', summary)
         print('Benchmark integration: PASSED')

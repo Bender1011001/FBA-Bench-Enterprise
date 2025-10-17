@@ -7,16 +7,21 @@ Exports:
 """
 
 # Auto-import built-in function-style validators (each module calls register_validator on import)
-from . import (
-    determinism_check,  # noqa: F401
-    reproducibility_metadata,  # noqa: F401
-    structural_consistency,  # noqa: F401
+from src.benchmarking.validators import (  # noqa: F401
+    determinism_check,
+    reproducibility_metadata,
+    structural_consistency,
 )
+
 from .audit_trail import AuditTrailManager
 
 # Import legacy utilities for backward-compat public API
 from .deterministic import DeterministicEnvironment
-from .registry import get_validator, list_validators, register_validator  # function-style helpers
+from .registry import (
+    get_validator,
+    list_validators,
+    register_validator,
+)  # function-style helpers
 from .reproducibility_validator import ReproducibilityValidator
 from .statistical_validator import StatisticalValidator
 from .version_control import VersionControlManager

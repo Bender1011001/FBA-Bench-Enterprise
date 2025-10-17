@@ -24,7 +24,9 @@ from tests.benchmarks.performance_benchmarks import PerformanceBenchmarkSuite
 from tests.community.extensibility_tests import CommunityAndExtensibilityTestSuite
 from tests.curriculum.scenario_curriculum_tests import ScenarioAndCurriculumTestSuite
 from tests.integration.real_world_integration_tests import RealWorldIntegrationTestSuite
-from tests.integration.test_comprehensive_integration import ComprehensiveIntegrationTests
+from tests.integration.test_comprehensive_integration import (
+    ComprehensiveIntegrationTests,
+)
 from tests.regression.regression_tests import RegressionTestSuite
 from tests.validation.functional_validation import FunctionalValidationSuite
 
@@ -101,7 +103,10 @@ class TestOrchestrationSystem:
             TestCategory.SCENARIO_CURRICULUM: [TestCategory.FUNCTIONAL],
             TestCategory.REAL_WORLD_INTEGRATION: [TestCategory.FUNCTIONAL],
             # Regression tests might depend on functional/integration stability
-            TestCategory.REGRESSION: [TestCategory.FUNCTIONAL, TestCategory.INTEGRATION],
+            TestCategory.REGRESSION: [
+                TestCategory.FUNCTIONAL,
+                TestCategory.INTEGRATION,
+            ],
             # Extensibility tests might depend on core functionality
             TestCategory.EXTENSIBILITY: [TestCategory.FUNCTIONAL],
         }
@@ -122,7 +127,8 @@ class TestOrchestrationSystem:
 
         # Keep track of remaining categories and their dependencies
         remaining_categories = {
-            cat: set(self.inter_suite_dependencies.get(cat, [])) for cat in categories_to_run
+            cat: set(self.inter_suite_dependencies.get(cat, []))
+            for cat in categories_to_run
         }
 
         while remaining_categories:
@@ -139,7 +145,9 @@ class TestOrchestrationSystem:
                     "Circular or unsatisfied dependencies detected after trying to resolve all dependencies. Cannot determine a valid test order."
                 )
                 unresolved = ", ".join(remaining_categories.keys())
-                raise ValueError(f"Could not resolve test dependencies. Unresolved: {unresolved}")
+                raise ValueError(
+                    f"Could not resolve test dependencies. Unresolved: {unresolved}"
+                )
 
             # Add runnable categories to the resolved order and mark dependencies as satisfied
             for cat in runnable_now:
@@ -157,7 +165,9 @@ class TestOrchestrationSystem:
         self.orchestration_config = config
 
         start_time = datetime.now()
-        logger.info(f"Starting FBA-Bench Test Orchestration at {start_time.isoformat()}")
+        logger.info(
+            f"Starting FBA-Bench Test Orchestration at {start_time.isoformat()}"
+        )
 
         if self.orchestration_config.clear_output_dir and self.output_dir.exists():
             shutil.rmtree(self.output_dir)
@@ -207,7 +217,9 @@ class TestOrchestrationSystem:
                     start_time, "No categories derived from specific tests."
                 )
         else:
-            logger.error(f"Invalid orchestration mode or missing parameters: {config.mode}")
+            logger.error(
+                f"Invalid orchestration mode or missing parameters: {config.mode}"
+            )
             return self._create_early_exit_result(
                 start_time, "Invalid orchestration configuration."
             )
@@ -216,7 +228,9 @@ class TestOrchestrationSystem:
             resolved_order = await self._resolve_dependencies(suites_to_run)
         except ValueError as e:
             logger.error(f"Dependency resolution failed: {e}")
-            return self._create_early_exit_result(start_time, f"Dependency resolution failed: {e}")
+            return self._create_early_exit_result(
+                start_time, f"Dependency resolution failed: {e}"
+            )
 
         detailed_results: Dict[TestCategory, Any] = {}
         successful_suites = 0
@@ -238,9 +252,12 @@ class TestOrchestrationSystem:
 
             try:
                 # Dynamically call the primary run method of each suite
-                if hasattr(test_suite_instance, f"run_{category.value.replace('_', '')}_suite"):
+                if hasattr(
+                    test_suite_instance, f"run_{category.value.replace('_', '')}_suite"
+                ):
                     run_method = getattr(
-                        test_suite_instance, f"run_{category.value.replace('_', '')}_suite"
+                        test_suite_instance,
+                        f"run_{category.value.replace('_', '')}_suite",
                     )
                     result = await run_method()
                 elif hasattr(test_suite_instance, "run_suite"):
@@ -254,13 +271,16 @@ class TestOrchestrationSystem:
                 detailed_results[category] = result
 
                 if (
-                    result.get("overall_success", True) or result.get("success_rate", 0) > 0.7
+                    result.get("overall_success", True)
+                    or result.get("success_rate", 0) > 0.7
                 ):  # Consider partial success as overall_success for report
                     successful_suites += 1
                     logger.info(f"✅ Suite '{category.value}' completed successfully.")
                 else:
                     failed_suites += 1
-                    errors_during_run.append(f"Suite '{category.value}' reported failures.")
+                    errors_during_run.append(
+                        f"Suite '{category.value}' reported failures."
+                    )
                     logger.error(f"❌ Suite '{category.value}' reported failures.")
                     if config.stop_on_failure:
                         logger.warning("Stopping on first failure as configured.")
@@ -299,7 +319,9 @@ class TestOrchestrationSystem:
         if config.generate_report:
             await self._generate_orchestration_report(orchestration_result)
 
-        logger.info(f"FBA-Bench Test Orchestration finished. Overall success: {overall_success}")
+        logger.info(
+            f"FBA-Bench Test Orchestration finished. Overall success: {overall_success}"
+        )
         return orchestration_result
 
     async def _generate_orchestration_report(self, result: OrchestrationResult):
@@ -336,7 +358,9 @@ class TestOrchestrationSystem:
             f.write(f"**Run Start:** {result.start_time}\n")
             f.write(f"**Run End:** {result.end_time}\n")
             f.write(f"**Duration:** {result.duration_seconds:.2f} seconds\n")
-            f.write(f"**Overall Success:** {'✅ Yes' if result.overall_success else '❌ No'}\n\n")
+            f.write(
+                f"**Overall Success:** {'✅ Yes' if result.overall_success else '❌ No'}\n\n"
+            )
 
             f.write("## Summary\n")
             f.write(f"- Total Test Suites Run: {result.total_suites_run}\n")
@@ -355,10 +379,13 @@ class TestOrchestrationSystem:
             f.write("## Detailed Results by Category\n")
             for category, details in result.detailed_results.items():
                 category_success = (
-                    details.get("overall_success", False) or details.get("success_rate", 0.0) > 0.7
+                    details.get("overall_success", False)
+                    or details.get("success_rate", 0.0) > 0.7
                 )
                 status_icon = "✅" if category_success else "❌"
-                f.write(f"### {status_icon} {category.value.replace('_', ' ').title()} Suite\n")
+                f.write(
+                    f"### {status_icon} {category.value.replace('_', ' ').title()} Suite\n"
+                )
                 if "success_rate" in details:
                     f.write(f"- Success Rate: {details.get('success_rate', 0.0):.1%}\n")
                 if "total_tests" in details:
@@ -368,7 +395,9 @@ class TestOrchestrationSystem:
                 if "failed_tests" in details:
                     f.write(f"- Failed Tests: {details.get('failed_tests', 'N/A')}\n")
                 if "regression_free" in details:
-                    f.write(f"- Regression Free: {'Yes' if details['regression_free'] else 'No'}\n")
+                    f.write(
+                        f"- Regression Free: {'Yes' if details['regression_free'] else 'No'}\n"
+                    )
                 if "curriculum_validated" in details:
                     f.write(
                         f"- Curriculum Validated: {'Yes' if details['curriculum_validated'] else 'No'}\n"
@@ -409,7 +438,8 @@ class TestOrchestrationSystem:
 async def main():
     """Run automated test orchestration suite."""
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     orchestrator = TestOrchestrationSystem()
@@ -428,7 +458,9 @@ async def main():
         print("\n" + "=" * 80)
         print("FBA-BENCH TEST ORCHESTRATION SUMMARY")
         print("=" * 80)
-        print(f"Overall Success: {'🎉 PASSED' if results.overall_success else '❌ FAILED'}")
+        print(
+            f"Overall Success: {'🎉 PASSED' if results.overall_success else '❌ FAILED'}"
+        )
         print(f"Total Suites Run: {results.total_suites_run}")
         print(f"Suites Passed: {results.suites_passed}")
         print(f"Suites Failed: {results.suites_failed}")
@@ -443,7 +475,8 @@ async def main():
         for category, details in results.detailed_results.items():
             status_icon = (
                 "✅"
-                if details.get("overall_success", True) or details.get("success_rate", 0.0) > 0.7
+                if details.get("overall_success", True)
+                or details.get("success_rate", 0.0) > 0.7
                 else "❌"
             )
             print(
@@ -456,7 +489,9 @@ async def main():
             sys.exit(1)  # Indicate failure in CLI if running from script
 
     except Exception as e:
-        logger.critical(f"Orchestration system crashed unexpectedly: {e}", exc_info=True)
+        logger.critical(
+            f"Orchestration system crashed unexpectedly: {e}", exc_info=True
+        )
         sys.exit(1)
 
 

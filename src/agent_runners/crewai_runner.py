@@ -61,11 +61,15 @@ class ToolSpec(BaseModel):
 class CrewAIRunnerConfig(BaseModel):
     """Pydantic v2 config for CrewAI runner."""
 
-    model: Optional[str] = Field(default=None, description="Model name for the LLM provider")
+    model: Optional[str] = Field(
+        default=None, description="Model name for the LLM provider"
+    )
     temperature: Optional[float] = Field(default=0.3, ge=0.0, le=2.0)
     max_steps: Optional[int] = Field(default=5, ge=1)
     tools: Optional[List[Union[ToolSpec, Callable[..., Any], Dict[str, Any]]]] = None
-    memory: Optional[bool] = Field(default=False, description="Enable memory if supported")
+    memory: Optional[bool] = Field(
+        default=False, description="Enable memory if supported"
+    )
     system_prompt: Optional[str] = Field(
         default="You are an FBA pricing expert. Provide JSON-only outputs.",
     )
@@ -94,7 +98,9 @@ class CrewAIRunnerConfig(BaseModel):
 class CrewAITaskInput(BaseModel):
     """Per-run input schema."""
 
-    prompt: Optional[str] = Field(default=None, description="User high-level task prompt")
+    prompt: Optional[str] = Field(
+        default=None, description="User high-level task prompt"
+    )
     products: Optional[List[Dict[str, Any]]] = None
     market_conditions: Optional[Dict[str, Any]] = None
     recent_events: Optional[List[Dict[str, Any]]] = None
@@ -137,7 +143,11 @@ def _normalize_tools(
             norm.append(t)
         elif callable(t):
             norm.append(
-                ToolSpec(name=getattr(t, "__name__", "tool"), description=t.__doc__, callable=t)
+                ToolSpec(
+                    name=getattr(t, "__name__", "tool"),
+                    description=t.__doc__,
+                    callable=t,
+                )
             )
         elif isinstance(t, dict):
             norm.append(ToolSpec.model_validate(t))
@@ -197,8 +207,11 @@ class CrewAIRunner(AgentRunner):
     def _do_initialize(self) -> None:
         """Instantiate CrewAI agent and crew (soft import)."""
         try:
-            from crewai import Agent as CrewAgent  # type: ignore
-            from crewai import Crew, Task
+            from crewai import (
+                Agent as CrewAgent,  # type: ignore
+                Crew,
+                Task,
+            )
         except Exception as e:
             raise AgentRunnerInitializationError(
                 "CrewAI is not installed. Install extras: pip install 'crewai>=0.28'",
@@ -222,7 +235,9 @@ class CrewAIRunner(AgentRunner):
             agent=self._crewai_agent,
             expected_output="JSON with pricing decisions",
         )
-        self._crew = Crew(agents=[self._crewai_agent], tasks=[placeholder], verbose=_verbose)
+        self._crew = Crew(
+            agents=[self._crewai_agent], tasks=[placeholder], verbose=_verbose
+        )
 
     def _wrap_tools_for_crewai(self, tools_spec: List[ToolSpec]) -> List[Any]:
         """Best-effort wrapping of tools to CrewAI Tool interface.
@@ -299,7 +314,9 @@ class CrewAIRunner(AgentRunner):
                 "metrics": {"duration_ms": int((time.monotonic() - started) * 1000)},
             }
 
-        await _maybe_publish_progress(topic, {"phase": "start", "at": _now_iso(), "tick": inp.tick})
+        await _maybe_publish_progress(
+            topic, {"phase": "start", "at": _now_iso(), "tick": inp.tick}
+        )
 
         # Ensure initialized; AgentRunner constructor usually did it, but guard
         if self.status != AgentRunnerStatus.READY:
@@ -334,16 +351,22 @@ class CrewAIRunner(AgentRunner):
             # Replace tasks, run
             self._crew.tasks = [task]  # type: ignore[attr-defined]
 
-            await _maybe_publish_progress(topic, {"phase": "inference_start", "at": _now_iso()})
+            await _maybe_publish_progress(
+                topic, {"phase": "inference_start", "at": _now_iso()}
+            )
             result = await asyncio.to_thread(self._crew.kickoff)  # type: ignore[attr-defined]
-            await _maybe_publish_progress(topic, {"phase": "inference_end", "at": _now_iso()})
+            await _maybe_publish_progress(
+                topic, {"phase": "inference_end", "at": _now_iso()}
+            )
 
             output_text = result if isinstance(result, str) else str(result)
 
             # Basic post-processing: attempt to detect tool usage if the framework surfaces it
             # CrewAI's public API for tool traces is limited; record provided tools as available.
             for ts in tools_spec:
-                tool_calls.append({"name": ts.name or "tool", "args": None, "result": None})
+                tool_calls.append(
+                    {"name": ts.name or "tool", "args": None, "result": None}
+                )
 
             steps.append({"role": "assistant", "content": output_text})
 

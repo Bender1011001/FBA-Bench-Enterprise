@@ -20,7 +20,11 @@ class CostTrackingService:
         self._by_cycle: dict[str, dict[str, Decimal | int]] = {}
 
     def record_usage(
-        self, model: str, usage: dict, agent_id: str | None = None, cycle_id: str | None = None
+        self,
+        model: str,
+        usage: dict,
+        agent_id: str | None = None,
+        cycle_id: str | None = None,
     ):
         """
         Records the token usage from an API call and updates the totals.

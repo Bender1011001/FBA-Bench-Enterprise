@@ -122,11 +122,15 @@ class SkillActionGenerated(BaseEvent):
 
         # Validate skill_name: Must be a non-empty string.
         if not self.skill_name:
-            raise ValueError("Skill name cannot be empty for SkillActionGenerated event.")
+            raise ValueError(
+                "Skill name cannot be empty for SkillActionGenerated event."
+            )
 
         # Validate action_type: Must be a non-empty string.
         if not self.action_type:
-            raise ValueError("Action type cannot be empty for SkillActionGenerated event.")
+            raise ValueError(
+                "Action type cannot be empty for SkillActionGenerated event."
+            )
 
         # Validate confidence_score: Must be within [0.0, 1.0].
         if not 0.0 <= self.confidence_score <= 1.0:
@@ -199,11 +203,15 @@ class SkillConflictDetected(BaseEvent):
 
         # Validate conflict_type: Must be a non-empty string.
         if not self.conflict_type:
-            raise ValueError("Conflict type cannot be empty for SkillConflictDetected event.")
+            raise ValueError(
+                "Conflict type cannot be empty for SkillConflictDetected event."
+            )
 
         # Validate resolution: Must be a non-empty string.
         if not self.resolution:
-            raise ValueError("Resolution cannot be empty for SkillConflictDetected event.")
+            raise ValueError(
+                "Resolution cannot be empty for SkillConflictDetected event."
+            )
 
     def to_summary_dict(self) -> Dict[str, Any]:
         """
@@ -267,11 +275,15 @@ class MultiDomainDecisionMade(BaseEvent):
 
         # Validate reasoning: Must be a non-empty string.
         if not self.reasoning:
-            raise ValueError("Reasoning cannot be empty for MultiDomainDecisionMade event.")
+            raise ValueError(
+                "Reasoning cannot be empty for MultiDomainDecisionMade event."
+            )
 
         # Validate coordinated_actions: Must be a list.
         if not isinstance(self.coordinated_actions, list):
-            raise TypeError("Coordinated actions must be a list for MultiDomainDecisionMade event.")
+            raise TypeError(
+                "Coordinated actions must be a list for MultiDomainDecisionMade event."
+            )
 
         # Validate resource_allocation: Must be a dictionary.
         if not isinstance(self.resource_allocation, dict):
@@ -281,7 +293,9 @@ class MultiDomainDecisionMade(BaseEvent):
 
         # Validate agent_id: Must be a non-empty string.
         if not self.agent_id:
-            raise ValueError("Agent ID cannot be empty for MultiDomainDecisionMade event.")
+            raise ValueError(
+                "Agent ID cannot be empty for MultiDomainDecisionMade event."
+            )
 
         # Validate strategic_alignment_score: Must be within [0.0, 1.0].
         if not 0.0 <= self.strategic_alignment_score <= 1.0:
@@ -305,7 +319,9 @@ class MultiDomainDecisionMade(BaseEvent):
             "timestamp": self.timestamp.isoformat(),
             "coordinated_actions_count": len(self.coordinated_actions),
             "reasoning_summary": (
-                self.reasoning[:200] + "..." if len(self.reasoning) > 200 else self.reasoning
+                self.reasoning[:200] + "..."
+                if len(self.reasoning) > 200
+                else self.reasoning
             ),  # Truncate long reasoning
             "resource_allocation": self.resource_allocation,
             "agent_id": self.agent_id,

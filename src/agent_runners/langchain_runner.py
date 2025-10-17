@@ -96,7 +96,9 @@ class LangChainRunnerConfig(BaseModel):
 class LangChainTaskInput(BaseModel):
     """Per-run input schema."""
 
-    prompt: Optional[str] = Field(default=None, description="User high-level task prompt")
+    prompt: Optional[str] = Field(
+        default=None, description="User high-level task prompt"
+    )
     products: Optional[List[Dict[str, Any]]] = None
     market_conditions: Optional[Dict[str, Any]] = None
     recent_events: Optional[List[Dict[str, Any]]] = None
@@ -138,7 +140,11 @@ def _normalize_tools(
             norm.append(t)
         elif callable(t):
             norm.append(
-                ToolSpec(name=getattr(t, "__name__", "tool"), description=t.__doc__, callable=t)
+                ToolSpec(
+                    name=getattr(t, "__name__", "tool"),
+                    description=t.__doc__,
+                    callable=t,
+                )
             )
         elif isinstance(t, dict):
             norm.append(ToolSpec.model_validate(t))
@@ -212,7 +218,9 @@ class LangChainRunner(AgentRunner):
             "response_format": {"type": "json_object"},
         }
         if not isinstance(model_kwargs, dict):
-            logger.warning("llm_model_kwargs in config is not a dict; ignoring custom kwargs.")
+            logger.warning(
+                "llm_model_kwargs in config is not a dict; ignoring custom kwargs."
+            )
             model_kwargs = {"response_format": {"type": "json_object"}}
 
         self._llm = ChatOpenAI(
@@ -268,7 +276,9 @@ class LangChainRunner(AgentRunner):
                 )
             return wrapped
         except Exception:
-            logger.debug("LangChain Tool adapter not available; continuing without tools")
+            logger.debug(
+                "LangChain Tool adapter not available; continuing without tools"
+            )
             return []
 
     def _build_agent_with_tools(self, tools_spec: List[ToolSpec]) -> Any:
@@ -311,7 +321,9 @@ class LangChainRunner(AgentRunner):
                 "metrics": {"duration_ms": int((time.monotonic() - started) * 1000)},
             }
 
-        await _maybe_publish_progress(topic, {"phase": "start", "at": _now_iso(), "tick": inp.tick})
+        await _maybe_publish_progress(
+            topic, {"phase": "start", "at": _now_iso(), "tick": inp.tick}
+        )
 
         # Ensure initialized
         if self.status != AgentRunnerStatus.READY:
@@ -336,14 +348,18 @@ class LangChainRunner(AgentRunner):
             steps.append({"role": "user", "content": inp.prompt})
 
         try:
-            await _maybe_publish_progress(topic, {"phase": "inference_start", "at": _now_iso()})
+            await _maybe_publish_progress(
+                topic, {"phase": "inference_start", "at": _now_iso()}
+            )
 
             if self._agent is not None:
                 # Use agent with tools
                 result_text = await asyncio.to_thread(self._agent.run, prompt)  # type: ignore
                 # We don't have direct tool trace without deeper callbacks; record available tools
                 for ts in tools_spec:
-                    tool_calls.append({"name": ts.name or "tool", "args": None, "result": None})
+                    tool_calls.append(
+                        {"name": ts.name or "tool", "args": None, "result": None}
+                    )
             else:
                 # Raw LLM call using messages to preserve system prompt
                 try:
@@ -365,7 +381,9 @@ class LangChainRunner(AgentRunner):
                 # resp could be a Message or dict-like
                 result_text = getattr(resp, "content", None) or str(resp)
 
-            await _maybe_publish_progress(topic, {"phase": "inference_end", "at": _now_iso()})
+            await _maybe_publish_progress(
+                topic, {"phase": "inference_end", "at": _now_iso()}
+            )
 
             steps.append({"role": "assistant", "content": result_text})
 
@@ -373,7 +391,8 @@ class LangChainRunner(AgentRunner):
             metrics = {"duration_ms": duration_ms}
 
             await _maybe_publish_progress(
-                topic, {"phase": "complete", "at": _now_iso(), "duration_ms": duration_ms}
+                topic,
+                {"phase": "complete", "at": _now_iso(), "duration_ms": duration_ms},
             )
 
             return {

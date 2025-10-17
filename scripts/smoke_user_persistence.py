@@ -5,12 +5,10 @@ Assumes migrations have been applied (run `alembic upgrade head` first).
 """
 
 import uuid
-from contextlib import contextmanager
 
 from api.db import get_session
 from api.models import User
 from api.security import hash_password
-
 
 SAMPLE_EMAIL = "smoke_user@example.com"
 SAMPLE_PASSWORD = "testpass123"

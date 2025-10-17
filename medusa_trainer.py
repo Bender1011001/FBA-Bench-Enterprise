@@ -1,21 +1,19 @@
-import os
-import sys
 import json
 import logging
+import os
+import shutil
+import signal
+import subprocess
+import sys
+import time
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from typing import Optional
-import subprocess
-import time
-import yaml
-from datetime import datetime
-import signal
-import shutil
 
+import yaml
 from openai import OpenAI
 from pydantic import ValidationError
 
-from medusa_experiments.schema import Genome, validate_genome_yaml
+from medusa_experiments.schema import validate_genome_yaml
 
 # Constants
 BASE_DIR = Path("medusa_experiments")
@@ -181,7 +179,7 @@ class MedusaTrainer:
 
     def parse_profitability(self, results_path: Path) -> float:
         """Parse profitability from results JSON."""
-        with open(results_path, "r") as f:
+        with open(results_path) as f:
             data = json.load(f)
         # Assume key; adjust based on actual metrics (e.g., from finance_metrics)
         profit = data.get("total_profit", data.get("profitability", 0.0))
@@ -190,9 +188,9 @@ class MedusaTrainer:
     def refine_agent(self, generation_num: int, elite_results_path: Path) -> str:
         """Use LLM to refine elite into candidate YAML."""
         elite_path = GENOMES_DIR / f"student_agent_gen_{generation_num}.yaml"
-        with open(elite_path, "r") as f:
+        with open(elite_path) as f:
             elite_yaml = f.read()
-        with open(elite_results_path, "r") as f:
+        with open(elite_results_path) as f:
             elite_results = json.load(f)
 
         elite_profit = self.parse_profitability(elite_results_path)

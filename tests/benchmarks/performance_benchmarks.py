@@ -23,6 +23,13 @@ import psutil
 # Add project root to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+from memory_experiments.dual_memory_manager import DualMemoryManager
+from memory_experiments.memory_config import ConsolidationAlgorithm, MemoryConfig
+from memory_experiments.reflection_module import ReflectionModule
+from observability.trace_analyzer import TraceAnalyzer
+from reproducibility.llm_cache import LLMResponseCache
+from reproducibility.sim_seed import SimSeed
+
 from agents.hierarchical_planner import StrategicPlanner, TacticalPlanner
 from agents.skill_coordinator import SkillCoordinator
 from agents.skill_modules.marketing_manager import MarketingManager
@@ -32,12 +39,6 @@ from events import SaleOccurred, SetPriceCommand, TickEvent
 from infrastructure.distributed_coordinator import DistributedCoordinator
 from infrastructure.llm_batcher import LLMBatcher
 from infrastructure.performance_monitor import PerformanceMonitor
-from memory_experiments.dual_memory_manager import DualMemoryManager
-from memory_experiments.memory_config import ConsolidationAlgorithm, MemoryConfig
-from memory_experiments.reflection_module import ReflectionModule
-from observability.trace_analyzer import TraceAnalyzer
-from reproducibility.llm_cache import LLMResponseCache
-from reproducibility.sim_seed import SimSeed
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +89,9 @@ class PerformanceBenchmarkSuite:
         self.process = psutil.Process()
         self.baseline_memory = None
 
-    async def benchmark_distributed_agent_performance(self) -> PerformanceBenchmarkResult:
+    async def benchmark_distributed_agent_performance(
+        self,
+    ) -> PerformanceBenchmarkResult:
         """Test 20+ concurrent agents performance."""
         benchmark_name = "distributed_agent_performance"
         start_time = time.time()
@@ -125,7 +128,9 @@ class PerformanceBenchmarkSuite:
 
                 # Cognitive systems (lightweight config for performance)
                 strategic_planner = StrategicPlanner(agent_id, self.event_bus)
-                tactical_planner = TacticalPlanner(agent_id, strategic_planner, self.event_bus)
+                tactical_planner = TacticalPlanner(
+                    agent_id, strategic_planner, self.event_bus
+                )
 
                 # Skill coordination
                 skill_coordinator = SkillCoordinator(
@@ -161,7 +166,9 @@ class PerformanceBenchmarkSuite:
 
                 # Progress logging
                 if (i + 1) % 5 == 0:
-                    logger.info(f"Created {i + 1}/{self.targets.min_concurrent_agents} agents")
+                    logger.info(
+                        f"Created {i + 1}/{self.targets.min_concurrent_agents} agents"
+                    )
 
             current_memory = self.process.memory_info().rss / 1024 / 1024  # MB
             memory_per_agent = (current_memory - baseline_memory) / len(agents)
@@ -180,7 +187,9 @@ class PerformanceBenchmarkSuite:
             events_per_agent = 50
 
             for agent in agents:
-                task = asyncio.create_task(self._process_events_for_agent(agent, events_per_agent))
+                task = asyncio.create_task(
+                    self._process_events_for_agent(agent, events_per_agent)
+                )
                 event_processing_tasks.append(task)
 
             # Process all agents concurrently
@@ -193,7 +202,9 @@ class PerformanceBenchmarkSuite:
             # Calculate performance metrics
             total_events = len(agents) * events_per_agent
             events_per_second = total_events / concurrent_test_duration
-            successful_agents = sum(1 for result in processing_results if isinstance(result, int))
+            successful_agents = sum(
+                1 for result in processing_results if isinstance(result, int)
+            )
 
             # Resource usage
             final_memory = self.process.memory_info().rss / 1024 / 1024  # MB
@@ -240,7 +251,9 @@ class PerformanceBenchmarkSuite:
             )
 
         except Exception as e:
-            logger.error(f"Distributed agent performance benchmark failed: {e}", exc_info=True)
+            logger.error(
+                f"Distributed agent performance benchmark failed: {e}", exc_info=True
+            )
             duration = time.time() - start_time
 
             return PerformanceBenchmarkResult(
@@ -255,7 +268,9 @@ class PerformanceBenchmarkSuite:
                 error_details=str(e),
             )
 
-    async def _process_events_for_agent(self, agent: Dict[str, Any], event_count: int) -> int:
+    async def _process_events_for_agent(
+        self, agent: Dict[str, Any], event_count: int
+    ) -> int:
         """Helper method to process events for a single agent."""
         events_processed = 0
 
@@ -264,7 +279,9 @@ class PerformanceBenchmarkSuite:
                 # Create test event
                 if i % 3 == 0:
                     event = TickEvent(
-                        event_id=f"tick_{agent['agent_id']}_{i}", timestamp=datetime.now(), tick=i
+                        event_id=f"tick_{agent['agent_id']}_{i}",
+                        timestamp=datetime.now(),
+                        tick=i,
                     )
                 elif i % 3 == 1:
                     event = SaleOccurred(
@@ -314,7 +331,9 @@ class PerformanceBenchmarkSuite:
             await llm_batcher.start()
 
             # Configure batching parameters for efficiency
-            llm_batcher.set_batch_parameters(max_size=10, timeout_ms=100, similarity_threshold=0.8)
+            llm_batcher.set_batch_parameters(
+                max_size=10, timeout_ms=100, similarity_threshold=0.8
+            )
 
             # Test scenarios
             test_scenarios = [
@@ -323,10 +342,22 @@ class PerformanceBenchmarkSuite:
                     "name": "high_deduplication",
                     "requests": [
                         ("req_1", "What is the optimal price for ASIN-001?", "gpt-4"),
-                        ("req_2", "What is the optimal price for ASIN-001?", "gpt-4"),  # Duplicate
-                        ("req_3", "What is the optimal price for ASIN-001?", "gpt-4"),  # Duplicate
+                        (
+                            "req_2",
+                            "What is the optimal price for ASIN-001?",
+                            "gpt-4",
+                        ),  # Duplicate
+                        (
+                            "req_3",
+                            "What is the optimal price for ASIN-001?",
+                            "gpt-4",
+                        ),  # Duplicate
                         ("req_4", "What is the optimal price for ASIN-002?", "gpt-4"),
-                        ("req_5", "What is the optimal price for ASIN-002?", "gpt-4"),  # Duplicate
+                        (
+                            "req_5",
+                            "What is the optimal price for ASIN-002?",
+                            "gpt-4",
+                        ),  # Duplicate
                     ],
                 },
                 # Scenario 2: Mixed model requests
@@ -343,7 +374,10 @@ class PerformanceBenchmarkSuite:
                 # Scenario 3: Large batch
                 {
                     "name": "large_batch",
-                    "requests": [(f"req_{i+11}", f"Process order {i}", "gpt-4") for i in range(20)],
+                    "requests": [
+                        (f"req_{i+11}", f"Process order {i}", "gpt-4")
+                        for i in range(20)
+                    ],
                 },
             ]
 
@@ -370,7 +404,9 @@ class PerformanceBenchmarkSuite:
 
                 # Submit requests
                 for req_id, prompt, model in scenario["requests"]:
-                    llm_batcher.add_request(req_id, prompt, model, create_callback(req_id))
+                    llm_batcher.add_request(
+                        req_id, prompt, model, create_callback(req_id)
+                    )
                     total_requests += 1
 
                 # Wait for responses
@@ -379,7 +415,9 @@ class PerformanceBenchmarkSuite:
                 scenario_duration = time.time() - scenario_start
                 batch_processing_times.append(scenario_duration)
 
-                logger.info(f"Scenario '{scenario['name']}' completed in {scenario_duration:.3f}s")
+                logger.info(
+                    f"Scenario '{scenario['name']}' completed in {scenario_duration:.3f}s"
+                )
 
             # Allow final processing
             await asyncio.sleep(1.0)
@@ -398,7 +436,9 @@ class PerformanceBenchmarkSuite:
             baseline_cost = total_requests * 0.002  # Estimated cost per request
             actual_cost = estimated_cost
             cost_savings_percent = (
-                ((baseline_cost - actual_cost) / baseline_cost) * 100 if baseline_cost > 0 else 0
+                ((baseline_cost - actual_cost) / baseline_cost) * 100
+                if baseline_cost > 0
+                else 0
             )
 
             # Latency analysis
@@ -444,7 +484,9 @@ class PerformanceBenchmarkSuite:
             )
 
         except Exception as e:
-            logger.error(f"LLM batching efficiency benchmark failed: {e}", exc_info=True)
+            logger.error(
+                f"LLM batching efficiency benchmark failed: {e}", exc_info=True
+            )
             duration = time.time() - start_time
 
             return PerformanceBenchmarkResult(
@@ -621,7 +663,9 @@ class PerformanceBenchmarkSuite:
             )
 
         except Exception as e:
-            logger.error(f"Long-horizon memory usage benchmark failed: {e}", exc_info=True)
+            logger.error(
+                f"Long-horizon memory usage benchmark failed: {e}", exc_info=True
+            )
             duration = time.time() - start_time
 
             return PerformanceBenchmarkResult(
@@ -706,7 +750,9 @@ class PerformanceBenchmarkSuite:
             ]
 
             # Run analysis tasks concurrently
-            analysis_results = await asyncio.gather(*analysis_tasks, return_exceptions=True)
+            analysis_results = await asyncio.gather(
+                *analysis_tasks, return_exceptions=True
+            )
 
             analysis_duration = time.time() - analysis_start
 
@@ -732,7 +778,8 @@ class PerformanceBenchmarkSuite:
                 hourly_analysis[hour] = {
                     "event_count": len(events),
                     "avg_duration": statistics.mean([e["duration_ms"] for e in events]),
-                    "success_rate": sum(1 for e in events if e["success"]) / len(events),
+                    "success_rate": sum(1 for e in events if e["success"])
+                    / len(events),
                 }
             time_series_duration = time.time() - time_series_start
 
@@ -740,12 +787,16 @@ class PerformanceBenchmarkSuite:
             correlation_start = time.time()
             performance_correlations = {}
             for component in components:
-                component_events = [e for e in trace_events if e["component"] == component]
+                component_events = [
+                    e for e in trace_events if e["component"] == component
+                ]
                 if component_events:
-                    avg_duration = statistics.mean([e["duration_ms"] for e in component_events])
-                    success_rate = sum(1 for e in component_events if e["success"]) / len(
-                        component_events
+                    avg_duration = statistics.mean(
+                        [e["duration_ms"] for e in component_events]
                     )
+                    success_rate = sum(
+                        1 for e in component_events if e["success"]
+                    ) / len(component_events)
                     performance_correlations[component] = {
                         "avg_duration": avg_duration,
                         "success_rate": success_rate,
@@ -753,7 +804,9 @@ class PerformanceBenchmarkSuite:
                     }
             correlation_duration = time.time() - correlation_start
 
-            total_analysis_time = analysis_duration + time_series_duration + correlation_duration
+            total_analysis_time = (
+                analysis_duration + time_series_duration + correlation_duration
+            )
 
             # Calculate throughput metrics
             events_per_second = len(trace_events) / total_analysis_time
@@ -809,7 +862,9 @@ class PerformanceBenchmarkSuite:
                 error_details=str(e),
             )
 
-    async def _analyze_event_patterns(self, trace_events: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def _analyze_event_patterns(
+        self, trace_events: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Analyze patterns in trace events."""
         patterns = {}
 
@@ -838,11 +893,15 @@ class PerformanceBenchmarkSuite:
         durations = [e["duration_ms"] for e in trace_events]
         trends["avg_duration"] = statistics.mean(durations)
         trends["median_duration"] = statistics.median(durations)
-        trends["duration_stddev"] = statistics.stdev(durations) if len(durations) > 1 else 0
+        trends["duration_stddev"] = (
+            statistics.stdev(durations) if len(durations) > 1 else 0
+        )
 
         return trends
 
-    async def _analyze_error_patterns(self, trace_events: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def _analyze_error_patterns(
+        self, trace_events: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Analyze error patterns in trace data."""
         errors = {}
 
@@ -860,7 +919,9 @@ class PerformanceBenchmarkSuite:
 
         return errors
 
-    async def _analyze_resource_usage(self, trace_events: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def _analyze_resource_usage(
+        self, trace_events: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Analyze resource usage patterns."""
         resource_analysis = {}
 
@@ -924,7 +985,9 @@ class PerformanceBenchmarkSuite:
             # Initialize systems for testing
             seed_manager = SimSeed("determinism_test_seed")
             llm_cache = LLMResponseCache(
-                cache_file="determinism_test.cache", enable_compression=True, enable_validation=True
+                cache_file="determinism_test.cache",
+                enable_compression=True,
+                enable_validation=True,
             )
 
             # Test 1: Non-deterministic mode (baseline)
@@ -945,10 +1008,14 @@ class PerformanceBenchmarkSuite:
 
                     # Cache a response
                     test_response = {
-                        "choices": [{"message": {"content": f"Response {iteration}_{i}"}}]
+                        "choices": [
+                            {"message": {"content": f"Response {iteration}_{i}"}}
+                        ]
                     }
                     llm_cache.cache_response(
-                        prompt_hash, test_response, {"model": "gpt-4", "temperature": 0.0}
+                        prompt_hash,
+                        test_response,
+                        {"model": "gpt-4", "temperature": 0.0},
                     )
 
                     baseline_operations += 2  # get + cache operations
@@ -972,10 +1039,14 @@ class PerformanceBenchmarkSuite:
                     prompt = f"Test prompt iteration {iteration} event {i}"
                     prompt_hash = llm_cache.generate_prompt_hash(prompt, "gpt-4", 0.0)
                     test_response = {
-                        "choices": [{"message": {"content": f"Response {iteration}_{i}"}}]
+                        "choices": [
+                            {"message": {"content": f"Response {iteration}_{i}"}}
+                        ]
                     }
                     llm_cache.cache_response(
-                        prompt_hash, test_response, {"model": "gpt-4", "temperature": 0.0}
+                        prompt_hash,
+                        test_response,
+                        {"model": "gpt-4", "temperature": 0.0},
                     )
 
             deterministic_start = time.time()
@@ -1003,7 +1074,9 @@ class PerformanceBenchmarkSuite:
                 await asyncio.sleep(0.001)
 
             deterministic_duration = time.time() - deterministic_start
-            deterministic_ops_per_second = deterministic_operations / deterministic_duration
+            deterministic_ops_per_second = (
+                deterministic_operations / deterministic_duration
+            )
 
             # Calculate overhead
             overhead_percent = (
@@ -1024,7 +1097,9 @@ class PerformanceBenchmarkSuite:
 
             actual_value = overhead_percent
             meets_target = actual_value <= self.targets.max_determinism_overhead_percent
-            target_performance_ratio = actual_value / self.targets.max_determinism_overhead_percent
+            target_performance_ratio = (
+                actual_value / self.targets.max_determinism_overhead_percent
+            )
 
             resource_usage = {
                 "baseline_duration": baseline_duration,
@@ -1061,7 +1136,9 @@ class PerformanceBenchmarkSuite:
             )
 
         except Exception as e:
-            logger.error(f"Deterministic mode overhead benchmark failed: {e}", exc_info=True)
+            logger.error(
+                f"Deterministic mode overhead benchmark failed: {e}", exc_info=True
+            )
             duration = time.time() - start_time
 
             return PerformanceBenchmarkResult(
@@ -1111,7 +1188,9 @@ class PerformanceBenchmarkSuite:
                         logger.error(f"Error: {result.error_details}")
 
             except Exception as e:
-                logger.error(f"Benchmark {benchmark_method.__name__} crashed: {e}", exc_info=True)
+                logger.error(
+                    f"Benchmark {benchmark_method.__name__} crashed: {e}", exc_info=True
+                )
                 results.append(
                     PerformanceBenchmarkResult(
                         benchmark_name=benchmark_method.__name__,
@@ -1139,7 +1218,9 @@ class PerformanceBenchmarkSuite:
             if result.meets_target:
                 # Bonus for exceeding target
                 score = (
-                    min(1.5, 1.0 / result.performance_ratio) if result.performance_ratio > 0 else 0
+                    min(1.5, 1.0 / result.performance_ratio)
+                    if result.performance_ratio > 0
+                    else 0
                 )
             else:
                 # Partial credit for partial performance
@@ -1151,7 +1232,9 @@ class PerformanceBenchmarkSuite:
             performance_scores.append(score)
 
         overall_performance_score = (
-            sum(performance_scores) / len(performance_scores) if performance_scores else 0
+            sum(performance_scores) / len(performance_scores)
+            if performance_scores
+            else 0
         )
 
         summary = {
@@ -1159,7 +1242,9 @@ class PerformanceBenchmarkSuite:
             "total_benchmarks": total_benchmarks,
             "passed_benchmarks": passed_benchmarks,
             "failed_benchmarks": failed_benchmarks,
-            "success_rate": passed_benchmarks / total_benchmarks if total_benchmarks > 0 else 0,
+            "success_rate": (
+                passed_benchmarks / total_benchmarks if total_benchmarks > 0 else 0
+            ),
             "overall_performance_score": overall_performance_score,
             "benchmark_targets": self.targets.__dict__,
             "benchmark_results": [result.__dict__ for result in results],
@@ -1179,7 +1264,8 @@ async def main():
     """Run performance benchmarks with default targets."""
     # Configure logging
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     # Initialize benchmark suite
@@ -1204,7 +1290,9 @@ async def main():
         print(f"Passed: {results['passed_benchmarks']}")
         print(f"Failed: {results['failed_benchmarks']}")
         print(f"Success Rate: {results['success_rate']:.1%}")
-        print(f"Overall Performance Score: {results['overall_performance_score']:.2f}/1.0")
+        print(
+            f"Overall Performance Score: {results['overall_performance_score']:.2f}/1.0"
+        )
         print(f"Suite Duration: {results['suite_duration_seconds']:.2f}s")
 
         print("\nDetailed Results:")

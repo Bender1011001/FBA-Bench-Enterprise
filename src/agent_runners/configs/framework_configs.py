@@ -29,7 +29,9 @@ class DIYConfig:
     """Pre-built configurations for DIY agent runner."""
 
     @staticmethod
-    def advanced_agent(agent_id: str, target_asin: str = "B0DEFAULT") -> UnifiedAgentRunnerConfig:
+    def advanced_agent(
+        agent_id: str, target_asin: str = "B0DEFAULT"
+    ) -> UnifiedAgentRunnerConfig:
         """Configuration for event-driven advanced-style DIY agent using parameters."""
         return UnifiedAgentRunnerConfig(
             name=f"{agent_id}_runner",
@@ -435,17 +437,23 @@ def create_example_config(
 
     if framework == "diy":
         if config_type == "advanced_agent":
-            return DIYConfig.advanced_agent(agent_id, kwargs.get("target_asin", "B0DEFAULT"))
+            return DIYConfig.advanced_agent(
+                agent_id, kwargs.get("target_asin", "B0DEFAULT")
+            )
         elif config_type == "baseline_greedy":
             return DIYConfig.baseline_greedy(agent_id)
         elif config_type == "llm_claude":
             if not api_key:
                 raise ValueError("api_key is required for llm_claude")
-            return DIYConfig.llm_claude(agent_id, api_key, kwargs.get("target_asin", "B0DEFAULT"))
+            return DIYConfig.llm_claude(
+                agent_id, api_key, kwargs.get("target_asin", "B0DEFAULT")
+            )
         elif config_type == "llm_gpt":
             if not api_key:
                 raise ValueError("api_key is required for llm_gpt")
-            return DIYConfig.llm_gpt(agent_id, api_key, kwargs.get("target_asin", "B0DEFAULT"))
+            return DIYConfig.llm_gpt(
+                agent_id, api_key, kwargs.get("target_asin", "B0DEFAULT")
+            )
 
     elif framework == "crewai":
         if config_type == "standard_crew":

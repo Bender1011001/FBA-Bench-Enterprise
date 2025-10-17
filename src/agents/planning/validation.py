@@ -2,10 +2,9 @@ from __future__ import annotations
 
 import logging
 from datetime import timedelta
-from typing import Dict, List, Any
+from typing import Any, Dict, List
 
 from .models import StrategicObjective, TacticalAction
-
 
 logger = logging.getLogger(__name__)
 
@@ -135,6 +134,8 @@ async def optimize_action_scheduling(
     if conflicting_actions:
         # Reschedule to avoid conflict
         latest_conflict = max(conflicting_actions, key=lambda a: a.scheduled_execution)
-        action.scheduled_execution = latest_conflict.scheduled_execution + timedelta(hours=1)
+        action.scheduled_execution = latest_conflict.scheduled_execution + timedelta(
+            hours=1
+        )
 
     return action

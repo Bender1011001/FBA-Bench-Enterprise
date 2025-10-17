@@ -8,19 +8,23 @@ and conflict resolution. All canonical market state is managed here.
 import logging
 from typing import Any, Dict, List, Optional
 
-from fba_events.bus import EventBus
-from fba_events.pricing import SetPriceCommand
-from fba_events.inventory import InventoryUpdate
-from fba_events.time_events import TickEvent
-
 from money import Money
 
-from .models import ProductState, CommandArbitrationResult, SimpleArbitrationResult
-from .state import WorldStateManager
+from fba_events.bus import EventBus
+from fba_events.inventory import InventoryUpdate
+from fba_events.pricing import SetPriceCommand
+from fba_events.time_events import TickEvent
+
 from .arbitration import CommandArbitrator
-from .events import handle_inventory_update, handle_tick_event_for_snapshot, save_state_snapshot
-from .persistence import InMemoryStorageBackend, PersistenceBackend
+from .events import (
+    handle_inventory_update,
+    handle_tick_event_for_snapshot,
+    save_state_snapshot,
+)
 from .factory import get_world_store, set_world_store
+from .models import CommandArbitrationResult, ProductState, SimpleArbitrationResult
+from .persistence import InMemoryStorageBackend, PersistenceBackend
+from .state import WorldStateManager
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +81,9 @@ class WorldStore:
     async def start(self):
         """Start the WorldStore service, subscribe to events, and initialize storage."""
         # Subscribe to events
-        await self.event_bus.subscribe(SetPriceCommand, self.arbitrator.handle_set_price_command)
+        await self.event_bus.subscribe(
+            SetPriceCommand, self.arbitrator.handle_set_price_command
+        )
         await self.event_bus.subscribe(InventoryUpdate, self._handle_inventory_update)
         await self.event_bus.subscribe(TickEvent, self._handle_tick_event)
 
@@ -113,7 +119,11 @@ class WorldStore:
 
         # Periodically persist snapshots
         self.snapshots_saved = await handle_tick_event_for_snapshot(
-            self.storage_backend, self.event_bus, self.state_manager, self.snapshots_saved, event
+            self.storage_backend,
+            self.event_bus,
+            self.state_manager,
+            self.snapshots_saved,
+            event,
         )
 
     # State Query Interface (delegated to state_manager)
@@ -188,7 +198,9 @@ class WorldStore:
 
     # Command arbitration (delegated)
 
-    def arbitrate_commands(self, commands: List[Dict[str, Any]]) -> SimpleArbitrationResult:
+    def arbitrate_commands(
+        self, commands: List[Dict[str, Any]]
+    ) -> SimpleArbitrationResult:
         """
         Back-compat simple arbitration for dict-based commands.
         """
@@ -214,14 +226,18 @@ class WorldStore:
         """
         Initialize a product with starting state.
         """
-        return self.state_manager.initialize_product(asin, initial_price, initial_inventory, initial_cost_basis)
+        return self.state_manager.initialize_product(
+            asin, initial_price, initial_inventory, initial_cost_basis
+        )
 
     async def save_state_snapshot(self, tick: Optional[int] = None) -> Optional[str]:
         """
         Saves a snapshot of the current WorldStore state using the configured backend.
         Publishes a WorldStateSnapshotEvent if successful.
         """
-        snapshot_id = await save_state_snapshot(self.storage_backend, self.event_bus, self.state_manager, tick)
+        snapshot_id = await save_state_snapshot(
+            self.storage_backend, self.event_bus, self.state_manager, tick
+        )
         if snapshot_id:
             self.snapshots_saved += 1
         return snapshot_id
@@ -233,7 +249,9 @@ class WorldStore:
         Returns True on success, False on failure.
         """
         if not self.storage_backend:
-            logger.warning("No storage backend configured for WorldStore, cannot load snapshot.")
+            logger.warning(
+                "No storage backend configured for WorldStore, cannot load snapshot."
+            )
             return False
 
         loaded_data = None
@@ -249,7 +267,9 @@ class WorldStore:
                 f"Current products: {len(self.state_manager.get_all_product_states())}"
             )
             return True
-        logger.warning(f"Failed to load WorldStore state snapshot {snapshot_id or 'latest'}.")
+        logger.warning(
+            f"Failed to load WorldStore state snapshot {snapshot_id or 'latest'}."
+        )
         return False
 
     def get_statistics(self) -> Dict[str, Any]:

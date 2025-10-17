@@ -26,7 +26,9 @@ async def test_experiment_stop_and_results_flow():
         assert created["status"] == "draft"
 
         # 2) Transition to running
-        r_patch = await client.patch(f"/api/v1/experiments/{exp_id}", json={"status": "running"})
+        r_patch = await client.patch(
+            f"/api/v1/experiments/{exp_id}", json={"status": "running"}
+        )
         assert r_patch.status_code == 200
         running = r_patch.json()
         assert running["status"] == "running"

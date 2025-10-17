@@ -5,11 +5,12 @@ import statistics
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
+from money import Money
+
 from fba_events.bus import EventBus  # typed event bus
 from fba_events.competitor import CompetitorPricesUpdated, CompetitorState
 from fba_events.sales import SaleOccurred
 from fba_events.time_events import TickEvent
-from money import Money
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +35,9 @@ class SalesService:
         * CompetitorPricesUpdated -> maintains competitor snapshots and summary
     """
 
-    def __init__(self, config: Dict[str, Any], fee_service: Optional[Any] = None) -> None:
+    def __init__(
+        self, config: Dict[str, Any], fee_service: Optional[Any] = None
+    ) -> None:
         self.config = dict(config or {})
         self.fee_service = fee_service
         self.event_bus: Optional[EventBus] = None
@@ -56,7 +59,9 @@ class SalesService:
                 "SalesService requires an EventBus; pass to start() or set .event_bus first."
             )
         await self.event_bus.subscribe(TickEvent, self._on_tick)
-        await self.event_bus.subscribe(CompetitorPricesUpdated, self._on_competitor_update)
+        await self.event_bus.subscribe(
+            CompetitorPricesUpdated, self._on_competitor_update
+        )
         logger.info("SalesService started and subscribed to events")
 
     async def stop(self) -> None:
@@ -79,7 +84,9 @@ class SalesService:
                     seasonal = float(md["seasonal_factor"])
             except Exception:
                 seasonal = 1.0
-            self.current_market_conditions = MarketConditions(seasonal_adjustment=seasonal)
+            self.current_market_conditions = MarketConditions(
+                seasonal_adjustment=seasonal
+            )
 
             # Let tests monkeypatch this method to control active products
             products = self._get_active_products(event.tick_number)
@@ -98,14 +105,21 @@ class SalesService:
                     total_revenue = unit_price * units_sold
                     fee_breakdown = {}
                     total_fees = Money.zero()
-                    if self.fee_service is not None and hasattr(self.fee_service, "calculate_fees"):
+                    if self.fee_service is not None and hasattr(
+                        self.fee_service, "calculate_fees"
+                    ):
                         try:
-                            total_fees, fee_breakdown = await self.fee_service.calculate_fees(
+                            (
+                                total_fees,
+                                fee_breakdown,
+                            ) = await self.fee_service.calculate_fees(
                                 p, units_sold
                             )  # type: ignore
                         except Exception:
                             total_fees, fee_breakdown = Money.zero(), {}
-                    total_profit = total_revenue - total_fees - getattr(p, "cost", Money.zero())
+                    total_profit = (
+                        total_revenue - total_fees - getattr(p, "cost", Money.zero())
+                    )
                     sale = SaleOccurred(
                         event_id=f"sale_{getattr(p, 'sku', getattr(p, 'asin', 'unknown'))}_{event.tick_number}",
                         timestamp=event.timestamp,
@@ -124,7 +138,9 @@ class SalesService:
                     )
                     await self.event_bus.publish(sale)  # type: ignore[arg-type]
         except Exception as e:
-            logger.error("Error handling TickEvent in SalesService: %s", e, exc_info=True)
+            logger.error(
+                "Error handling TickEvent in SalesService: %s", e, exc_info=True
+            )
 
     async def _on_competitor_update(self, event: CompetitorPricesUpdated) -> None:
         """

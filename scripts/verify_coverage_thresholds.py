@@ -6,8 +6,9 @@ Exits non-zero on violation with a clear report.
 """
 
 import sys
-from pathlib import Path
 import xml.etree.ElementTree as ET
+from pathlib import Path
+
 
 def parse_coverage_xml(xml_path: Path) -> dict:
     """Parse coverage.xml and return coverage data."""

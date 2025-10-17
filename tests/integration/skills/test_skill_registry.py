@@ -6,7 +6,13 @@ from agents.skill_modules.registry import create, list_skills
 
 def test_list_skills_includes_expected():
     names = {entry["name"] for entry in list_skills()}
-    assert {"calculator", "summarize", "extract_fields", "lookup", "transform_text"}.issubset(names)
+    assert {
+        "calculator",
+        "summarize",
+        "extract_fields",
+        "lookup",
+        "transform_text",
+    }.issubset(names)
 
 
 def test_create_known_and_unknown_skill():

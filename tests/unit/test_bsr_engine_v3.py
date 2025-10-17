@@ -3,10 +3,10 @@ from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
 
 import pytest
-
-from events import CompetitorPricesUpdated, CompetitorState, SaleOccurred
 from money import Money
 from services.bsr_engine_v3 import BsrEngineV3Service
+
+from events import CompetitorPricesUpdated, CompetitorState, SaleOccurred
 
 
 # A mock event bus with an event to signal completion
@@ -43,7 +43,10 @@ def dq(x: Decimal) -> Decimal:
 
 
 def make_sale_event(
-    asin: str, units_sold: int, units_demanded: int, price_dollars: Decimal = Decimal("10.00")
+    asin: str,
+    units_sold: int,
+    units_demanded: int,
+    price_dollars: Decimal = Decimal("10.00"),
 ) -> SaleOccurred:
     unit_price = Money.from_dollars(price_dollars)
     total_revenue = unit_price * units_sold
@@ -90,7 +93,10 @@ def comp_state(asin: str, price: Money, bsr: int, velocity: float) -> Competitor
 async def test_ema_updates_single_asin_over_3_sales():
     # Config: alpha 0.5 for both to simplify expected math
     svc = BsrEngineV3Service(
-        config={"ema_alpha_velocity": Decimal("0.5"), "ema_alpha_conversion": Decimal("0.5")}
+        config={
+            "ema_alpha_velocity": Decimal("0.5"),
+            "ema_alpha_conversion": Decimal("0.5"),
+        }
     )
     bus = MockEventBus()
     await bus.start()
@@ -127,7 +133,10 @@ async def test_ema_updates_single_asin_over_3_sales():
 @pytest.mark.asyncio
 async def test_market_ema_updates_via_competitor_prices_updated():
     svc = BsrEngineV3Service(
-        config={"ema_alpha_velocity": Decimal("0.5"), "ema_alpha_conversion": Decimal("0.5")}
+        config={
+            "ema_alpha_velocity": Decimal("0.5"),
+            "ema_alpha_conversion": Decimal("0.5"),
+        }
     )
     bus = MockEventBus()
     await bus.start()
@@ -217,7 +226,9 @@ async def test_relative_indices_after_min_samples():
 
         # Market EMAs from comps snapshot 1 (alpha applies, prev=None => equal to averages)
         m_v = (Decimal("10") + Decimal("20")) / Decimal("2")  # 15
-        m_c = ((Decimal("10") / (Decimal("11"))) + (Decimal("20") / (Decimal("21")))) / Decimal("2")
+        m_c = (
+            (Decimal("10") / (Decimal("11"))) + (Decimal("20") / (Decimal("21")))
+        ) / Decimal("2")
 
         eps = cfg["smoothing_eps"]
         floor = cfg["index_floor"]

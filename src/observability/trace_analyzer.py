@@ -33,7 +33,9 @@ class TraceAnalyzer:
 
     # --- Query helpers ---
     def find_traces_by_operation(self, operation: str) -> List[Dict[str, Any]]:
-        return [t for t in self._traces.values() if t.get("operation_name") == operation]
+        return [
+            t for t in self._traces.values() if t.get("operation_name") == operation
+        ]
 
     def find_traces_by_tag(self, tag: str, value: Any) -> List[Dict[str, Any]]:
         out: List[Dict[str, Any]] = []
@@ -70,7 +72,9 @@ class TraceAnalyzer:
         total = sum(int(t.get("duration", 0)) for t in traces)
         return int(total / len(traces))
 
-    def detect_anomalies(self, operation: str, threshold: float = 2.0) -> List[Dict[str, Any]]:
+    def detect_anomalies(
+        self, operation: str, threshold: float = 2.0
+    ) -> List[Dict[str, Any]]:
         """
         Simple anomaly: traces whose duration > average_duration * threshold
         """
@@ -101,7 +105,12 @@ class TraceAnalyzer:
                 continue
             key = (op, "pattern", tag_val)
             if key not in patterns:
-                patterns[key] = {"operation": op, "tag": "pattern", "value": tag_val, "count": 0}
+                patterns[key] = {
+                    "operation": op,
+                    "tag": "pattern",
+                    "value": tag_val,
+                    "count": 0,
+                }
             patterns[key]["count"] += 1
         self._trace_patterns = list(patterns.values())
         return self._trace_patterns
@@ -120,7 +129,11 @@ class TraceAnalyzer:
 
         # Unique operations
         ops = sorted(
-            {t.get("operation_name") for t in all_traces if t.get("operation_name") is not None}
+            {
+                t.get("operation_name")
+                for t in all_traces
+                if t.get("operation_name") is not None
+            }
         )
         report["operations"] = ops
 

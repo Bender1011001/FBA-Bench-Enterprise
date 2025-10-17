@@ -22,11 +22,9 @@ class PluginError(Exception):
 class PluginInterface(Protocol):
     """Protocol for general plugins."""
 
-    def initialize(self, config: Dict[str, Any]) -> Any:
-        ...
+    def initialize(self, config: Dict[str, Any]) -> Any: ...
 
-    def get_plugin_info(self) -> Dict[str, Any]:
-        ...
+    def get_plugin_info(self) -> Dict[str, Any]: ...
 
 
 class PluginType(Enum):
@@ -72,9 +70,9 @@ class PluginFramework:
         self._loaded_plugins: Dict[str, Any] = {}
 
         # Community API state
-        self._registered_named_plugins: Dict[
-            str, Any
-        ] = {}  # name -> plugin object (with async lifecycle)
+        self._registered_named_plugins: Dict[str, Any] = (
+            {}
+        )  # name -> plugin object (with async lifecycle)
         self._active_plugins: Set[str] = set()
 
         # Options
@@ -107,7 +105,9 @@ class PluginFramework:
         Register a plugin type. Expects dict with keys: name, description, base_class, interface
         Returns a generated type_id.
         """
-        type_id = f"type_{plugin_type.get('name', str(uuid.uuid4()))}_{uuid.uuid4().hex[:8]}"
+        type_id = (
+            f"type_{plugin_type.get('name', str(uuid.uuid4()))}_{uuid.uuid4().hex[:8]}"
+        )
         self._plugin_types[type_id] = dict(plugin_type)
         return type_id
 
@@ -164,7 +164,9 @@ class PluginFramework:
             try:
                 instance = cls()
             except TypeError as e:
-                raise PluginError(f"Failed to instantiate {class_name} from {module_path}: {e}")
+                raise PluginError(
+                    f"Failed to instantiate {class_name} from {module_path}: {e}"
+                )
 
         return instance
 
@@ -199,10 +201,14 @@ class PluginFramework:
         type_name = type_id_or_name.lower()
         # Attempt to find the first matching type_id by name
         selected_type_ids = [
-            tid for tid, td in self._plugin_types.items() if td.get("name", "").lower() == type_name
+            tid
+            for tid, td in self._plugin_types.items()
+            if td.get("name", "").lower() == type_name
         ]
         if selected_type_ids:
-            return [p for p in self._plugins.values() if p.get("type") in selected_type_ids]
+            return [
+                p for p in self._plugins.values() if p.get("type") in selected_type_ids
+            ]
 
         return []
 
@@ -287,7 +293,9 @@ class PluginFramework:
         plugin = self._registered_named_plugins.get(name)
         if not plugin:
             return False
-        if hasattr(plugin, "deactivate") and inspect.iscoroutinefunction(plugin.deactivate):
+        if hasattr(plugin, "deactivate") and inspect.iscoroutinefunction(
+            plugin.deactivate
+        ):
             ok = await plugin.deactivate()
             if ok and name in self._active_plugins:
                 self._active_plugins.remove(name)
@@ -308,7 +316,9 @@ class PluginFramework:
             metadata = {
                 "name": name,
                 "type": getattr(
-                    getattr(obj, "plugin_type", None), "value", str(getattr(obj, "plugin_type", ""))
+                    getattr(obj, "plugin_type", None),
+                    "value",
+                    str(getattr(obj, "plugin_type", "")),
                 ),
                 "version": getattr(obj, "version", ""),
                 "description": getattr(obj, "description", f"{name} plugin"),
@@ -330,21 +340,27 @@ class PluginFramework:
     def register_extension_point(self, name: str, handler: Callable) -> None:
         self._extension_points[name] = handler
 
-    async def execute_plugin_hook(self, hook_name: str, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute_plugin_hook(
+        self, hook_name: str, context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Execute a hook across all loaded plugin instances registered via the unit-test API.
         """
         results: Dict[str, Any] = {}
         for plugin_id, instance in self._loaded_plugins.items():
             try:
-                if hasattr(instance, hook_name) and callable(getattr(instance, hook_name)):
+                if hasattr(instance, hook_name) and callable(
+                    getattr(instance, hook_name)
+                ):
                     method = getattr(instance, hook_name)
                     if inspect.iscoroutinefunction(method):
                         results[plugin_id] = await method(context)
                     else:
                         results[plugin_id] = method(context)
             except Exception as e:  # pragma: no cover - defensive
-                logger.error("Error executing hook %s for %s: %s", hook_name, plugin_id, e)
+                logger.error(
+                    "Error executing hook %s for %s: %s", hook_name, plugin_id, e
+                )
         return results
 
     # ---------- Security helpers ----------

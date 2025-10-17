@@ -101,10 +101,15 @@ class TestAdvancedCognitiveMetrics:
                 },
                 (0.0, 100.0),
             ),
-            ({"logical_statements": [], "contradictions": 0, "total_statements": 0}, (0.0, 0.0)),
+            (
+                {"logical_statements": [], "contradictions": 0, "total_statements": 0},
+                (0.0, 0.0),
+            ),
         ],
     )
-    def test_calculate_logical_consistency(self, advanced_cognitive_metrics, data, expected_range):
+    def test_calculate_logical_consistency(
+        self, advanced_cognitive_metrics, data, expected_range
+    ):
         """Test logical consistency calculation with different data."""
         result = advanced_cognitive_metrics.calculate_logical_consistency(data)
 
@@ -126,12 +131,18 @@ class TestAdvancedCognitiveMetrics:
                 (0.0, 100.0),
             ),
             (
-                {"causal_chains": [], "correct_causal_inferences": 0, "total_causal_inferences": 0},
+                {
+                    "causal_chains": [],
+                    "correct_causal_inferences": 0,
+                    "total_causal_inferences": 0,
+                },
                 (0.0, 0.0),
             ),
         ],
     )
-    def test_calculate_causal_reasoning(self, advanced_cognitive_metrics, data, expected_range):
+    def test_calculate_causal_reasoning(
+        self, advanced_cognitive_metrics, data, expected_range
+    ):
         """Test causal reasoning calculation with different data."""
         result = advanced_cognitive_metrics.calculate_causal_reasoning(data)
 
@@ -161,7 +172,9 @@ class TestAdvancedCognitiveMetrics:
             ),
         ],
     )
-    def test_calculate_abstract_reasoning(self, advanced_cognitive_metrics, data, expected_range):
+    def test_calculate_abstract_reasoning(
+        self, advanced_cognitive_metrics, data, expected_range
+    ):
         """Test abstract reasoning calculation with different data."""
         result = advanced_cognitive_metrics.calculate_abstract_reasoning(data)
 
@@ -191,7 +204,9 @@ class TestAdvancedCognitiveMetrics:
             ),
         ],
     )
-    def test_calculate_metacognition(self, advanced_cognitive_metrics, data, expected_range):
+    def test_calculate_metacognition(
+        self, advanced_cognitive_metrics, data, expected_range
+    ):
         """Test metacognition calculation with different data."""
         result = advanced_cognitive_metrics.calculate_metacognition(data)
 
@@ -221,7 +236,9 @@ class TestAdvancedCognitiveMetrics:
             ),
         ],
     )
-    def test_calculate_multi_step_planning(self, advanced_cognitive_metrics, data, expected_range):
+    def test_calculate_multi_step_planning(
+        self, advanced_cognitive_metrics, data, expected_range
+    ):
         """Test multi-step planning calculation with different data."""
         result = advanced_cognitive_metrics.calculate_multi_step_planning(data)
 
@@ -251,7 +268,9 @@ class TestAdvancedCognitiveMetrics:
             ),
         ],
     )
-    def test_calculate_memory_efficiency(self, advanced_cognitive_metrics, data, expected_range):
+    def test_calculate_memory_efficiency(
+        self, advanced_cognitive_metrics, data, expected_range
+    ):
         """Test memory efficiency calculation with different data."""
         result = advanced_cognitive_metrics.calculate_memory_efficiency(data)
 
@@ -281,7 +300,9 @@ class TestAdvancedCognitiveMetrics:
             ),
         ],
     )
-    def test_calculate_learning_adaptation(self, advanced_cognitive_metrics, data, expected_range):
+    def test_calculate_learning_adaptation(
+        self, advanced_cognitive_metrics, data, expected_range
+    ):
         """Test learning and adaptation calculation with different data."""
         result = advanced_cognitive_metrics.calculate_learning_adaptation(data)
 
@@ -456,7 +477,9 @@ class TestBusinessIntelligenceMetrics:
             ),
         ],
     )
-    def test_calculate_risk_assessment(self, business_intelligence_metrics, data, expected_range):
+    def test_calculate_risk_assessment(
+        self, business_intelligence_metrics, data, expected_range
+    ):
         """Test risk assessment calculation with different data."""
         result = business_intelligence_metrics.calculate_risk_assessment(data)
 
@@ -486,7 +509,9 @@ class TestBusinessIntelligenceMetrics:
             ),
         ],
     )
-    def test_calculate_roi_optimization(self, business_intelligence_metrics, data, expected_range):
+    def test_calculate_roi_optimization(
+        self, business_intelligence_metrics, data, expected_range
+    ):
         """Test ROI optimization calculation with different data."""
         result = business_intelligence_metrics.calculate_roi_optimization(data)
 
@@ -552,7 +577,9 @@ class TestBusinessIntelligenceMetrics:
         self, business_intelligence_metrics, data, expected_range
     ):
         """Test business outcome prediction calculation with different data."""
-        result = business_intelligence_metrics.calculate_business_outcome_prediction(data)
+        result = business_intelligence_metrics.calculate_business_outcome_prediction(
+            data
+        )
 
         assert isinstance(result, float)
         assert expected_range[0] <= result <= expected_range[1]
@@ -586,7 +613,9 @@ class TestBusinessIntelligenceMetrics:
             ),
         ],
     )
-    def test_calculate_overall(self, business_intelligence_metrics, data, expected_range):
+    def test_calculate_overall(
+        self, business_intelligence_metrics, data, expected_range
+    ):
         """Test overall business intelligence metrics calculation with different data."""
         result = business_intelligence_metrics.calculate(data)
 
@@ -629,7 +658,9 @@ class TestTechnicalPerformanceMetrics:
             ),
         ],
     )
-    def test_calculate_scalability(self, technical_performance_metrics, data, expected_range):
+    def test_calculate_scalability(
+        self, technical_performance_metrics, data, expected_range
+    ):
         """Test scalability calculation with different data."""
         result = technical_performance_metrics.calculate_scalability(data)
 
@@ -723,7 +754,9 @@ class TestTechnicalPerformanceMetrics:
             ),
         ],
     )
-    def test_calculate_error_handling(self, technical_performance_metrics, data, expected_range):
+    def test_calculate_error_handling(
+        self, technical_performance_metrics, data, expected_range
+    ):
         """Test error handling calculation with different data."""
         result = technical_performance_metrics.calculate_error_handling(data)
 
@@ -743,12 +776,19 @@ class TestTechnicalPerformanceMetrics:
                 (0.0, 100.0),
             ),
             (
-                {"availability": 0.2, "reliability": 0.2, "recoverability": 0.2, "stability": 0.2},
+                {
+                    "availability": 0.2,
+                    "reliability": 0.2,
+                    "recoverability": 0.2,
+                    "stability": 0.2,
+                },
                 (0.0, 100.0),
             ),
         ],
     )
-    def test_calculate_system_resilience(self, technical_performance_metrics, data, expected_range):
+    def test_calculate_system_resilience(
+        self, technical_performance_metrics, data, expected_range
+    ):
         """Test system resilience calculation with different data."""
         result = technical_performance_metrics.calculate_system_resilience(data)
 
@@ -792,7 +832,9 @@ class TestAdvancedMetricsExtended:
     """Extended test cases for advanced metrics classes."""
 
     @pytest.mark.asyncio
-    async def test_advanced_cognitive_metrics_with_missing_data(self, advanced_cognitive_metrics):
+    async def test_advanced_cognitive_metrics_with_missing_data(
+        self, advanced_cognitive_metrics
+    ):
         """Test advanced cognitive metrics with missing data."""
         # Test with missing individual metric scores
         incomplete_data = {
@@ -812,7 +854,9 @@ class TestAdvancedMetricsExtended:
         assert 0.0 <= result <= 100.0
 
     @pytest.mark.asyncio
-    async def test_advanced_cognitive_metrics_with_invalid_data(self, advanced_cognitive_metrics):
+    async def test_advanced_cognitive_metrics_with_invalid_data(
+        self, advanced_cognitive_metrics
+    ):
         """Test advanced cognitive metrics with invalid data."""
         # Test with invalid metric scores
         invalid_data = {
@@ -920,7 +964,9 @@ class TestAdvancedMetricsExtended:
         assert 0.0 <= result <= 100.0
 
     @pytest.mark.asyncio
-    async def test_ethical_safety_metrics_with_missing_data(self, ethical_safety_metrics):
+    async def test_ethical_safety_metrics_with_missing_data(
+        self, ethical_safety_metrics
+    ):
         """Test ethical safety metrics with missing data."""
         # Test with missing individual metric scores
         incomplete_data = {
@@ -940,7 +986,9 @@ class TestAdvancedMetricsExtended:
         assert 0.0 <= result <= 100.0
 
     @pytest.mark.asyncio
-    async def test_ethical_safety_metrics_with_invalid_data(self, ethical_safety_metrics):
+    async def test_ethical_safety_metrics_with_invalid_data(
+        self, ethical_safety_metrics
+    ):
         """Test ethical safety metrics with invalid data."""
         # Test with invalid metric scores
         invalid_data = {
@@ -1032,7 +1080,9 @@ class TestAdvancedMetricsExtended:
         assert 0.0 <= result <= 100.0
 
     @pytest.mark.asyncio
-    async def test_comparative_analysis_engine_with_missing_data(self, comparative_analysis_engine):
+    async def test_comparative_analysis_engine_with_missing_data(
+        self, comparative_analysis_engine
+    ):
         """Test comparative analysis engine with missing data."""
         # Test with missing individual metric scores
         incomplete_data = {
@@ -1049,7 +1099,9 @@ class TestAdvancedMetricsExtended:
         assert 0.0 <= result <= 100.0
 
     @pytest.mark.asyncio
-    async def test_comparative_analysis_engine_with_invalid_data(self, comparative_analysis_engine):
+    async def test_comparative_analysis_engine_with_invalid_data(
+        self, comparative_analysis_engine
+    ):
         """Test comparative analysis engine with invalid data."""
         # Test with invalid metric scores
         invalid_data = {
@@ -1095,7 +1147,9 @@ class TestAdvancedMetricsExtended:
         """Test strategic decision making calculation with empty data."""
         empty_data = {}
 
-        result = business_intelligence_metrics.calculate_strategic_decision_making(empty_data)
+        result = business_intelligence_metrics.calculate_strategic_decision_making(
+            empty_data
+        )
 
         # Should handle empty data gracefully
         assert isinstance(result, float)
@@ -1107,7 +1161,9 @@ class TestAdvancedMetricsExtended:
         """Test market trend analysis calculation with empty data."""
         empty_data = {}
 
-        result = business_intelligence_metrics.calculate_market_trend_analysis(empty_data)
+        result = business_intelligence_metrics.calculate_market_trend_analysis(
+            empty_data
+        )
 
         # Should handle empty data gracefully
         assert isinstance(result, float)
@@ -1131,7 +1187,9 @@ class TestAdvancedMetricsExtended:
         """Test resource utilization calculation with empty data."""
         empty_data = {}
 
-        result = technical_performance_metrics.calculate_resource_utilization(empty_data)
+        result = technical_performance_metrics.calculate_resource_utilization(
+            empty_data
+        )
 
         # Should handle empty data gracefully
         assert isinstance(result, float)
@@ -1191,7 +1249,9 @@ class TestAdvancedMetricsExtended:
         """Test descriptive statistics calculation with empty data."""
         empty_data = {}
 
-        result = statistical_analysis_framework.calculate_descriptive_statistics(empty_data)
+        result = statistical_analysis_framework.calculate_descriptive_statistics(
+            empty_data
+        )
 
         # Should handle empty data gracefully
         assert isinstance(result, float)
@@ -1203,7 +1263,9 @@ class TestAdvancedMetricsExtended:
         """Test inferential statistics calculation with empty data."""
         empty_data = {}
 
-        result = statistical_analysis_framework.calculate_inferential_statistics(empty_data)
+        result = statistical_analysis_framework.calculate_inferential_statistics(
+            empty_data
+        )
 
         # Should handle empty data gracefully
         assert isinstance(result, float)
@@ -1215,7 +1277,9 @@ class TestAdvancedMetricsExtended:
         """Test performance comparison calculation with empty data."""
         empty_data = {}
 
-        result = comparative_analysis_engine.calculate_performance_comparison(empty_data)
+        result = comparative_analysis_engine.calculate_performance_comparison(
+            empty_data
+        )
 
         # Should handle empty data gracefully
         assert isinstance(result, float)
@@ -1227,7 +1291,9 @@ class TestAdvancedMetricsExtended:
         """Test efficiency-effectiveness calculation with empty data."""
         empty_data = {}
 
-        result = comparative_analysis_engine.calculate_efficiency_effectiveness(empty_data)
+        result = comparative_analysis_engine.calculate_efficiency_effectiveness(
+            empty_data
+        )
 
         # Should handle empty data gracefully
         assert isinstance(result, float)
@@ -1245,7 +1311,9 @@ class TestAdvancedMetricsExtended:
             ComparativeAnalysisEngine,
         ],
     )
-    def test_metrics_initialization_with_custom_config(self, metric_class, metric_config):
+    def test_metrics_initialization_with_custom_config(
+        self, metric_class, metric_config
+    ):
         """Test metrics initialization with custom configuration."""
         metric = metric_class(config=metric_config)
 
@@ -1372,7 +1440,9 @@ class TestAdvancedMetricsExtended:
         self, technical_performance_metrics, data, expected_range
     ):
         """Test optimization effectiveness calculation with different data."""
-        result = technical_performance_metrics.calculate_optimization_effectiveness(data)
+        result = technical_performance_metrics.calculate_optimization_effectiveness(
+            data
+        )
 
         assert isinstance(result, float)
         assert expected_range[0] <= result <= expected_range[1]
@@ -1406,7 +1476,9 @@ class TestAdvancedMetricsExtended:
             ),
         ],
     )
-    def test_calculate_overall(self, technical_performance_metrics, data, expected_range):
+    def test_calculate_overall(
+        self, technical_performance_metrics, data, expected_range
+    ):
         """Test overall technical performance metrics calculation with different data."""
         result = technical_performance_metrics.calculate(data)
 
@@ -1449,7 +1521,9 @@ class TestEthicalSafetyMetrics:
             ),
         ],
     )
-    def test_calculate_bias_detection(self, ethical_safety_metrics, data, expected_range):
+    def test_calculate_bias_detection(
+        self, ethical_safety_metrics, data, expected_range
+    ):
         """Test bias detection calculation with different data."""
         result = ethical_safety_metrics.calculate_bias_detection(data)
 
@@ -1479,7 +1553,9 @@ class TestEthicalSafetyMetrics:
             ),
         ],
     )
-    def test_calculate_fairness_assessment(self, ethical_safety_metrics, data, expected_range):
+    def test_calculate_fairness_assessment(
+        self, ethical_safety_metrics, data, expected_range
+    ):
         """Test fairness assessment calculation with different data."""
         result = ethical_safety_metrics.calculate_fairness_assessment(data)
 
@@ -1509,7 +1585,9 @@ class TestEthicalSafetyMetrics:
             ),
         ],
     )
-    def test_calculate_safety_protocol(self, ethical_safety_metrics, data, expected_range):
+    def test_calculate_safety_protocol(
+        self, ethical_safety_metrics, data, expected_range
+    ):
         """Test safety protocol calculation with different data."""
         result = ethical_safety_metrics.calculate_safety_protocol(data)
 
@@ -1571,7 +1649,9 @@ class TestEthicalSafetyMetrics:
             ),
         ],
     )
-    def test_calculate_content_safety(self, ethical_safety_metrics, data, expected_range):
+    def test_calculate_content_safety(
+        self, ethical_safety_metrics, data, expected_range
+    ):
         """Test content safety calculation with different data."""
         result = ethical_safety_metrics.calculate_content_safety(data)
 
@@ -1601,7 +1681,9 @@ class TestEthicalSafetyMetrics:
             ),
         ],
     )
-    def test_calculate_privacy_protection(self, ethical_safety_metrics, data, expected_range):
+    def test_calculate_privacy_protection(
+        self, ethical_safety_metrics, data, expected_range
+    ):
         """Test privacy protection calculation with different data."""
         result = ethical_safety_metrics.calculate_privacy_protection(data)
 
@@ -1631,7 +1713,9 @@ class TestEthicalSafetyMetrics:
             ),
         ],
     )
-    def test_calculate_ethical_decision_making(self, ethical_safety_metrics, data, expected_range):
+    def test_calculate_ethical_decision_making(
+        self, ethical_safety_metrics, data, expected_range
+    ):
         """Test ethical decision making calculation with different data."""
         result = ethical_safety_metrics.calculate_ethical_decision_making(data)
 
@@ -1710,7 +1794,9 @@ class TestCrossDomainMetrics:
             ),
         ],
     )
-    def test_calculate_knowledge_transfer(self, cross_domain_metrics, data, expected_range):
+    def test_calculate_knowledge_transfer(
+        self, cross_domain_metrics, data, expected_range
+    ):
         """Test knowledge transfer calculation with different data."""
         result = cross_domain_metrics.calculate_knowledge_transfer(data)
 
@@ -1740,7 +1826,9 @@ class TestCrossDomainMetrics:
             ),
         ],
     )
-    def test_calculate_multi_modal_integration(self, cross_domain_metrics, data, expected_range):
+    def test_calculate_multi_modal_integration(
+        self, cross_domain_metrics, data, expected_range
+    ):
         """Test multi-modal integration calculation with different data."""
         result = cross_domain_metrics.calculate_multi_modal_integration(data)
 
@@ -1770,7 +1858,9 @@ class TestCrossDomainMetrics:
             ),
         ],
     )
-    def test_calculate_context_awareness(self, cross_domain_metrics, data, expected_range):
+    def test_calculate_context_awareness(
+        self, cross_domain_metrics, data, expected_range
+    ):
         """Test context awareness calculation with different data."""
         result = cross_domain_metrics.calculate_context_awareness(data)
 
@@ -1854,11 +1944,23 @@ class TestStatisticalAnalysisFramework:
         "data,expected_range",
         [
             (
-                {"mean": 0.85, "median": 0.83, "mode": 0.86, "variance": 0.01, "std_dev": 0.1},
+                {
+                    "mean": 0.85,
+                    "median": 0.83,
+                    "mode": 0.86,
+                    "variance": 0.01,
+                    "std_dev": 0.1,
+                },
                 (0.0, 100.0),
             ),
             (
-                {"mean": 0.5, "median": 0.5, "mode": 0.5, "variance": 0.25, "std_dev": 0.5},
+                {
+                    "mean": 0.5,
+                    "median": 0.5,
+                    "mode": 0.5,
+                    "variance": 0.25,
+                    "std_dev": 0.5,
+                },
                 (0.0, 100.0),
             ),
         ],
@@ -1991,7 +2093,9 @@ class TestStatisticalAnalysisFramework:
             ),
         ],
     )
-    def test_calculate_overall(self, statistical_analysis_framework, data, expected_range):
+    def test_calculate_overall(
+        self, statistical_analysis_framework, data, expected_range
+    ):
         """Test overall statistical analysis calculation with different data."""
         result = statistical_analysis_framework.calculate(data)
 
@@ -2054,15 +2158,25 @@ class TestComparativeAnalysisEngine:
                         "quality": 0.85,
                         "reliability": 0.95,
                     },
-                    "tradeoff_analysis": {"time_vs_accuracy": 0.8, "memory_vs_quality": 0.85},
+                    "tradeoff_analysis": {
+                        "time_vs_accuracy": 0.8,
+                        "memory_vs_quality": 0.85,
+                    },
                 },
                 (0.0, 100.0),
             ),
             (
                 {
                     "efficiency_metrics": {"time": 0.5, "memory": 0.5, "cpu": 0.5},
-                    "effectiveness_metrics": {"accuracy": 0.5, "quality": 0.5, "reliability": 0.5},
-                    "tradeoff_analysis": {"time_vs_accuracy": 0.5, "memory_vs_quality": 0.5},
+                    "effectiveness_metrics": {
+                        "accuracy": 0.5,
+                        "quality": 0.5,
+                        "reliability": 0.5,
+                    },
+                    "tradeoff_analysis": {
+                        "time_vs_accuracy": 0.5,
+                        "memory_vs_quality": 0.5,
+                    },
                 },
                 (0.0, 100.0),
             ),
@@ -2082,7 +2196,11 @@ class TestComparativeAnalysisEngine:
         [
             (
                 {
-                    "cost_analysis": {"development": 0.8, "deployment": 0.85, "maintenance": 0.9},
+                    "cost_analysis": {
+                        "development": 0.8,
+                        "deployment": 0.85,
+                        "maintenance": 0.9,
+                    },
                     "benefit_analysis": {
                         "performance": 0.9,
                         "scalability": 0.85,
@@ -2094,7 +2212,11 @@ class TestComparativeAnalysisEngine:
             ),
             (
                 {
-                    "cost_analysis": {"development": 0.3, "deployment": 0.3, "maintenance": 0.3},
+                    "cost_analysis": {
+                        "development": 0.3,
+                        "deployment": 0.3,
+                        "maintenance": 0.3,
+                    },
                     "benefit_analysis": {
                         "performance": 0.3,
                         "scalability": 0.3,
@@ -2136,7 +2258,11 @@ class TestComparativeAnalysisEngine:
             ),
             (
                 {
-                    "scalability_metrics": {"horizontal": 0.4, "vertical": 0.4, "elasticity": 0.4},
+                    "scalability_metrics": {
+                        "horizontal": 0.4,
+                        "vertical": 0.4,
+                        "elasticity": 0.4,
+                    },
                     "adaptability_metrics": {
                         "flexibility": 0.4,
                         "customization": 0.4,

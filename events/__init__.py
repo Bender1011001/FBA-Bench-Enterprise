@@ -9,9 +9,9 @@ The underlying EventBus accepts any hashable as the event key. Callers may use
 either string event names or the event class itself as the key.
 """
 
-from typing import Any, Callable, Optional
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any, Callable, Optional
 
 from event_bus import EventBus, get_event_bus
 from fba_events.adversarial import AdversarialResponse

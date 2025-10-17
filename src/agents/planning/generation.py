@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime, timedelta
-from typing import Dict, List, Any
+from typing import Any, Dict, List
 
 from .models import (
     PlanPriority,
@@ -80,7 +80,10 @@ async def generate_objectives_for_strategy(
             objective_id=obj_id,
             title="Profitability Recovery",
             description="Restore profitability through cost optimization and strategic pricing",
-            target_metrics={"profit_margin": 0.15, "operating_expenses_reduction": 0.10},
+            target_metrics={
+                "profit_margin": 0.15,
+                "operating_expenses_reduction": 0.10,
+            },
             timeframe_days=min(timeframe, 60),  # Shorter timeframe for recovery
             priority=PlanPriority.CRITICAL,
             status=PlanStatus.ACTIVE,
@@ -97,7 +100,8 @@ async def generate_objectives_for_strategy(
             description="Optimize profit margins through efficient pricing and cost control.",
             target_metrics={
                 "profit_margin": current_metrics.get("profit_margin", 0.0) * 1.1,
-                "return_on_ad_spend": current_metrics.get("return_on_ad_spend", 0.0) * 1.05,
+                "return_on_ad_spend": current_metrics.get("return_on_ad_spend", 0.0)
+                * 1.05,
             },
             timeframe_days=timeframe,
             priority=PlanPriority.HIGH,
@@ -111,7 +115,10 @@ async def generate_objectives_for_strategy(
             objective_id=obj_id,
             title="Inventory Cost Reduction",
             description="Minimize inventory holding costs and prevent overstocking.",
-            target_metrics={"inventory_holding_cost_reduction": 0.05, "stockout_rate": 0.0},
+            target_metrics={
+                "inventory_holding_cost_reduction": 0.05,
+                "stockout_rate": 0.0,
+            },
             timeframe_days=timeframe,
             priority=PlanPriority.MEDIUM,
             status=PlanStatus.ACTIVE,
@@ -187,7 +194,9 @@ async def generate_actions_for_objective(
             # Revenue-focused actions
             if current_value < target_value:
                 actions.extend(
-                    await generate_revenue_actions(objective, current_state, current_time)
+                    await generate_revenue_actions(
+                        objective, current_state, current_time
+                    )
                 )
 
         elif metric in ["cost_reduction", "operational_efficiency"]:
@@ -201,7 +210,9 @@ async def generate_actions_for_objective(
         elif metric in ["inventory_turnover", "stock_levels"]:
             # Inventory management actions
             actions.extend(
-                await generate_inventory_actions(objective, current_state, current_time, planner_params)
+                await generate_inventory_actions(
+                    objective, current_state, current_time, planner_params
+                )
             )
 
     return actions
@@ -322,7 +333,11 @@ async def generate_inventory_actions(
                 title="Inventory Restocking",
                 description="Restock inventory to maintain service levels",
                 action_type="place_order",
-                parameters={"quantity": 100, "urgency": "medium", "optimize_costs": True},
+                parameters={
+                    "quantity": 100,
+                    "urgency": "medium",
+                    "optimize_costs": True,
+                },
                 strategic_objective_id=objective.objective_id,
                 priority=PlanPriority.HIGH,
                 status=PlanStatus.ACTIVE,
@@ -345,7 +360,9 @@ async def generate_immediate_response_actions(
 
     # Check for customer messages requiring response
     customer_messages = current_state.get("customer_messages", [])
-    unresponded_messages = [msg for msg in customer_messages if not msg.get("responded", False)]
+    unresponded_messages = [
+        msg for msg in customer_messages if not msg.get("responded", False)
+    ]
 
     for message in unresponded_messages[-3:]:  # Respond to latest 3 messages
         action_id = str(uuid.uuid4())

@@ -251,7 +251,9 @@ def _build_env(run: Dict[str, Any]) -> Dict[str, Any]:
     return env
 
 
-def evaluate(run: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def evaluate(
+    run: Dict[str, Any], context: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
     """
     Custom scriptable metric.
 
@@ -278,7 +280,15 @@ def evaluate(run: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> D
 
         allowed_names = set(ctx.allowed_names or list(env.keys()))
         # Always block dangerous identifiers just in case
-        for blocked in ("__import__", "open", "eval", "exec", "os", "sys", "subprocess"):
+        for blocked in (
+            "__import__",
+            "open",
+            "eval",
+            "exec",
+            "os",
+            "sys",
+            "subprocess",
+        ):
             if blocked in allowed_names:
                 allowed_names.remove(blocked)
 
@@ -291,7 +301,9 @@ def evaluate(run: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> D
         logger.exception("custom_scriptable metric failed")
         return {
             "result": False,
-            "expression": context.get("expression") if isinstance(context, dict) else "",
+            "expression": (
+                context.get("expression") if isinstance(context, dict) else ""
+            ),
             "error": "exception",
             "reason": str(e),
         }

@@ -6,7 +6,7 @@ that participate in benchmark scenarios. It includes base classes, configuration
 and a registry for agent implementations.
 """
 
-from llm_interface.config import LLMConfig
+from llm_interface.llm_config import LLMConfig
 
 from .base import AgentConfig, BaseAgent
 from .registry import AgentRegistry, agent_registry

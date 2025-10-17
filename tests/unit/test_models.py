@@ -34,13 +34,18 @@ class TestCompetitor(unittest.TestCase):
         self.assertEqual(self.competitor.id, "competitor1")
         self.assertEqual(self.competitor.name, "Competitor A")
         self.assertEqual(self.competitor.market_share, 0.25)
-        self.assertEqual(self.competitor.strengths, ["brand_recognition", "distribution_network"])
-        self.assertEqual(self.competitor.weaknesses, ["high_prices", "limited_product_range"])
+        self.assertEqual(
+            self.competitor.strengths, ["brand_recognition", "distribution_network"]
+        )
+        self.assertEqual(
+            self.competitor.weaknesses, ["high_prices", "limited_product_range"]
+        )
         self.assertEqual(self.competitor.products, ["product1", "product2"])
         self.assertEqual(self.competitor.pricing_strategy, "premium")
         self.assertEqual(self.competitor.market_position, "leader")
         self.assertEqual(
-            self.competitor.recent_activities, ["launched_new_product", "expanded_to_new_market"]
+            self.competitor.recent_activities,
+            ["launched_new_product", "expanded_to_new_market"],
         )
 
     def test_competitor_to_dict(self):
@@ -54,12 +59,15 @@ class TestCompetitor(unittest.TestCase):
         self.assertEqual(
             competitor_dict["strengths"], ["brand_recognition", "distribution_network"]
         )
-        self.assertEqual(competitor_dict["weaknesses"], ["high_prices", "limited_product_range"])
+        self.assertEqual(
+            competitor_dict["weaknesses"], ["high_prices", "limited_product_range"]
+        )
         self.assertEqual(competitor_dict["products"], ["product1", "product2"])
         self.assertEqual(competitor_dict["pricing_strategy"], "premium")
         self.assertEqual(competitor_dict["market_position"], "leader")
         self.assertEqual(
-            competitor_dict["recent_activities"], ["launched_new_product", "expanded_to_new_market"]
+            competitor_dict["recent_activities"],
+            ["launched_new_product", "expanded_to_new_market"],
         )
 
     def test_competitor_from_dict(self):
@@ -87,7 +95,9 @@ class TestCompetitor(unittest.TestCase):
         self.assertEqual(competitor.products, ["product3", "product4"])
         self.assertEqual(competitor.pricing_strategy, "economy")
         self.assertEqual(competitor.market_position, "follower")
-        self.assertEqual(competitor.recent_activities, ["price_cut", "product_discontinuation"])
+        self.assertEqual(
+            competitor.recent_activities, ["price_cut", "product_discontinuation"]
+        )
 
     def test_competitor_update_market_share(self):
         """Test updating competitor market share."""
@@ -173,7 +183,9 @@ class TestProduct(unittest.TestCase):
         self.assertEqual(self.product.cost, 50.0)
         self.assertEqual(self.product.description, "A high-quality electronic product")
         self.assertEqual(self.product.features, ["feature1", "feature2", "feature3"])
-        self.assertEqual(self.product.specifications, {"weight": "1kg", "dimensions": "10x20x30cm"})
+        self.assertEqual(
+            self.product.specifications, {"weight": "1kg", "dimensions": "10x20x30cm"}
+        )
         self.assertEqual(self.product.inventory, 100)
         self.assertEqual(len(self.product.sales_history), 2)
         self.assertEqual(len(self.product.customer_reviews), 2)
@@ -189,10 +201,13 @@ class TestProduct(unittest.TestCase):
         self.assertEqual(product_dict["category"], "electronics")
         self.assertEqual(product_dict["price"], 99.99)
         self.assertEqual(product_dict["cost"], 50.0)
-        self.assertEqual(product_dict["description"], "A high-quality electronic product")
+        self.assertEqual(
+            product_dict["description"], "A high-quality electronic product"
+        )
         self.assertEqual(product_dict["features"], ["feature1", "feature2", "feature3"])
         self.assertEqual(
-            product_dict["specifications"], {"weight": "1kg", "dimensions": "10x20x30cm"}
+            product_dict["specifications"],
+            {"weight": "1kg", "dimensions": "10x20x30cm"},
         )
         self.assertEqual(product_dict["inventory"], 100)
         self.assertEqual(len(product_dict["sales_history"]), 2)
@@ -268,7 +283,9 @@ class TestProduct(unittest.TestCase):
 
         self.assertEqual(len(self.product.customer_reviews), 3)
         self.assertEqual(self.product.customer_reviews[2]["rating"], 3)
-        self.assertEqual(self.product.customer_reviews[2]["comment"], "Average product.")
+        self.assertEqual(
+            self.product.customer_reviews[2]["comment"], "Average product."
+        )
 
     def test_product_add_competitor(self):
         """Test adding a competitor to product."""
@@ -353,7 +370,9 @@ class TestSalesResult(unittest.TestCase):
         self.assertEqual(self.sales_result.sale_date, "2023-01-01")
         self.assertEqual(self.sales_result.sale_channel, "online")
         self.assertEqual(self.sales_result.payment_method, "credit_card")
-        self.assertEqual(self.sales_result.shipping_address, "123 Main St, City, Country")
+        self.assertEqual(
+            self.sales_result.shipping_address, "123 Main St, City, Country"
+        )
         self.assertEqual(self.sales_result.order_status, "completed")
         self.assertEqual(self.sales_result.delivery_date, "2023-01-05")
         self.assertEqual(self.sales_result.customer_feedback, "Great service!")
@@ -376,7 +395,9 @@ class TestSalesResult(unittest.TestCase):
         self.assertEqual(sales_result_dict["sale_date"], "2023-01-01")
         self.assertEqual(sales_result_dict["sale_channel"], "online")
         self.assertEqual(sales_result_dict["payment_method"], "credit_card")
-        self.assertEqual(sales_result_dict["shipping_address"], "123 Main St, City, Country")
+        self.assertEqual(
+            sales_result_dict["shipping_address"], "123 Main St, City, Country"
+        )
         self.assertEqual(sales_result_dict["order_status"], "completed")
         self.assertEqual(sales_result_dict["delivery_date"], "2023-01-05")
         self.assertEqual(sales_result_dict["customer_feedback"], "Great service!")

@@ -261,7 +261,9 @@ class CrossDomainMetrics(BaseMetric):
                     target_domain=adaptation.get("target_domain", ""),
                     adaptation_speed=adaptation.get("adaptation_speed", 0.0),
                     adaptation_quality=adaptation.get("adaptation_quality", 0.0),
-                    knowledge_transfer_rate=adaptation.get("knowledge_transfer_rate", 0.0),
+                    knowledge_transfer_rate=adaptation.get(
+                        "knowledge_transfer_rate", 0.0
+                    ),
                     adaptation_efficiency=adaptation.get("adaptation_efficiency", 0.0),
                 )
 
@@ -272,7 +274,12 @@ class CrossDomainMetrics(BaseMetric):
             efficiency_score = self._evaluate_adaptation_efficiency(adaptation)
 
             # Calculate weighted adaptation score
-            weights = {"speed": 0.25, "quality": 0.3, "transfer": 0.25, "efficiency": 0.2}
+            weights = {
+                "speed": 0.25,
+                "quality": 0.3,
+                "transfer": 0.25,
+                "efficiency": 0.2,
+            }
 
             adaptation_score = (
                 speed_score * weights["speed"]
@@ -406,8 +413,12 @@ class CrossDomainMetrics(BaseMetric):
             return 0.0
 
         # Evaluate consistency components
-        performance_consistency = self._evaluate_performance_consistency(domain_performances)
-        behavioral_consistency = self._evaluate_behavioral_consistency(consistency_metrics)
+        performance_consistency = self._evaluate_performance_consistency(
+            domain_performances
+        )
+        behavioral_consistency = self._evaluate_behavioral_consistency(
+            consistency_metrics
+        )
         strategy_consistency = self._evaluate_strategy_consistency(consistency_metrics)
         quality_consistency = self._evaluate_quality_consistency(consistency_metrics)
 
@@ -433,7 +444,9 @@ class CrossDomainMetrics(BaseMetric):
         adaptation_speed = adaptation.adaptation_speed
 
         # Higher adaptation speed is better
-        speed_score = min(1.0, adaptation_speed / 100.0)  # Normalize to reasonable range
+        speed_score = min(
+            1.0, adaptation_speed / 100.0
+        )  # Normalize to reasonable range
 
         return speed_score
 
@@ -548,7 +561,9 @@ class CrossDomainMetrics(BaseMetric):
 
         return gap_handling_score
 
-    def _evaluate_performance_consistency(self, domain_performances: List[Dict[str, Any]]) -> float:
+    def _evaluate_performance_consistency(
+        self, domain_performances: List[Dict[str, Any]]
+    ) -> float:
         """Evaluate performance consistency across domains."""
         if not domain_performances:
             return 0.0
@@ -563,7 +578,9 @@ class CrossDomainMetrics(BaseMetric):
                     efficiency=performance.get("efficiency", 0.0),
                     adaptation_time=performance.get("adaptation_time", 0.0),
                     resource_usage=performance.get("resource_usage", 0.0),
-                    domain_specific_metrics=performance.get("domain_specific_metrics", {}),
+                    domain_specific_metrics=performance.get(
+                        "domain_specific_metrics", {}
+                    ),
                 )
 
             # Calculate overall performance score
@@ -579,7 +596,9 @@ class CrossDomainMetrics(BaseMetric):
 
         return consistency_score
 
-    def _evaluate_behavioral_consistency(self, consistency_metrics: Dict[str, Any]) -> float:
+    def _evaluate_behavioral_consistency(
+        self, consistency_metrics: Dict[str, Any]
+    ) -> float:
         """Evaluate behavioral consistency across domains."""
         if not consistency_metrics:
             return 0.0
@@ -592,7 +611,9 @@ class CrossDomainMetrics(BaseMetric):
 
         return behavioral_consistency
 
-    def _evaluate_strategy_consistency(self, consistency_metrics: Dict[str, Any]) -> float:
+    def _evaluate_strategy_consistency(
+        self, consistency_metrics: Dict[str, Any]
+    ) -> float:
         """Evaluate strategy consistency across domains."""
         if not consistency_metrics:
             return 0.0
@@ -605,7 +626,9 @@ class CrossDomainMetrics(BaseMetric):
 
         return strategy_score
 
-    def _evaluate_quality_consistency(self, consistency_metrics: Dict[str, Any]) -> float:
+    def _evaluate_quality_consistency(
+        self, consistency_metrics: Dict[str, Any]
+    ) -> float:
         """Evaluate quality consistency across domains."""
         if not consistency_metrics:
             return 0.0
@@ -751,7 +774,9 @@ class CrossDomainMetrics(BaseMetric):
             "adaptation_difficulty": 1.0 - direct_similarity,
         }
 
-    def calculate_cross_domain_learning_curve(self, data: Dict[str, Any]) -> Dict[str, List[float]]:
+    def calculate_cross_domain_learning_curve(
+        self, data: Dict[str, Any]
+    ) -> Dict[str, List[float]]:
         """
         Calculate cross-domain learning curves.
 
@@ -777,7 +802,9 @@ class CrossDomainMetrics(BaseMetric):
 
         return learning_curves
 
-    def calculate_domain_transfer_matrix(self, data: Dict[str, Any]) -> Dict[str, Dict[str, float]]:
+    def calculate_domain_transfer_matrix(
+        self, data: Dict[str, Any]
+    ) -> Dict[str, Dict[str, float]]:
         """
         Calculate domain transfer effectiveness matrix.
 
@@ -821,7 +848,9 @@ class CrossDomainMetrics(BaseMetric):
         # Calculate transfer effectiveness
         if transfer_time > 0:
             effectiveness = (
-                (target_performance / source_performance) * knowledge_overlap / transfer_time
+                (target_performance / source_performance)
+                * knowledge_overlap
+                / transfer_time
             )
         else:
             effectiveness = 0.0

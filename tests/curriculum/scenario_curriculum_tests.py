@@ -21,13 +21,18 @@ from typing import Any, Dict, List, Optional
 # Add project root to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+from memory_experiments.dual_memory_manager import DualMemoryManager
+from memory_experiments.memory_config import MemoryConfig
+
 from agents.hierarchical_planner import StrategicPlanner
 from agents.skill_coordinator import SkillCoordinator
 from event_bus import get_event_bus
 from events import BaseEvent, MarketChangeEvent, SaleOccurred, TickEvent
-from memory_experiments.dual_memory_manager import DualMemoryManager
-from memory_experiments.memory_config import MemoryConfig
-from scenarios.multi_agent_coordinator import AgentRole, CoordinationMode, MultiAgentCoordinator
+from scenarios.multi_agent_coordinator import (
+    AgentRole,
+    CoordinationMode,
+    MultiAgentCoordinator,
+)
 from scenarios.scenario_engine import ScenarioEngine, ScenarioType
 from scenarios.tier_manager import TierRequirements
 
@@ -103,7 +108,9 @@ class ScenarioProgressionTracker:
             "progression_timestamps": {},
         }
 
-    def record_scenario_completion(self, agent_id: str, scenario_result: ScenarioTestResult):
+    def record_scenario_completion(
+        self, agent_id: str, scenario_result: ScenarioTestResult
+    ):
         """Record a completed scenario for progression tracking."""
         if agent_id not in self.agent_progressions:
             self.initialize_agent_progression(agent_id)
@@ -223,7 +230,10 @@ class ScenarioAndCurriculumTestSuite:
                 "market_volatility": 0.2,
                 "competition_level": 0.1,
                 "duration_ticks": 150,
-                "success_criteria": {"stockout_rate": 0.05, "inventory_efficiency": 0.8},
+                "success_criteria": {
+                    "stockout_rate": 0.05,
+                    "inventory_efficiency": 0.8,
+                },
             },
             {
                 "name": "simple_marketing",
@@ -271,7 +281,10 @@ class ScenarioAndCurriculumTestSuite:
                 "market_volatility": 0.6,
                 "competition_level": 0.4,
                 "duration_ticks": 300,
-                "success_criteria": {"forecast_accuracy": 0.8, "profit_optimization": 0.2},
+                "success_criteria": {
+                    "forecast_accuracy": 0.8,
+                    "profit_optimization": 0.2,
+                },
             },
             {
                 "name": "multi_product_portfolio",
@@ -287,7 +300,10 @@ class ScenarioAndCurriculumTestSuite:
                 "market_volatility": 0.8,
                 "competition_level": 0.3,
                 "duration_ticks": 180,
-                "success_criteria": {"recovery_time": 0.9, "disruption_mitigation": 0.75},
+                "success_criteria": {
+                    "recovery_time": 0.9,
+                    "disruption_mitigation": 0.75,
+                },
             },
             {
                 "name": "customer_lifecycle_optimization",
@@ -328,7 +344,10 @@ class ScenarioAndCurriculumTestSuite:
                 "market_volatility": 0.4,
                 "competition_level": 0.8,
                 "duration_ticks": 300,
-                "success_criteria": {"relative_performance": 0.55, "market_dominance": 0.6},
+                "success_criteria": {
+                    "relative_performance": 0.55,
+                    "market_dominance": 0.6,
+                },
             },
             {
                 "name": "oligopoly_price_war",
@@ -337,7 +356,10 @@ class ScenarioAndCurriculumTestSuite:
                 "market_volatility": 0.3,
                 "competition_level": 0.9,
                 "duration_ticks": 250,
-                "success_criteria": {"profit_sustainability": 0.7, "competitive_advantage": 0.5},
+                "success_criteria": {
+                    "profit_sustainability": 0.7,
+                    "competitive_advantage": 0.5,
+                },
             },
             {
                 "name": "market_entry_defense",
@@ -346,7 +368,10 @@ class ScenarioAndCurriculumTestSuite:
                 "market_volatility": 0.5,
                 "competition_level": 0.7,
                 "duration_ticks": 200,
-                "success_criteria": {"market_retention": 0.8, "entry_barrier_effectiveness": 0.6},
+                "success_criteria": {
+                    "market_retention": 0.8,
+                    "entry_barrier_effectiveness": 0.6,
+                },
             },
             {
                 "name": "collaborative_competition",
@@ -398,7 +423,10 @@ class ScenarioAndCurriculumTestSuite:
                 "market_volatility": 0.7,
                 "competition_level": 0.8,
                 "duration_ticks": 500,
-                "success_criteria": {"innovation_adoption": 0.7, "market_transition": 0.6},
+                "success_criteria": {
+                    "innovation_adoption": 0.7,
+                    "market_transition": 0.6,
+                },
             },
             {
                 "name": "regulatory_environment_shift",
@@ -407,7 +435,10 @@ class ScenarioAndCurriculumTestSuite:
                 "market_volatility": 0.5,
                 "competition_level": 0.4,
                 "duration_ticks": 350,
-                "success_criteria": {"compliance_efficiency": 0.9, "regulatory_advantage": 0.5},
+                "success_criteria": {
+                    "compliance_efficiency": 0.9,
+                    "regulatory_advantage": 0.5,
+                },
             },
         ]
 
@@ -470,11 +501,15 @@ class ScenarioAndCurriculumTestSuite:
 
                 # Collect performance metrics periodically
                 if tick % 25 == 0:
-                    tick_metrics = await self._collect_scenario_metrics(agent_id, scenario_state)
+                    tick_metrics = await self._collect_scenario_metrics(
+                        agent_id, scenario_state
+                    )
                     performance_metrics.update(tick_metrics)
 
             # Evaluate final performance against success criteria
-            final_metrics = await self._collect_scenario_metrics(agent_id, scenario_state)
+            final_metrics = await self._collect_scenario_metrics(
+                agent_id, scenario_state
+            )
             performance_metrics.update(final_metrics)
 
             # Check progression criteria
@@ -483,7 +518,10 @@ class ScenarioAndCurriculumTestSuite:
                 progression_criteria_met[criterion] = actual_value >= target
 
             # Determine overall success
-            success = sum(progression_criteria_met.values()) >= len(progression_criteria_met) * 0.7
+            success = (
+                sum(progression_criteria_met.values())
+                >= len(progression_criteria_met) * 0.7
+            )
 
             duration = time.time() - start_time
 
@@ -500,7 +538,8 @@ class ScenarioAndCurriculumTestSuite:
 
         except Exception as e:
             logger.error(
-                f"Single-agent scenario {scenario_config['name']} failed: {e}", exc_info=True
+                f"Single-agent scenario {scenario_config['name']} failed: {e}",
+                exc_info=True,
             )
             duration = time.time() - start_time
 
@@ -523,7 +562,9 @@ class ScenarioAndCurriculumTestSuite:
         start_time = time.time()
 
         try:
-            logger.info(f"Running {tier.value} multi-agent scenario: {scenario_config['name']}")
+            logger.info(
+                f"Running {tier.value} multi-agent scenario: {scenario_config['name']}"
+            )
 
             # Initialize multi-agent coordinator
             multi_agent_coordinator = MultiAgentCoordinator(
@@ -546,7 +587,9 @@ class ScenarioAndCurriculumTestSuite:
                 "competition_level": scenario_config["competition_level"],
                 "current_tick": 0,
                 "max_ticks": scenario_config["duration_ticks"],
-                "agent_states": {aid: {"score": 0.0, "actions": []} for aid in agent_ids},
+                "agent_states": {
+                    aid: {"score": 0.0, "actions": []} for aid in agent_ids
+                },
             }
 
             performance_metrics = {}
@@ -559,12 +602,15 @@ class ScenarioAndCurriculumTestSuite:
 
                 # Coordinate agent responses
                 agent_actions = await multi_agent_coordinator.coordinate_responses(
-                    market_events, {aid: agents[aid]["skill_coordinator"] for aid in agent_ids}
+                    market_events,
+                    {aid: agents[aid]["skill_coordinator"] for aid in agent_ids},
                 )
 
                 # Process agent interactions
-                interaction_results = await multi_agent_coordinator.process_agent_interactions(
-                    agent_actions
+                interaction_results = (
+                    await multi_agent_coordinator.process_agent_interactions(
+                        agent_actions
+                    )
                 )
 
                 # Update scenario state
@@ -579,14 +625,20 @@ class ScenarioAndCurriculumTestSuite:
                     )
                     performance_metrics.update(tick_metrics)
 
-                    coord_metrics = await multi_agent_coordinator.get_coordination_metrics()
+                    coord_metrics = (
+                        await multi_agent_coordinator.get_coordination_metrics()
+                    )
                     coordination_metrics.update(coord_metrics)
 
             # Evaluate final performance
-            final_metrics = await self._collect_multi_agent_metrics(agent_ids, scenario_state)
+            final_metrics = await self._collect_multi_agent_metrics(
+                agent_ids, scenario_state
+            )
             performance_metrics.update(final_metrics)
 
-            final_coordination = await multi_agent_coordinator.get_coordination_metrics()
+            final_coordination = (
+                await multi_agent_coordinator.get_coordination_metrics()
+            )
             coordination_metrics.update(final_coordination)
 
             # Check progression criteria
@@ -596,9 +648,12 @@ class ScenarioAndCurriculumTestSuite:
                 progression_criteria_met[criterion] = actual_value >= target
 
             # Determine success based on coordination effectiveness and performance
-            coordination_success = coordination_metrics.get("coordination_effectiveness", 0.0) > 0.6
+            coordination_success = (
+                coordination_metrics.get("coordination_effectiveness", 0.0) > 0.6
+            )
             performance_success = (
-                sum(progression_criteria_met.values()) >= len(progression_criteria_met) * 0.6
+                sum(progression_criteria_met.values())
+                >= len(progression_criteria_met) * 0.6
             )
 
             success = coordination_success and performance_success
@@ -618,7 +673,8 @@ class ScenarioAndCurriculumTestSuite:
 
         except Exception as e:
             logger.error(
-                f"Multi-agent scenario {scenario_config['name']} failed: {e}", exc_info=True
+                f"Multi-agent scenario {scenario_config['name']} failed: {e}",
+                exc_info=True,
             )
             duration = time.time() - start_time
 
@@ -641,7 +697,9 @@ class ScenarioAndCurriculumTestSuite:
         start_time = time.time()
 
         try:
-            logger.info(f"Running {tier.value} complex scenario: {scenario_config['name']}")
+            logger.info(
+                f"Running {tier.value} complex scenario: {scenario_config['name']}"
+            )
 
             # Initialize complex scenario with external factors
             scenario_engine = ScenarioEngine()
@@ -649,12 +707,20 @@ class ScenarioAndCurriculumTestSuite:
             # Add complex market dynamics
             external_factors = {
                 "economic_indicators": {
-                    "gdp_growth": -0.02 if "crisis" in scenario_config["name"] else 0.03,
-                    "inflation_rate": 0.08 if "crisis" in scenario_config["name"] else 0.03,
-                    "unemployment_rate": 0.12 if "crisis" in scenario_config["name"] else 0.05,
+                    "gdp_growth": (
+                        -0.02 if "crisis" in scenario_config["name"] else 0.03
+                    ),
+                    "inflation_rate": (
+                        0.08 if "crisis" in scenario_config["name"] else 0.03
+                    ),
+                    "unemployment_rate": (
+                        0.12 if "crisis" in scenario_config["name"] else 0.05
+                    ),
                 },
                 "technological_factors": {
-                    "innovation_rate": 0.9 if "technological" in scenario_config["name"] else 0.3,
+                    "innovation_rate": (
+                        0.9 if "technological" in scenario_config["name"] else 0.3
+                    ),
                     "disruption_probability": (
                         0.8 if "disruption" in scenario_config["name"] else 0.1
                     ),
@@ -663,7 +729,9 @@ class ScenarioAndCurriculumTestSuite:
                     "compliance_complexity": (
                         0.9 if "regulatory" in scenario_config["name"] else 0.3
                     ),
-                    "regulatory_stability": 0.2 if "regulatory" in scenario_config["name"] else 0.8,
+                    "regulatory_stability": (
+                        0.2 if "regulatory" in scenario_config["name"] else 0.8
+                    ),
                 },
             }
 
@@ -693,7 +761,8 @@ class ScenarioAndCurriculumTestSuite:
                 "max_ticks": scenario_config["duration_ticks"],
                 "external_factors": external_factors,
                 "agent_states": {
-                    aid: {"adaptation_score": 0.0, "complexity_handling": 0.0} for aid in agent_ids
+                    aid: {"adaptation_score": 0.0, "complexity_handling": 0.0}
+                    for aid in agent_ids
                 },
             }
 
@@ -703,7 +772,9 @@ class ScenarioAndCurriculumTestSuite:
             # Run complex scenario simulation
             for tick in range(scenario_config["duration_ticks"]):
                 # Generate complex market events with external factors
-                market_events = await self._generate_complex_market_events(scenario_state, tick)
+                market_events = await self._generate_complex_market_events(
+                    scenario_state, tick
+                )
 
                 # Test agent adaptation to complexity
                 for agent_id in agent_ids:
@@ -720,7 +791,10 @@ class ScenarioAndCurriculumTestSuite:
                         await multi_agent_coordinator.coordinate_complex_responses(
                             market_events,
                             external_factors,
-                            {aid: agents[aid]["skill_coordinator"] for aid in agent_ids},
+                            {
+                                aid: agents[aid]["skill_coordinator"]
+                                for aid in agent_ids
+                            },
                         )
                     )
 
@@ -743,10 +817,14 @@ class ScenarioAndCurriculumTestSuite:
                     adaptation_metrics.update(adaptation_data)
 
             # Evaluate complex scenario performance
-            final_metrics = await self._collect_complex_scenario_metrics(agent_ids, scenario_state)
+            final_metrics = await self._collect_complex_scenario_metrics(
+                agent_ids, scenario_state
+            )
             performance_metrics.update(final_metrics)
 
-            final_adaptation = await self._collect_adaptation_metrics(agent_ids, scenario_state)
+            final_adaptation = await self._collect_adaptation_metrics(
+                agent_ids, scenario_state
+            )
             adaptation_metrics.update(final_adaptation)
 
             # Check complex progression criteria
@@ -757,12 +835,16 @@ class ScenarioAndCurriculumTestSuite:
 
             # Evaluate adaptation and complexity handling
             avg_adaptation = sum(
-                scenario_state["agent_states"][aid]["adaptation_score"] for aid in agent_ids
+                scenario_state["agent_states"][aid]["adaptation_score"]
+                for aid in agent_ids
             ) / len(agent_ids)
 
-            adaptation_success = avg_adaptation > scenario_config["duration_ticks"] * 0.6
+            adaptation_success = (
+                avg_adaptation > scenario_config["duration_ticks"] * 0.6
+            )
             complexity_success = (
-                sum(progression_criteria_met.values()) >= len(progression_criteria_met) * 0.7
+                sum(progression_criteria_met.values())
+                >= len(progression_criteria_met) * 0.7
             )
 
             success = adaptation_success and complexity_success
@@ -781,7 +863,9 @@ class ScenarioAndCurriculumTestSuite:
             )
 
         except Exception as e:
-            logger.error(f"Complex scenario {scenario_config['name']} failed: {e}", exc_info=True)
+            logger.error(
+                f"Complex scenario {scenario_config['name']} failed: {e}", exc_info=True
+            )
             duration = time.time() - start_time
 
             return ScenarioTestResult(
@@ -803,7 +887,9 @@ class ScenarioAndCurriculumTestSuite:
         events = []
 
         # Always generate a tick event
-        events.append(TickEvent(event_id=f"tick_{tick}", timestamp=datetime.now(), tick=tick))
+        events.append(
+            TickEvent(event_id=f"tick_{tick}", timestamp=datetime.now(), tick=tick)
+        )
 
         # Generate sales based on market conditions
         volatility = scenario_state["market_volatility"]
@@ -851,7 +937,10 @@ class ScenarioAndCurriculumTestSuite:
                         event_id=f"economic_downturn_{tick}",
                         timestamp=datetime.now(),
                         change_type="economic_crisis",
-                        severity=abs(external_factors["economic_indicators"]["gdp_growth"]) * 10,
+                        severity=abs(
+                            external_factors["economic_indicators"]["gdp_growth"]
+                        )
+                        * 10,
                         affected_products=["ALL"],
                     )
                 )
@@ -864,7 +953,9 @@ class ScenarioAndCurriculumTestSuite:
                         event_id=f"tech_disruption_{tick}",
                         timestamp=datetime.now(),
                         change_type="technological_disruption",
-                        severity=external_factors["technological_factors"]["innovation_rate"],
+                        severity=external_factors["technological_factors"][
+                            "innovation_rate"
+                        ],
                         affected_products=[f"PRODUCT-{i:03d}" for i in range(2)],
                     )
                 )
@@ -878,7 +969,9 @@ class ScenarioAndCurriculumTestSuite:
                         timestamp=datetime.now(),
                         change_type="regulatory_shift",
                         severity=1.0
-                        - external_factors["regulatory_factors"]["regulatory_stability"],
+                        - external_factors["regulatory_factors"][
+                            "regulatory_stability"
+                        ],
                         affected_products=["ALL"],
                     )
                 )
@@ -927,7 +1020,9 @@ class ScenarioAndCurriculumTestSuite:
 
         return min(adaptation_score, 1.0)
 
-    async def _apply_external_factor_changes(self, scenario_state: Dict[str, Any], tick: int):
+    async def _apply_external_factor_changes(
+        self, scenario_state: Dict[str, Any], tick: int
+    ):
         """Apply changes to external factors over time."""
         external_factors = scenario_state["external_factors"]
 
@@ -953,11 +1048,19 @@ class ScenarioAndCurriculumTestSuite:
             "profit_margin": 0.15 + (scenario_state["current_tick"] / 1000),
             "revenue_growth": 0.05 + (scenario_state["current_tick"] / 2000),
             "stockout_rate": max(0.01, 0.1 - (scenario_state["current_tick"] / 5000)),
-            "inventory_efficiency": min(0.95, 0.7 + (scenario_state["current_tick"] / 3000)),
-            "customer_acquisition": min(0.3, 0.05 + (scenario_state["current_tick"] / 4000)),
+            "inventory_efficiency": min(
+                0.95, 0.7 + (scenario_state["current_tick"] / 3000)
+            ),
+            "customer_acquisition": min(
+                0.3, 0.05 + (scenario_state["current_tick"] / 4000)
+            ),
             "marketing_roi": min(3.0, 1.2 + (scenario_state["current_tick"] / 2000)),
-            "forecast_accuracy": min(0.95, 0.6 + (scenario_state["current_tick"] / 2500)),
-            "profit_optimization": min(0.4, 0.1 + (scenario_state["current_tick"] / 1500)),
+            "forecast_accuracy": min(
+                0.95, 0.6 + (scenario_state["current_tick"] / 2500)
+            ),
+            "profit_optimization": min(
+                0.4, 0.1 + (scenario_state["current_tick"] / 1500)
+            ),
         }
 
     async def _collect_multi_agent_metrics(
@@ -967,12 +1070,24 @@ class ScenarioAndCurriculumTestSuite:
         return {
             "relative_performance": 0.5 + (scenario_state["current_tick"] / 2000),
             "market_dominance": min(0.8, 0.4 + (scenario_state["current_tick"] / 2000)),
-            "profit_sustainability": min(0.9, 0.5 + (scenario_state["current_tick"] / 3000)),
-            "competitive_advantage": min(0.7, 0.3 + (scenario_state["current_tick"] / 2500)),
-            "market_retention": min(0.95, 0.6 + (scenario_state["current_tick"] / 2000)),
-            "entry_barrier_effectiveness": min(0.8, 0.4 + (scenario_state["current_tick"] / 3000)),
-            "partnership_value": min(0.6, 0.2 + (scenario_state["current_tick"] / 4000)),
-            "coordination_effectiveness": min(0.9, 0.5 + (scenario_state["current_tick"] / 2500)),
+            "profit_sustainability": min(
+                0.9, 0.5 + (scenario_state["current_tick"] / 3000)
+            ),
+            "competitive_advantage": min(
+                0.7, 0.3 + (scenario_state["current_tick"] / 2500)
+            ),
+            "market_retention": min(
+                0.95, 0.6 + (scenario_state["current_tick"] / 2000)
+            ),
+            "entry_barrier_effectiveness": min(
+                0.8, 0.4 + (scenario_state["current_tick"] / 3000)
+            ),
+            "partnership_value": min(
+                0.6, 0.2 + (scenario_state["current_tick"] / 4000)
+            ),
+            "coordination_effectiveness": min(
+                0.9, 0.5 + (scenario_state["current_tick"] / 2500)
+            ),
         }
 
     async def _collect_complex_scenario_metrics(
@@ -982,10 +1097,18 @@ class ScenarioAndCurriculumTestSuite:
         return {
             "crisis_survival": min(0.95, 0.7 + (scenario_state["current_tick"] / 2000)),
             "adaptation_speed": min(0.9, 0.5 + (scenario_state["current_tick"] / 2500)),
-            "innovation_adoption": min(0.8, 0.4 + (scenario_state["current_tick"] / 3000)),
-            "market_transition": min(0.8, 0.3 + (scenario_state["current_tick"] / 3500)),
-            "compliance_efficiency": min(0.95, 0.8 + (scenario_state["current_tick"] / 5000)),
-            "regulatory_advantage": min(0.7, 0.3 + (scenario_state["current_tick"] / 4000)),
+            "innovation_adoption": min(
+                0.8, 0.4 + (scenario_state["current_tick"] / 3000)
+            ),
+            "market_transition": min(
+                0.8, 0.3 + (scenario_state["current_tick"] / 3500)
+            ),
+            "compliance_efficiency": min(
+                0.95, 0.8 + (scenario_state["current_tick"] / 5000)
+            ),
+            "regulatory_advantage": min(
+                0.7, 0.3 + (scenario_state["current_tick"] / 4000)
+            ),
         }
 
     async def _collect_adaptation_metrics(
@@ -994,13 +1117,16 @@ class ScenarioAndCurriculumTestSuite:
         """Collect adaptation metrics for complex scenarios."""
         return {
             "average_adaptation_score": sum(
-                scenario_state["agent_states"][aid]["adaptation_score"] for aid in agent_ids
+                scenario_state["agent_states"][aid]["adaptation_score"]
+                for aid in agent_ids
             )
             / len(agent_ids),
             "complexity_handling_efficiency": min(
                 0.9, 0.5 + (scenario_state["current_tick"] / 2000)
             ),
-            "external_factor_response": min(0.8, 0.4 + (scenario_state["current_tick"] / 3000)),
+            "external_factor_response": min(
+                0.8, 0.4 + (scenario_state["current_tick"] / 3000)
+            ),
         }
 
     async def test_curriculum_progression(self) -> List[CurriculumProgressionResult]:
@@ -1036,7 +1162,9 @@ class ScenarioAndCurriculumTestSuite:
                 tier_completion_times[current_tier.value] = tier_duration
 
                 # Check if progressed to next tier
-                agent_progression = self.progression_tracker.agent_progressions.get(agent_id, {})
+                agent_progression = self.progression_tracker.agent_progressions.get(
+                    agent_id, {}
+                )
                 new_tier = agent_progression.get("current_tier", current_tier)
 
                 if new_tier != current_tier:
@@ -1053,7 +1181,9 @@ class ScenarioAndCurriculumTestSuite:
                 tier_completion_times[TierLevel.T3.value] = time.time() - tier_start
 
             # Analyze progression
-            final_progression = self.progression_tracker.agent_progressions.get(agent_id, {})
+            final_progression = self.progression_tracker.agent_progressions.get(
+                agent_id, {}
+            )
 
             # Calculate skill development scores
             skill_scores = final_progression.get("skill_scores", {})
@@ -1066,7 +1196,9 @@ class ScenarioAndCurriculumTestSuite:
             bottlenecks = []
             for tier in TierLevel:
                 tier_attempts = final_progression.get("tier_attempts", {}).get(tier, 0)
-                tier_completed = final_progression.get("tier_completions", {}).get(tier, False)
+                tier_completed = final_progression.get("tier_completions", {}).get(
+                    tier, False
+                )
 
                 if tier_attempts > 5 and not tier_completed:
                     bottlenecks.append(f"{tier.value}_completion_difficulty")
@@ -1119,19 +1251,27 @@ class ScenarioAndCurriculumTestSuite:
         tier_success_rates = {}
         for tier_name, results in tier_results.items():
             if results:
-                tier_success_rates[tier_name] = sum(1 for r in results if r.success) / len(results)
+                tier_success_rates[tier_name] = sum(
+                    1 for r in results if r.success
+                ) / len(results)
             else:
                 tier_success_rates[tier_name] = 0.0
 
         # Progression analysis
-        successful_progressions = sum(1 for p in progression_results if p.overall_success)
+        successful_progressions = sum(
+            1 for p in progression_results if p.overall_success
+        )
         progression_success_rate = (
-            successful_progressions / len(progression_results) if progression_results else 0
+            successful_progressions / len(progression_results)
+            if progression_results
+            else 0
         )
 
         # Multi-agent coordination analysis
         multi_agent_scenarios = [
-            r for r in all_scenario_results if r.scenario_type == ScenarioType.MULTI_AGENT
+            r
+            for r in all_scenario_results
+            if r.scenario_type == ScenarioType.MULTI_AGENT
         ]
         avg_coordination_effectiveness = 0.0
         if multi_agent_scenarios:
@@ -1139,7 +1279,9 @@ class ScenarioAndCurriculumTestSuite:
                 r.multi_agent_coordination.get("coordination_effectiveness", 0.0)
                 for r in multi_agent_scenarios
             ]
-            avg_coordination_effectiveness = sum(coordination_scores) / len(coordination_scores)
+            avg_coordination_effectiveness = sum(coordination_scores) / len(
+                coordination_scores
+            )
 
         summary = {
             "suite_duration_seconds": suite_duration,
@@ -1185,7 +1327,8 @@ async def main():
     """Run scenario and curriculum testing suite."""
     # Configure logging
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     test_suite = ScenarioAndCurriculumTestSuite()

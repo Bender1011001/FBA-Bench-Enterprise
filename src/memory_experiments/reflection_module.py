@@ -59,7 +59,9 @@ class PolicyAdjustment:
     """A policy adjustment recommendation from reflection."""
 
     adjustment_id: str = field(default_factory=lambda: str(uuid.uuid4()))
-    policy_area: str = field(default="")  # e.g., "pricing", "inventory", "marketing", "risk"
+    policy_area: str = field(
+        default=""
+    )  # e.g., "pricing", "inventory", "marketing", "risk"
     current_parameters: Dict[str, Any] = field(default_factory=dict)
     recommended_parameters: Dict[str, Any] = field(default_factory=dict)
     rationale: str = field(default="")
@@ -89,7 +91,9 @@ class StructuredReflectionResult:
     # Analysis results
     decisions_analyzed: int = 0
     events_processed: int = 0
-    performance_metrics: Dict[str, float] = field(default_factory=dict)  # Ensure default
+    performance_metrics: Dict[str, float] = field(
+        default_factory=dict
+    )  # Ensure default
 
     # Generated insights
     insights: List[ReflectionInsight] = field(default_factory=list)
@@ -163,7 +167,9 @@ class ImportanceScoreAlgorithm(ConsolidationAlgorithmBase):
             base_score = memory.importance_score
 
             # Boost score based on access frequency (configurable weight)
-            access_boost_factor = config.consolidation_weights.get("access_frequency_boost", 0.05)
+            access_boost_factor = config.consolidation_weights.get(
+                "access_frequency_boost", 0.05
+            )
             access_boost = min(
                 config.consolidation_weights.get("max_access_boost", 0.3),
                 memory.access_count * access_boost_factor,
@@ -172,8 +178,12 @@ class ImportanceScoreAlgorithm(ConsolidationAlgorithmBase):
             # Boost score for recent access (configurable weight and decay)
             recency_boost = 0.0
             if memory.last_accessed:
-                hours_since_access = (current_time - memory.last_accessed).total_seconds() / 3600
-                recency_decay_hours = config.consolidation_weights.get("recency_decay_hours", 24)
+                hours_since_access = (
+                    current_time - memory.last_accessed
+                ).total_seconds() / 3600
+                recency_decay_hours = config.consolidation_weights.get(
+                    "recency_decay_hours", 24
+                )
                 if hours_since_access < recency_decay_hours:
                     recency_boost_factor = config.consolidation_weights.get(
                         "recency_boost_factor", 0.2
@@ -183,11 +193,13 @@ class ImportanceScoreAlgorithm(ConsolidationAlgorithmBase):
                     )
 
             # Domain-specific adjustments (configurable weights from config)
-            domain_multiplier = config.consolidation_weights.get("domain_multipliers", {}).get(
-                memory.domain, 1.0
-            )
+            domain_multiplier = config.consolidation_weights.get(
+                "domain_multipliers", {}
+            ).get(memory.domain, 1.0)
 
-            final_score = min(1.0, (base_score + access_boost + recency_boost) * domain_multiplier)
+            final_score = min(
+                1.0, (base_score + access_boost + recency_boost) * domain_multiplier
+            )
             scores[memory.event_id] = final_score
 
         return scores
@@ -215,18 +227,25 @@ class RecencyFrequencyAlgorithm(ConsolidationAlgorithmBase):
             # Frequency component (configurable weight)
             frequency_weight = config.consolidation_weights.get("frequency_weight", 0.5)
             frequency_score = min(
-                frequency_weight, memory.access_count / max_access_count * frequency_weight
+                frequency_weight,
+                memory.access_count / max_access_count * frequency_weight,
             )
 
             # Recency component (configurable weight and decay)
             recency_weight = config.consolidation_weights.get("recency_weight", 0.5)
-            recency_decay_days = config.consolidation_weights.get("recency_decay_days", 7)
+            recency_decay_days = config.consolidation_weights.get(
+                "recency_decay_days", 7
+            )
             recency_score = 0.0
             if memory.last_accessed:
-                hours_since_access = (current_time - memory.last_accessed).total_seconds() / 3600
+                hours_since_access = (
+                    current_time - memory.last_accessed
+                ).total_seconds() / 3600
                 if hours_since_access < recency_decay_days * 24:
                     recency_score = max(
-                        0.0, recency_weight * (1 - hours_since_access / (recency_decay_days * 24))
+                        0.0,
+                        recency_weight
+                        * (1 - hours_since_access / (recency_decay_days * 24)),
                     )
 
             scores[memory.event_id] = frequency_score + recency_score
@@ -266,7 +285,13 @@ class StrategicValueAlgorithm(ConsolidationAlgorithmBase):
         # Domain strategic importance (configurable from config)
         domain_strategic_weights = config.consolidation_weights.get(
             "domain_strategic_weights",
-            {"strategy": 1.0, "pricing": 0.9, "competitors": 0.8, "sales": 0.7, "operations": 0.6},
+            {
+                "strategy": 1.0,
+                "pricing": 0.9,
+                "competitors": 0.8,
+                "sales": 0.7,
+                "operations": 0.6,
+            },
         )
 
         for memory in memories:
@@ -274,7 +299,9 @@ class StrategicValueAlgorithm(ConsolidationAlgorithmBase):
 
             # Adjust for memory age (configurable penalty)
             age_days = (current_time - memory.timestamp).days
-            age_penalty_per_day = config.consolidation_weights.get("age_penalty_per_day", 0.1)
+            age_penalty_per_day = config.consolidation_weights.get(
+                "age_penalty_per_day", 0.1
+            )
             age_penalty = max(0.0, 1.0 - age_days * age_penalty_per_day)
 
             # Adjust for domain strategic importance
@@ -296,7 +323,9 @@ class RandomSelectionAlgorithm(ConsolidationAlgorithmBase):
     ) -> Dict[str, float]:
         """Assign random scores for baseline comparison."""
         scores = {}
-        rng = random.Random(config.randomization_seed)  # Use config seed for reproducibility
+        rng = random.Random(
+            config.randomization_seed
+        )  # Use config seed for reproducibility
         for memory in memories:
             scores[memory.event_id] = rng.random()
 
@@ -309,7 +338,9 @@ class RandomSelectionAlgorithm(ConsolidationAlgorithmBase):
 class LLMReflectionAlgorithm(ConsolidationAlgorithmBase):
     """LLM-based reflection for intelligent memory consolidation."""
 
-    def __init__(self, llm_client: BaseLLMClient):  # Made llm_client a required dependency
+    def __init__(
+        self, llm_client: BaseLLMClient
+    ):  # Made llm_client a required dependency
         if llm_client is None:
             raise ValueError(
                 "LLM client must be provided for LLMReflectionAlgorithm."
@@ -365,7 +396,9 @@ Provide your response as a JSON array ONLY:
             )
 
         memories_json = json.dumps(memory_summaries, indent=2)
-        full_prompt = self.prompt_template.format(memories_json=memories_json)  # Use templating
+        full_prompt = self.prompt_template.format(
+            memories_json=memories_json
+        )  # Use templating
 
         try:
             llm_response = await self.llm_client.generate_response(
@@ -408,12 +441,16 @@ Provide your response as a JSON array ONLY:
             logger.error(
                 f"LLM reflection response was not valid JSON. Error: {e}. Response: {response_content[:500]}..."
             )
-            logger.warning("Falling back to ImportanceScoreAlgorithm due to invalid LLM response.")
+            logger.warning(
+                "Falling back to ImportanceScoreAlgorithm due to invalid LLM response."
+            )
             fallback = ImportanceScoreAlgorithm()
             return await fallback.score_memories(memories, config)
         except Exception as e:
             logger.error(f"Error during LLM reflection: {e}", exc_info=True)
-            logger.warning("Falling back to ImportanceScoreAlgorithm due to LLM reflection error.")
+            logger.warning(
+                "Falling back to ImportanceScoreAlgorithm due to LLM reflection error."
+            )
             fallback = ImportanceScoreAlgorithm()
             return await fallback.score_memories(memories, config)
 
@@ -476,12 +513,16 @@ class ReflectionModule:
         """
         current_time = current_time or datetime.now()
 
-        logger.info(f"Starting memory consolidation for agent {self.agent_id} at {current_time}")
+        logger.info(
+            f"Starting memory consolidation for agent {self.agent_id} at {current_time}"
+        )
 
         candidate_memories = await self.memory_manager.get_memories_for_promotion()
 
         if not candidate_memories:
-            logger.info("No memories available for consolidation. Skipping consolidation.")
+            logger.info(
+                "No memories available for consolidation. Skipping consolidation."
+            )
             return ConsolidationResult(
                 memories_considered=0,
                 memories_promoted=0,
@@ -507,7 +548,9 @@ class ReflectionModule:
             candidate_memories, memory_scores
         )
 
-        promote_success = await self.memory_manager.promote_memories(memories_to_promote)
+        promote_success = await self.memory_manager.promote_memories(
+            memories_to_promote
+        )
         if not promote_success:
             logger.warning(
                 "Memory promotion encountered issues, not all memories might be promoted."
@@ -543,7 +586,9 @@ class ReflectionModule:
 
         self.reflection_history.append(result)
         self.total_reflections += 1
-        self.memory_manager.last_reflection_time = current_time  # Update manager's reflection time
+        self.memory_manager.last_reflection_time = (
+            current_time  # Update manager's reflection time
+        )
 
         logger.info(
             f"Consolidation completed: {result.memories_promoted} promoted, {result.memories_discarded} discarded. Algorithm: {result.algorithm_used}"
@@ -557,19 +602,26 @@ class ReflectionModule:
         """Select memories for promotion based on scores, capacity, and configurable thresholds."""
 
         scored_memories = [
-            (memory, memory_scores.get(memory.event_id, 0.0)) for memory in candidate_memories
+            (memory, memory_scores.get(memory.event_id, 0.0))
+            for memory in candidate_memories
         ]
-        scored_memories.sort(key=lambda x: x[1], reverse=True)  # Sort by score, highest first
+        scored_memories.sort(
+            key=lambda x: x[1], reverse=True
+        )  # Sort by score, highest first
 
         total_candidates = len(candidate_memories)
 
         # Determine max promotions based on consolidation percentage
-        consolidation_percentage = self.config.consolidation_config.consolidation_percentage
+        consolidation_percentage = (
+            self.config.consolidation_config.consolidation_percentage
+        )
         max_promotions_by_percentage = int(total_candidates * consolidation_percentage)
 
         # Check long-term memory capacity
         current_long_term_size = await self.memory_manager.long_term_store.size()
-        available_capacity = max(0, self.config.long_term_capacity - current_long_term_size)
+        available_capacity = max(
+            0, self.config.long_term_capacity - current_long_term_size
+        )
 
         # Final limit on promotions: Minimum of percentage-based and available capacity
         max_promotions = min(max_promotions_by_percentage, available_capacity)
@@ -587,7 +639,9 @@ class ReflectionModule:
 
         return memories_to_promote
 
-    def _should_discard_memory(self, memory: MemoryEvent, current_time: datetime) -> bool:
+    def _should_discard_memory(
+        self, memory: MemoryEvent, current_time: datetime
+    ) -> bool:
         """Determine if a memory should be discarded from short-term storage based on config."""
 
         # Check if memory has exceeded short-term retention period
@@ -597,8 +651,13 @@ class ReflectionModule:
             return True
 
         # Check if memory has low importance and hasn't been accessed (configurable thresholds)
-        low_importance_threshold = self.config.consolidation_config.discard_low_importance_threshold
-        if memory.importance_score < low_importance_threshold and memory.access_count == 0:
+        low_importance_threshold = (
+            self.config.consolidation_config.discard_low_importance_threshold
+        )
+        if (
+            memory.importance_score < low_importance_threshold
+            and memory.access_count == 0
+        ):
             return True
 
         # Add other potential discard criteria based on configuration
@@ -623,10 +682,16 @@ class ReflectionModule:
 
         promotion_rate = len(promoted_memories) / len(candidate_memories)
 
-        promoted_scores = [memory_scores.get(memory.event_id, 0.0) for memory in promoted_memories]
-        avg_promoted_score = statistics.mean(promoted_scores) if promoted_scores else 0.0
+        promoted_scores = [
+            memory_scores.get(memory.event_id, 0.0) for memory in promoted_memories
+        ]
+        avg_promoted_score = (
+            statistics.mean(promoted_scores) if promoted_scores else 0.0
+        )
 
-        all_scores = [memory_scores.get(memory.event_id, 0.0) for memory in candidate_memories]
+        all_scores = [
+            memory_scores.get(memory.event_id, 0.0) for memory in candidate_memories
+        ]
         avg_candidate_score = statistics.mean(all_scores) if all_scores else 0.0
 
         score_selectivity = avg_promoted_score - avg_candidate_score
@@ -671,14 +736,22 @@ class ReflectionModule:
             if result.quality_metrics:
                 quality_scores_list.append(
                     result.quality_metrics.get("score_selectivity", 0.0)
-                    * self.config.reflection_quality_weights.get("score_selectivity", 0.4)
+                    * self.config.reflection_quality_weights.get(
+                        "score_selectivity", 0.4
+                    )
                     + result.quality_metrics.get("domain_diversity", 0.0)
-                    * self.config.reflection_quality_weights.get("domain_diversity", 0.3)
+                    * self.config.reflection_quality_weights.get(
+                        "domain_diversity", 0.3
+                    )
                     + result.quality_metrics.get("avg_promoted_score", 0.0)
-                    * self.config.reflection_quality_weights.get("avg_promoted_score", 0.3)
+                    * self.config.reflection_quality_weights.get(
+                        "avg_promoted_score", 0.3
+                    )
                 )
 
-        avg_quality_score = statistics.mean(quality_scores_list) if quality_scores_list else 0.0
+        avg_quality_score = (
+            statistics.mean(quality_scores_list) if quality_scores_list else 0.0
+        )
 
         return {
             "total_reflections": self.total_reflections,
@@ -688,7 +761,9 @@ class ReflectionModule:
             "total_memories_promoted": total_promoted,
             "reflection_history": [
                 result.to_dict()
-                for result in self.reflection_history[-self.config.reflection_history_size :]
+                for result in self.reflection_history[
+                    -self.config.reflection_history_size :
+                ]
             ],  # Configurable history size
         }
 
@@ -776,7 +851,9 @@ class ReflectionComponent:  # Refactored from StructuredReflectionLoop
         )
 
         # Step 2: Generate Insights
-        insights = await self._generate_insights(decision_analysis, sim_events, current_time)
+        insights = await self._generate_insights(
+            decision_analysis, sim_events, current_time
+        )
 
         # Step 3: Generate Policy Adjustments
         policy_adjustments = await self._generate_policy_adjustments(
@@ -786,7 +863,9 @@ class ReflectionComponent:  # Refactored from StructuredReflectionLoop
         # Step 4: Calculate Reflection Quality Metrics
         analysis_depth_score = self._calculate_analysis_depth_score(decision_analysis)
         insight_novelty_score = self._calculate_insight_novelty_score(insights)
-        actionability_score = self._calculate_actionability_score(insights, policy_adjustments)
+        actionability_score = self._calculate_actionability_score(
+            insights, policy_adjustments
+        )
 
         reflection_result = StructuredReflectionResult(
             agent_id=self.agent_id,
@@ -798,10 +877,16 @@ class ReflectionComponent:  # Refactored from StructuredReflectionLoop
             events_processed=len(sim_events),
             performance_metrics=current_performance,
             insights=insights,
-            critical_insights_count=len([i for i in insights if i.priority == "critical"]),
+            critical_insights_count=len(
+                [i for i in insights if i.priority == "critical"]
+            ),
             policy_adjustments=policy_adjustments,
             high_priority_adjustments=len(
-                [a for a in policy_adjustments if a.implementation_urgency == "immediate"]
+                [
+                    a
+                    for a in policy_adjustments
+                    if a.implementation_urgency == "immediate"
+                ]
             ),
             analysis_depth_score=analysis_depth_score,
             insight_novelty_score=insight_novelty_score,
@@ -812,7 +897,9 @@ class ReflectionComponent:  # Refactored from StructuredReflectionLoop
         return reflection_result
 
     async def _analyze_recent_decisions(
-        self, agent_decisions: List[Dict[str, Any]], current_performance: Dict[str, float]
+        self,
+        agent_decisions: List[Dict[str, Any]],
+        current_performance: Dict[str, float],
     ) -> Dict[str, Any]:
         """Analyzes recent agent decisions and their outcomes."""
         analysis: Dict[str, Any] = {
@@ -821,7 +908,9 @@ class ReflectionComponent:  # Refactored from StructuredReflectionLoop
             "performance_patterns": await self._identify_performance_patterns(
                 agent_decisions, current_performance
             ),
-            "decision_effectiveness": await self._analyze_decision_effectiveness(agent_decisions),
+            "decision_effectiveness": await self._analyze_decision_effectiveness(
+                agent_decisions
+            ),
             "failure_analysis": await self._analyze_decision_failures(agent_decisions),
             "success_factors": await self._analyze_decision_successes(agent_decisions),
             "recommendations": [],
@@ -841,10 +930,14 @@ class ReflectionComponent:  # Refactored from StructuredReflectionLoop
         }
 
         overall_score = performance_metrics.get("overall_score", 0.0)
-        if overall_score > self.config.structured_reflection_config.performance_threshold_improving:
+        if (
+            overall_score
+            > self.config.structured_reflection_config.performance_threshold_improving
+        ):
             patterns["trend"] = "improving"
         elif (
-            overall_score < self.config.structured_reflection_config.performance_threshold_declining
+            overall_score
+            < self.config.structured_reflection_config.performance_threshold_declining
         ):
             patterns["trend"] = "declining"
 
@@ -866,7 +959,9 @@ class ReflectionComponent:  # Refactored from StructuredReflectionLoop
             decision_outcomes[d_type].append(outcome)
 
         for d_type, outcomes_list in decision_outcomes.items():
-            success_rate = sum(outcomes_list) / len(outcomes_list) if outcomes_list else 0.0
+            success_rate = (
+                sum(outcomes_list) / len(outcomes_list) if outcomes_list else 0.0
+            )
             effectiveness_by_type[d_type] = {
                 "total_decisions": len(outcomes_list),
                 "success_rate": success_rate,
@@ -875,7 +970,8 @@ class ReflectionComponent:  # Refactored from StructuredReflectionLoop
                         [
                             d.get("impact_score", 0.0)
                             for d in decisions
-                            if d.get("type") == d_type and d.get("impact_score") is not None
+                            if d.get("type") == d_type
+                            and d.get("impact_score") is not None
                         ]
                     )
                     if any(d.get("type") == d_type for d in decisions)
@@ -884,7 +980,9 @@ class ReflectionComponent:  # Refactored from StructuredReflectionLoop
             }
         return effectiveness_by_type
 
-    async def _analyze_decision_failures(self, decisions: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def _analyze_decision_failures(
+        self, decisions: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Analyzes patterns and root causes of failed decisions."""
         failures = [d for d in decisions if not d.get("success", True)]
         # More sophisticated analysis would extract failure reasons, correlate with context etc.
@@ -893,7 +991,9 @@ class ReflectionComponent:  # Refactored from StructuredReflectionLoop
             "failure_rate": len(failures) / max(1, len(decisions)),
         }
 
-    async def _analyze_decision_successes(self, decisions: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def _analyze_decision_successes(
+        self, decisions: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Analyzes factors contributing to successful decisions."""
         successes = [d for d in decisions if d.get("success", False)]
         # More sophisticated analysis would extract common success factors
@@ -906,7 +1006,10 @@ class ReflectionComponent:  # Refactored from StructuredReflectionLoop
         """Generates recommendations based on the decision analysis."""
         recs = []
         failure_rate = analysis.get("failure_analysis", {}).get("failure_rate", 0.0)
-        if failure_rate > self.config.structured_reflection_config.failure_rate_threshold:
+        if (
+            failure_rate
+            > self.config.structured_reflection_config.failure_rate_threshold
+        ):
             recs.append(
                 "HIGH PRIORITY: Agent is experiencing frequent failures. Implement more robust decision-making processes."
             )
@@ -930,7 +1033,9 @@ class ReflectionComponent:  # Refactored from StructuredReflectionLoop
                     category="performance",
                     title="Sustained Performance Decline",
                     description="Agent's overall performance metrics have shown a sustained declining trend over the analysis period.",
-                    evidence=[f"Performance metrics: {analysis_results['performance_patterns']}"],
+                    evidence=[
+                        f"Performance metrics: {analysis_results['performance_patterns']}"
+                    ],
                     confidence=0.9,
                     actionability=0.8,
                     priority="critical",  # High priority for performance issues
@@ -944,7 +1049,9 @@ class ReflectionComponent:  # Refactored from StructuredReflectionLoop
             )
 
         # Example: Insight from high failure rate in a specific decision type
-        for d_type, effectiveness in analysis_results.get("decision_effectiveness", {}).items():
+        for d_type, effectiveness in analysis_results.get(
+            "decision_effectiveness", {}
+        ).items():
             if (
                 effectiveness.get("success_rate", 1.0)
                 < self.config.structured_reflection_config.decision_failure_rate_threshold
@@ -1015,7 +1122,9 @@ class ReflectionComponent:  # Refactored from StructuredReflectionLoop
                         PolicyAdjustment(
                             policy_area="pricing",
                             current_parameters={"strategy": "dynamic_pricing"},
-                            recommended_parameters={"strategy": "cost_plus_pricing_stable"},
+                            recommended_parameters={
+                                "strategy": "cost_plus_pricing_stable"
+                            },
                             rationale=f"Performance decline linked to aggressive dynamic pricing under unstable market conditions. Insight: {insight.title}",
                             expected_impact={"profit_margin": 0.02, "stability": 0.1},
                             confidence=insight.confidence,
@@ -1038,7 +1147,10 @@ class ReflectionComponent:  # Refactored from StructuredReflectionLoop
                                 "pre_action_validation_enabled": True,
                             },
                             rationale=f"Systematic decision failures detected. Enhanced risk assessment and pre-action validation needed. Insight: {insight.title}",
-                            expected_impact={"failure_rate": -0.15, "decision_quality": 0.1},
+                            expected_impact={
+                                "failure_rate": -0.15,
+                                "decision_quality": 0.1,
+                            },
                             confidence=insight.confidence,
                             implementation_urgency="immediate",
                             created_at=current_time,
@@ -1051,7 +1163,9 @@ class ReflectionComponent:  # Refactored from StructuredReflectionLoop
         self, insights: List[ReflectionInsight]
     ) -> List[ReflectionInsight]:
         """Ranks insights based on priority, confidence, and actionability."""
-        priority_weights = self.config.structured_reflection_config.insight_priority_weights
+        priority_weights = (
+            self.config.structured_reflection_config.insight_priority_weights
+        )
 
         def insight_score(insight):
             p_weight = priority_weights.get(insight.priority, 1)
@@ -1074,7 +1188,9 @@ class ReflectionComponent:  # Refactored from StructuredReflectionLoop
             score += 0.2
         return min(1.0, score)
 
-    def _calculate_insight_novelty_score(self, insights: List[ReflectionInsight]) -> float:
+    def _calculate_insight_novelty_score(
+        self, insights: List[ReflectionInsight]
+    ) -> float:
         """Calculates a score for how novel the generated insights are."""
         if not insights:
             return 0.0
@@ -1117,7 +1233,9 @@ class ReflectionComponent:  # Refactored from StructuredReflectionLoop
     ) -> List[PolicyAdjustment]:
         """Validates and filters policy adjustments based on confidence and other criteria."""
         validated = []
-        min_confidence = self.config.structured_reflection_config.policy_adjustment_min_confidence
+        min_confidence = (
+            self.config.structured_reflection_config.policy_adjustment_min_confidence
+        )
 
         for adjustment in adjustments:
             if adjustment.confidence >= min_confidence:
@@ -1145,7 +1263,8 @@ class ReflectionComponent:  # Refactored from StructuredReflectionLoop
             )
         except Exception as e:
             logger.error(
-                f"Failed to publish structured reflection completed event: {e}", exc_info=True
+                f"Failed to publish structured reflection completed event: {e}",
+                exc_info=True,
             )
 
 
@@ -1189,7 +1308,9 @@ class StructuredReflectionLoop:  # Old class name, now an alias/wrapper for Refl
     ) -> Dict[str, Any]:
         return await self._component._analyze_recent_decisions(event_history, outcomes)
 
-    async def generate_insights(self, analysis_results: Dict[str, Any]) -> List[ReflectionInsight]:
+    async def generate_insights(
+        self, analysis_results: Dict[str, Any]
+    ) -> List[ReflectionInsight]:
         return await self._component._generate_insights(
             analysis_results, [], datetime.now()
         )  # Placeholder for sim_events

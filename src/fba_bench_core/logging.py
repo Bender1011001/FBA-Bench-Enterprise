@@ -67,7 +67,9 @@ def _make_formatter(json_enabled: bool, fmt: str) -> logging.Formatter:
                 if hasattr(record, "span_id") and record.span_id:
                     log_record["span_id"] = record.span_id
                 # Extract traceparent from environment if available (set by middleware)
-                traceparent = getattr(record, "traceparent", None) or os.environ.get("traceparent")
+                traceparent = getattr(record, "traceparent", None) or os.environ.get(
+                    "traceparent"
+                )
                 if traceparent:
                     log_record["traceparent"] = traceparent
 
@@ -92,7 +94,9 @@ def configure_logging(settings=None, *, force: bool = False) -> None:
 
     if settings is None:
         try:
-            from fba_bench_core.settings import get_settings  # lazy import to avoid cycles
+            from fba_bench_core.settings import (
+                get_settings,
+            )  # lazy import to avoid cycles
 
             settings = get_settings()
         except Exception:
@@ -103,9 +107,7 @@ def configure_logging(settings=None, *, force: bool = False) -> None:
                     json = True  # Default to JSON for structured logging
                     destination = "stdout"
                     filename = None
-                    format = (
-                        "%(asctime)s %(levelname)s %(name)s - %(message)s [trace:%(traceparent)s]"
-                    )
+                    format = "%(asctime)s %(levelname)s %(name)s - %(message)s [trace:%(traceparent)s]"
 
             settings = _Fallback()  # type: ignore[assignment]
 
@@ -125,9 +127,7 @@ def configure_logging(settings=None, *, force: bool = False) -> None:
 
     def trace_filter(record):
         if hasattr(record, "trace_id") and record.trace_id:
-            record.traceparent = (
-                f"trace_id:{record.trace_id},span_id:{getattr(record, 'span_id', 'unknown')}"
-            )
+            record.traceparent = f"trace_id:{record.trace_id},span_id:{getattr(record, 'span_id', 'unknown')}"
         else:
             record.traceparent = "unknown"
         return True

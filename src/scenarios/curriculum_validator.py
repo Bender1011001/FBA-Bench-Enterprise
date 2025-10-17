@@ -49,7 +49,12 @@ class CurriculumValidator:
         'results' should contain metrics like 'profit', 'market_share', 'success_status', etc.
         """
         self.performance_data.append(
-            {"agent_model": agent_model, "tier": tier, "scenario_name": scenario_name, **results}
+            {
+                "agent_model": agent_model,
+                "tier": tier,
+                "scenario_name": scenario_name,
+                **results,
+            }
         )
         print(
             f"Benchmark recorded for agent '{agent_model}' on scenario '{scenario_name}' (Tier {tier})."
@@ -81,7 +86,9 @@ class CurriculumValidator:
         }
         return rule_id
 
-    def update_validation_rule(self, rule_id: str, updated_data: Dict[str, Any]) -> None:
+    def update_validation_rule(
+        self, rule_id: str, updated_data: Dict[str, Any]
+    ) -> None:
         if rule_id not in self._validation_rules:
             raise KeyError(f"Validation rule '{rule_id}' not found")
         rec = self._validation_rules[rule_id]
@@ -109,7 +116,9 @@ class CurriculumValidator:
         }
         return template_id
 
-    def update_curriculum_template(self, template_id: str, updated_data: Dict[str, Any]) -> None:
+    def update_curriculum_template(
+        self, template_id: str, updated_data: Dict[str, Any]
+    ) -> None:
         if template_id not in self._curriculum_templates:
             raise KeyError(f"Curriculum template '{template_id}' not found")
         rec = self._curriculum_templates[template_id]
@@ -162,9 +171,13 @@ class CurriculumValidator:
                 passed = self._prerequisites_met(curriculum)
 
             if not passed:
-                result["valid"] = False if severity in {"error", "critical"} else result["valid"]
+                result["valid"] = (
+                    False if severity in {"error", "critical"} else result["valid"]
+                )
                 (
-                    result["errors"] if severity in {"error", "critical"} else result["warnings"]
+                    result["errors"]
+                    if severity in {"error", "critical"}
+                    else result["warnings"]
                 ).append({"rule": rule.get("name", ""), "message": message})
 
         return result
@@ -226,7 +239,9 @@ class CurriculumValidator:
                 tier_key = str(tier_idx)  # Ensure string keys
                 validation_report["tier_summaries"][tier_key] = {
                     "avg_profit": float(tier_summary.loc[tier_idx, "avg_profit"]),
-                    "avg_success_rate": float(tier_summary.loc[tier_idx, "avg_success_rate"]),
+                    "avg_success_rate": float(
+                        tier_summary.loc[tier_idx, "avg_success_rate"]
+                    ),
                     "avg_duration": float(tier_summary.loc[tier_idx, "avg_duration"]),
                 }
         except Exception:
@@ -269,10 +284,14 @@ class CurriculumValidator:
         if scenario_type is not None:
             # This would require 'scenario_type' to be part of the collected results
             # For simplicity, let's assume scenario_name contains type info for now or we add it to benchmark_agent_performance
-            data = data[data["scenario_name"].str.contains(scenario_type, case=False, na=False)]
+            data = data[
+                data["scenario_name"].str.contains(scenario_type, case=False, na=False)
+            ]
 
         if data.empty:
-            print(f"No data for selected filters (Tier: {tier}, Type: {scenario_type}).")
+            print(
+                f"No data for selected filters (Tier: {tier}, Type: {scenario_type})."
+            )
             return {}
 
         # Create JSON-serializable dict with string keys
@@ -313,7 +332,9 @@ class CurriculumValidator:
             report["overall_performance_summary"] = summary_dict
         except Exception:
             # Fallback simple summary
-            report["overall_performance_summary"] = {"status": "summary_generation_failed"}
+            report["overall_performance_summary"] = {
+                "status": "summary_generation_failed"
+            }
 
         report["tier_progression_validation"] = self.validate_tier_progression()
         report["success_rate_by_tier"] = {}
@@ -321,8 +342,8 @@ class CurriculumValidator:
         try:
             tier_values = pd.DataFrame(self.performance_data)["tier"].unique()
             for tier_val in sorted(tier_values):
-                report["success_rate_by_tier"][f"Tier_{tier_val}"] = self.analyze_success_rates(
-                    tier=tier_val
+                report["success_rate_by_tier"][f"Tier_{tier_val}"] = (
+                    self.analyze_success_rates(tier=tier_val)
                 )
         except Exception:
             # Fallback for tests with minimal data
@@ -407,13 +428,21 @@ class CurriculumValidator:
                 }
 
         # Analyze strategic skills (planning, resource allocation, risk management)
-        strategic_metrics = ["cash_reserve_min", "debt_to_equity_ratio_max", "survival_until_end"]
+        strategic_metrics = [
+            "cash_reserve_min",
+            "debt_to_equity_ratio_max",
+            "survival_until_end",
+        ]
         for metric in strategic_metrics:
             if metric in data.columns:
                 skill_assessment["strategic_skills"][metric] = {
                     "average_performance": data[metric].mean(),
-                    "risk_management_score": self._calculate_risk_management_score(data, metric),
-                    "resource_efficiency": self._calculate_resource_efficiency(data, metric),
+                    "risk_management_score": self._calculate_risk_management_score(
+                        data, metric
+                    ),
+                    "resource_efficiency": self._calculate_resource_efficiency(
+                        data, metric
+                    ),
                     "tier_progression": self._calculate_tier_progression(data, metric),
                 }
 
@@ -427,8 +456,12 @@ class CurriculumValidator:
             if metric in data.columns:
                 skill_assessment["operational_skills"][metric] = {
                     "average_performance": data[metric].mean(),
-                    "execution_efficiency": self._calculate_execution_efficiency(data, metric),
-                    "adaptability_score": self._calculate_adaptability_score(data, metric),
+                    "execution_efficiency": self._calculate_execution_efficiency(
+                        data, metric
+                    ),
+                    "adaptability_score": self._calculate_adaptability_score(
+                        data, metric
+                    ),
                     "tier_progression": self._calculate_tier_progression(data, metric),
                 }
 
@@ -439,7 +472,9 @@ class CurriculumValidator:
         skill_assessment["skill_gaps"] = self._identify_skill_gaps(skill_assessment)
 
         # Generate skill development recommendations
-        skill_assessment["recommendations"] = self._generate_skill_recommendations(skill_assessment)
+        skill_assessment["recommendations"] = self._generate_skill_recommendations(
+            skill_assessment
+        )
 
         return skill_assessment
 
@@ -466,7 +501,9 @@ class CurriculumValidator:
                 return 1.0 - (std_val / abs(mean_val))
         return 0.0
 
-    def _calculate_tier_progression(self, data: pd.DataFrame, metric: str) -> Dict[int, float]:
+    def _calculate_tier_progression(
+        self, data: pd.DataFrame, metric: str
+    ) -> Dict[int, float]:
         """Calculate how a metric progresses across different tiers."""
         tier_progression = {}
         if "tier" in data.columns and metric in data.columns:
@@ -476,7 +513,9 @@ class CurriculumValidator:
                     tier_progression[int(tier)] = tier_data[metric].mean()
         return tier_progression
 
-    def _calculate_risk_management_score(self, data: pd.DataFrame, metric: str) -> float:
+    def _calculate_risk_management_score(
+        self, data: pd.DataFrame, metric: str
+    ) -> float:
         """Calculate risk management score based on debt ratios and survival rates."""
         if metric == "debt_to_equity_ratio_max":
             # Lower debt ratios indicate better risk management
@@ -511,7 +550,8 @@ class CurriculumValidator:
             else:
                 # Calculate distance from optimal range
                 distance = min(
-                    abs(avg_turnover - optimal_range[0]), abs(avg_turnover - optimal_range[1])
+                    abs(avg_turnover - optimal_range[0]),
+                    abs(avg_turnover - optimal_range[1]),
                 )
                 return max(0, 1.0 - (distance / optimal_range[1]))
         return 0.5  # Neutral score for other metrics
@@ -550,8 +590,8 @@ class CurriculumValidator:
                 for metric in cognitive_metrics:
                     if metric in tier_data.columns:
                         cognitive_score += tier_data[metric].mean()
-                skill_progression["cognitive_progression"][int(tier)] = cognitive_score / len(
-                    cognitive_metrics
+                skill_progression["cognitive_progression"][int(tier)] = (
+                    cognitive_score / len(cognitive_metrics)
                 )
 
                 # Strategic skills progression
@@ -568,8 +608,8 @@ class CurriculumValidator:
                             strategic_score += 1.0 - tier_data[metric].mean()
                         else:
                             strategic_score += tier_data[metric].mean()
-                skill_progression["strategic_progression"][int(tier)] = strategic_score / len(
-                    strategic_metrics
+                skill_progression["strategic_progression"][int(tier)] = (
+                    strategic_score / len(strategic_metrics)
                 )
 
                 # Operational skills progression
@@ -582,8 +622,8 @@ class CurriculumValidator:
                 for metric in operational_metrics:
                     if metric in tier_data.columns:
                         operational_score += tier_data[metric].mean()
-                skill_progression["operational_progression"][int(tier)] = operational_score / len(
-                    operational_metrics
+                skill_progression["operational_progression"][int(tier)] = (
+                    operational_score / len(operational_metrics)
                 )
 
             # Determine overall progression trend
@@ -612,7 +652,9 @@ class CurriculumValidator:
 
         return skill_progression
 
-    def _identify_skill_gaps(self, skill_assessment: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _identify_skill_gaps(
+        self, skill_assessment: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Identify skill gaps based on skill assessment data."""
         skill_gaps = []
 
@@ -624,7 +666,9 @@ class CurriculumValidator:
                         "category": "cognitive",
                         "skill": skill,
                         "severity": (
-                            "high" if data.get("average_performance", 0) < 0.4 else "medium"
+                            "high"
+                            if data.get("average_performance", 0) < 0.4
+                            else "medium"
                         ),
                         "description": f"Low performance in {skill} indicates gaps in cognitive abilities",
                     }
@@ -638,7 +682,9 @@ class CurriculumValidator:
                         "category": "strategic",
                         "skill": skill,
                         "severity": (
-                            "high" if data.get("risk_management_score", 0) < 0.4 else "medium"
+                            "high"
+                            if data.get("risk_management_score", 0) < 0.4
+                            else "medium"
                         ),
                         "description": f"Poor risk management in {skill} indicates strategic planning gaps",
                     }
@@ -652,7 +698,9 @@ class CurriculumValidator:
                         "category": "operational",
                         "skill": skill,
                         "severity": (
-                            "high" if data.get("execution_efficiency", 0) < 0.4 else "medium"
+                            "high"
+                            if data.get("execution_efficiency", 0) < 0.4
+                            else "medium"
                         ),
                         "description": f"Low execution efficiency in {skill} indicates operational gaps",
                     }
@@ -660,7 +708,9 @@ class CurriculumValidator:
 
         return skill_gaps
 
-    def _generate_skill_recommendations(self, skill_assessment: Dict[str, Any]) -> List[str]:
+    def _generate_skill_recommendations(
+        self, skill_assessment: Dict[str, Any]
+    ) -> List[str]:
         """Generate recommendations for skill development based on assessment."""
         recommendations = []
 
@@ -679,7 +729,9 @@ class CurriculumValidator:
 
         # Analyze skill gaps
         skill_gaps = skill_assessment.get("skill_gaps", [])
-        high_severity_gaps = [gap for gap in skill_gaps if gap.get("severity") == "high"]
+        high_severity_gaps = [
+            gap for gap in skill_gaps if gap.get("severity") == "high"
+        ]
 
         if high_severity_gaps:
             recommendations.append(

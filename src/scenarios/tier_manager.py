@@ -39,7 +39,9 @@ class TierProgression:
     tier_completions: Dict[TierLevel, bool] = field(
         default_factory=lambda: {t: False for t in TierLevel}
     )
-    tier_attempts: Dict[TierLevel, int] = field(default_factory=lambda: {t: 0 for t in TierLevel})
+    tier_attempts: Dict[TierLevel, int] = field(
+        default_factory=lambda: {t: 0 for t in TierLevel}
+    )
     progression_timestamps: Dict[str, str] = field(default_factory=dict)
 
     def record_attempt(self, tier: TierLevel) -> None:
@@ -86,7 +88,9 @@ class TierManager:
         Determine if an agent should progress to the next tier based on
         the number of successful scenarios completed at the current tier.
         """
-        required = self._requirements.required_successes.get(progression.current_tier, 999)
+        required = self._requirements.required_successes.get(
+            progression.current_tier, 999
+        )
         succeeded = 0
         for s in progression.completed_scenarios:
             tier_val = s.get("tier_level")
@@ -124,5 +128,7 @@ class TierManager:
             if new_tier != old:
                 progression.current_tier = new_tier
                 progression.tier_completions[old] = True
-                progression.progression_timestamps[new_tier.value] = datetime.now().isoformat()
+                progression.progression_timestamps[new_tier.value] = (
+                    datetime.now().isoformat()
+                )
         return progression

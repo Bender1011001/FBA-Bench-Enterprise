@@ -40,6 +40,7 @@ from typing import Any, Dict
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from integration_tests import IntegrationTestConfig, logger
+
 # Optional import: demo scenarios rely on agent_runners; skip gracefully if unavailable
 try:
     from integration_tests.demo_scenarios import DemoScenarios  # may require agent_runners
@@ -79,14 +80,14 @@ class IntegrationTestRunner:
             else:
                 # Fallback: Run T0 with OpenRouterBot (LLM testing) even without agent_runners
                 logger.info("DemoScenarios not available (agent_runners missing). Running T0 with OpenRouterBot.")
-                from simulation_orchestrator import SimulationConfig, SimulationOrchestrator
-                from fba_events.bus import get_event_bus, InMemoryEventBus
-                from fba_bench_core.services.world_store import WorldStore
+                from baseline_bots.bot_factory import BotFactory
                 from fba_bench_core.services.sales_service import SalesService
                 from fba_bench_core.services.trust_score_service import TrustScoreService
-                from metrics.metric_suite import MetricSuite
+                from fba_bench_core.services.world_store import WorldStore
+                from fba_events.bus import get_event_bus
                 from financial_audit import FinancialAuditService
-                from baseline_bots.bot_factory import BotFactory
+                from metrics.metric_suite import MetricSuite
+                from simulation_orchestrator import SimulationConfig, SimulationOrchestrator
 
                 # Use env overrides if present (set earlier via CLI flags)
                 max_ticks = int(os.getenv("SIM_MAX_TICKS", "200"))
@@ -200,7 +201,9 @@ class IntegrationTestRunner:
             # If agent_runners or demo_scenarios aren't installed in this environment,
             # fall back to a minimal T2-style stress run that still exercises real LLM calls.
             try:
-                from integration_tests.demo_scenarios import DemoScenarios  # may require agent_runners
+                from integration_tests.demo_scenarios import (
+                    DemoScenarios,  # may require agent_runners
+                )
             except Exception:
                 DemoScenarios = None
 
@@ -220,14 +223,14 @@ class IntegrationTestRunner:
                 # Fallback minimal T2 run that creates a simulation, an OpenRouter-backed agent,
                 # and forces more frequent LLM decisions to simulate stress/behavioral checks.
                 logger.info("DemoScenarios not available (agent_runners missing). Running minimal T2 fallback with LLM-powered agent.")
-                from simulation_orchestrator import SimulationConfig, SimulationOrchestrator
-                from fba_events.bus import get_event_bus
-                from fba_bench_core.services.world_store import WorldStore
+                from baseline_bots.bot_factory import BotFactory
                 from fba_bench_core.services.sales_service import SalesService
                 from fba_bench_core.services.trust_score_service import TrustScoreService
-                from metrics.metric_suite import MetricSuite
+                from fba_bench_core.services.world_store import WorldStore
+                from fba_events.bus import get_event_bus
                 from financial_audit import FinancialAuditService
-                from baseline_bots.bot_factory import BotFactory
+                from metrics.metric_suite import MetricSuite
+                from simulation_orchestrator import SimulationConfig, SimulationOrchestrator
 
                 # Env overrides
                 max_ticks = int(os.getenv("SIM_MAX_TICKS", "365"))

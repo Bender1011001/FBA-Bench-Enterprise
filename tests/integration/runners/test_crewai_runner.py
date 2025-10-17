@@ -15,9 +15,13 @@ def test_crewai_runner_not_installed(monkeypatch):
     sys.modules.pop("crewai", None)
 
     with pytest.raises(AgentRunnerInitializationError) as exc:
-        CrewAIRunner("agent-x", {"model": "gpt-4o-mini"})  # base __init__ triggers _do_initialize
+        CrewAIRunner(
+            "agent-x", {"model": "gpt-4o-mini"}
+        )  # base __init__ triggers _do_initialize
 
-    assert "CrewAI is not installed" in str(exc.value) or "CrewAI not installed" in str(exc.value)
+    assert "CrewAI is not installed" in str(exc.value) or "CrewAI not installed" in str(
+        exc.value
+    )
 
 
 @pytest.mark.integration
@@ -25,11 +29,12 @@ def test_crewai_runner_not_installed(monkeypatch):
 async def test_crewai_runner_success_with_fake_lib(monkeypatch):
     # Fake CrewAI minimal surface
     class FakeAgent:
-        def __init__(self, **kwargs):
-            ...
+        def __init__(self, **kwargs): ...
 
     class FakeTask:
-        def __init__(self, description: str, agent: Any, expected_output: str, **kwargs):
+        def __init__(
+            self, description: str, agent: Any, expected_output: str, **kwargs
+        ):
             self.description = description
             self.agent = agent
             self.expected_output = expected_output
@@ -44,12 +49,16 @@ async def test_crewai_runner_success_with_fake_lib(monkeypatch):
             # Return valid JSON string
             return json.dumps(
                 {
-                    "decisions": [{"asin": "B0TEST", "new_price": 19.99, "reasoning": "ok"}],
+                    "decisions": [
+                        {"asin": "B0TEST", "new_price": 19.99, "reasoning": "ok"}
+                    ],
                     "meta": {"tick": 1},
                 }
             )
 
-    fake_module = SimpleNamespace(Agent=FakeAgent, Task=FakeTask, Crew=FakeCrew, Tool=None)
+    fake_module = SimpleNamespace(
+        Agent=FakeAgent, Task=FakeTask, Crew=FakeCrew, Tool=None
+    )
     monkeypatch.setitem(sys.modules, "crewai", fake_module)
 
     runner = CrewAIRunner(

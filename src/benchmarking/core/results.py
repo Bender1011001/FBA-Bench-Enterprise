@@ -83,7 +83,8 @@ class AgentRunResult:
             end_time=datetime.fromisoformat(data["end_time"]),
             duration_seconds=data["duration_seconds"],
             metrics=[
-                MetricResult.from_dict(metric_data) for metric_data in data.get("metrics", [])
+                MetricResult.from_dict(metric_data)
+                for metric_data in data.get("metrics", [])
             ],
             errors=data.get("errors", []),
             success=data.get("success", True),
@@ -246,7 +247,8 @@ class BenchmarkResult:
         summary = {
             "total_scenarios": len(self.scenario_results),
             "total_agent_runs": sum(
-                len(scenario_result.agent_results) for scenario_result in self.scenario_results
+                len(scenario_result.agent_results)
+                for scenario_result in self.scenario_results
             ),
             "successful_runs": 0,
             "failed_runs": 0,
@@ -257,7 +259,8 @@ class BenchmarkResult:
 
         if self.scenario_results:
             summary["average_scenario_duration"] = sum(
-                scenario_result.duration_seconds for scenario_result in self.scenario_results
+                scenario_result.duration_seconds
+                for scenario_result in self.scenario_results
             ) / len(self.scenario_results)
 
         # Count successful and failed runs
@@ -292,7 +295,9 @@ class BenchmarkResult:
                 for metric in agent_result.metrics:
                     if metric.name not in agent_performance[agent_id]["metrics"]:
                         agent_performance[agent_id]["metrics"][metric.name] = []
-                    agent_performance[agent_id]["metrics"][metric.name].append(metric.value)
+                    agent_performance[agent_id]["metrics"][metric.name].append(
+                        metric.value
+                    )
 
         # Calculate averages for each agent
         for agent_id, performance in agent_performance.items():
@@ -303,7 +308,9 @@ class BenchmarkResult:
                     for scenario_result in self.scenario_results
                     for result in scenario_result.get_agent_results(agent_id)
                 )
-                performance["average_duration"] = total_duration / performance["total_runs"]
+                performance["average_duration"] = (
+                    total_duration / performance["total_runs"]
+                )
 
                 # Calculate metric averages
                 for metric_name, values in performance["metrics"].items():
@@ -311,7 +318,9 @@ class BenchmarkResult:
                         performance["metrics"][metric_name] = {
                             "mean": statistics.mean(values),
                             "median": statistics.median(values),
-                            "std_dev": statistics.stdev(values) if len(values) > 1 else 0.0,
+                            "std_dev": (
+                                statistics.stdev(values) if len(values) > 1 else 0.0
+                            ),
                         }
 
         summary["agent_performance"] = agent_performance

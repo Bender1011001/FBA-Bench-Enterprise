@@ -2,18 +2,14 @@
 Conflict resolution and action coordination for skills.
 """
 
-import asyncio
 import logging
 from collections import defaultdict
-from typing import List, Dict, Any, Tuple, Optional
-
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
 
-from .models import CoordinationStrategy, CoordinatorTuning
-from .models import ResourceAllocation
-from .utils import get_expected_roi_baseline
 from ..skill_modules.base_skill import SkillAction
-
+from .models import CoordinationStrategy, CoordinatorTuning, ResourceAllocation
+from .utils import get_expected_roi_baseline
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +25,7 @@ class ConflictResolver:
         coordinator_tuning: CoordinatorTuning,
         config: Dict[str, Any],
         conflict_log: List[Dict[str, Any]],
-        skill_metrics: Dict[str, 'SkillPerformanceMetrics'],  # Forward ref
+        skill_metrics: Dict[str, "SkillPerformanceMetrics"],  # Forward ref
         resource_allocation: ResourceAllocation,
     ):
         """
@@ -49,7 +45,9 @@ class ConflictResolver:
         self.skill_metrics = skill_metrics
         self.resource_allocation = resource_allocation
 
-    async def coordinate_actions(self, skill_actions: List[SkillAction]) -> List[SkillAction]:
+    async def coordinate_actions(
+        self, skill_actions: List[SkillAction]
+    ) -> List[SkillAction]:
         """
         Public method to coordinate pre-generated skill actions.
 
@@ -62,7 +60,7 @@ class ConflictResolver:
         # Flatten all actions with skill attribution if from multiple sources
         all_actions = []
         for action in skill_actions:
-            if not hasattr(action, 'skill_source') or not action.skill_source:
+            if not hasattr(action, "skill_source") or not action.skill_source:
                 action.skill_source = "external"  # Default for direct calls
             all_actions.append(action)
 
@@ -82,19 +80,25 @@ class ConflictResolver:
     def _coordinate_by_priority(self, actions: List[SkillAction]) -> List[SkillAction]:
         """Coordinate actions based on priority scores."""
         # Sort by priority and confidence
-        sorted_actions = sorted(actions, key=lambda a: a.priority * a.confidence, reverse=True)
+        sorted_actions = sorted(
+            actions, key=lambda a: a.priority * a.confidence, reverse=True
+        )
 
         # Check for conflicts and resolve
         coordinated_actions = []
         resource_usage = {"budget": Money(cents=0), "tokens": 0}
 
         for action in sorted_actions:
-            action_budget_money = Money(cents=action.resource_requirements.get("budget", 0))
+            action_budget_money = Money(
+                cents=action.resource_requirements.get("budget", 0)
+            )
             action_tokens = action.resource_requirements.get("tokens", 0)
 
             if (
-                resource_usage["budget"] + action_budget_money <= self.resource_allocation.remaining_budget
-                and resource_usage["tokens"] + action_tokens <= self.resource_allocation.remaining_tokens
+                resource_usage["budget"] + action_budget_money
+                <= self.resource_allocation.remaining_budget
+                and resource_usage["tokens"] + action_tokens
+                <= self.resource_allocation.remaining_tokens
                 and not self._has_conflict(action, coordinated_actions)
             ):
                 coordinated_actions.append(action)
@@ -111,7 +115,9 @@ class ConflictResolver:
         # Calculate resource efficiency for each action
         efficient_actions = []
 
-        expected_roi_baseline = get_expected_roi_baseline(self.coordinator_tuning, self.config)
+        expected_roi_baseline = get_expected_roi_baseline(
+            self.coordinator_tuning, self.config
+        )
 
         for action in actions:
             budget_req = action.resource_requirements.get("budget", 0)
@@ -135,12 +141,16 @@ class ConflictResolver:
         resource_usage = {"budget": Money(cents=0), "tokens": 0}
 
         for action, efficiency in efficient_actions:
-            action_budget_money = Money(cents=action.resource_requirements.get("budget", 0))
+            action_budget_money = Money(
+                cents=action.resource_requirements.get("budget", 0)
+            )
             action_tokens = action.resource_requirements.get("tokens", 0)
 
             if (
-                resource_usage["budget"] + action_budget_money <= self.resource_allocation.remaining_budget
-                and resource_usage["tokens"] + action_tokens <= self.resource_allocation.remaining_tokens
+                resource_usage["budget"] + action_budget_money
+                <= self.resource_allocation.remaining_budget
+                and resource_usage["tokens"] + action_tokens
+                <= self.resource_allocation.remaining_tokens
                 and not self._has_conflict(action, coordinated_actions)
             ):
                 coordinated_actions.append(action)
@@ -149,7 +159,9 @@ class ConflictResolver:
 
         return coordinated_actions
 
-    async def _coordinate_by_consensus(self, actions: List[SkillAction]) -> List[SkillAction]:
+    async def _coordinate_by_consensus(
+        self, actions: List[SkillAction]
+    ) -> List[SkillAction]:
         """Coordinate actions based on consensus among skills."""
         # Group actions by type
         action_groups = defaultdict(list)
@@ -196,14 +208,15 @@ class ConflictResolver:
 
         return coordinated_actions
 
-    def _has_conflict(self, action: SkillAction, existing_actions: List[SkillAction]) -> bool:
+    def _has_conflict(
+        self, action: SkillAction, existing_actions: List[SkillAction]
+    ) -> bool:
         """Check if action conflicts with existing actions."""
         for existing in existing_actions:
             # Check for same action type targeting same resource
-            if (
-                action.action_type == existing.action_type
-                and action.parameters.get("asin") == existing.parameters.get("asin")
-            ):
+            if action.action_type == existing.action_type and action.parameters.get(
+                "asin"
+            ) == existing.parameters.get("asin"):
                 return True
 
             # Check for mutually exclusive actions
@@ -216,7 +229,8 @@ class ConflictResolver:
         """Check if two action types are mutually exclusive."""
         exclusive_pairs = self._get_exclusive_pairs()
         return (action_type1, action_type2) in exclusive_pairs or (
-            action_type2, action_type1
+            action_type2,
+            action_type1,
         ) in exclusive_pairs
 
     def _get_exclusive_pairs(self) -> List[Tuple[str, str]]:
@@ -234,7 +248,9 @@ class ConflictResolver:
             ("run_marketing_campaign", "reduce_campaign_spend"),
         ]
 
-    async def _find_consensus_action(self, actions: List[SkillAction]) -> Optional[SkillAction]:
+    async def _find_consensus_action(
+        self, actions: List[SkillAction]
+    ) -> Optional[SkillAction]:
         """Find consensus action from multiple similar actions."""
         if not actions:
             return None
@@ -300,7 +316,10 @@ class ConflictResolver:
         if conflicting_action.skill_source in self.skill_metrics:
             metrics = self.skill_metrics[conflicting_action.skill_source]
             my_conflicts = [
-                c for c in self.conflict_log
+                c
+                for c in self.conflict_log
                 if c["conflicting_action"]["skill"] == conflicting_action.skill_source
             ]
-            metrics.conflict_rate = len(my_conflicts) / max(1, metrics.total_actions_generated)
+            metrics.conflict_rate = len(my_conflicts) / max(
+                1, metrics.total_actions_generated
+            )

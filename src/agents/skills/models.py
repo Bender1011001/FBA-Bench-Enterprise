@@ -39,7 +39,9 @@ class SkillSubscription:
     event_types: Set[str]
     priority_multiplier: float = 1.0
     filters: Dict[str, Any] = field(default_factory=dict)
-    max_concurrent_events: int = field(default=3)  # Will be overridden in register_skill
+    max_concurrent_events: int = field(
+        default=3
+    )  # Will be overridden in register_skill
     current_load: int = 0
 
 
@@ -59,7 +61,9 @@ class ResourceAllocation:
         used_slots: Currently used execution slots
     """
 
-    total_budget: Money = field(default_factory=lambda: Money(cents=1000000))  # $10,000 in cents
+    total_budget: Money = field(
+        default_factory=lambda: Money(cents=1000000)
+    )  # $10,000 in cents
     allocated_budget: Money = field(default_factory=lambda: Money(cents=0))
     remaining_budget: Money = field(default_factory=lambda: Money(cents=1000000))
     token_budget: int = 100000
@@ -95,7 +99,12 @@ class CoordinatorTuning:
     max_concurrent_events_default: Optional[int] = None
     total_budget_cents: Optional[int] = None
     urgency_multipliers: Optional[Dict[str, float]] = field(
-        default_factory=lambda: {"low": 0.8, "normal": 1.0, "high": 1.3, "critical": 1.5}
+        default_factory=lambda: {
+            "low": 0.8,
+            "normal": 1.0,
+            "high": 1.3,
+            "critical": 1.5,
+        }
     )
     expected_roi_baseline: Optional[float] = 2.0
 

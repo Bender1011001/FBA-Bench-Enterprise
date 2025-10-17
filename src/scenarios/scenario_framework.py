@@ -145,7 +145,9 @@ class ScenarioConfig:
 
         return market_params
 
-    def define_product_catalog(self, category: str, complexity: str) -> List[Dict[str, Any]]:
+    def define_product_catalog(
+        self, category: str, complexity: str
+    ) -> List[Dict[str, Any]]:
         """
         Sets available products and variants based on category and complexity.
         Uses values from self.config_data['product_catalog'] and applies business logic.
@@ -169,17 +171,37 @@ class ScenarioConfig:
         # Define product templates for different categories
         product_templates = {
             "electronics": {
-                "base_attributes": ["warranty", "technical_support", "software_updates"],
+                "base_attributes": [
+                    "warranty",
+                    "technical_support",
+                    "software_updates",
+                ],
                 "variants": ["storage_size", "color", "connectivity"],
-                "pricing_factors": ["brand_premium", "feature_complexity", "market_demand"],
+                "pricing_factors": [
+                    "brand_premium",
+                    "feature_complexity",
+                    "market_demand",
+                ],
             },
             "apparel": {
-                "base_attributes": ["material_quality", "design_complexity", "brand_reputation"],
+                "base_attributes": [
+                    "material_quality",
+                    "design_complexity",
+                    "brand_reputation",
+                ],
                 "variants": ["size", "color", "style"],
-                "pricing_factors": ["seasonal_demand", "brand_value", "production_cost"],
+                "pricing_factors": [
+                    "seasonal_demand",
+                    "brand_value",
+                    "production_cost",
+                ],
             },
             "food_beverage": {
-                "base_attributes": ["organic_certification", "shelf_life", "nutritional_value"],
+                "base_attributes": [
+                    "organic_certification",
+                    "shelf_life",
+                    "nutritional_value",
+                ],
                 "variants": ["flavor", "packaging_size", "dietary_category"],
                 "pricing_factors": [
                     "ingredient_quality",
@@ -190,12 +212,24 @@ class ScenarioConfig:
             "home_goods": {
                 "base_attributes": ["durability", "aesthetic_design", "functionality"],
                 "variants": ["size", "color", "material"],
-                "pricing_factors": ["material_quality", "design_complexity", "brand_premium"],
+                "pricing_factors": [
+                    "material_quality",
+                    "design_complexity",
+                    "brand_premium",
+                ],
             },
             "automotive": {
-                "base_attributes": ["safety_rating", "fuel_efficiency", "performance_metrics"],
+                "base_attributes": [
+                    "safety_rating",
+                    "fuel_efficiency",
+                    "performance_metrics",
+                ],
                 "variants": ["model", "trim_level", "color"],
-                "pricing_factors": ["engine_size", "luxury_features", "technology_package"],
+                "pricing_factors": [
+                    "engine_size",
+                    "luxury_features",
+                    "technology_package",
+                ],
             },
         }
 
@@ -274,8 +308,11 @@ class ScenarioConfig:
                 for i in range(variant_count):
                     variant = {
                         "variant_id": f"{processed_product.get('name', 'product')}_{i+1}",
-                        "attributes": self._generate_variant_attributes(template["variants"]),
-                        "price_adjustment": modifier["price_adjustment"] * (0.9 + (i * 0.1)),
+                        "attributes": self._generate_variant_attributes(
+                            template["variants"]
+                        ),
+                        "price_adjustment": modifier["price_adjustment"]
+                        * (0.9 + (i * 0.1)),
                     }
                     variants.append(variant)
 
@@ -289,11 +326,15 @@ class ScenarioConfig:
             defaults_built = False
             for cat in categories or []:
                 if cat in product_templates:
-                    processed_products.extend(self._generate_default_products(cat, complexity))
+                    processed_products.extend(
+                        self._generate_default_products(cat, complexity)
+                    )
                     defaults_built = True
             if not defaults_built:
                 # Fallback to a stable default category
-                processed_products = self._generate_default_products("electronics", complexity)
+                processed_products = self._generate_default_products(
+                    "electronics", complexity
+                )
 
         # Validate and normalize product catalog
         processed_products = self._validate_product_catalog(processed_products)
@@ -354,7 +395,14 @@ class ScenarioFramework:
         if scenario_id not in self._scenarios:
             raise KeyError(f"Scenario '{scenario_id}' not found")
         rec = self._scenarios[scenario_id]
-        for k in ("name", "description", "category", "parameters", "steps", "expected_outcomes"):
+        for k in (
+            "name",
+            "description",
+            "category",
+            "parameters",
+            "steps",
+            "expected_outcomes",
+        ):
             if k in updated_data:
                 rec[k] = updated_data[k]
         rec["updated_at"] = datetime.now(timezone.utc).isoformat()
@@ -368,7 +416,11 @@ class ScenarioFramework:
 
     def get_scenarios_by_category(self, category: str) -> List[Dict[str, Any]]:
         cat = (category or "").strip()
-        return [s for s in self._scenarios.values() if (s.get("category") or "").strip() == cat]
+        return [
+            s
+            for s in self._scenarios.values()
+            if (s.get("category") or "").strip() == cat
+        ]
 
     # Categories
     def create_scenario_category(self, category_data: Dict[str, Any]) -> str:
@@ -399,7 +451,9 @@ class ScenarioFramework:
     def create_scenario_from_template(self, scenario_data: Dict[str, Any]) -> str:
         template_id = scenario_data.get("template_id")
         if not template_id or template_id not in self._scenario_templates:
-            raise KeyError("Valid 'template_id' is required to create a scenario from template")
+            raise KeyError(
+                "Valid 'template_id' is required to create a scenario from template"
+            )
         tpl = self._scenario_templates[template_id]
 
         # Merge parameters (template defaults overridden by provided)
@@ -408,7 +462,9 @@ class ScenarioFramework:
 
         new_scenario = {
             "name": scenario_data.get("name", tpl.get("name", "Scenario")).strip(),
-            "description": scenario_data.get("description", tpl.get("description", "")).strip(),
+            "description": scenario_data.get(
+                "description", tpl.get("description", "")
+            ).strip(),
             "category": tpl.get("category", ""),
             "parameters": merged_params,
             "steps": list(tpl.get("steps", []) or []),
@@ -494,7 +550,9 @@ class ScenarioFramework:
             sc.get("execution_history", [])
         )  # already list of dicts
         total = len(history)
-        successes = sum(1 for e in history if str(e.get("status", "")).lower() == "success")
+        successes = sum(
+            1 for e in history if str(e.get("status", "")).lower() == "success"
+        )
         success_rate = (successes / total) if total > 0 else 0.0
 
         report = {
@@ -543,7 +601,12 @@ class ScenarioFramework:
                 ],
             },
             "market_shift": {
-                "types": ["demand_surge", "demand_decline", "price_war", "new_competitor"],
+                "types": [
+                    "demand_surge",
+                    "demand_decline",
+                    "price_war",
+                    "new_competitor",
+                ],
                 "impact_levels": ["low", "medium", "high"],
                 "duration_range": (3, 10),
                 "probability_factors": [
@@ -561,7 +624,11 @@ class ScenarioFramework:
                 ],
                 "impact_levels": ["medium", "high", "critical"],
                 "duration_range": (5, 15),
-                "probability_factors": ["debt_levels", "cash_reserves", "market_volatility"],
+                "probability_factors": [
+                    "debt_levels",
+                    "cash_reserves",
+                    "market_volatility",
+                ],
             },
             "regulatory_change": {
                 "types": [
@@ -619,7 +686,9 @@ class ScenarioFramework:
 
                 for i in range(event_count):
                     # Generate event based on template
-                    new_event = self._generate_event_from_template(template, event_type, timeline)
+                    new_event = self._generate_event_from_template(
+                        template, event_type, timeline
+                    )
 
                     # Ensure no timing conflicts
                     if self._validate_event_timing(new_event, scheduled_events):
@@ -701,10 +770,14 @@ class ScenarioFramework:
                 base_constraints[key] = value
 
             # Apply additional tier-specific logic
-            base_constraints = self._apply_tier_specific_logic(base_constraints, difficulty_tier)
+            base_constraints = self._apply_tier_specific_logic(
+                base_constraints, difficulty_tier
+            )
 
         # Validate constraints
-        base_constraints = self._validate_agent_constraints(base_constraints, difficulty_tier)
+        base_constraints = self._validate_agent_constraints(
+            base_constraints, difficulty_tier
+        )
 
         return base_constraints
 
@@ -764,7 +837,9 @@ class ScenarioFramework:
 
         # Check for logical conflicts between scenario parameters
         if not self._check_logical_conflicts():
-            print("Validation Error: Logical conflicts detected in scenario parameters.")
+            print(
+                "Validation Error: Logical conflicts detected in scenario parameters."
+            )
             return False
 
         # Validate numerical ranges
@@ -774,13 +849,18 @@ class ScenarioFramework:
 
         # Validate multi-agent configurations if present
         if "multi_agent_config" in self.config_data:
-            if not self._validate_multi_agent_configuration(self.config_data["multi_agent_config"]):
-                print("Validation Error: Multi-agent configuration is incomplete or inconsistent.")
+            if not self._validate_multi_agent_configuration(
+                self.config_data["multi_agent_config"]
+            ):
+                print(
+                    "Validation Error: Multi-agent configuration is incomplete or inconsistent."
+                )
                 return False
 
-        print(f"Scenario '{scenario_name}' consistency validation passed (comprehensive check).")
+        print(
+            f"Scenario '{scenario_name}' consistency validation passed (comprehensive check)."
+        )
         return True
-
 
     def to_yaml(self, filepath: str):
         """Saves the ScenarioConfig to a YAML file."""
@@ -813,7 +893,12 @@ class ScenarioFramework:
         attribute_values = {
             "electronics": {
                 "warranty": ["1 year", "2 years", "3 years", "extended"],
-                "technical_support": ["24/7", "business hours", "email only", "premium"],
+                "technical_support": [
+                    "24/7",
+                    "business hours",
+                    "email only",
+                    "premium",
+                ],
                 "software_updates": ["2 years", "3 years", "5 years", "lifetime"],
             },
             "apparel": {
@@ -822,7 +907,12 @@ class ScenarioFramework:
                 "brand_reputation": ["emerging", "established", "premium", "luxury"],
             },
             "food_beverage": {
-                "organic_certification": ["none", "partial", "certified", "premium organic"],
+                "organic_certification": [
+                    "none",
+                    "partial",
+                    "certified",
+                    "premium organic",
+                ],
                 "shelf_life": ["short", "medium", "long", "extended"],
                 "nutritional_value": ["basic", "standard", "enhanced", "premium"],
             },
@@ -834,7 +924,12 @@ class ScenarioFramework:
             "automotive": {
                 "safety_rating": ["3-star", "4-star", "5-star", "top safety pick+"],
                 "fuel_efficiency": ["standard", "efficient", "hybrid", "electric"],
-                "performance_metrics": ["economy", "standard", "sport", "high-performance"],
+                "performance_metrics": [
+                    "economy",
+                    "standard",
+                    "sport",
+                    "high-performance",
+                ],
             },
         }
 
@@ -857,7 +952,9 @@ class ScenarioFramework:
                     ["black", "white", "silver", "blue", "red", "green"]
                 )
             elif variant_type == "size":
-                variant_attributes[variant_type] = random.choice(["XS", "S", "M", "L", "XL", "XXL"])
+                variant_attributes[variant_type] = random.choice(
+                    ["XS", "S", "M", "L", "XL", "XXL"]
+                )
             elif variant_type == "style":
                 variant_attributes[variant_type] = random.choice(
                     ["casual", "formal", "sport", "classic"]
@@ -871,7 +968,9 @@ class ScenarioFramework:
                     ["base", "sport", "luxury", "performance"]
                 )
             elif variant_type == "trim_level":
-                variant_attributes[variant_type] = random.choice(["base", "mid", "high", "premium"])
+                variant_attributes[variant_type] = random.choice(
+                    ["base", "mid", "high", "premium"]
+                )
             elif variant_type == "material":
                 variant_attributes[variant_type] = random.choice(
                     ["plastic", "metal", "wood", "glass", "fabric"]
@@ -893,7 +992,9 @@ class ScenarioFramework:
 
         return variant_attributes
 
-    def _generate_default_products(self, category: str, complexity: str) -> List[Dict[str, Any]]:
+    def _generate_default_products(
+        self, category: str, complexity: str
+    ) -> List[Dict[str, Any]]:
         """Generates default products for a category when no base products are provided."""
         default_products = []
 
@@ -940,7 +1041,9 @@ class ScenarioFramework:
 
         return default_products
 
-    def _validate_product_catalog(self, products: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _validate_product_catalog(
+        self, products: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         """Validates and normalizes the product catalog."""
         validated_products = []
 
@@ -959,10 +1062,14 @@ class ScenarioFramework:
                 validated_product["base_price"] = 100
 
             # Ensure variants are properly structured
-            if "variants" in validated_product and isinstance(validated_product["variants"], list):
+            if "variants" in validated_product and isinstance(
+                validated_product["variants"], list
+            ):
                 for i, variant in enumerate(validated_product["variants"]):
                     if isinstance(variant, dict) and "variant_id" not in variant:
-                        variant["variant_id"] = f"{validated_product['name']}_variant_{i+1}"
+                        variant["variant_id"] = (
+                            f"{validated_product['name']}_variant_{i+1}"
+                        )
 
             validated_products.append(validated_product)
 
@@ -1007,7 +1114,9 @@ class ScenarioFramework:
         # Select random event type from template
         event_subtype = random.choice(template["types"])
         impact_level = random.choice(template["impact_levels"])
-        duration = random.randint(template["duration_range"][0], template["duration_range"][1])
+        duration = random.randint(
+            template["duration_range"][0], template["duration_range"][1]
+        )
 
         # Calculate timing
         timing = random.randint(1, timeline)
@@ -1038,7 +1147,10 @@ class ScenarioFramework:
             existing_duration = existing_event.get("duration", 1)
 
             # Check for overlap
-            if (new_tick >= existing_tick and new_tick <= existing_tick + existing_duration) or (
+            if (
+                new_tick >= existing_tick
+                and new_tick <= existing_tick + existing_duration
+            ) or (
                 existing_tick >= new_tick and existing_tick <= new_tick + new_duration
             ):
                 return False
@@ -1192,10 +1304,14 @@ class ScenarioFramework:
 
         # Check for conflicting events
         recession_events = [
-            e for e in external_events if e.get("type") in ["economic_crisis", "recession"]
+            e
+            for e in external_events
+            if e.get("type") in ["economic_crisis", "recession"]
         ]
         boom_events = [
-            e for e in external_events if e.get("type") in ["economic_boom", "growth_surge"]
+            e
+            for e in external_events
+            if e.get("type") in ["economic_boom", "growth_surge"]
         ]
 
         if recession_events and boom_events:
@@ -1227,7 +1343,9 @@ class ScenarioFramework:
 
         return True
 
-    def _validate_multi_agent_configuration(self, multi_agent_config: Dict[str, Any]) -> bool:
+    def _validate_multi_agent_configuration(
+        self, multi_agent_config: Dict[str, Any]
+    ) -> bool:
         """Validates multi-agent configuration for completeness and consistency."""
         # Check required fields
         required_fields = ["agent_count", "agent_roles", "interaction_rules"]

@@ -168,7 +168,9 @@ def test_cors_defaults_and_override(monkeypatch):
     assert "http://localhost:3000" in s.cors_allow_origins
 
     # Comma-separated env override
-    monkeypatch.setenv("FBA_CORS_ALLOW_ORIGINS", "https://example.com, http://localhost:5555")
+    monkeypatch.setenv(
+        "FBA_CORS_ALLOW_ORIGINS", "https://example.com, http://localhost:5555"
+    )
     get_settings.cache_clear()
     s = get_settings()
     assert s.cors_allow_origins == ["https://example.com", "http://localhost:5555"]

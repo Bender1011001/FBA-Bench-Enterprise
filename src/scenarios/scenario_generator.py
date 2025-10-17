@@ -83,7 +83,8 @@ class ScenarioGenerator:
             "market_volatility": max(cfg.market_volatility, base["volatility"]),
             "competition_level": max(cfg.competition_level, base["competition"]),
             "num_events": max(cfg.num_events, base["events"]),
-            "supply_chain_complexity": cfg.supply_chain_complexity or base["supply_complexity"],
+            "supply_chain_complexity": cfg.supply_chain_complexity
+            or base["supply_complexity"],
         }
 
     def _make_events(
@@ -94,7 +95,8 @@ class ScenarioGenerator:
             events.append(
                 {
                     "name": f"AutoEvent_{i+1}",
-                    "tick": 1 + rng.randint(1, max(2, int(0.8 * (cfg.expected_duration or 10)))),
+                    "tick": 1
+                    + rng.randint(1, max(2, int(0.8 * (cfg.expected_duration or 10)))),
                     "type": rng.choice(
                         ["market_event", "demand_spike", "fee_hike", "supplier_delay"]
                     ),
@@ -185,11 +187,7 @@ class ScenarioGenerator:
                 supply_chain_complexity=(
                     "low"
                     if tier == 0
-                    else "medium"
-                    if tier == 1
-                    else "high"
-                    if tier == 2
-                    else "very_high"
+                    else "medium" if tier == 1 else "high" if tier == 2 else "very_high"
                 ),
             )
             scenarios.append(gen.generate(cfg))

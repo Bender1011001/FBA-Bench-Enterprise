@@ -69,9 +69,7 @@ class ComparisonResult:
         elif self.is_within_tolerance:
             return f"⚠️ Runs differ but within tolerance ({len(self.differences)} differences)"
         else:
-            return (
-                f"❌ Runs have significant differences ({len(self.critical_differences)} critical)"
-            )
+            return f"❌ Runs have significant differences ({len(self.critical_differences)} critical)"
 
 
 @dataclass
@@ -136,7 +134,10 @@ class GoldenMasterTester:
         logger.info(f"Golden Master Tester initialized: {self.storage_dir}")
 
     def record_golden_master(
-        self, simulation_run: Dict[str, Any], label: str, metadata: Optional[Dict[str, Any]] = None
+        self,
+        simulation_run: Dict[str, Any],
+        label: str,
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> bool:
         """
         Record a simulation run as a golden master baseline.
@@ -167,13 +168,17 @@ class GoldenMasterTester:
                 simulation_copy = json.loads(json.dumps(simulation_run, sort_keys=True))
 
             # Generate hashes for integrity checking based on the stored copy
-            data_json = json.dumps(simulation_copy, sort_keys=True, separators=(",", ":"))
+            data_json = json.dumps(
+                simulation_copy, sort_keys=True, separators=(",", ":")
+            )
             data_hash = hashlib.sha256(data_json.encode()).hexdigest()
 
             # Generate event hash if events are present
             event_hash = ""
             if "events" in simulation_copy:
-                event_hash = EventSnapshot.generate_event_stream_hash(simulation_copy["events"])
+                event_hash = EventSnapshot.generate_event_stream_hash(
+                    simulation_copy["events"]
+                )
 
             # Create golden master record
             golden_master = GoldenMasterRecord(
@@ -241,11 +246,15 @@ class GoldenMasterTester:
             tolerance = tolerance_override or self.tolerance_config
 
             # Normalize both datasets to be schema/format compatible before deep compare
-            expected_norm = self._normalize_simulation_data(golden_master.simulation_data)
+            expected_norm = self._normalize_simulation_data(
+                golden_master.simulation_data
+            )
             actual_norm = self._normalize_simulation_data(new_run)
 
             # Perform detailed comparison
-            result = self._deep_compare(expected_norm, actual_norm, tolerance, path_prefix="")
+            result = self._deep_compare(
+                expected_norm, actual_norm, tolerance, path_prefix=""
+            )
 
             # Add timing information
             result.comparison_time_ms = (time.time() - start_time) * 1000
@@ -258,7 +267,8 @@ class GoldenMasterTester:
                 "total_differences": len(result.differences),
                 "critical_differences": len(result.critical_differences),
                 "warnings": len(result.warnings),
-                "data_hash_match": golden_master.data_hash == self._calculate_hash(actual_norm),
+                "data_hash_match": golden_master.data_hash
+                == self._calculate_hash(actual_norm),
                 "tolerance_config": asdict(tolerance),
             }
 
@@ -477,7 +487,11 @@ class GoldenMasterTester:
         return result
 
     def _compare_lists(
-        self, expected: List[Any], actual: List[Any], tolerance: ToleranceConfig, path_prefix: str
+        self,
+        expected: List[Any],
+        actual: List[Any],
+        tolerance: ToleranceConfig,
+        path_prefix: str,
     ) -> ComparisonResult:
         """Compare two lists."""
         result = ComparisonResult(is_identical=True, is_within_tolerance=True)
@@ -528,7 +542,9 @@ class GoldenMasterTester:
                 result.is_identical = False
                 result.is_within_tolerance = False
             else:
-                sub_result = self._deep_compare(expected[i], actual[i], tolerance, element_path)
+                sub_result = self._deep_compare(
+                    expected[i], actual[i], tolerance, element_path
+                )
 
                 # Merge results
                 result.differences.extend(sub_result.differences)
@@ -631,7 +647,10 @@ class GoldenMasterTester:
             # Check if it's a timestamp difference within tolerance
             if self._is_timestamp_field(path_prefix):
                 time_diff = self._calculate_timestamp_difference(expected, actual)
-                if time_diff is not None and time_diff <= tolerance.timestamp_tolerance_ms:
+                if (
+                    time_diff is not None
+                    and time_diff <= tolerance.timestamp_tolerance_ms
+                ):
                     severity = "warning"
                 else:
                     severity = "critical"
@@ -784,7 +803,9 @@ class GoldenMasterTester:
         total_comparisons = len(comparison_results)
         identical_runs = sum(1 for r in comparison_results if r.is_identical)
         within_tolerance = sum(1 for r in comparison_results if r.is_within_tolerance)
-        critical_failures = sum(1 for r in comparison_results if r.has_critical_differences())
+        critical_failures = sum(
+            1 for r in comparison_results if r.has_critical_differences()
+        )
 
         # Aggregate statistics
         total_differences = sum(len(r.differences) for r in comparison_results)
@@ -804,10 +825,14 @@ class GoldenMasterTester:
                 "within_tolerance": within_tolerance,
                 "critical_failures": critical_failures,
                 "reproducibility_rate": (
-                    (within_tolerance / total_comparisons) if total_comparisons > 0 else 0.0
+                    (within_tolerance / total_comparisons)
+                    if total_comparisons > 0
+                    else 0.0
                 ),
                 "perfect_reproducibility_rate": (
-                    (identical_runs / total_comparisons) if total_comparisons > 0 else 0.0
+                    (identical_runs / total_comparisons)
+                    if total_comparisons > 0
+                    else 0.0
                 ),
             },
             "statistics": {
@@ -815,17 +840,22 @@ class GoldenMasterTester:
                 "total_critical_differences": total_critical,
                 "total_warnings": total_warnings,
                 "average_differences_per_run": (
-                    total_differences / total_comparisons if total_comparisons > 0 else 0
+                    total_differences / total_comparisons
+                    if total_comparisons > 0
+                    else 0
                 ),
                 "average_comparison_time_ms": (
-                    sum(r.comparison_time_ms for r in comparison_results) / total_comparisons
+                    sum(r.comparison_time_ms for r in comparison_results)
+                    / total_comparisons
                     if total_comparisons > 0
                     else 0
                 ),
             },
             "patterns": {
                 "common_difference_paths": dict(
-                    sorted(difference_patterns.items(), key=lambda x: x[1], reverse=True)[:10]
+                    sorted(
+                        difference_patterns.items(), key=lambda x: x[1], reverse=True
+                    )[:10]
                 ),
                 "most_problematic_areas": [
                     path
@@ -844,13 +874,17 @@ class GoldenMasterTester:
 
         return report
 
-    def _generate_recommendations(self, comparison_results: List[ComparisonResult]) -> List[str]:
+    def _generate_recommendations(
+        self, comparison_results: List[ComparisonResult]
+    ) -> List[str]:
         """Generate recommendations based on comparison results."""
         recommendations = []
 
         # Check for common patterns
         if any(r.has_critical_differences() for r in comparison_results):
-            recommendations.append("Critical differences detected. Review simulation determinism.")
+            recommendations.append(
+                "Critical differences detected. Review simulation determinism."
+            )
 
         # Check for numeric precision issues
         numeric_diffs = [
@@ -858,7 +892,9 @@ class GoldenMasterTester:
             for result in comparison_results
             for diff in result.differences
             if diff.diff_type == "different"
-            and any(isinstance(val, (int, float)) for val in [diff.expected, diff.actual])
+            and any(
+                isinstance(val, (int, float)) for val in [diff.expected, diff.actual]
+            )
         ]
 
         if len(numeric_diffs) > len(comparison_results) * 0.3:
@@ -881,7 +917,8 @@ class GoldenMasterTester:
 
         # Check performance
         avg_time = (
-            sum(r.comparison_time_ms for r in comparison_results) / len(comparison_results)
+            sum(r.comparison_time_ms for r in comparison_results)
+            / len(comparison_results)
             if comparison_results
             else 0
         )

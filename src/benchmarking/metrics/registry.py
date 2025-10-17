@@ -42,7 +42,9 @@ class MetricRegistry:
             # Allow mocks with BaseMetric spec in tests
             # but still enforce presence of 'name' attribute for sanity
             if not hasattr(metric, "name"):
-                raise TypeError("Metric must be a BaseMetric or a compatible mock with 'name'")
+                raise TypeError(
+                    "Metric must be a BaseMetric or a compatible mock with 'name'"
+                )
         self._metrics[name] = metric
 
     def get(self, name: str) -> Optional[BaseMetric]:
@@ -51,7 +53,9 @@ class MetricRegistry:
     # Legacy/test API: allow creating/returning a metric instance by name.
     # Tests monkeypatch MetricRegistry.create_metric(self, name, config=None),
     # so we provide this symbol for compatibility.
-    def create_metric(self, name: str, config: Optional[dict] = None) -> Optional[BaseMetric]:
+    def create_metric(
+        self, name: str, config: Optional[dict] = None
+    ) -> Optional[BaseMetric]:
         # In this minimal registry we store instances directly, so just return it if present.
         # The test will monkeypatch this to return custom stubs as needed.
         return self._metrics.get(name)

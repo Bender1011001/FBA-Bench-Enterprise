@@ -10,7 +10,6 @@ import tempfile
 from unittest.mock import Mock, patch
 
 import pytest
-
 from reproducibility.llm_cache import LLMPredictionCache
 
 
@@ -78,14 +77,18 @@ class TestLLMCache:
             mock_logger.error.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_context_manager_with_exception_in_close(self, cache_config, mock_logger):
+    async def test_context_manager_with_exception_in_close(
+        self, cache_config, mock_logger
+    ):
         """Test using the cache as a context manager with an exception in close."""
         with patch("reproducibility.llm_cache.logger", mock_logger):
             # Create a cache that will raise an exception when closed
             cache = LLMPredictionCache(cache_config)
 
             # Mock the _close method to raise an exception
-            with patch.object(cache, "_close", side_effect=Exception("Context close error")):
+            with patch.object(
+                cache, "_close", side_effect=Exception("Context close error")
+            ):
                 try:
                     async with cache:
                         pass
@@ -99,7 +102,9 @@ class TestLLMCache:
                 assert "Context close error" in args[0]
 
     @pytest.mark.asyncio
-    async def test_context_manager_with_exception_in_body(self, cache_config, mock_logger):
+    async def test_context_manager_with_exception_in_body(
+        self, cache_config, mock_logger
+    ):
         """Test using the cache as a context manager with an exception in the body."""
         with patch("reproducibility.llm_cache.logger", mock_logger):
             try:

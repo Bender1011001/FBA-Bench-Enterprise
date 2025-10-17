@@ -6,9 +6,8 @@ from typing import Any, Dict, Optional
 
 from money import Money
 
-from .models import AccountType, FinancialStatement
 from .core import LedgerCore
-
+from .models import AccountType, FinancialStatement
 
 logger = logging.getLogger(__name__)
 
@@ -171,14 +170,24 @@ class StatementsGenerator:
             "timestamp": datetime.now(),
             "cash": self.ledger_core.get_cash_balance(),
             "inventory_value": self.ledger_core.get_account_balance("inventory"),
-            "accounts_receivable": self.ledger_core.get_account_balance("accounts_receivable"),
+            "accounts_receivable": self.ledger_core.get_account_balance(
+                "accounts_receivable"
+            ),
             "total_assets": balance_sheet.data["total_assets"],
-            "accounts_payable": self.ledger_core.get_account_balance("accounts_payable"),
-            "accrued_liabilities": self.ledger_core.get_account_balance("accrued_liabilities"),
+            "accounts_payable": self.ledger_core.get_account_balance(
+                "accounts_payable"
+            ),
+            "accrued_liabilities": self.ledger_core.get_account_balance(
+                "accrued_liabilities"
+            ),
             "total_liabilities": balance_sheet.data["total_liabilities"],
-            "retained_earnings": self.ledger_core.get_account_balance("retained_earnings"),
+            "retained_earnings": self.ledger_core.get_account_balance(
+                "retained_earnings"
+            ),
             "current_period_profit": income_statement.data["net_income"],
             "total_equity": balance_sheet.data["total_equity"],
-            "accounting_identity_valid": balance_sheet.data["accounting_identity_valid"],
+            "accounting_identity_valid": balance_sheet.data[
+                "accounting_identity_valid"
+            ],
             "identity_difference": balance_sheet.data["identity_difference"],
         }

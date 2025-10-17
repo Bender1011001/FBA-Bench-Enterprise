@@ -186,9 +186,13 @@ def structural_consistency_validate(
         _validate_run(i, run, out)
 
     # Summary details
-    success = sum(1 for r in runs if isinstance(r, dict) and r.get("status") == "success")
+    success = sum(
+        1 for r in runs if isinstance(r, dict) and r.get("status") == "success"
+    )
     errors = sum(1 for r in runs if isinstance(r, dict) and r.get("status") == "error")
-    timeouts = sum(1 for r in runs if isinstance(r, dict) and r.get("status") == "timeout")
+    timeouts = sum(
+        1 for r in runs if isinstance(r, dict) and r.get("status") == "timeout"
+    )
     out.summary.details.update(
         {
             "runs": len(runs),

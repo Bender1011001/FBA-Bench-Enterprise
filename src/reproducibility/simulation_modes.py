@@ -22,9 +22,13 @@ logger = logging.getLogger(__name__)
 class SimulationMode(Enum):
     """Simulation operating modes for reproducibility control."""
 
-    DETERMINISTIC = "deterministic"  # Cached responses, fixed seeds, bit-perfect reproduction
+    DETERMINISTIC = (
+        "deterministic"  # Cached responses, fixed seeds, bit-perfect reproduction
+    )
     STOCHASTIC = "stochastic"  # Live calls, randomized elements, variability testing
-    RESEARCH = "research"  # Hybrid mode with controlled variability for robustness analysis
+    RESEARCH = (
+        "research"  # Hybrid mode with controlled variability for robustness analysis
+    )
 
 
 @dataclass
@@ -70,7 +74,9 @@ class ModeConfiguration:
                 self.controlled_randomness_probability < 0
                 or self.controlled_randomness_probability > 1
             ):
-                issues.append("Controlled randomness probability must be between 0 and 1")
+                issues.append(
+                    "Controlled randomness probability must be between 0 and 1"
+                )
 
         return issues
 
@@ -151,7 +157,10 @@ class ComponentRegistry(Generic[ComponentType]):
             for name, component in self._components.items():
                 try:
                     # Try mode-specific handler first
-                    if name in self._mode_handlers and mode in self._mode_handlers[name]:
+                    if (
+                        name in self._mode_handlers
+                        and mode in self._mode_handlers[name]
+                    ):
                         self._mode_handlers[name][mode](component, config)
 
                     # Try generic mode setter
@@ -160,7 +169,9 @@ class ComponentRegistry(Generic[ComponentType]):
 
                     # Try deterministic mode setter
                     elif hasattr(component, "set_deterministic_mode"):
-                        component.set_deterministic_mode(mode == SimulationMode.DETERMINISTIC)
+                        component.set_deterministic_mode(
+                            mode == SimulationMode.DETERMINISTIC
+                        )
 
                     results[name] = True
                     logger.debug(f"Applied {mode.value} mode to component: {name}")
@@ -227,7 +238,11 @@ class SimulationModeController:
         enable_validation=True,
         strict_mode=False,
         controlled_randomness_probability=0.1,
-        variability_injection_points=["market_events", "customer_behavior", "external_shocks"],
+        variability_injection_points=[
+            "market_events",
+            "customer_behavior",
+            "external_shocks",
+        ],
     )
 
     def __init__(
@@ -257,7 +272,9 @@ class SimulationModeController:
         self._mode_start_time = time.time()
         self._validation_enabled = True
 
-        logger.info(f"SimulationModeController initialized in {initial_mode.value} mode")
+        logger.info(
+            f"SimulationModeController initialized in {initial_mode.value} mode"
+        )
 
     def set_mode(
         self, mode: SimulationMode, config: Optional[ModeConfiguration] = None
@@ -291,7 +308,9 @@ class SimulationModeController:
                     issues=config_issues,
                 )
 
-            logger.info(f"Transitioning from {previous_mode.value} to {mode.value} mode")
+            logger.info(
+                f"Transitioning from {previous_mode.value} to {mode.value} mode"
+            )
 
             try:
                 # Apply mode to core systems
@@ -315,7 +334,9 @@ class SimulationModeController:
 
                 # Check for any failures
                 all_results = {**core_results, **component_results}
-                failures = [name for name, success in all_results.items() if not success]
+                failures = [
+                    name for name, success in all_results.items() if not success
+                ]
 
                 result = ModeTransitionResult(
                     success=len(failures) == 0,
@@ -328,7 +349,9 @@ class SimulationModeController:
                 )
 
                 if failures:
-                    result.issues.extend([f"Failed to apply mode to: {', '.join(failures)}"])
+                    result.issues.extend(
+                        [f"Failed to apply mode to: {', '.join(failures)}"]
+                    )
 
                 logger.info(
                     f"Mode transition {'completed' if result.success else 'completed with issues'} in {transition_time:.1f}ms"
@@ -377,7 +400,9 @@ class SimulationModeController:
                     for ts, mode in self._mode_history[-10:]  # Last 10 transitions
                 ],
                 "performance_metrics": asdict(self._performance_metrics),
-                "registered_components": list(self._component_registry.get_components().keys()),
+                "registered_components": list(
+                    self._component_registry.get_components().keys()
+                ),
                 "validation_enabled": self._validation_enabled,
                 "last_updated": datetime.now(timezone.utc).isoformat(),
             }
@@ -479,7 +504,9 @@ class SimulationModeController:
             elif hasattr(component, "set_mode"):
                 component.set_mode(self._current_mode, self._current_config)
             elif hasattr(component, "set_deterministic_mode"):
-                component.set_deterministic_mode(self._current_mode == SimulationMode.DETERMINISTIC)
+                component.set_deterministic_mode(
+                    self._current_mode == SimulationMode.DETERMINISTIC
+                )
 
             logger.info(
                 f"Applied current mode ({self._current_mode.value}) to newly registered component: {name}"
@@ -498,7 +525,9 @@ class SimulationModeController:
             self._performance_metrics.add_operation(operation_overhead_ms)
 
     @contextmanager
-    def temporary_mode(self, mode: SimulationMode, config: Optional[ModeConfiguration] = None):
+    def temporary_mode(
+        self, mode: SimulationMode, config: Optional[ModeConfiguration] = None
+    ):
         """
         Context manager for temporary mode changes.
 
@@ -520,7 +549,9 @@ class SimulationModeController:
             # Switch to temporary mode
             result = self.set_mode(mode, config)
             if not result.success:
-                raise RuntimeError(f"Failed to switch to temporary mode: {result.issues}")
+                raise RuntimeError(
+                    f"Failed to switch to temporary mode: {result.issues}"
+                )
 
             yield self
 
@@ -528,7 +559,9 @@ class SimulationModeController:
             # Restore original mode
             restore_result = self.set_mode(original_mode, original_config)
             if not restore_result.success:
-                logger.error(f"Failed to restore original mode: {restore_result.issues}")
+                logger.error(
+                    f"Failed to restore original mode: {restore_result.issues}"
+                )
 
     def enable_validation(self, enabled: bool = True):
         """Enable or disable validation features."""
@@ -628,7 +661,9 @@ def get_current_mode() -> SimulationMode:
 
 
 def register_global_component(
-    name: str, component: Any, mode_handlers: Optional[Dict[SimulationMode, Callable]] = None
+    name: str,
+    component: Any,
+    mode_handlers: Optional[Dict[SimulationMode, Callable]] = None,
 ):
     """Register a component with the global mode controller."""
     controller = get_mode_controller()

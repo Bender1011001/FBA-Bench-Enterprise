@@ -356,7 +356,9 @@ class ErrorHandler:
             stats = self.error_stats.copy()
 
         # Calculate totals
-        total_errors = sum(sum(severity_counts.values()) for severity_counts in stats.values())
+        total_errors = sum(
+            sum(severity_counts.values()) for severity_counts in stats.values()
+        )
 
         return {
             "total_errors": total_errors,
@@ -366,7 +368,8 @@ class ErrorHandler:
                 [
                     e
                     for e in self.error_history
-                    if (datetime.now() - e.timestamp).total_seconds() < 3600  # Last hour
+                    if (datetime.now() - e.timestamp).total_seconds()
+                    < 3600  # Last hour
                 ]
             ),
         }
@@ -411,7 +414,9 @@ class ErrorHandler:
 
         logger.info(f"Error history exported to {file_path}")
 
-    def get_error_suggestions(self, error_type: str, category: ErrorCategory) -> List[str]:
+    def get_error_suggestions(
+        self, error_type: str, category: ErrorCategory
+    ) -> List[str]:
         """
         Get suggestions for handling a specific type of error.
 

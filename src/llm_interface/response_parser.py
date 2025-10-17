@@ -104,11 +104,11 @@ class LLMResponseParser:
         except json.JSONDecodeError as e:
             # Redact raw_llm_response content for security
             redacted_response = (
-                raw_llm_response[:200] + "..." if len(raw_llm_response) > 200 else raw_llm_response
+                raw_llm_response[:200] + "..."
+                if len(raw_llm_response) > 200
+                else raw_llm_response
             )
-            error_message = (
-                f"Malformed JSON response: {e.msg}. Response snippet: {redacted_response}"
-            )
+            error_message = f"Malformed JSON response: {e.msg}. Response snippet: {redacted_response}"
             error_details = {
                 "error_type": "JSONParsingError",
                 "message": error_message,
@@ -122,7 +122,9 @@ class LLMResponseParser:
         except Exception as e:
             # Redact raw_llm_response content for security
             redacted_response = (
-                raw_llm_response[:200] + "..." if len(raw_llm_response) > 200 else raw_llm_response
+                raw_llm_response[:200] + "..."
+                if len(raw_llm_response) > 200
+                else raw_llm_response
             )
             error_message = f"An unexpected error occurred during JSON parsing: {e!s}. Response snippet: {redacted_response}"
             error_details = {
@@ -132,7 +134,9 @@ class LLMResponseParser:
                 "trust_score_penalty": self.UNEXPECTED_PARSING_PENALTY,
                 "parsing_error": str(e),
             }
-            logger.error(f"[{agent_id}] Unexpected Parsing Error: {error_details['message']}")
+            logger.error(
+                f"[{agent_id}] Unexpected Parsing Error: {error_details['message']}"
+            )
             await self._publish_llm_error(agent_id, error_details)
             return None, error_details
 
@@ -166,7 +170,9 @@ class LLMResponseParser:
                 path_str = str(validation_error_info.get("path", "") or "")
             except Exception:
                 path_str = ""
-            if "should be non-empty" in msg and ("actions" in msg or "actions" in path_str):
+            if "should be non-empty" in msg and (
+                "actions" in msg or "actions" in path_str
+            ):
                 logger.info(
                     f"[{agent_id}] LLM response parsed; empty actions allowed without penalty."
                 )
@@ -220,7 +226,8 @@ class LLMResponseParser:
             message=error_details["message"],
             severity=(
                 "Critical"
-                if error_details["error_type"] in ["JSONParsingError", "UnexpectedParsingError"]
+                if error_details["error_type"]
+                in ["JSONParsingError", "UnexpectedParsingError"]
                 else "Warning"
             ),
             details=error_details,

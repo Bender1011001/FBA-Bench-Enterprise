@@ -41,7 +41,9 @@ def test_experiment_cli_sequential_run(tmp_path, monkeypatch):
     results_dir.mkdir()
     run_numbers = run_items
 
-    successes = ec._parallel_run(str(config_path), run_numbers, str(results_dir), parallel=1)
+    successes = ec._parallel_run(
+        str(config_path), run_numbers, str(results_dir), parallel=1
+    )
     assert successes == 1
     # Verify result file exists
     result_file = results_dir / "run_1.json"

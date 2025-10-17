@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional
 import httpx
 import tiktoken
 
-from llm_interface.config import LLMConfig  # Imported LLMConfig
+from llm_interface.llm_config import LLMConfig  # Imported LLMConfig
 from llm_interface.contract import BaseLLMClient, LLMClientError
 
 logger = logging.getLogger(__name__)
@@ -68,7 +68,9 @@ class OpenRouterClient(BaseLLMClient):
 
         # Initialize tiktoken for token counting (compatible with OpenAI models)
         try:
-            self.encoding = tiktoken.encoding_for_model(self.config.model)  # Use config.model
+            self.encoding = tiktoken.encoding_for_model(
+                self.config.model
+            )  # Use config.model
         except KeyError:
             logger.warning(
                 f"Could not find tiktoken encoding for model '{self.config.model}'. Using 'cl100k_base' as fallback. Token counts might be inaccurate."
@@ -88,7 +90,9 @@ class OpenRouterClient(BaseLLMClient):
         top_p: Optional[float] = None,
         frequency_penalty: Optional[float] = None,
         presence_penalty: Optional[float] = None,
-        response_format: Optional[Dict[str, str]] = None,  # Default for structured output
+        response_format: Optional[
+            Dict[str, str]
+        ] = None,  # Default for structured output
         **kwargs,
     ) -> Dict[str, Any]:
         """
@@ -121,7 +125,9 @@ class OpenRouterClient(BaseLLMClient):
             "Authorization": f"Bearer {self.api_key}",
             "HTTP-Referer": referer,
             "X-Title": app_title,
-            "X-Request-Id": kwargs.pop("request_id", ""),  # Optional: for tracing requests
+            "X-Request-Id": kwargs.pop(
+                "request_id", ""
+            ),  # Optional: for tracing requests
             "Content-Type": "application/json",  # Explicitly set content type
         }
 
@@ -131,8 +137,12 @@ class OpenRouterClient(BaseLLMClient):
         payload = {
             "model": self.config.model,
             "messages": messages,
-            "temperature": temperature if temperature is not None else self.config.temperature,
-            "max_tokens": max_tokens if max_tokens is not None else self.config.max_tokens,
+            "temperature": (
+                temperature if temperature is not None else self.config.temperature
+            ),
+            "max_tokens": (
+                max_tokens if max_tokens is not None else self.config.max_tokens
+            ),
             "top_p": top_p if top_p is not None else self.config.top_p,
             "frequency_penalty": (
                 frequency_penalty
@@ -140,10 +150,14 @@ class OpenRouterClient(BaseLLMClient):
                 else self.config.frequency_penalty
             ),
             "presence_penalty": (
-                presence_penalty if presence_penalty is not None else self.config.presence_penalty
+                presence_penalty
+                if presence_penalty is not None
+                else self.config.presence_penalty
             ),
             "response_format": (
-                response_format if response_format is not None else {"type": "json_object"}
+                response_format
+                if response_format is not None
+                else {"type": "json_object"}
             ),
             **kwargs,
         }
@@ -170,15 +184,17 @@ class OpenRouterClient(BaseLLMClient):
                 )
 
             # Basic validation of response structure, allowing for non-strict OpenAI-like responses
-            if not response_data.get("choices") or not isinstance(response_data["choices"], list):
+            if not response_data.get("choices") or not isinstance(
+                response_data["choices"], list
+            ):
                 # This could be a valid response from a non-OpenAI-compatible model
                 logger.warning(
                     f"OpenRouter response missing 'choices' field or not a list, but returning raw response. Response: {response_data}"
                 )
                 return response_data  # Return raw response if not conforming to expected structure
-            if not response_data["choices"][0].get("message") or not response_data["choices"][0][
-                "message"
-            ].get("content"):
+            if not response_data["choices"][0].get("message") or not response_data[
+                "choices"
+            ][0]["message"].get("content"):
                 logger.warning(
                     f"OpenRouter response missing message content in choices, but returning raw response. Response: {response_data}"
                 )
@@ -202,7 +218,8 @@ class OpenRouterClient(BaseLLMClient):
             )
         except Exception as e:
             logger.error(
-                f"An unexpected error occurred during OpenRouter API call: {e}", exc_info=True
+                f"An unexpected error occurred during OpenRouter API call: {e}",
+                exc_info=True,
             )
             raise LLMClientError(
                 f"An unexpected error occurred during OpenRouter API call: {e}",

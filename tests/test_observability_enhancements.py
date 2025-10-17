@@ -6,13 +6,18 @@ from unittest.mock import Mock
 
 # Add parent directories to sys.path to resolve imports for observability and tools
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "tools")))
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "observability")))
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "instrumentation")))
+sys.path.insert(
+    0, os.path.abspath(os.path.join(os.path.dirname(__file__), "observability"))
+)
+sys.path.insert(
+    0, os.path.abspath(os.path.join(os.path.dirname(__file__), "instrumentation"))
+)
+
+from observability.observability_config import ObservabilityConfig
 
 from alert_system import ObservabilityAlertSystem
 from command_processor import SmartCommandProcessor
 from error_handler import AgentErrorHandler
-from observability.observability_config import ObservabilityConfig
 from tools.llm_friendly_interface import LLMFriendlyToolWrapper
 from trace_analyzer import TraceAnalyzer
 
@@ -61,7 +66,9 @@ class TestObservabilityEnhancements(unittest.TestCase):
         self.mock_alerts = []
 
     def _mock_notification_callback(self, alert_type, severity, details):
-        self.mock_alerts.append({"type": alert_type, "severity": severity, "details": details})
+        self.mock_alerts.append(
+            {"type": alert_type, "severity": severity, "details": details}
+        )
 
     # Test LLM-Friendly Tool Wrappers
     def test_llm_friendly_tool_wrapper(self):
@@ -102,16 +109,12 @@ class TestObservabilityEnhancements(unittest.TestCase):
         is_valid, msg = self.error_handler.validate_command_syntax(valid_json_cmd)
         self.assertTrue(is_valid)
 
-        invalid_json_cmd = (
-            '{"tool_name": "test_tool", "parameters": "value"}'  # parameters must be an object
-        )
+        invalid_json_cmd = '{"tool_name": "test_tool", "parameters": "value"}'  # parameters must be an object
         is_valid, msg = self.error_handler.validate_command_syntax(invalid_json_cmd)
         self.assertFalse(is_valid)
         self.assertIn("'parameters' must be a JSON object", msg)
 
-        invalid_json_format = (
-            '{"tool_name": "test_tool", "parameters": {"param1": "value",}'  # malformed JSON
-        )
+        invalid_json_format = '{"tool_name": "test_tool", "parameters": {"param1": "value",}'  # malformed JSON
         is_valid, msg = self.error_handler.validate_command_syntax(invalid_json_format)
         self.assertFalse(is_valid)
         self.assertIn("Invalid JSON format", msg)
@@ -150,8 +153,16 @@ class TestObservabilityEnhancements(unittest.TestCase):
                 "timestamp": 105,
                 "details": {"agent_id": "A1", "action": "observe"},
             },
-            {"event_type": "warning", "timestamp": 108, "details": "low inventory alert"},
-            {"event_type": "error", "timestamp": 110, "details": "tool_call_failed: invalid param"},
+            {
+                "event_type": "warning",
+                "timestamp": 108,
+                "details": "low inventory alert",
+            },
+            {
+                "event_type": "error",
+                "timestamp": 110,
+                "details": "tool_call_failed: invalid param",
+            },
             {
                 "event_type": "agent_action",
                 "timestamp": 112,
@@ -164,10 +175,14 @@ class TestObservabilityEnhancements(unittest.TestCase):
             "reason": "unhandled exception",
         }
 
-        analysis = self.trace_analyzer.analyze_simulation_failure(trace_data, failure_point)
+        analysis = self.trace_analyzer.analyze_simulation_failure(
+            trace_data, failure_point
+        )
         self.assertIn("root_cause_candidates", analysis)
         self.assertTrue(len(analysis["root_cause_candidates"]) > 0)
-        self.assertIn("tool_call_failed: invalid param", str(analysis["root_cause_candidates"]))
+        self.assertIn(
+            "tool_call_failed: invalid param", str(analysis["root_cause_candidates"])
+        )
 
         agent_traces = [
             {
@@ -221,17 +236,19 @@ class TestObservabilityEnhancements(unittest.TestCase):
 
     # Test Enhanced Agent Command Processing
     def test_smart_command_processor(self):
-        clean_command = '{"tool_name": "create_product", "parameters": {"name": "WidgetA"}}'
+        clean_command = (
+            '{"tool_name": "create_product", "parameters": {"name": "WidgetA"}}'
+        )
         processed = self.command_processor.process_agent_command(clean_command, {})
         self.assertEqual(processed["status"], "success")
         self.assertEqual(processed["parsed_command"]["tool_name"], "create_product")
         self.assertTrue(processed["confidence_score"] > 0.8)
         self.assertEqual(processed["intent"], "create_product")
 
-        malformed_command = (
-            "{'tool_name': 'update_stock', 'parameters': {'id': 'xyz'}}"  # single quotes
+        malformed_command = "{'tool_name': 'update_stock', 'parameters': {'id': 'xyz'}}"  # single quotes
+        processed_malformed = self.command_processor.process_agent_command(
+            malformed_command, {}
         )
-        processed_malformed = self.command_processor.process_agent_command(malformed_command, {})
         self.assertEqual(processed_malformed["status"], "corrected")
         self.assertIn("tool_name", processed_malformed["corrected_command"])
         self.assertTrue(
@@ -240,13 +257,17 @@ class TestObservabilityEnhancements(unittest.TestCase):
         self.assertIn("update_stock", processed_malformed["intent"])
 
         completely_broken = "I want to create a new product, name it 'MyItem'"
-        processed_broken = self.command_processor.process_agent_command(completely_broken, {})
+        processed_broken = self.command_processor.process_agent_command(
+            completely_broken, {}
+        )
         self.assertEqual(processed_broken["status"], "partial_understanding")
         self.assertEqual(processed_broken["intent"], "create_product")
         self.assertTrue(processed_broken["confidence_score"] > 0)
         self.assertIsNone(processed_broken["parsed_command"])
 
-        fallback_suggestions = self.command_processor.suggest_fallback_actions(processed_broken)
+        fallback_suggestions = self.command_processor.suggest_fallback_actions(
+            processed_broken
+        )
         self.assertIn("Double-check your JSON syntax", fallback_suggestions[0])
         self.assertIn("create_product", fallback_suggestions[2])
 
@@ -265,7 +286,9 @@ class TestObservabilityEnhancements(unittest.TestCase):
     # Test Real-Time Observability Alerts
     def test_observability_alert_system(self):
         # Test performance monitoring
-        self.alert_system.monitor_performance_metrics({"latency_ms": 150}, {"latency_ms": 100})
+        self.alert_system.monitor_performance_metrics(
+            {"latency_ms": 150}, {"latency_ms": 100}
+        )
         self.assertEqual(len(self.mock_alerts), 1)
         self.assertEqual(self.mock_alerts[0]["type"], "performance_alert")
         self.assertEqual(self.mock_alerts[0]["severity"], "Critical")
@@ -280,7 +303,9 @@ class TestObservabilityEnhancements(unittest.TestCase):
             )
         self.assertEqual(len(self.mock_alerts), 1)
         self.assertEqual(self.mock_alerts[0]["type"], "error_rate_alert")
-        self.assertIn("High error rate detected", self.mock_alerts[0]["details"]["message"])
+        self.assertIn(
+            "High error rate detected", self.mock_alerts[0]["details"]["message"]
+        )
         self.mock_alerts.clear()
 
         # Test anomaly detection

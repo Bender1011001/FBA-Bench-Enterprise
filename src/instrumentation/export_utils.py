@@ -88,15 +88,22 @@ class ChromeTracingExporter(SpanExporter):
         # Convert span attributes to a dictionary suitable for Chrome tracing args
         args: Dict[str, Any] = {}
         try:
-            for key, value in attributes.items() if hasattr(attributes, "items") else []:
-                args[str(key)] = value if isinstance(value, (str, int, float, bool)) else str(value)
+            for key, value in (
+                attributes.items() if hasattr(attributes, "items") else []
+            ):
+                args[str(key)] = (
+                    value if isinstance(value, (str, int, float, bool)) else str(value)
+                )
         except Exception:
             # Attribute conversion should never break exporting
             pass
         return args
 
     def get_chrome_trace_format(self) -> dict:
-        return {"traceEvents": self.trace_events, "displayTimeUnit": "ns"}  # "ns", "ms", "us"
+        return {
+            "traceEvents": self.trace_events,
+            "displayTimeUnit": "ns",
+        }  # "ns", "ms", "us"
 
     def shutdown(self):
         self.trace_events = []  # Clear events on shutdown
@@ -167,12 +174,16 @@ class ExportUtils:
                 if isinstance(obj, dict):
                     parts = []
                     for k, v in obj.items():
-                        parts.append(f"{pad}<{k}>\n{_to_xml(v, indent, level+1)}\n{pad}</{k}>")
+                        parts.append(
+                            f"{pad}<{k}>\n{_to_xml(v, indent, level+1)}\n{pad}</{k}>"
+                        )
                     return "\n".join(parts)
                 if isinstance(obj, list):
                     parts = []
                     for item in obj:
-                        parts.append(f"{pad}<item>\n{_to_xml(item, indent, level+1)}\n{pad}</item>")
+                        parts.append(
+                            f"{pad}<item>\n{_to_xml(item, indent, level+1)}\n{pad}</item>"
+                        )
                     return "\n".join(parts)
                 return f"{pad}{json.dumps(obj, default=str)}"
 

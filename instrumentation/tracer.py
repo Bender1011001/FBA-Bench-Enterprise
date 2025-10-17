@@ -3,9 +3,11 @@ Minimal, production-safe tracer shim to satisfy imports.
 Provides a no-op tracer interface that logs spans using stdlib logging.
 """
 from __future__ import annotations
+
 import logging
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Iterator, Optional, Dict, Any
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger("instrumentation.tracer")
 if not logger.handlers:

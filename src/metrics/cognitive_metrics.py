@@ -20,22 +20,26 @@ class CognitiveMetricsConfig:
 class CognitiveMetrics:
     def __init__(self, config: Optional[CognitiveMetricsConfig] = None):
         self.config = config if config else CognitiveMetricsConfig()
-        self.planned_goals: Dict[
-            str, Any
-        ] = (
+        self.planned_goals: Dict[str, Any] = (
             {}
         )  # goal_id: {'status': 'active'/'completed'/'abandoned', 'start_tick': int, 'end_tick': int}
         self.agent_actions_history: List[Dict] = []
-        self.focus_duration: Dict[str, int] = {}  # goal_id: total ticks agent focused on it
+        self.focus_duration: Dict[str, int] = (
+            {}
+        )  # goal_id: total ticks agent focused on it
         self.context_switches = 0
-        self.planning_coherence_scores: List[float] = []  # Scores based on plan adherence
+        self.planning_coherence_scores: List[float] = (
+            []
+        )  # Scores based on plan adherence
 
         # Unit-test compatibility: lightweight metric registry
         self._metrics: Dict[str, Any] = {}
 
     def update(self, current_tick: int, events: List[Dict]):
         for event in events:
-            if event.get("type") == "AgentPlannedGoalEvent":  # Agent declares a new goal
+            if (
+                event.get("type") == "AgentPlannedGoalEvent"
+            ):  # Agent declares a new goal
                 goal_id = event["goal_id"]
                 self.planned_goals[goal_id] = {
                     "description": event["description"],
@@ -43,7 +47,9 @@ class CognitiveMetrics:
                     "start_tick": current_tick,
                     "end_tick": -1,
                 }
-            elif event.get("type") == "AgentGoalStatusUpdateEvent":  # Agent updates goal status
+            elif (
+                event.get("type") == "AgentGoalStatusUpdateEvent"
+            ):  # Agent updates goal status
                 goal_id = event["goal_id"]
                 if goal_id in self.planned_goals:
                     self.planned_goals[goal_id]["status"] = event["status"]
@@ -97,7 +103,9 @@ class CognitiveMetrics:
                         goal_data["end_tick"] - goal_data["start_tick"]
                     ) * 0.1  # Example weighting
                 elif goal_data["status"] == "active":
-                    total_goal_attention_score += duration * 0.05  # Reward for current focus
+                    total_goal_attention_score += (
+                        duration * 0.05
+                    )  # Reward for current focus
 
         # Penalize for context switches
         penalty_for_switches = self.context_switches * 5  # Example penalty
@@ -109,7 +117,11 @@ class CognitiveMetrics:
             else 0
         )
 
-        cra_score = total_goal_attention_score + avg_planning_coherence * 10 - penalty_for_switches
+        cra_score = (
+            total_goal_attention_score
+            + avg_planning_coherence * 10
+            - penalty_for_switches
+        )
         return max(0, min(100, cra_score))  # Clamp score between 0-100
 
     # ---- Unit-test compatible helpers expected by tests ----
@@ -155,7 +167,12 @@ class CognitiveMetrics:
     def calculate_memory_score(self, data: Dict[str, float]) -> float:
         vals = [
             float(data.get(k, 0.0))
-            for k in ("short_term_memory", "long_term_memory", "working_memory", "episodic_memory")
+            for k in (
+                "short_term_memory",
+                "long_term_memory",
+                "working_memory",
+                "episodic_memory",
+            )
         ]
         return self._avg(vals)
 
@@ -187,7 +204,8 @@ class CognitiveMetrics:
             "cra_score": cra_score,
             "context_switches": float(self.context_switches),
             "avg_planning_coherence": (
-                sum(self.planning_coherence_scores) / len(self.planning_coherence_scores)
+                sum(self.planning_coherence_scores)
+                / len(self.planning_coherence_scores)
                 if self.planning_coherence_scores
                 else 0.0
             ),

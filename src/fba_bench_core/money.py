@@ -15,11 +15,11 @@ from fba_bench.money import (
     GBP_ZERO,
     MAX_MONEY_CENTS,
     USD_ZERO,
+    Money as _Money,  # type: ignore
     max_money,
     min_money,
     sum_money,
 )
-from fba_bench.money import Money as _Money  # type: ignore
 
 
 class Money(_Money):  # type: ignore[misc]
@@ -38,7 +38,11 @@ class Money(_Money):  # type: ignore[misc]
                 amount = kwargs.get("amount", 0)
                 try:
                     d = Decimal(str(amount))
-                    cents = int((d * Decimal("100")).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+                    cents = int(
+                        (d * Decimal("100")).quantize(
+                            Decimal("1"), rounding=ROUND_HALF_UP
+                        )
+                    )
                 except Exception:
                     cents = 0
             super().__init__(cents, currency)
@@ -53,7 +57,9 @@ class Money(_Money):  # type: ignore[misc]
     def from_dollars(cls, amount: Any, currency: str = "USD") -> Money:
         try:
             d = Decimal(str(amount))
-            cents = int((d * Decimal("100")).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+            cents = int(
+                (d * Decimal("100")).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+            )
         except Exception:
             cents = 0
         return cls(cents, currency)

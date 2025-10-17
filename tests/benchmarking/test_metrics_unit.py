@@ -58,7 +58,11 @@ def test_accuracy_exact_and_overlap():
 
 def test_keyword_coverage_unique_and_freq():
     fn = get_metric("keyword_coverage")
-    run = {"output": {"summary": "Q3 revenue increased while Q2 was flat. Revenue guidance up."}}
+    run = {
+        "output": {
+            "summary": "Q3 revenue increased while Q2 was flat. Revenue guidance up."
+        }
+    }
     ctx = {"keywords": ["Q3", "revenue", "profit"], "field_path": "summary"}
     out = fn(run, ctx)
     assert out["keyword_total"] == 3
@@ -139,7 +143,10 @@ def test_custom_scriptable_safe_eval_and_blocking():
     run = {
         "duration_ms": 1200,
         "status": "success",
-        "metrics": {"accuracy_score": 0.85, "technical_performance": {"fast_enough": True}},
+        "metrics": {
+            "accuracy_score": 0.85,
+            "technical_performance": {"fast_enough": True},
+        },
     }
     expr = "duration_ms < 1500 and (accuracy_score >= 0.8 or technical_performance__fast_enough)"
     out = fn(run, {"expression": expr})
@@ -173,11 +180,18 @@ def test_aggregation_numeric_boolean_and_by_field():
         },
     ]
     acc_agg = aggregate_metric_values(runs, "accuracy_score")
-    assert "numeric" in acc_agg and abs(acc_agg["numeric"]["mean"] - (0.8 + 1.0 + 0.4) / 3.0) < 1e-9
+    assert (
+        "numeric" in acc_agg
+        and abs(acc_agg["numeric"]["mean"] - (0.8 + 1.0 + 0.4) / 3.0) < 1e-9
+    )
 
     tech_agg = aggregate_metric_values(runs, "technical_performance")
     assert "by_field" in tech_agg and "latency_ms" in tech_agg["by_field"]
     assert "boolean" in tech_agg and "success_rate" in tech_agg["boolean"]
 
-    all_agg = aggregate_all(runs, ["accuracy_score", "technical_performance", "nonexistent"])
-    assert "nonexistent" in all_agg and isinstance(all_agg["nonexistent"].get("missing", 0), int)
+    all_agg = aggregate_all(
+        runs, ["accuracy_score", "technical_performance", "nonexistent"]
+    )
+    assert "nonexistent" in all_agg and isinstance(
+        all_agg["nonexistent"].get("missing", 0), int
+    )

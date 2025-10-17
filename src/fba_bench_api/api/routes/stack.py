@@ -23,7 +23,8 @@ class StartRequest(BaseModel):
         default=None, description="Optional path to docker-compose.clearml.yml"
     )
     detach: bool = Field(
-        default=True, description="Ignored by server; always enforced as detached for safety"
+        default=True,
+        description="Ignored by server; always enforced as detached for safety",
     )
 
 
@@ -87,9 +88,13 @@ async def start_stack(req: StartRequest) -> Union[StartResponse, JSONResponse]:
     - Requires ALLOW_STACK_CONTROL=true (403 otherwise).
     """
     if not _is_allowed():
-        return _forbidden_json("Stack control disabled; set ALLOW_STACK_CONTROL=true to enable.")
+        return _forbidden_json(
+            "Stack control disabled; set ALLOW_STACK_CONTROL=true to enable."
+        )
 
-    started, compose_file, message, variant = sm.start_stack(req.composePath, detach=True)
+    started, compose_file, message, variant = sm.start_stack(
+        req.composePath, detach=True
+    )
     logger.info(
         "stack.start: compose=%s variant=%s started=%s",
         str(compose_file) if compose_file else "None",
@@ -116,7 +121,9 @@ async def stack_status(
     - Requires ALLOW_STACK_CONTROL=true (403 otherwise).
     """
     if not _is_allowed():
-        return _forbidden_json("Stack control disabled; set ALLOW_STACK_CONTROL=true to enable.")
+        return _forbidden_json(
+            "Stack control disabled; set ALLOW_STACK_CONTROL=true to enable."
+        )
 
     payload = sm.status(composePath)
     logger.info(
@@ -152,7 +159,9 @@ async def stop_stack(req: StopRequest) -> Union[StopResponse, JSONResponse]:
     - Requires ALLOW_STACK_CONTROL=true (403 otherwise).
     """
     if not _is_allowed():
-        return _forbidden_json("Stack control disabled; set ALLOW_STACK_CONTROL=true to enable.")
+        return _forbidden_json(
+            "Stack control disabled; set ALLOW_STACK_CONTROL=true to enable."
+        )
 
     stopped, compose_file, message, variant = sm.stop_stack(req.composePath)
     logger.info(

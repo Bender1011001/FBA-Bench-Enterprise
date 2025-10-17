@@ -54,9 +54,13 @@ class TrustScoreService:
             # Normalize feedback (1-5) to a scale that adjusts the score.
             # (avg_feedback - 3) maps 3 stars to 0, 1 star to -2, 5 stars to +2.
             # Multiply by a fraction of the base score to determine adjustment magnitude.
-            feedback_normalization_factor = (avg_feedback - 3.0) / 2.0  # Results in -1 to 1
+            feedback_normalization_factor = (
+                avg_feedback - 3.0
+            ) / 2.0  # Results in -1 to 1
             max_feedback_adjustment = self.base_score * self.feedback_weight
-            feedback_adjustment = feedback_normalization_factor * max_feedback_adjustment
+            feedback_adjustment = (
+                feedback_normalization_factor * max_feedback_adjustment
+            )
             current_score += feedback_adjustment
 
         # Ensure score is within the configured valid range
@@ -102,7 +106,9 @@ class TrustScoreService:
             if event_bus is not None:
                 self.event_bus = event_bus
             if self.event_bus is not None:
-                from fba_events.sales import SaleOccurred  # local import to avoid cycles
+                from fba_events.sales import (
+                    SaleOccurred,
+                )  # local import to avoid cycles
 
                 async def _on_sale(evt):
                     """
@@ -116,10 +122,14 @@ class TrustScoreService:
                         from types import SimpleNamespace as _NS  # type: ignore
 
                         # Always add a 'sale' record
-                        self.event_history.append(_NS(event_type=_NS(value="sale"), raw=evt))
+                        self.event_history.append(
+                            _NS(event_type=_NS(value="sale"), raw=evt)
+                        )
                         # Derive 'stockout' when demand exceeded supply
                         try:
-                            if getattr(evt, "units_demanded", 0) > getattr(evt, "units_sold", 0):
+                            if getattr(evt, "units_demanded", 0) > getattr(
+                                evt, "units_sold", 0
+                            ):
                                 self.event_history.append(
                                     _NS(event_type=_NS(value="stockout"), raw=evt)
                                 )
@@ -168,7 +178,10 @@ class TrustScoreService:
             or "total_days" in kwargs
         ):
             v = int(kwargs.get("violations_count", 0))
-            fb = kwargs.get("buyer_feedback_scores", kwargs.get("feedback_scores", [])) or []
+            fb = (
+                kwargs.get("buyer_feedback_scores", kwargs.get("feedback_scores", []))
+                or []
+            )
             td = int(kwargs.get("total_days", 0))
             return self.calculate_trust_score(v, list(fb), td)
 
@@ -180,4 +193,7 @@ class TrustScoreService:
             return self.calculate_trust_score(v, fb, td)
 
         # Fallback: return a minimally adjusted score to remain distinct from base
-        return max(float(self.min_score), min(float(self.max_score), float(self.base_score) - 0.25))
+        return max(
+            float(self.min_score),
+            min(float(self.max_score), float(self.base_score) - 0.25),
+        )

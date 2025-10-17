@@ -1,45 +1,106 @@
-services:
-  db:
-    image: postgres:13
-    container_name: fba_db
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: fba_db
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
+# Default Docker Compose configuration for FBA-Bench Enterprise
+# Usage: docker compose up -d
+# For other environments, use specific compose files:
+#   Development: docker-compose.dev.yml
+#   Production: docker-compose.prod.yml
+#   Testing: docker-compose.test.yml
 
-  backend:
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: fba-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-fba}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-fba_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-fba_bench}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - backend
+
+  redis:
+    image: redis:7-alpine
+    container_name: fba-redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-fba_dev_redis}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-fba_dev_redis}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - backend
+
+  api:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: fba_backend
-    command: poetry run uvicorn api_server:app --host 0.0.0.0 --port 8000 --reload
+    container_name: fba-api
+    environment:
+      DATABASE_URL: "postgresql+asyncpg://${POSTGRES_USER:-fba}:${POSTGRES_PASSWORD:-fba_dev_password}@postgres:5432/${POSTGRES_DB:-fba_bench}"
+      FBA_BENCH_REDIS_URL: "redis://:${REDIS_PASSWORD:-fba_dev_redis}@redis:6379/0"
+      PYTHONPATH: "/app/src"
+      LOG_LEVEL: "${LOG_LEVEL:-INFO}"
+      ENVIRONMENT: "${ENVIRONMENT:-development}"
     ports:
       - "8000:8000"
-    environment:
-      - DATABASE_URL=postgresql://user:password@db:5432/fba_db
     depends_on:
-      - db
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
-      - ./src:/app/src
+      - api_data:/data
+      - ./src:/app/src:ro  # Mount source for development
+    networks:
+      - backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: fba_frontend
+    container_name: fba-frontend
+    environment:
+      VITE_API_URL: "${PUBLIC_APP_BASE_URL:-http://localhost:8000}"
     ports:
       - "5173:5173"
-    environment:
-      - VITE_API_URL=http://localhost:8000
     depends_on:
-      - backend
+      api:
+        condition: service_healthy
     volumes:
-      - ./frontend:/app
+      - ./frontend:/app:ro
       - /app/node_modules
+    networks:
+      - backend
+    restart: unless-stopped
 
 volumes:
   postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  api_data:
+    driver: local
+
+networks:
+  backend:
+    driver: bridge

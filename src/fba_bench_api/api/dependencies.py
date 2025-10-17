@@ -21,12 +21,14 @@ __all__ = [
     "simulation_manager",
 ]
 
-from typing import Optional, Dict, Any
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import os
+from typing import Any, Dict, Optional
+
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 security = HTTPBearer(auto_error=False)
+
 
 def get_current_user(token: str = Depends(security)) -> Optional[Dict[str, Any]]:
     """
@@ -42,13 +44,15 @@ def get_current_user(token: str = Depends(security)) -> Optional[Dict[str, Any]]
 # In production, integrate with Auth0 JWT validation to extract real tenant claims.
 from pydantic import BaseModel
 
+
 class TenantContext(BaseModel):
     tenant_id: str
     user_id: str
     roles: list[str]
 
+
 async def get_tenant_context(
-    credentials: HTTPAuthorizationCredentials = Depends(security)
+    credentials: HTTPAuthorizationCredentials = Depends(security),
 ) -> TenantContext:
     """
     Spike implementation: Extract tenant context from Authorization header.
@@ -58,27 +62,24 @@ async def get_tenant_context(
     token = credentials.credentials
     try:
         # Mock parsing (replace with jwt.decode(credentials.credentials, key, algorithms=["RS256"]) in prod)
-        parts = token.split('|')
+        parts = token.split("|")
         if len(parts) < 3:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token format for tenant context"
+                detail="Invalid token format for tenant context",
             )
-        tenant_id = parts[0].replace('tenant:', '')
-        user_id = parts[1].replace('user:', '')
-        roles_str = parts[2].replace('roles:', '')
-        roles = [r.strip() for r in roles_str.split(',') if r.strip()]
-        
-        return TenantContext(
-            tenant_id=tenant_id,
-            user_id=user_id,
-            roles=roles
-        )
+        tenant_id = parts[0].replace("tenant:", "")
+        user_id = parts[1].replace("user:", "")
+        roles_str = parts[2].replace("roles:", "")
+        roles = [r.strip() for r in roles_str.split(",") if r.strip()]
+
+        return TenantContext(tenant_id=tenant_id, user_id=user_id, roles=roles)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Could not validate tenant context: {str(e)}"
+            detail=f"Could not validate tenant context: {str(e)}",
         )
+
 
 # Usage example in routers:
 # def some_endpoint(ctx: TenantContext = Depends(get_tenant_context)):
@@ -90,16 +91,18 @@ async def get_tenant_context(
 # Phase 0 Spike: TenantContext Dependency (Mock for Demonstration)
 # In production, integrate with Auth0 JWT validation to extract real tenant claims.
 from typing import Optional
+
 from pydantic import BaseModel
-from fastapi import HTTPException, status
+
 
 class TenantContext(BaseModel):
     tenant_id: str
     user_id: str
     roles: list[str]
 
+
 async def get_tenant_context(
-    credentials: HTTPAuthorizationCredentials = Depends(security)
+    credentials: HTTPAuthorizationCredentials = Depends(security),
 ) -> TenantContext:
     """
     Spike implementation: Extract tenant context from Authorization header.
@@ -109,27 +112,24 @@ async def get_tenant_context(
     token = credentials.credentials
     try:
         # Mock parsing (replace with jwt.decode(credentials.credentials, key, algorithms=["RS256"]) in prod)
-        parts = token.split('|')
+        parts = token.split("|")
         if len(parts) < 3:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token format for tenant context"
+                detail="Invalid token format for tenant context",
             )
-        tenant_id = parts[0].replace('tenant:', '')
-        user_id = parts[1].replace('user:', '')
-        roles_str = parts[2].replace('roles:', '')
-        roles = [r.strip() for r in roles_str.split(',') if r.strip()]
-        
-        return TenantContext(
-            tenant_id=tenant_id,
-            user_id=user_id,
-            roles=roles
-        )
+        tenant_id = parts[0].replace("tenant:", "")
+        user_id = parts[1].replace("user:", "")
+        roles_str = parts[2].replace("roles:", "")
+        roles = [r.strip() for r in roles_str.split(",") if r.strip()]
+
+        return TenantContext(tenant_id=tenant_id, user_id=user_id, roles=roles)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Could not validate tenant context: {str(e)}"
+            detail=f"Could not validate tenant context: {str(e)}",
         )
+
 
 # Usage example in routers:
 # def some_endpoint(ctx: TenantContext = Depends(get_tenant_context)):

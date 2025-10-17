@@ -1,8 +1,8 @@
 """Tests for authenticated profile retrieval and protected routes."""
 
+import os
 from datetime import datetime
 from zoneinfo import ZoneInfo
-import os
 
 # Configure test database URL before importing modules that depend on it
 TEST_DB = "enterprise_test_profile.db"
@@ -11,13 +11,12 @@ os.environ["DATABASE_URL"] = f"sqlite:///./{TEST_DB}"
 from pathlib import Path
 
 import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, text
-
-from api.server import app
 from api.db import get_db
 from api.models import Base, User
 from api.security.passwords import hash_password
+from api.server import app
+from fastapi.testclient import TestClient
+from sqlalchemy import create_engine, text
 
 
 @pytest.fixture(scope="module", autouse=True)

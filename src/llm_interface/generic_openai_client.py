@@ -4,9 +4,9 @@ from typing import Any, Dict, Optional
 
 import httpx
 import tiktoken
+from services.cost_tracking_service import CostTrackingService
 
 from llm_interface.contract import BaseLLMClient, LLMClientError
-from services.cost_tracking_service import CostTrackingService
 
 logger = logging.getLogger(__name__)
 
@@ -137,16 +137,27 @@ class GenericOpenAIClient(BaseLLMClient):
             logger.debug(f"Received response: {response_data}")
 
             # Validate minimal structure
-            if not response_data.get("choices") or not isinstance(response_data["choices"], list):
-                raise LLMClientError(f"Response missing 'choices' list: {response_data}")
+            if not response_data.get("choices") or not isinstance(
+                response_data["choices"], list
+            ):
+                raise LLMClientError(
+                    f"Response missing 'choices' list: {response_data}"
+                )
             first_choice = response_data["choices"][0]
             # Allow empty content for reasoning models; only ensure message object exists
-            if not first_choice.get("message") or "content" not in first_choice["message"]:
-                raise LLMClientError(f"Response missing message object in choices: {response_data}")
+            if (
+                not first_choice.get("message")
+                or "content" not in first_choice["message"]
+            ):
+                raise LLMClientError(
+                    f"Response missing message object in choices: {response_data}"
+                )
 
             # Report usage if cost_tracker is available and usage data is present
             if self.cost_tracker and response_data.get("usage"):
-                self.cost_tracker.record_usage(model=self.model_name, usage=response_data["usage"])
+                self.cost_tracker.record_usage(
+                    model=self.model_name, usage=response_data["usage"]
+                )
 
             return response_data
 
@@ -162,12 +173,17 @@ class GenericOpenAIClient(BaseLLMClient):
         except httpx.RequestError as e:
             logger.error(f"Network error connecting to OpenAI-compatible API: {e}")
             raise LLMClientError(
-                f"Network error connecting to OpenAI-compatible API: {e}", original_exception=e
+                f"Network error connecting to OpenAI-compatible API: {e}",
+                original_exception=e,
             )
         except Exception as e:
-            logger.error(f"Unexpected error during OpenAI-compatible API call: {e}", exc_info=True)
+            logger.error(
+                f"Unexpected error during OpenAI-compatible API call: {e}",
+                exc_info=True,
+            )
             raise LLMClientError(
-                f"Unexpected error during OpenAI-compatible API call: {e}", original_exception=e
+                f"Unexpected error during OpenAI-compatible API call: {e}",
+                original_exception=e,
             )
 
     async def get_token_count(self, text: str) -> int:

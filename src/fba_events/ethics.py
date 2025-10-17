@@ -46,7 +46,9 @@ class ComplianceViolationEvent(BaseEvent):
 
         # Validate details: Must be a dictionary.
         if not isinstance(self.details, dict):
-            raise TypeError("Details must be a dictionary for ComplianceViolationEvent.")
+            raise TypeError(
+                "Details must be a dictionary for ComplianceViolationEvent."
+            )
 
     def to_summary_dict(self) -> Dict[str, Any]:
         return {

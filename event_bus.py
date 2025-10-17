@@ -2,29 +2,19 @@
 from collections.abc import Awaitable
 from typing import Any, Callable, Dict
 
-from fba_bench_core.event_bus import (
-    AsyncioQueueBackend as _CoreAsyncioQueueBackend,
-)
-from fba_bench_core.event_bus import (
-    BaseEvent as _CoreBaseEvent,
-)
-from fba_bench_core.event_bus import (
-    DistributedBackend as _CoreDistributedBackend,
-)
 from fba_bench_core.event_bus import (  # type: ignore
+    AsyncioQueueBackend as _CoreAsyncioQueueBackend,
+    BaseEvent as _CoreBaseEvent,
+    DistributedBackend as _CoreDistributedBackend,
     EventBus as _CoreEventBus,
-)
-from fba_bench_core.event_bus import (
     InMemoryEventBus as _CoreInMemoryEventBus,
-)
-from fba_bench_core.event_bus import (
-    get_event_bus as _core_get_event_bus,
-)
-from fba_bench_core.event_bus import (
     set_event_bus as _core_set_event_bus,
 )
-from fba_events.bus import InMemoryEventBus as _EventsInMemoryEventBus, get_event_bus as _events_get_event_bus, set_event_bus as _events_set_event_bus
-from fba_events.bus import get_event_bus as _events_get_event_bus, set_event_bus as _events_set_event_bus
+from fba_events.bus import (
+    InMemoryEventBus as _EventsInMemoryEventBus,
+    get_event_bus as _events_get_event_bus,
+    set_event_bus as _events_set_event_bus,
+)
 
 __all__ = [
     "EventBus",

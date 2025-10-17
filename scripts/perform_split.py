@@ -11,7 +11,7 @@ import os
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Any, Dict, List
 
 MAPPING_FILE = "repos/file_split_map.json"
 REPORT_FILE = "repos/split_report.json"
@@ -103,7 +103,7 @@ def main():
         Path(log).touch(exist_ok=True)
 
     # Read and validate mapping
-    with open(MAPPING_FILE, "r") as f:
+    with open(MAPPING_FILE) as f:
         data = json.load(f)
 
     if not validate_mapping(data):

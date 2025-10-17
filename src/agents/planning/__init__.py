@@ -10,16 +10,16 @@ from fba_events import BaseEvent
 from .events import (
     StrategicPlanCreatedEvent,
     StrategicPlanUpdatedEvent,
+    TacticalActionCompletedEvent,
     TacticalActionsGeneratedEvent,
     TacticalActionsPrioritizedEvent,
-    TacticalActionCompletedEvent,
     publish_strategic_plan_created_event,  # Assume added
     # Add other publishing if needed
 )
 from .generation import (
-    generate_objectives_for_strategy,
     generate_actions_for_objective,
     generate_immediate_response_actions,
+    generate_objectives_for_strategy,
 )
 from .models import (
     PlanPriority,
@@ -29,27 +29,26 @@ from .models import (
     TacticalAction,
 )
 from .utils import (
-    determine_strategy_type,
-    should_create_new_strategy,
-    assess_strategic_performance,
     analyze_external_events_impact,
-    determine_objective_modifications,
+    apply_constraints_to_prioritization,
     apply_objective_modifications,
+    archive_completed_objectives,
+    assess_strategic_performance,
+    calculate_action_objective_alignment,
+    calculate_action_priority_score,
+    cleanup_old_actions,
+    determine_objective_modifications,
+    determine_strategy_type,
     identify_new_objectives_needed,
     identify_objectives_to_cancel,
-    calculate_action_objective_alignment,
-    archive_completed_objectives,
-    calculate_action_priority_score,
-    apply_constraints_to_prioritization,
-    cleanup_old_actions,
-    should_reschedule_failed_action,
     reschedule_failed_action,
+    should_create_new_strategy,
+    should_reschedule_failed_action,
 )
 from .validation import (
-    validate_strategic_objectives,
     validate_and_schedule_actions,
+    validate_strategic_objectives,
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -111,9 +110,15 @@ class StrategicPlanner:
 
         # Clear existing objectives if starting fresh strategic cycle
         if should_create_new_strategy(
-            current_time, self.strategy_created_at, self.current_strategy_type, strategy_type, self._planner_params
+            current_time,
+            self.strategy_created_at,
+            self.current_strategy_type,
+            strategy_type,
+            self._planner_params,
         ):
-            archive_completed_objectives(self.strategic_objectives, self.archived_objectives, self.agent_id)
+            archive_completed_objectives(
+                self.strategic_objectives, self.archived_objectives, self.agent_id
+            )
             self.strategic_objectives.clear()
             self.current_strategy_type = strategy_type
             self.strategy_created_at = current_time
@@ -131,14 +136,21 @@ class StrategicPlanner:
             self.strategic_objectives[obj_id] = objective
 
         await publish_strategic_plan_created_event(
-            self.event_bus, validated_objectives, self.agent_id, self.current_strategy_type
+            self.event_bus,
+            validated_objectives,
+            self.agent_id,
+            self.current_strategy_type,
         )
 
-        logger.info(f"Created strategic plan with {len(validated_objectives)} objectives")
+        logger.info(
+            f"Created strategic plan with {len(validated_objectives)} objectives"
+        )
         return validated_objectives
 
     async def update_strategic_plan(
-        self, current_performance: Dict[str, float], external_events: List[Dict[str, Any]]
+        self,
+        current_performance: Dict[str, float],
+        external_events: List[Dict[str, Any]],
     ) -> Dict[str, Any]:
         """
         Adapt strategy based on performance and external events.
@@ -162,11 +174,15 @@ class StrategicPlanner:
         }
 
         # Assess performance against current objectives
-        performance_assessment = assess_strategic_performance(self.strategic_objectives, current_performance)
+        performance_assessment = assess_strategic_performance(
+            self.strategic_objectives, current_performance
+        )
         update_results["performance_assessment"] = performance_assessment
 
         # Analyze impact of external events
-        event_impact = await analyze_external_events_impact(external_events, self.strategic_objectives)
+        event_impact = await analyze_external_events_impact(
+            external_events, self.strategic_objectives
+        )
         self.external_events_impact.extend(event_impact)
 
         # Update objective priorities and status based on performance
@@ -197,7 +213,10 @@ class StrategicPlanner:
 
         # Cancel objectives that are no longer viable
         cancelled_objectives = await identify_objectives_to_cancel(
-            self.strategic_objectives, current_performance, external_events, self._planner_params
+            self.strategic_objectives,
+            current_performance,
+            external_events,
+            self._planner_params,
         )
 
         for obj_id in cancelled_objectives:
@@ -229,7 +248,9 @@ class StrategicPlanner:
         return update_results
 
     async def validate_action_alignment(
-        self, proposed_action: Dict[str, Any], current_strategy: Optional[Dict[str, Any]] = None
+        self,
+        proposed_action: Dict[str, Any],
+        current_strategy: Optional[Dict[str, Any]] = None,
     ) -> Tuple[bool, float, str]:
         """
         Check if a proposed action aligns with current strategic objectives.
@@ -242,7 +263,11 @@ class StrategicPlanner:
             Tuple of (is_aligned, alignment_score, reasoning)
         """
         if not self.strategic_objectives:
-            return True, 0.5, "No strategic objectives defined - action allowed by default"
+            return (
+                True,
+                0.5,
+                "No strategic objectives defined - action allowed by default",
+            )
 
         action_type = proposed_action.get("type", "unknown")
         expected_impact = proposed_action.get("expected_impact", {})
@@ -287,10 +312,14 @@ class StrategicPlanner:
         current_time = datetime.now()
 
         active_objectives = [
-            obj for obj in self.strategic_objectives.values() if obj.status == PlanStatus.ACTIVE
+            obj
+            for obj in self.strategic_objectives.values()
+            if obj.status == PlanStatus.ACTIVE
         ]
 
-        overdue_objectives = [obj for obj in active_objectives if obj.is_overdue(current_time)]
+        overdue_objectives = [
+            obj for obj in active_objectives if obj.is_overdue(current_time)
+        ]
 
         status = {
             "agent_id": self.agent_id,
@@ -298,13 +327,17 @@ class StrategicPlanner:
                 self.current_strategy_type.value if self.current_strategy_type else None
             ),
             "strategy_age_days": (
-                (current_time - self.strategy_created_at).days if self.strategy_created_at else 0
+                (current_time - self.strategy_created_at).days
+                if self.strategy_created_at
+                else 0
             ),
             "total_objectives": len(self.strategic_objectives),
             "active_objectives": len(active_objectives),
             "overdue_objectives": len(overdue_objectives),
             "last_review": (
-                self.last_strategy_review.isoformat() if self.last_strategy_review else None
+                self.last_strategy_review.isoformat()
+                if self.last_strategy_review
+                else None
             ),
             "performance_history_entries": len(self.strategy_performance_history),
         }
@@ -314,7 +347,9 @@ class StrategicPlanner:
             progress_scores = []
             for obj in active_objectives:
                 if obj.progress_indicators:
-                    progress_scores.append(obj.progress_indicators.get("overall_progress", 0.0))
+                    progress_scores.append(
+                        obj.progress_indicators.get("overall_progress", 0.0)
+                    )
 
             status["average_progress"] = (
                 sum(progress_scores) / len(progress_scores) if progress_scores else 0.0
@@ -372,7 +407,9 @@ class TacticalPlanner:
         logger.info(f"TacticalPlanner initialized for agent {agent_id}")
 
     async def generate_tactical_actions(
-        self, strategic_goals: Dict[str, StrategicObjective], current_state: Dict[str, Any]
+        self,
+        strategic_goals: Dict[str, StrategicObjective],
+        current_state: Dict[str, Any],
     ) -> List[TacticalAction]:
         """
         Create action plans that serve strategic goals.
@@ -384,7 +421,9 @@ class TacticalPlanner:
         Returns:
             List of tactical actions ordered by priority and dependencies
         """
-        logger.info(f"Generating tactical actions for {len(strategic_goals)} strategic goals")
+        logger.info(
+            f"Generating tactical actions for {len(strategic_goals)} strategic goals"
+        )
 
         current_time = datetime.now()
         new_actions = []
@@ -444,7 +483,10 @@ class TacticalPlanner:
 
         for action in action_list:
             score = await calculate_action_priority_score(
-                action, constraints, self.strategic_planner.strategic_objectives, self._planner_params
+                action,
+                constraints,
+                self.strategic_planner.strategic_objectives,
+                self._planner_params,
             )
             action_scores.append((action, score))
 
@@ -465,7 +507,9 @@ class TacticalPlanner:
         )
         return prioritized_actions
 
-    def get_ready_actions(self, current_time: Optional[datetime] = None) -> List[TacticalAction]:
+    def get_ready_actions(
+        self, current_time: Optional[datetime] = None
+    ) -> List[TacticalAction]:
         """Get actions that are ready for execution."""
         current_time = current_time or datetime.now()
 
@@ -476,7 +520,9 @@ class TacticalPlanner:
 
         return ready_actions
 
-    async def mark_action_completed(self, action_id: str, execution_result: Dict[str, Any]):
+    async def mark_action_completed(
+        self, action_id: str, execution_result: Dict[str, Any]
+    ):
         """Mark an action as completed and record results."""
         if action_id in self.tactical_actions:
             action = self.tactical_actions[action_id]
@@ -530,7 +576,9 @@ class TacticalPlanner:
             a for a in self.tactical_actions.values() if a.status == PlanStatus.ACTIVE
         ]
         ready_actions = self.get_ready_actions(current_time)
-        overdue_actions = [a for a in active_actions if a.scheduled_execution < current_time]
+        overdue_actions = [
+            a for a in active_actions if a.scheduled_execution < current_time
+        ]
 
         status = {
             "agent_id": self.agent_id,
@@ -581,7 +629,9 @@ class HierarchicalPlanner:
         self.event_bus = event_bus or get_event_bus()
 
         self.strategic_planner = StrategicPlanner(agent_id, self.event_bus)
-        self.tactical_planner = TacticalPlanner(agent_id, self.strategic_planner, self.event_bus)
+        self.tactical_planner = TacticalPlanner(
+            agent_id, self.strategic_planner, self.event_bus
+        )
 
         logger.info(f"HierarchicalPlanner initialized for agent {agent_id}")
 
@@ -589,19 +639,26 @@ class HierarchicalPlanner:
         self, context: Dict[str, Any], timeframe: int
     ) -> Dict[str, StrategicObjective]:
         """Create a new strategic plan and generate initial tactical actions."""
-        strategic_objectives = await self.strategic_planner.create_strategic_plan(context, timeframe)
-        await self.tactical_planner.generate_tactical_actions(strategic_objectives, context)
+        strategic_objectives = await self.strategic_planner.create_strategic_plan(
+            context, timeframe
+        )
+        await self.tactical_planner.generate_tactical_actions(
+            strategic_objectives, context
+        )
         return strategic_objectives
 
     async def update_strategic_plan(
-        self, current_performance: Dict[str, float], external_events: List[Dict[str, Any]]
+        self,
+        current_performance: Dict[str, float],
+        external_events: List[Dict[str, Any]],
     ) -> Dict[str, Any]:
         """Update the strategic plan and refresh tactical actions."""
         update_results = await self.strategic_planner.update_strategic_plan(
             current_performance, external_events
         )
         await self.tactical_planner.generate_tactical_actions(
-            self.strategic_planner.strategic_objectives, {"current_metrics": current_performance}
+            self.strategic_planner.strategic_objectives,
+            {"current_metrics": current_performance},
         )
         return update_results
 
@@ -610,7 +667,9 @@ class HierarchicalPlanner:
     ) -> List[TacticalAction]:
         """Generate tactical actions based on current state."""
         strategic_goals = self.strategic_planner.strategic_objectives
-        return await self.tactical_planner.generate_tactical_actions(strategic_goals, current_state)
+        return await self.tactical_planner.generate_tactical_actions(
+            strategic_goals, current_state
+        )
 
     async def prioritize_actions(
         self, action_list: List[TacticalAction], constraints: Dict[str, Any]
@@ -618,11 +677,15 @@ class HierarchicalPlanner:
         """Prioritize tactical actions."""
         return await self.tactical_planner.prioritize_actions(action_list, constraints)
 
-    def get_ready_actions(self, current_time: Optional[datetime] = None) -> List[TacticalAction]:
+    def get_ready_actions(
+        self, current_time: Optional[datetime] = None
+    ) -> List[TacticalAction]:
         """Get ready tactical actions."""
         return self.tactical_planner.get_ready_actions(current_time)
 
-    async def mark_action_completed(self, action_id: str, execution_result: Dict[str, Any]):
+    async def mark_action_completed(
+        self, action_id: str, execution_result: Dict[str, Any]
+    ):
         """Mark tactical action as completed."""
         await self.tactical_planner.mark_action_completed(action_id, execution_result)
 

@@ -4,14 +4,14 @@ Event dispatch logic for skill coordination.
 
 import asyncio
 import logging
-from typing import Dict, List, Optional, Tuple, Set
+from typing import Dict, List, Optional, Tuple
 
-from .models import SkillSubscription, ResourceAllocation
-from .utils import get_urgency_multiplier
-from ..skill_modules.base_skill import BaseSkill, SkillAction
 from fba_events.base import BaseEvent
-from .metrics import MetricsTracker
 
+from ..skill_modules.base_skill import BaseSkill, SkillAction
+from .metrics import MetricsTracker
+from .models import ResourceAllocation, SkillSubscription
+from .utils import get_urgency_multiplier
 
 logger = logging.getLogger(__name__)
 
@@ -24,9 +24,9 @@ class DispatchManager:
 
     def __init__(
         self,
-        event_bus: 'EventBus',  # Forward ref for EventBus
+        event_bus: "EventBus",  # Forward ref for EventBus
         config: Dict,
-        coordinator_tuning: 'CoordinatorTuning',  # Forward ref
+        coordinator_tuning: "CoordinatorTuning",  # Forward ref
         skill_subscriptions: Dict[str, SkillSubscription],
         event_skill_mapping: Dict[str, List[str]],
         resource_allocation: ResourceAllocation,
@@ -57,7 +57,9 @@ class DispatchManager:
         self.conflict_resolution_timeout = conflict_resolution_timeout
         self.metrics_tracker = metrics_tracker
 
-    async def dispatch_event(self, event: BaseEvent) -> List[Tuple[str, List[SkillAction]]]:
+    async def dispatch_event(
+        self, event: BaseEvent
+    ) -> List[Tuple[str, List[SkillAction]]]:
         """
         Dispatch event to relevant skills based on priority and generate actions.
 
@@ -78,7 +80,9 @@ class DispatchManager:
 
         try:
             # Calculate skill priorities for this event
-            skill_priorities = await self._calculate_skill_priorities(event, interested_skills)
+            skill_priorities = await self._calculate_skill_priorities(
+                event, interested_skills
+            )
 
             # Filter skills based on resource availability and load
             available_skills = self._filter_available_skills(skill_priorities)
@@ -86,7 +90,9 @@ class DispatchManager:
             # Dispatch to skills concurrently
             skill_actions = await self._dispatch_to_skills(event, available_skills)
 
-            logger.debug(f"Dispatched event {event_type} to {len(skill_actions)} skills")
+            logger.debug(
+                f"Dispatched event {event_type} to {len(skill_actions)} skills"
+            )
             return skill_actions
 
         except Exception as e:
@@ -116,7 +122,9 @@ class DispatchManager:
 
                 # Apply skill-specific priority multiplier and then urgency multiplier
                 adjusted_priority = (
-                    base_priority * subscription.priority_multiplier * urgency_multiplier
+                    base_priority
+                    * subscription.priority_multiplier
+                    * urgency_multiplier
                 )
 
                 # Factor in current load, guarding against ZeroDivisionError
@@ -149,7 +157,10 @@ class DispatchManager:
                 continue
 
             # Check if we have available execution slots
-            if self.resource_allocation.used_slots >= self.resource_allocation.concurrent_slots:
+            if (
+                self.resource_allocation.used_slots
+                >= self.resource_allocation.concurrent_slots
+            ):
                 break  # No more concurrent slots available
 
             available_skills.append((skill_name, priority))
@@ -181,7 +192,9 @@ class DispatchManager:
         # Wait for all skills to process the event
         for skill_name, task in dispatch_tasks:
             try:
-                actions = await asyncio.wait_for(task, timeout=self.conflict_resolution_timeout)
+                actions = await asyncio.wait_for(
+                    task, timeout=self.conflict_resolution_timeout
+                )
                 if actions:
                     skill_actions.append((skill_name, actions))
             except asyncio.TimeoutError:
@@ -212,7 +225,9 @@ class DispatchManager:
             # Update response time metric (partial; full metrics in MetricsTracker)
             if self.performance_tracking_enabled:
                 response_time = (datetime.now() - start_time).total_seconds()
-                await self.metrics_tracker.update_event_processing(skill_name, response_time, actions or [])
+                await self.metrics_tracker.update_event_processing(
+                    skill_name, response_time, actions or []
+                )
 
             return actions
 

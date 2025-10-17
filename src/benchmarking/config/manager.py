@@ -100,9 +100,13 @@ class ConfigurationManager:
         # Environment variables
         self._env_prefix = "FBA_BENCH_"
 
-        logger.info(f"Initialized ConfigurationManager with config directory: {self.config_dir}")
+        logger.info(
+            f"Initialized ConfigurationManager with config directory: {self.config_dir}"
+        )
 
-    def load_config(self, config_path: str, config_type: str = "benchmark") -> Dict[str, Any]:
+    def load_config(
+        self, config_path: str, config_type: str = "benchmark"
+    ) -> Dict[str, Any]:
         """
         Load a configuration from file.
 
@@ -124,14 +128,19 @@ class ConfigurationManager:
 
         try:
             # Load configuration based on file extension
-            if config_file.suffix.lower() == ".yaml" or config_file.suffix.lower() == ".yml":
+            if (
+                config_file.suffix.lower() == ".yaml"
+                or config_file.suffix.lower() == ".yml"
+            ):
                 with open(config_file) as f:
                     config = yaml.safe_load(f)
             elif config_file.suffix.lower() == ".json":
                 with open(config_file) as f:
                     config = json.load(f)
             else:
-                raise ValueError(f"Unsupported configuration file format: {config_file.suffix}")
+                raise ValueError(
+                    f"Unsupported configuration file format: {config_file.suffix}"
+                )
 
             # Validate configuration using Pydantic schemas
             mapped_type = {
@@ -146,7 +155,9 @@ class ConfigurationManager:
             }.get(config_type, config_type)
 
             try:
-                validated_config = self.schema_manager.validate_config(mapped_type, config)
+                validated_config = self.schema_manager.validate_config(
+                    mapped_type, config
+                )
             except SchemaValidationError as e:
                 raise ValueError(f"Configuration validation failed: {e}") from e
 
@@ -204,14 +215,19 @@ class ConfigurationManager:
             config["metadata"]["saved_by"] = "ConfigurationManager"
 
             # Save configuration based on file extension
-            if config_file.suffix.lower() == ".yaml" or config_file.suffix.lower() == ".yml":
+            if (
+                config_file.suffix.lower() == ".yaml"
+                or config_file.suffix.lower() == ".yml"
+            ):
                 with open(config_file, "w") as f:
                     yaml.dump(config, f, default_flow_style=False, indent=2)
             elif config_file.suffix.lower() == ".json":
                 with open(config_file, "w") as f:
                     json.dump(config, f, indent=2)
             else:
-                raise ValueError(f"Unsupported configuration file format: {config_file.suffix}")
+                raise ValueError(
+                    f"Unsupported configuration file format: {config_file.suffix}"
+                )
 
             logger.info(f"Saved configuration to {config_path}")
 
@@ -253,7 +269,9 @@ class ConfigurationManager:
         # Save profile to disk
         self._save_profile(profile)
 
-        logger.info(f"Created configuration profile: {name} for environment: {environment}")
+        logger.info(
+            f"Created configuration profile: {name} for environment: {environment}"
+        )
         return profile
 
     def load_profile(self, name: str) -> Optional[ConfigurationProfile]:
@@ -384,11 +402,15 @@ class ConfigurationManager:
         }.get(config_type, config_type)
 
         try:
-            template_config = self.schema_manager.validate_config(mapped_type, template_config)
+            template_config = self.schema_manager.validate_config(
+                mapped_type, template_config
+            )
         except SchemaValidationError as e:
             raise ValueError(f"Template validation failed: {e}") from e
 
-        template_file = self.config_dir / "templates" / f"{config_type}_{template_name}.yaml"
+        template_file = (
+            self.config_dir / "templates" / f"{config_type}_{template_name}.yaml"
+        )
         template_file.parent.mkdir(parents=True, exist_ok=True)
 
         try:
@@ -426,7 +448,9 @@ class ConfigurationManager:
 
         return templates
 
-    def load_template(self, config_type: str, template_name: str) -> Optional[Dict[str, Any]]:
+    def load_template(
+        self, config_type: str, template_name: str
+    ) -> Optional[Dict[str, Any]]:
         """
         Load a configuration template.
 
@@ -437,7 +461,9 @@ class ConfigurationManager:
         Returns:
             Template configuration or None if not found
         """
-        template_file = self.config_dir / "templates" / f"{config_type}_{template_name}.yaml"
+        template_file = (
+            self.config_dir / "templates" / f"{config_type}_{template_name}.yaml"
+        )
         if template_file.exists():
             try:
                 with open(template_file) as f:
@@ -528,7 +554,9 @@ class ConfigurationManager:
         result = config.copy()
 
         # Get environment variables with prefix
-        env_vars = {k: v for k, v in os.environ.items() if k.startswith(self._env_prefix)}
+        env_vars = {
+            k: v for k, v in os.environ.items() if k.startswith(self._env_prefix)
+        }
 
         for env_var, env_value in env_vars.items():
             # Convert environment variable name to configuration path
@@ -560,7 +588,9 @@ class ConfigurationManager:
 
         return result
 
-    def _deep_merge(self, base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
+    def _deep_merge(
+        self, base: Dict[str, Any], override: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Deep merge two dictionaries.
 
@@ -574,7 +604,11 @@ class ConfigurationManager:
         result = base.copy()
 
         for key, value in override.items():
-            if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            if (
+                key in result
+                and isinstance(result[key], dict)
+                and isinstance(value, dict)
+            ):
                 result[key] = self._deep_merge(result[key], value)
             else:
                 result[key] = value
@@ -599,7 +633,9 @@ class ConfigurationManager:
             logger.error(f"Failed to save profile {profile.name}: {e}")
             raise
 
-    def create_environment_config(self, environment: str, config: Dict[str, Any]) -> None:
+    def create_environment_config(
+        self, environment: str, config: Dict[str, Any]
+    ) -> None:
         """
         Create environment-specific configuration.
 

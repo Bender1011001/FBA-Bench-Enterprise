@@ -51,7 +51,10 @@ def test_summarization_rule_truncates_under_limit():
     # Output should be non-empty and include truncation marker when over limit pre-enforcement
     assert isinstance(res["output"], str)
     # The constraint enforcer adds the truncation message if needed
-    assert "truncated to meet constraints" in res["output"] or res["metrics"]["tokens_est"] <= 50
+    assert (
+        "truncated to meet constraints" in res["output"]
+        or res["metrics"]["tokens_est"] <= 50
+    )
 
 
 def test_extraction_rule_returns_json_fields():
@@ -67,7 +70,9 @@ def test_extraction_rule_returns_json_fields():
 
 def test_compute_with_calculator_tool():
     text = "Compute 12*(3+4)"
-    res = decide(text, context={"tools": [{"name": "calculator", "callable": calculator_tool}]})
+    res = decide(
+        text, context={"tools": [{"name": "calculator", "callable": calculator_tool}]}
+    )
     assert res["status"] == "success"
     assert "RULE_COMPUTE" in res["applied_rules"]
     assert res["output"].strip() == "Result: 84"
@@ -114,16 +119,21 @@ def test_memory_hint_is_used_on_second_call():
 def test_error_path_faulty_tool_graceful_failure():
     # Force a compute path with a faulty tool and an invalid expression so fallback cannot compute
     text = "Compute abc+def"  # not a numeric expression; local fallback will fail
-    res = decide(text, context={"tools": [{"name": "calculator", "callable": faulty_tool}]})
+    res = decide(
+        text, context={"tools": [{"name": "calculator", "callable": faulty_tool}]}
+    )
     # Our engine marks failed when output is empty or "Could not compute expression" with tool errors observed
     assert res["status"] == "failed"
-    assert any(u.get("name") == "calculator" and u.get("error") for u in res["used_tools"])
+    assert any(
+        u.get("name") == "calculator" and u.get("error") for u in res["used_tools"]
+    )
 
 
 @pytest.mark.asyncio
 async def test_async_wrapper_works():
     res = await decide_async(
-        "Compute 2+2*3", context={"tools": [{"name": "calculator", "callable": calculator_tool}]}
+        "Compute 2+2*3",
+        context={"tools": [{"name": "calculator", "callable": calculator_tool}]},
     )
     assert res["status"] == "success"
     assert res["output"].strip() == "Result: 8"

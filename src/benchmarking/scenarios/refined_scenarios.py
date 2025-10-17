@@ -372,7 +372,10 @@ class PricingScenario(BaseScenario):
             "price_elasticity": self.price_elasticity,
         }
 
-        self.context.competitor_state = {"price": self.competitor_price, "market_share": 0.5}
+        self.context.competitor_state = {
+            "price": self.competitor_price,
+            "market_share": 0.5,
+        }
 
         self.context.agent_state = {
             "total_revenue": 0.0,
@@ -407,7 +410,8 @@ class PricingScenario(BaseScenario):
         # Update competitor price (with some randomness)
         price_change = random.gauss(0, self.competitor_price_volatility)
         self.competitor_price = max(
-            self.min_price, min(self.max_price, self.competitor_price * (1 + price_change))
+            self.min_price,
+            min(self.max_price, self.competitor_price * (1 + price_change)),
         )
 
         # Calculate demand based on prices
@@ -431,7 +435,9 @@ class PricingScenario(BaseScenario):
         # Update metrics
         self.metrics.revenue = self.context.agent_state["total_revenue"]
         self.metrics.profit = self.context.agent_state["total_profit"]
-        self.metrics.costs = self.context.agent_state["total_units_sold"] * self.cost_per_unit
+        self.metrics.costs = (
+            self.context.agent_state["total_units_sold"] * self.cost_per_unit
+        )
 
         # Update context
         self.context.product_state["price"] = self.current_price
@@ -544,11 +550,19 @@ class InventoryScenario(BaseScenario):
 
         # Inventory-specific parameters
         self.initial_inventory = self.config.initial_state.get("initial_inventory", 100)
-        self.holding_cost_per_unit = self.config.initial_state.get("holding_cost_per_unit", 0.1)
-        self.stockout_cost_per_unit = self.config.initial_state.get("stockout_cost_per_unit", 2.0)
-        self.order_cost_per_order = self.config.initial_state.get("order_cost_per_order", 10.0)
+        self.holding_cost_per_unit = self.config.initial_state.get(
+            "holding_cost_per_unit", 0.1
+        )
+        self.stockout_cost_per_unit = self.config.initial_state.get(
+            "stockout_cost_per_unit", 2.0
+        )
+        self.order_cost_per_order = self.config.initial_state.get(
+            "order_cost_per_order", 10.0
+        )
         self.lead_time = self.config.initial_state.get("lead_time", 3)
-        self.max_order_quantity = self.config.initial_state.get("max_order_quantity", 200)
+        self.max_order_quantity = self.config.initial_state.get(
+            "max_order_quantity", 200
+        )
         self.demand_mean = self.config.initial_state.get("demand_mean", 20)
         self.demand_std = self.config.initial_state.get("demand_std", 5)
 
@@ -570,7 +584,10 @@ class InventoryScenario(BaseScenario):
             "pending_orders": self.pending_orders,
         }
 
-        self.context.market_state = {"demand_mean": self.demand_mean, "demand_std": self.demand_std}
+        self.context.market_state = {
+            "demand_mean": self.demand_mean,
+            "demand_std": self.demand_std,
+        }
 
         self.context.agent_state = {
             "total_holding_cost": 0.0,
@@ -646,7 +663,9 @@ class InventoryScenario(BaseScenario):
 
         self.total_holding_cost += holding_cost
         self.total_stockout_cost += stockout_cost
-        self.total_cost = self.total_holding_cost + self.total_stockout_cost + self.total_order_cost
+        self.total_cost = (
+            self.total_holding_cost + self.total_stockout_cost + self.total_order_cost
+        )
 
         # Update agent state
         self.context.agent_state["total_holding_cost"] = self.total_holding_cost
@@ -656,9 +675,9 @@ class InventoryScenario(BaseScenario):
         # Update metrics
         self.metrics.costs = self.total_cost
         self.metrics.order_fulfillment_rate = units_sold / max(1, demand)
-        self.metrics.inventory_turnover = self.context.agent_state["total_units_ordered"] / max(
-            1, self.current_inventory
-        )
+        self.metrics.inventory_turnover = self.context.agent_state[
+            "total_units_ordered"
+        ] / max(1, self.current_inventory)
 
         # Update context
         self.context.product_state["inventory"] = self.current_inventory
@@ -781,8 +800,12 @@ class CompetitiveScenario(BaseScenario):
             "competitor_strategies", ["aggressive", "moderate", "conservative"]
         )
         self.price_sensitivity = self.config.initial_state.get("price_sensitivity", 1.0)
-        self.quality_sensitivity = self.config.initial_state.get("quality_sensitivity", 0.8)
-        self.marketing_sensitivity = self.config.initial_state.get("marketing_sensitivity", 0.5)
+        self.quality_sensitivity = self.config.initial_state.get(
+            "quality_sensitivity", 0.8
+        )
+        self.marketing_sensitivity = self.config.initial_state.get(
+            "marketing_sensitivity", 0.5
+        )
 
         # Current state
         self.agent_price = self.config.initial_state.get("agent_price", 10.0)
@@ -1003,24 +1026,42 @@ class CompetitiveScenario(BaseScenario):
         # Check time limit
         if self.get_elapsed_time() >= self.config.time_limit:
             self.is_success = self.agent_market_share > 0.3  # Example success criteria
-            return True, f"Time limit reached. Market share: {self.agent_market_share:.2%}"
+            return (
+                True,
+                f"Time limit reached. Market share: {self.agent_market_share:.2%}",
+            )
 
         # Check tick limit
         if self.context.tick >= self.config.max_ticks:
             self.is_success = self.agent_market_share > 0.3  # Example success criteria
-            return True, f"Tick limit reached. Market share: {self.agent_market_share:.2%}"
+            return (
+                True,
+                f"Tick limit reached. Market share: {self.agent_market_share:.2%}",
+            )
 
         # Check success criteria
         if "min_market_share" in self.config.success_criteria:
-            if self.agent_market_share >= self.config.success_criteria["min_market_share"]:
+            if (
+                self.agent_market_share
+                >= self.config.success_criteria["min_market_share"]
+            ):
                 self.is_success = True
-                return True, f"Success criteria met. Market share: {self.agent_market_share:.2%}"
+                return (
+                    True,
+                    f"Success criteria met. Market share: {self.agent_market_share:.2%}",
+                )
 
         # Check failure criteria
         if "max_market_share" in self.config.failure_criteria:
-            if self.agent_market_share <= self.config.failure_criteria["max_market_share"]:
+            if (
+                self.agent_market_share
+                <= self.config.failure_criteria["max_market_share"]
+            ):
                 self.is_success = False
-                return True, f"Failure criteria met. Market share: {self.agent_market_share:.2%}"
+                return (
+                    True,
+                    f"Failure criteria met. Market share: {self.agent_market_share:.2%}",
+                )
 
         return False, "Scenario in progress"
 

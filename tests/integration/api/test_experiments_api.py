@@ -31,7 +31,8 @@ def client():
 
 def _create_agent(client: TestClient) -> str:
     r = client.post(
-        "/api/v1/agents", json={"name": "Agent X", "framework": "baseline", "config": {"t": 1}}
+        "/api/v1/agents",
+        json={"name": "Agent X", "framework": "baseline", "config": {"t": 1}},
     )
     assert r.status_code == 201, r.text
     return r.json()["id"]
@@ -77,7 +78,8 @@ def test_experiment_crud_and_status_transitions(client: TestClient):
 
         # Valid transition: draft -> running
         r4 = c2.patch(
-            f"/api/v1/experiments/{exp_id}", json={"status": "running", "params": {"k": 2}}
+            f"/api/v1/experiments/{exp_id}",
+            json={"status": "running", "params": {"k": 2}},
         )
         assert r4.status_code == 200
         updated = r4.json()

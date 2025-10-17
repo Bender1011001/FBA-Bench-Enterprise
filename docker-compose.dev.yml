@@ -1,32 +1,69 @@
+# Development Docker Compose configuration for FBA-Bench Enterprise
+# - Optimized for rapid development with hot-reload
+# - Uses Poetry for dependency management
+# - SQLite for simplicity in development
+# - All debugging and development features enabled
+
 version: "3.9"
 
 services:
+  redis:
+    image: redis:7-alpine
+    container_name: fba-redis-dev
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_dev_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+    networks:
+      - backend
+
   api:
-    image: python:3.11-slim
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: fba-api-dev
     working_dir: /app
     ports:
       - "8000:8000"
     environment:
-      AUTH_ENABLED: "false"        # dev only
-      AUTH_TEST_BYPASS: "true"     # dev only
+      # Development-specific settings
+      ENVIRONMENT: "development"
+      DEBUG: "true"
+      AUTH_ENABLED: "false"
+      AUTH_TEST_BYPASS: "true"
       FBA_CORS_ALLOW_ORIGINS: "*"
-      DATABASE_URL: "sqlite+aiosqlite:///./dev.db"  # dev only
-      DB_AUTO_CREATE: "true"
-      API_RATE_LIMIT: "100/minute"
-      LOG_LEVEL: "INFO"
+      DATABASE_URL: "sqlite+aiosqlite:///./dev.db"
+      FBA_BENCH_REDIS_URL: "redis://redis:6379/0"
+      PYTHONPATH: "/app/src"
+      LOG_LEVEL: "DEBUG"
+      API_RATE_LIMIT: "1000/minute"  # Relaxed for development
+      # Enable reload for development
+      UVICORN_RELOAD: "true"
     volumes:
-      - ./:/app
+      - ./src:/app/src
+      - ./tests:/app/tests
+      - dev_data:/data
     command: >
-      sh -c "pip install --no-cache-dir poetry==1.7.1 &&
-             poetry config virtualenvs.create false &&
-             poetry install --no-interaction --no-ansi &&
-             uvicorn fba_bench_api.main:create_app --factory --host 0.0.0.0 --port 8000 --reload"
+      sh -c "poetry install --no-interaction --no-ansi &&
+             poetry run uvicorn api_server:app --host 0.0.0.0 --port 8000 --reload"
+    depends_on:
+      redis:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0) if urllib.request.urlopen('http://localhost:8000/api/v1/health').getcode()==200 else sys.exit(1)"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
       interval: 30s
       timeout: 10s
       retries: 3
     restart: unless-stopped
+    networks:
+      - backend
     deploy:
       resources:
         limits:
@@ -35,3 +72,33 @@ services:
         reservations:
           cpus: "0.50"
           memory: 512M
+
+  frontend:
+    image: node:20-alpine
+    container_name: fba-frontend-dev
+    working_dir: /app
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: "http://localhost:8000"
+      NODE_ENV: "development"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: >
+      sh -c "npm ci && npm run dev -- --host 0.0.0.0"
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - backend
+
+volumes:
+  redis_dev_data:
+    driver: local
+  dev_data:
+    driver: local
+
+networks:
+  backend:
+    driver: bridge

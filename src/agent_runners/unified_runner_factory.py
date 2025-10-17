@@ -14,7 +14,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, List, Union
 
-from . import registry as _registry
+from agent_runners import registry as _registry
 
 logger = logging.getLogger(__name__)
 

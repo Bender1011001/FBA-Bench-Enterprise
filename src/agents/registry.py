@@ -7,10 +7,10 @@ and lookup by name or type. Used in base.py for agent discovery.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, Type, Optional
+from typing import TYPE_CHECKING, Dict, Optional, Type
 
 if TYPE_CHECKING:
-    from .base import BaseAgent, AgentConfig
+    from .base import AgentConfig, BaseAgent
 
 
 class AgentRegistry:
@@ -21,8 +21,8 @@ class AgentRegistry:
     """
 
     _instance = None
-    _agents: Dict[str, Type["BaseAgent"]] = {}
-    _configs: Dict[str, "AgentConfig"] = {}
+    _agents: Dict[str, Type[BaseAgent]] = {}
+    _configs: Dict[str, AgentConfig] = {}
 
     def __new__(cls):
         if cls._instance is None:
@@ -30,7 +30,10 @@ class AgentRegistry:
         return cls._instance
 
     def register(
-        self, name: str, agent_class: Type[BaseAgent], config: Optional[AgentConfig] = None
+        self,
+        name: str,
+        agent_class: Type[BaseAgent],
+        config: Optional[AgentConfig] = None,
     ) -> None:
         """
         Register an agent class and optional config by name.
@@ -44,7 +47,7 @@ class AgentRegistry:
         if config:
             self._configs[name] = config
 
-    def get_agent_class(self, name: str) -> Optional[Type["BaseAgent"]]:
+    def get_agent_class(self, name: str) -> Optional[Type[BaseAgent]]:
         """
         Retrieve the agent class by name.
 
@@ -56,7 +59,7 @@ class AgentRegistry:
         """
         return self._agents.get(name)
 
-    def get_config(self, name: str) -> Optional["AgentConfig"]:
+    def get_config(self, name: str) -> Optional[AgentConfig]:
         """
         Retrieve the default config for an agent by name.
 

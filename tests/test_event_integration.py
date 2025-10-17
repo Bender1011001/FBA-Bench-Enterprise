@@ -5,14 +5,14 @@ from datetime import datetime
 from typing import Any, Dict, List
 
 import pytest
-
-from event_bus import AsyncioQueueBackend, EventBus
-from events import SaleOccurred, TickEvent
 from models.product import Product
 from money import Money
 from services.fee_calculation_service import FeeCalculationService
 from services.sales_service import SalesService
 from services.trust_score_service import TrustScoreService
+
+from event_bus import AsyncioQueueBackend, EventBus
+from events import SaleOccurred, TickEvent
 from simulation_orchestrator import SimulationConfig, SimulationOrchestrator
 
 
@@ -31,7 +31,9 @@ class EventCollector:
 
     def get_events_of_type(self, event_type: type) -> List[Any]:
         """Get all collected events of a specific type."""
-        return [event for event in self.collected_events if isinstance(event, event_type)]
+        return [
+            event for event in self.collected_events if isinstance(event, event_type)
+        ]
 
     def clear(self) -> None:
         """Clear collected events."""
@@ -87,7 +89,10 @@ def sample_product():
 def fee_service():
     """Create a fee calculation service for testing."""
     config = {
-        "fee_rates": {"referral_base_rate": 0.15, "fba_small_standard": Money.from_dollars(3.22)}
+        "fee_rates": {
+            "referral_base_rate": 0.15,
+            "fba_small_standard": Money.from_dollars(3.22),
+        }
     }
     return FeeCalculationService(config)
 
@@ -95,14 +100,21 @@ def fee_service():
 @pytest.fixture
 def sales_service(fee_service):
     """Create a sales service for testing."""
-    config = {"demand_model": "exponential", "base_conversion_rate": 0.15, "price_elasticity": -1.5}
+    config = {
+        "demand_model": "exponential",
+        "base_conversion_rate": 0.15,
+        "price_elasticity": -1.5,
+    }
     return SalesService(config, fee_service)
 
 
 @pytest.fixture
 def trust_service():
     """Create a trust score service for testing."""
-    config = {"base_trust_score": 0.7, "trust_event_weights": {"sale": 0.02, "stockout": -0.03}}
+    config = {
+        "base_trust_score": 0.7,
+        "trust_event_weights": {"sale": 0.02, "stockout": -0.03},
+    }
     return TrustScoreService(config)
 
 
@@ -150,7 +162,9 @@ class TestEventDrivenCore:
         assert received_event.tick_number == 1
 
     @pytest.mark.asyncio
-    async def test_simulation_orchestrator_tick_generation(self, event_bus, orchestrator):
+    async def test_simulation_orchestrator_tick_generation(
+        self, event_bus, orchestrator
+    ):
         """Test that SimulationOrchestrator generates TickEvents."""
         collector = EventCollector()
 
@@ -177,7 +191,9 @@ class TestEventDrivenCore:
             assert "weekday_factor" in event.metadata
 
     @pytest.mark.asyncio
-    async def test_sales_service_event_handling(self, event_bus, sales_service, sample_product):
+    async def test_sales_service_event_handling(
+        self, event_bus, sales_service, sample_product
+    ):
         """Test that SalesService responds to TickEvents and publishes SaleOccurred events."""
         collector = EventCollector()
 
@@ -264,7 +280,9 @@ class TestEventDrivenCore:
         assert len(trust_service.event_history) > 0
 
         # Check for sale event
-        sale_events = [e for e in trust_service.event_history if e.event_type.value == "sale"]
+        sale_events = [
+            e for e in trust_service.event_history if e.event_type.value == "sale"
+        ]
         assert len(sale_events) == 1
 
         # Check for stockout event (units_demanded > units_sold)

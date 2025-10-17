@@ -2,7 +2,6 @@ import tempfile
 from textwrap import dedent
 
 import pytest
-
 from observability.observability_config import ObservabilityConfig
 
 

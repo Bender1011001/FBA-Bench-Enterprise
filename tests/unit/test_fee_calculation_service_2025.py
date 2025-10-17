@@ -17,7 +17,9 @@ class ProductStub:
         self.product_id = product_id
         self.category = category
         self.weight_oz = weight_oz
-        self.dimensions_inches = dimensions_inches if dimensions_inches is not None else [12, 8, 1]
+        self.dimensions_inches = (
+            dimensions_inches if dimensions_inches is not None else [12, 8, 1]
+        )
         self.cost_basis = cost_basis if cost_basis is not None else Money.zero()
 
 
@@ -56,19 +58,27 @@ def test_fee_percentage_and_profit_margin_percent_do_not_divide_money():
     # Sanity: profit margin percentage matches cents-based computation
     profit = breakdown.net_proceeds - product.cost_basis
     expected_pct = (
-        (profit.cents / product.cost_basis.cents) * 100.0 if product.cost_basis.cents else 0.0
+        (profit.cents / product.cost_basis.cents) * 100.0
+        if product.cost_basis.cents
+        else 0.0
     )
-    assert math.isclose(breakdown.profit_margin_percent, expected_pct, rel_tol=1e-9, abs_tol=1e-9)
+    assert math.isclose(
+        breakdown.profit_margin_percent, expected_pct, rel_tol=1e-9, abs_tol=1e-9
+    )
 
 
 def test_billable_weight_large_standard_uses_dim_weight_and_additional_pounds():
     # Dimensions at the max of large_standard to force dim weight >> actual
     dims = [18, 14, 8]  # in inches
     weight_oz = 40  # 2.5 lb actual
-    product = ProductStub(category="unknown", weight_oz=weight_oz, dimensions_inches=dims)
+    product = ProductStub(
+        category="unknown", weight_oz=weight_oz, dimensions_inches=dims
+    )
     service = FeeCalculationService(config={"dimensional_weight_divisor": 139})
 
-    breakdown = service.calculate_comprehensive_fees(product, Money.from_dollars(20.00), {})
+    breakdown = service.calculate_comprehensive_fees(
+        product, Money.from_dollars(20.00), {}
+    )
     fba_fee = _find_fee(breakdown, FeeType.FBA)
     assert fba_fee is not None
 
@@ -89,7 +99,9 @@ def test_billable_weight_large_standard_uses_dim_weight_and_additional_pounds():
     base_fee_cents = 409  # default 'fba_large_standard_1lb'
     add_rate_cents = 42  # default 'fba_large_standard_additional_lb'
     add_fee_cents = int(
-        (add_weight * Decimal(add_rate_cents)).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+        (add_weight * Decimal(add_rate_cents)).quantize(
+            Decimal("1"), rounding=ROUND_HALF_UP
+        )
     )
     expected_fba_cents = base_fee_cents + add_fee_cents
 
@@ -143,10 +155,14 @@ def test_surcharges_peak_remote_hazmat():
     fba_cents = fba_fee.calculated_amount.cents
 
     peak = int(
-        (Decimal(fba_cents) * Decimal("0.10")).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+        (Decimal(fba_cents) * Decimal("0.10")).quantize(
+            Decimal("1"), rounding=ROUND_HALF_UP
+        )
     )
     fuel = int(
-        (Decimal(fba_cents) * Decimal("0.05")).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+        (Decimal(fba_cents) * Decimal("0.05")).quantize(
+            Decimal("1"), rounding=ROUND_HALF_UP
+        )
     )
     total_expected = Money(peak + fuel + 100 + 200)
 
@@ -175,12 +191,16 @@ def test_penalties_ltsf_and_low_price_penalty():
     assert len(pen_fees) >= 2
 
     # Validate LTSF = $1.00 * 12 months * 1 cu ft = $12.00
-    ltsf = next((f for f in pen_fees if "Long-term storage penalty" in f.description), None)
+    ltsf = next(
+        (f for f in pen_fees if "Long-term storage penalty" in f.description), None
+    )
     assert ltsf is not None
     assert ltsf.calculated_amount.cents == 1200
 
     # Validate low-price penalty flat
-    low_price = next((f for f in pen_fees if "Low-price penalty" in f.description), None)
+    low_price = next(
+        (f for f in pen_fees if "Low-price penalty" in f.description), None
+    )
     assert low_price is not None
     assert low_price.calculated_amount.cents == 123
 
@@ -209,7 +229,11 @@ def test_summary_by_type_totals_and_averages():
     # Compute expected from individual breakdowns
     def sur_total(bd):
         return _sum_money(
-            [f.calculated_amount for f in bd.individual_fees if f.fee_type == FeeType.SURCHARGE]
+            [
+                f.calculated_amount
+                for f in bd.individual_fees
+                if f.fee_type == FeeType.SURCHARGE
+            ]
         )
 
     expected_total = sur_total(b1) + sur_total(b2)

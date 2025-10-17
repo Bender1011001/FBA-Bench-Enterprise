@@ -32,12 +32,18 @@ logger = logging.getLogger(__name__)
 class AdvancedAgentParams(BaseModel):
     # Pricing controls
     min_margin: float = Field(0.12, ge=0.0, description="Minimum margin over cost")
-    undercut: float = Field(0.01, ge=0.0, description="Percent to undercut competitor price")
-    max_change_pct: float = Field(0.15, gt=0.0, description="Max per-tick change fraction")
+    undercut: float = Field(
+        0.01, ge=0.0, description="Percent to undercut competitor price"
+    )
+    max_change_pct: float = Field(
+        0.15, gt=0.0, description="Max per-tick change fraction"
+    )
     price_sensitivity: float = Field(
         0.10, ge=0.0, le=1.0, description="Heuristic demand sensitivity"
     )
-    reaction_speed: float = Field(1.0, gt=0.0, description="Adjustment amplifier/damper")
+    reaction_speed: float = Field(
+        1.0, gt=0.0, description="Adjustment amplifier/damper"
+    )
 
     # Inventory behavior
     inventory_low_threshold: int = Field(10, ge=0)
@@ -45,25 +51,38 @@ class AdvancedAgentParams(BaseModel):
     # Inventory ratio thresholds and nudges used inside decision logic
     inv_low_ratio: float = Field(0.5, gt=0.0)
     inv_high_ratio: float = Field(1.2, gt=0.0)
-    inv_low_nudge: float = Field(0.2, description="Increase price when too low inventory")
-    inv_high_nudge: float = Field(-0.15, description="Lower price when too high inventory")
+    inv_low_nudge: float = Field(
+        0.2, description="Increase price when too low inventory"
+    )
+    inv_high_nudge: float = Field(
+        -0.15, description="Lower price when too high inventory"
+    )
 
     # Confidence computation shaping
     confidence_log_divisor: float = Field(3.0, gt=0.0)
     confidence_demand_cap: float = Field(0.3, ge=0.0, le=0.99)
 
     # Smoothing/memory windows
-    demand_avg_window: int = Field(7, ge=1, description="Moving window for demand average")
-    price_avg_window: int = Field(7, ge=1, description="Moving window for price average")
+    demand_avg_window: int = Field(
+        7, ge=1, description="Moving window for demand average"
+    )
+    price_avg_window: int = Field(
+        7, ge=1, description="Moving window for price average"
+    )
 
     # Confidence calculation parameters for DIYRunner
     confidence_product_data_boost: float = Field(
-        0.1, ge=0.0, le=1.0, description="Confidence boost for each valid product data point."
+        0.1,
+        ge=0.0,
+        le=1.0,
+        description="Confidence boost for each valid product data point.",
     )
     confidence_market_data_boost_per_item: float = Field(
         0.05, ge=0.0, le=1.0, description="Confidence boost per market data item."
     )
-    confidence_max_cap: float = Field(0.95, ge=0.0, le=1.0, description="Maximum confidence cap.")
+    confidence_max_cap: float = Field(
+        0.95, ge=0.0, le=1.0, description="Maximum confidence cap."
+    )
 
     # Reasoning parameters for DIYRunner (sales rank, inventory)
     reasoning_high_demand_rank_threshold: int = Field(
@@ -79,10 +98,14 @@ class AdvancedAgentParams(BaseModel):
         100, ge=0, description="Inventory threshold for 'high inventory' in reasoning."
     )
     reasoning_high_market_demand_factor: float = Field(
-        1.2, gt=1.0, description="Market demand factor for 'high market demand' in reasoning."
+        1.2,
+        gt=1.0,
+        description="Market demand factor for 'high market demand' in reasoning.",
     )
     reasoning_low_market_demand_factor: float = Field(
-        0.8, lt=1.0, description="Market demand factor for 'low market demand' in reasoning."
+        0.8,
+        lt=1.0,
+        description="Market demand factor for 'low market demand' in reasoning.",
     )
     reasoning_competitor_price_deviation_pct: float = Field(
         0.1,
@@ -173,16 +196,26 @@ class FinancialAnalystParams(BaseModel):
 
     # Burn rate and health score parameters
     default_burn_rate_cents: int = Field(
-        100, ge=0, description="Default daily cash burn rate in cents if history is insufficient."
+        100,
+        ge=0,
+        description="Default daily cash burn rate in cents if history is insufficient.",
     )
     burn_rate_history_window: int = Field(
-        7, ge=1, description="Number of days to consider for calculating historical burn rate."
+        7,
+        ge=1,
+        description="Number of days to consider for calculating historical burn rate.",
     )
     margin_score_weight: float = Field(
-        0.4, ge=0.0, le=1.0, description="Weight for profit margin in financial health score."
+        0.4,
+        ge=0.0,
+        le=1.0,
+        description="Weight for profit margin in financial health score.",
     )
     runway_score_weight: float = Field(
-        0.4, ge=0.0, le=1.0, description="Weight for cash runway in financial health score."
+        0.4,
+        ge=0.0,
+        le=1.0,
+        description="Weight for cash runway in financial health score.",
     )
     burn_score_weight: float = Field(
         0.2,
@@ -191,7 +224,9 @@ class FinancialAnalystParams(BaseModel):
         description="Weight for burn rate efficiency in financial health score.",
     )
     target_cash_runway_days: int = Field(
-        90, ge=1, description="Target number of days for cash runway to achieve full score."
+        90,
+        ge=1,
+        description="Target number of days for cash runway to achieve full score.",
     )
 
     # Reallocation & optimization parameters
@@ -201,7 +236,10 @@ class FinancialAnalystParams(BaseModel):
         description="Maximum amount in cents to reallocate in a single budget reallocation action.",
     )
     default_cost_reduction_target: float = Field(
-        0.2, ge=0.0, le=1.0, description="Default percentage target for cost reduction actions."
+        0.2,
+        ge=0.0,
+        le=1.0,
+        description="Default percentage target for cost reduction actions.",
     )
     max_investment_cents: int = Field(
         50000,
@@ -215,10 +253,16 @@ class FinancialAnalystParams(BaseModel):
         "moderate", description="Default risk level for investment recommendations."
     )
     low_profit_margin_threshold: float = Field(
-        0.1, ge=0.0, le=1.0, description="Threshold below which profit margin is considered low."
+        0.1,
+        ge=0.0,
+        le=1.0,
+        description="Threshold below which profit margin is considered low.",
     )
     high_fee_percentage_threshold: float = Field(
-        0.2, ge=0.0, le=1.0, description="Threshold above which fee percentage is considered high."
+        0.2,
+        ge=0.0,
+        le=1.0,
+        description="Threshold above which fee percentage is considered high.",
     )
 
     class Config:
@@ -270,7 +314,9 @@ class ModelParams(BaseModel):
     version: str = Field("1.0")
     advanced_agent: AdvancedAgentParams = Field(default_factory=AdvancedAgentParams)
     pricing: PricingStrategyParams = Field(default_factory=PricingStrategyParams)
-    financial_analyst: FinancialAnalystParams = Field(default_factory=FinancialAnalystParams)
+    financial_analyst: FinancialAnalystParams = Field(
+        default_factory=FinancialAnalystParams
+    )
     planner: PlannerParams = Field(default_factory=PlannerParams)
 
     class Config:
@@ -324,7 +370,9 @@ def get_model_params(
 
     defaults = ModelParams().model_dump()
 
-    yaml_path = os.getenv("MODEL_PARAMS_YAML") or os.path.join("configs", "model_params.yaml")
+    yaml_path = os.getenv("MODEL_PARAMS_YAML") or os.path.join(
+        "configs", "model_params.yaml"
+    )
     overlay = _load_yaml(yaml_path)
 
     merged = _deep_merge(defaults, overlay)

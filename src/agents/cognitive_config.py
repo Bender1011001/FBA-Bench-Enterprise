@@ -102,7 +102,9 @@ class StrategicPlanningConfig:
     # Strategic adaptation
     strategy_adaptation_enabled: bool = True
     external_event_sensitivity: float = 0.7  # sensitivity to external events
-    performance_adaptation_threshold: float = 0.15  # performance change to trigger adaptation
+    performance_adaptation_threshold: float = (
+        0.15  # performance change to trigger adaptation
+    )
 
     # Action generation
     tactical_action_generation: bool = True
@@ -209,8 +211,12 @@ class CognitiveConfig:
 
     # Component configurations
     reflection: ReflectionConfig = field(default_factory=ReflectionConfig)
-    strategic_planning: StrategicPlanningConfig = field(default_factory=StrategicPlanningConfig)
-    memory_validation: MemoryValidationConfig = field(default_factory=MemoryValidationConfig)
+    strategic_planning: StrategicPlanningConfig = field(
+        default_factory=StrategicPlanningConfig
+    )
+    memory_validation: MemoryValidationConfig = field(
+        default_factory=MemoryValidationConfig
+    )
     performance: PerformanceConfig = field(default_factory=PerformanceConfig)
     integration: IntegrationConfig = field(default_factory=IntegrationConfig)
 
@@ -265,11 +271,15 @@ class CognitiveConfig:
             self.strategic_planning.strategic_planning_horizon
             <= self.strategic_planning.tactical_planning_horizon
         ):
-            raise ValueError("Strategic planning horizon must be longer than tactical horizon")
+            raise ValueError(
+                "Strategic planning horizon must be longer than tactical horizon"
+            )
 
         # Validate thresholds
         if not (0.0 <= self.reflection.performance_degradation_threshold <= 1.0):
-            raise ValueError("Performance degradation threshold must be between 0.0 and 1.0")
+            raise ValueError(
+                "Performance degradation threshold must be between 0.0 and 1.0"
+            )
 
         if not (0.0 <= self.memory_validation.contradiction_threshold <= 1.0):
             raise ValueError("Contradiction threshold must be between 0.0 and 1.0")
@@ -318,7 +328,9 @@ class CognitiveConfig:
         logger.info("Optimizing cognitive configuration for performance")
 
         # Reduce reflection frequency
-        self.reflection.reflection_interval = min(14, self.reflection.reflection_interval * 1.5)
+        self.reflection.reflection_interval = min(
+            14, self.reflection.reflection_interval * 1.5
+        )
 
         # Reduce planning complexity
         self.strategic_planning.max_concurrent_objectives = min(
@@ -329,21 +341,27 @@ class CognitiveConfig:
         )
 
         # Optimize memory validation
-        self.memory_validation.contradiction_threshold *= 1.1  # Make validation less strict
+        self.memory_validation.contradiction_threshold *= (
+            1.1  # Make validation less strict
+        )
         self.memory_validation.temporal_consistency_window_hours = min(
             12, self.memory_validation.temporal_consistency_window_hours
         )
 
         # Adjust resource limits
         for key in self.cognitive_resource_limits:
-            self.cognitive_resource_limits[key] = int(self.cognitive_resource_limits[key] * 0.8)
+            self.cognitive_resource_limits[key] = int(
+                self.cognitive_resource_limits[key] * 0.8
+            )
 
     def optimize_for_accuracy(self):
         """Optimize configuration for better accuracy."""
         logger.info("Optimizing cognitive configuration for accuracy")
 
         # Increase reflection frequency
-        self.reflection.reflection_interval = max(3, int(self.reflection.reflection_interval * 0.7))
+        self.reflection.reflection_interval = max(
+            3, int(self.reflection.reflection_interval * 0.7)
+        )
 
         # Increase analysis depth
         self.reflection.analysis_lookback_days = min(
@@ -354,7 +372,9 @@ class CognitiveConfig:
         )
 
         # Stricter validation
-        self.memory_validation.contradiction_threshold *= 0.9  # Make validation more strict
+        self.memory_validation.contradiction_threshold *= (
+            0.9  # Make validation more strict
+        )
         self.memory_validation.confidence_threshold *= 1.1
 
         # More comprehensive planning

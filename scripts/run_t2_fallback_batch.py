@@ -17,12 +17,10 @@ Behavior:
 Usage:
     poetry run python scripts/run_t2_fallback_batch.py
 """
+import asyncio
 import os
 import sys
-import asyncio
-import subprocess
 from datetime import datetime
-from typing import Optional
 
 # Ensure repository root is on sys.path so local modules (e.g., simulation_orchestrator, fba_bench_core)
 # can be imported when this script is executed from the scripts/ directory.
@@ -73,9 +71,9 @@ except Exception:
 
 # Prefer src package imports for core services
 try:
-    from fba_bench_core.services.world_store import WorldStore
     from fba_bench_core.services.sales_service import SalesService
     from fba_bench_core.services.trust_score_service import TrustScoreService
+    from fba_bench_core.services.world_store import WorldStore
 except Exception as e:
     print(f"Could not import core services from src: {e}", file=sys.stderr)
     raise

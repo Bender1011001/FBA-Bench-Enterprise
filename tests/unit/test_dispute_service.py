@@ -1,5 +1,4 @@
 import pytest
-
 from money import Money
 from services.dispute_service import DisputeDetails, DisputeResolution, DisputeService
 from services.double_entry_ledger_service import DoubleEntryLedgerService
@@ -60,7 +59,13 @@ async def test_resolve_reject_has_no_ledger_impact():
     assert updated.resolved_at is not None
 
     # No ledger impact expected; balances remain zero
-    for acct in ("sales_revenue", "cash", "inventory", "cost_of_goods_sold", "other_expenses"):
+    for acct in (
+        "sales_revenue",
+        "cash",
+        "inventory",
+        "cost_of_goods_sold",
+        "other_expenses",
+    ):
         assert ledger.get_account_balance(acct).cents == 0
 
     assert ledger.is_trial_balance_balanced() is True

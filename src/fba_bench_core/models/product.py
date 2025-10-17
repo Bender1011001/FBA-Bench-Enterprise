@@ -3,10 +3,9 @@ from __future__ import annotations
 from typing import Any, Dict, Optional
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
-
 # Import canonical Money (re-exported shim ensures single implementation)
 from money import Money
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class Product(BaseModel):
