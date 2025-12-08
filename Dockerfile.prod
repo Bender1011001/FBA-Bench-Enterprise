@@ -18,7 +18,7 @@ RUN npm run build
 # Output: dist/ directory with static files
 
 # Stage 2: Build Python API
-FROM python:3.11-slim AS api-build
+FROM python:3.14-slim AS api-build
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
