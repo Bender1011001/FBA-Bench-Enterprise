@@ -8,13 +8,13 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
-    "@types/react": "^19.1.16",
-    "@types/react-dom": "^19.1.9",
+    "@types/node": "^20.19.27",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
     "@vitest/ui": "^1.0.0",
     "jsdom": "^23.0.0",
     "react-hot-toast": "^2.6.0",
-    "typescript": "^5.0.0",
+    "typescript": "^5.9.3",
     "vitest": "^1.0.0"
   }
 }
