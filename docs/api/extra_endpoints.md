@@ -19,6 +19,5 @@ Route module: `src/fba_bench_api/api/routes/wargames.py`
 Purpose:
 - A “micro-sim” / stress harness API surface for running short adversarial or scenario-style games
 
-Important:
-- Treat this route group as **experimental** until it is aligned with the current production services
-  (there are signs of stale imports and older ledger interfaces in the module).
+Note:
+- This route group is **experimental** and subject to change.
